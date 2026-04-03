@@ -404,7 +404,7 @@ export default function Dashboard() {
     setIsLoading(false);
   };
 
-  const BASE_URL = 'https://memoriashare.com';
+  const BASE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
 
   const handleCopyLink = () => {
     const eventUrl = `${BASE_URL}${createPageUrl(`Event?code=${event.unique_code}`)}&pin=${event.pin_code}`;
