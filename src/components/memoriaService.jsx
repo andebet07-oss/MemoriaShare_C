@@ -101,8 +101,27 @@ const memoriaService = {
       }
     },
 
-    create: async (eventData) => {
+    create: async (rawData) => {
       try {
+        // Strip UI-only fields that don't exist as table columns, and map
+        // privacy_mode → auto_publish_guest_photos (immediate = true, manual = false).
+        const {
+          privacy_mode,
+          event_type,   // form-only
+          description,  // form-only
+          price,        // form-only (pricing display)
+          qr_code,      // form-only
+          photo_filter, // form-only
+          ...rest
+        } = rawData;
+
+        const eventData = {
+          ...rest,
+          auto_publish_guest_photos:
+            rest.auto_publish_guest_photos ??
+            (privacy_mode === 'immediate' ? true : false),
+        };
+
         const { data, error } = await supabase
           .from('events')
           .insert(eventData)

@@ -320,7 +320,11 @@ export default function App() {
         pin_code: generatedPin, created_by: user.email, photo_filter: 'none'
       });
       navigate(createPageUrl(`EventSuccess?id=${newEvent.id}`));
-    } catch (error) {console.error('Error creating event:', error);setIsLoading(false);}
+    } catch (error) {
+      console.error('Error creating event:', error);
+      alert('שגיאה ביצירת האירוע: ' + (error?.message || 'נסה שוב'));
+      setIsLoading(false);
+    }
   };
 
   const displayPreviewImage = localPreviewUrl || coverImagePreview;
