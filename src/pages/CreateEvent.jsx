@@ -17,6 +17,7 @@ import {
 import { useNavigate, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import memoriaService from "@/components/memoriaService";
+import { useAuth } from "@/lib/AuthContext";
 
 /**
  * Compress an image file using canvas — max 1200px, JPEG 0.7 quality
@@ -229,6 +230,7 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
 
 export default function App() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -306,9 +308,12 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    if (!user?.email) {
+      alert('יש להתחבר לפני יצירת אירוע');
+      return;
+    }
     setIsLoading(true);
     try {
-      const user = await memoriaService.auth.me();
       const uniqueCode = Math.random().toString(36).substring(2, 10);
       const generatedPin = Math.floor(1000 + Math.random() * 9000).toString();
       const newEvent = await memoriaService.events.create({
