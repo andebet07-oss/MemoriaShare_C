@@ -13,7 +13,7 @@ export default function PhoneMockup({ eventData = {} }) {
   }, [eventData.cover_image]);
 
   // שימוש בתמונת ברירת המחדל מהשרת שלך
-  const displayImage = eventData.cover_image || "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6856836a59e22df6936b8f37/305fc46ef_IMG_0999.jpg";
+  const displayImage = eventData.cover_image || "/Center_PhoneMoucup_hero.jpeg";
 
   return (
     // Outer Hardware Frame (מסגרת המכשיר - Bezel)

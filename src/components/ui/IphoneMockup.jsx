@@ -51,7 +51,7 @@ export default function IphoneMockup({ coverImage, eventName, eventDate }) {
 
         {/* Background Image */}
         <img
-          src={coverImage || "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/b0c3d57f3_jonathan-borba-sAAkJ3QaA9o-unsplash1.jpg"}
+          src={coverImage || "/Center_PhoneMoucup_hero.jpeg"}
           alt={eventName || "תמונת נושא"}
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -75,7 +75,7 @@ export default function IphoneMockup({ coverImage, eventName, eventDate }) {
             </div>
 
             <div className="w-12 h-16 rounded-lg overflow-hidden border-2 border-white/50 cursor-pointer" style={{ transform: 'rotate(10deg) scale(1.05)' }}>
-            <img src={coverImage || "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/b0c3d57f3_jonathan-borba-sAAkJ3QaA9o-unsplash1.jpg"} alt="preview" className="w-full h-full object-cover" />
+            <img src={coverImage || "/Center_PhoneMoucup_hero.jpeg"} alt="preview" className="w-full h-full object-cover" />
             </div>
         </div>
       </div>

@@ -10,9 +10,9 @@ export default function HeroSection({ onOpenDemo }) {
   const navigate = useNavigate();
 
   const eventPhotos = [
-    "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=600&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=600&auto=format&fit=crop&q=80",
+    "/Left_PhoneMoucup_hero.jpeg",
+    "/Center_PhoneMoucup_hero.jpeg",
+    "/right_PhoneMoucup_hero.jpeg",
   ];
 
   // לוגיקה חכמה ליצירת אירוע
@@ -37,7 +37,7 @@ export default function HeroSection({ onOpenDemo }) {
       <div className={`absolute -inset-10 bg-white/${isCenter ? '20' : '5'} blur-[60px] rounded-full -z-10`}></div>
       <div className={`relative ${isCenter ? 'w-48 md:w-72 h-[380px] md:h-[560px]' : 'w-40 md:w-60 h-[320px] md:h-[480px]'} bg-[#0c0c0c] rounded-[2.8rem] p-2 md:p-3 shadow-2xl border border-white/20`}>
         <div className="w-full h-full bg-black rounded-[2.3rem] overflow-hidden relative border border-white/10">
-          <img src={image} className="w-full h-full object-cover opacity-90" alt="event" />
+          <img src={image} className="w-full h-full object-cover object-center opacity-90" alt="event" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10"></div>
           
           <div className="absolute inset-0 z-20 flex flex-col justify-between pointer-events-none">
