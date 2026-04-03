@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Play, X } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 
 export default function HeroSection({ onOpenDemo }) {
   const { isAuthenticated } = useAuth();
@@ -22,7 +22,7 @@ export default function HeroSection({ onOpenDemo }) {
     } else {
       // יפנה להתחברות ויחזור אוטומטית לעמוד היצירה
       const returnUrl = `${window.location.origin}${createPageUrl("CreateEvent")}`;
-      base44.auth.redirectToLogin(returnUrl);
+      supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: returnUrl } });
     }
   };
 

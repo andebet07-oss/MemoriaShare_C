@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
 import { ArrowRight, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ export default function FinalCTA() {
     } else {
       // יפנה להתחברות ויחזור לעמוד היצירה בצורה חלקה
       const returnUrl = `${window.location.origin}${createPageUrl("CreateEvent")}`;
-      base44.auth.redirectToLogin(returnUrl);
+      supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: returnUrl } });
     }
   };
 

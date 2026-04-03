@@ -15,13 +15,12 @@ import {
   MessageSquare
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-const { Event } = base44.entities;
 
 // --- ממשק המצלמה המעוצב בתוך האייפון ---
 const CameraMockupUI = ({ event }) => {
@@ -102,8 +101,8 @@ export default function EventSuccess() {
     const eventId = urlParams.get('id');
     if (!eventId) { setIsLoading(false); return; }
     try {
-      const events = await Event.filter({ id: eventId });
-      if (events.length > 0) setEvent(events[0]);
+      const { data: eventData } = await supabase.from('events').select('*').eq('id', eventId).maybeSingle();
+      if (eventData) setEvent(eventData);
     } catch (e) { console.error(e); }
     setIsLoading(false);
   };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { Heart, LogIn, LogOut, LayoutDashboard, X, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -11,15 +11,15 @@ export default function Header({ onlyMenu: _onlyMenu = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await base44.auth.me();
-        setUser(currentUser);
-      } catch {
-        setUser(null);
-      }
-    };
-    fetchUser();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -34,14 +34,17 @@ export default function Header({ onlyMenu: _onlyMenu = false }) {
   }, [isMenuOpen]);
 
   const handleLogout = async () => {
-    await base44.auth.logout();
+    await supabase.auth.signOut();
     setUser(null);
   };
 
   const closeMenu = () => setIsMenuOpen(false);
 
-  const handleLogin = async () => {
-    await base44.auth.redirectToLogin(window.location.href);
+  const handleLogin = () => {
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href },
+    });
   };
 
   const scrollToSection = (e, sectionId) => {

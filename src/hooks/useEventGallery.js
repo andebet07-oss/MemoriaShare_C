@@ -3,7 +3,7 @@ import memoriaService from "@/components/memoriaService";
 import { useAuth } from '@/lib/AuthContext';
 import { useNavigate } from "react-router-dom";
 import confetti from 'canvas-confetti';
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabase";
 import { checkGuestQuota } from "@/functions/checkGuestQuota";
 import { processImage } from "@/functions/processImage";
 import { requestPhotoDeletion } from "@/functions/requestPhotoDeletion";
@@ -235,40 +235,50 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   // ─── Real-time photo subscription (guest gallery) ─────────────────────────
   useEffect(() => {
     if (isAdminView) return;
-    const unsubscribe = base44.entities.Photo.subscribe((evt) => {
-      const photo = evt.data;
-      if (!photo) return;
 
-      if (evt.type === "create") {
-        // Only show notification for other users' uploads
-        if (photo.created_by && photo.created_by === currentUser?.email) return;
-        const uploaderName = photo.guest_name || (photo.created_by ? photo.created_by.split("@")[0] : "אורח");
-        setLiveNotification({ id: Date.now(), message: `${uploaderName} העלה תמונה חדשה 📸`, icon: "📸" });
-        setTimeout(() => setLiveNotification(null), 5000);
-      }
+    const channel = supabase
+      .channel('photos-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'photos' },
+        (payload) => {
+          const eventType = payload.eventType; // 'INSERT' | 'UPDATE' | 'DELETE'
+          const photo = payload.new;
+          if (!photo) return;
 
-      if (evt.type === "update" && photo.is_approved) {
-        const oldData = evt.old_data;
-        if (oldData && !oldData.is_approved) {
-          // Add the newly approved photo to the legacy gallery and shared tab
-          setPhotos(prev => {
-            if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
-            return [photo, ...prev];
-          });
-          setSharedPhotos(prev => {
-            if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
-            return [photo, ...prev];
-          });
-          // Update the photo in myPhotos if it's the user's own
-          if (photo.created_by === currentUser?.email) {
-            setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
+          if (eventType === 'INSERT') {
+            // Only show notification for other users' uploads
+            if (photo.created_by && photo.created_by === currentUser?.email) return;
+            const uploaderName = photo.guest_name || (photo.created_by ? photo.created_by.split('@')[0] : 'אורח');
+            setLiveNotification({ id: Date.now(), message: `${uploaderName} העלה תמונה חדשה 📸`, icon: '📸' });
+            setTimeout(() => setLiveNotification(null), 5000);
           }
-          setLiveNotification({ id: Date.now(), message: "תמונה חדשה עלתה לגלריה!", icon: "🖼️" });
-          setTimeout(() => setLiveNotification(null), 5000);
+
+          if (eventType === 'UPDATE' && photo.is_approved) {
+            const oldData = payload.old;
+            if (oldData && !oldData.is_approved) {
+              // Add the newly approved photo to the legacy gallery and shared tab
+              setPhotos(prev => {
+                if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
+                return [photo, ...prev];
+              });
+              setSharedPhotos(prev => {
+                if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
+                return [photo, ...prev];
+              });
+              // Update the photo in myPhotos if it's the user's own
+              if (photo.created_by === currentUser?.email) {
+                setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
+              }
+              setLiveNotification({ id: Date.now(), message: 'תמונה חדשה עלתה לגלריה!', icon: '🖼️' });
+              setTimeout(() => setLiveNotification(null), 5000);
+            }
+          }
         }
-      }
-    });
-    return () => unsubscribe();
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, [isAdminView, currentUser?.email]);
 
   // ─── Fetch next page (called by VirtuosoGrid endReached) ─────────────────

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { resolvePhotoDeletion } from "@/functions/resolvePhotoDeletion";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabase";
 import { Loader2, Check, X, EyeOff, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -16,11 +16,12 @@ export default function DeletionRequestsPanel({ eventId }) {
 
   const loadRequests = async () => {
     setIsLoading(true);
-    const photos = await base44.entities.Photo.filter({
-      event_id: eventId,
-      deletion_status: 'requested'
-    });
-    setRequests(photos);
+    const { data: photos } = await supabase
+      .from('photos')
+      .select('*')
+      .eq('event_id', eventId)
+      .eq('deletion_status', 'requested');
+    setRequests(photos || []);
     setIsLoading(false);
   };
 

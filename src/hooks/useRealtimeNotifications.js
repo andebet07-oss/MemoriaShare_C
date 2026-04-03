@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabase";
 
 /**
  * useRealtimeNotifications
- * Subscribes to Photo entity changes for a given eventId.
+ * Subscribes to Photo table changes for a given eventId via Supabase Realtime.
  * Calls onNewPhoto(photo) when a new photo is created for this event.
  * Calls onApprovedPhoto(photo) when a photo is approved (is_approved becomes true).
  *
@@ -29,34 +29,42 @@ export default function useRealtimeNotifications({ eventId, onNewPhoto, onApprov
   useEffect(() => {
     if (!eventId) return;
 
-    const unsubscribe = base44.entities.Photo.subscribe((event) => {
-      const photo = event.data;
-      if (!photo || photo.event_id !== eventId) return;
+    const channel = supabase
+      .channel(`photos-notifications-${eventId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'photos', filter: `event_id=eq.${eventId}` },
+        (payload) => {
+          const eventType = payload.eventType; // 'INSERT' | 'UPDATE' | 'DELETE'
+          const photo = payload.new;
+          if (!photo) return;
 
-      if (event.type === "create") {
-        // Avoid duplicate notifications
-        if (seenIds.current.has(photo.id)) return;
-        seenIds.current.add(photo.id);
+          if (eventType === 'INSERT') {
+            // Avoid duplicate notifications
+            if (seenIds.current.has(photo.id)) return;
+            seenIds.current.add(photo.id);
 
-        // Don't notify the uploader about their own photo
-        if (photo.created_by && photo.created_by === currentUserEmail) return;
+            // Don't notify the uploader about their own photo
+            if (photo.created_by && photo.created_by === currentUserEmail) return;
 
-        if (onNewPhoto) onNewPhoto(photo);
-        const uploaderName = photo.guest_name || (photo.created_by ? photo.created_by.split("@")[0] : "אורח");
-        addNotification({ message: `תמונה חדשה הועלתה על ידי ${uploaderName}`, icon: "📸" });
-      }
+            if (onNewPhoto) onNewPhoto(photo);
+            const uploaderName = photo.guest_name || (photo.created_by ? photo.created_by.split('@')[0] : 'אורח');
+            addNotification({ message: `תמונה חדשה הועלתה על ידי ${uploaderName}`, icon: '📸' });
+          }
 
-      if (event.type === "update") {
-        const oldData = event.old_data;
-        // Only notify when is_approved transitions false → true
-        if (photo.is_approved && oldData && !oldData.is_approved) {
-          if (onApprovedPhoto) onApprovedPhoto(photo);
-          addNotification({ message: "תמונה חדשה אושרה ועלתה לגלריה!", icon: "✅" });
+          if (eventType === 'UPDATE') {
+            const oldData = payload.old;
+            // Only notify when is_approved transitions false → true
+            if (photo.is_approved && oldData && !oldData.is_approved) {
+              if (onApprovedPhoto) onApprovedPhoto(photo);
+              addNotification({ message: 'תמונה חדשה אושרה ועלתה לגלריה!', icon: '✅' });
+            }
+          }
         }
-      }
-    });
+      )
+      .subscribe();
 
-    return () => unsubscribe();
+    return () => supabase.removeChannel(channel);
   }, [eventId, currentUserEmail, addNotification, onNewPhoto, onApprovedPhoto]);
 
   return { notifications, dismissNotification };

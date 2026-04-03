@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Users, Search, Shield, User, ChevronRight, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -90,7 +90,10 @@ export default function AdminUsers() {
   // Auth check
   const { data: currentUser, isLoading: isAuthLoading } = useQuery({
     queryKey: ['current-user-admin'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
     retry: false,
   });
 
@@ -98,13 +101,20 @@ export default function AdminUsers() {
 
   const { data: users = [], isLoading: isUsersLoading } = useQuery({
     queryKey: ['all-users'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
     enabled: isSuperAdmin,
     staleTime: 2 * 60 * 1000,
   });
 
   const updateRoleMutation = useMutation({
-    mutationFn: ({ userId, role }) => base44.entities.User.update(userId, { role }),
+    mutationFn: async ({ userId, role }) => {
+      const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
+      if (error) throw error;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['all-users'] }),
   });
 
