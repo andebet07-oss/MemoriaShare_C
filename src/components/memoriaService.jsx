@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 /**
  * Memoria Service Layer
  * Centralizes all Supabase calls with consistent error logging
- * and data normalization. Mirrors the original Base44-backed API surface.
+ * and data normalization.
  */
 const memoriaService = {
 

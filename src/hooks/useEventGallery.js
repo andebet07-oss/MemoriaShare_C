@@ -13,6 +13,16 @@ const PHOTOS_PER_PAGE = 30;
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 const DEVICE_UUID_KEY = 'ms_device_uuid';
 
+/** Returns the persisted device UUID for anonymous guests, generating one on first call. */
+function getOrCreateDeviceUUID() {
+  let uuid = localStorage.getItem(DEVICE_UUID_KEY);
+  if (!uuid) {
+    uuid = 'dev-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+    localStorage.setItem(DEVICE_UUID_KEY, uuid);
+  }
+  return uuid;
+}
+
 export default function useEventGallery({ propEventCode, isAdminView, adminPhotos, onAdminPhotosChange }) {
   const navigate = useNavigate();
   const { user: currentUser, isLoadingAuth } = useAuth();
@@ -137,35 +147,34 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         // Note: getMyPhotos backend returns ALL user photos in one call (not paginated),
         // so we only need to set it on the first load. Subsequent pages only affect sharedPhotos.
         if (pageNum === 1) {
-          setMyPhotos(myAllPhotos.filter(p => p.is_hidden !== true));
+          // Show ALL user's own photos including pending/hidden ones
+          setMyPhotos(myAllPhotos);
         }
 
-        if (eventData?.auto_publish_guest_photos) {
-          // Shared gallery: approved photos, client-side is_hidden filter
-          const rawApprovedPhotos = await memoriaService.photos.getByEvent(
-            eventId, { is_approved: true }, STABLE_SORT,
-            { limit: PHOTOS_PER_PAGE, offset: (pageNum - 1) * PHOTOS_PER_PAGE }
-          );
-          const approvedVisible = rawApprovedPhotos.filter(p => p.is_hidden !== true);
+        // Always fetch shared gallery: approved + visible public photos + user's own
+        const rawApprovedPhotos = await memoriaService.photos.getByEvent(
+          eventId, { is_approved: true }, STABLE_SORT,
+          { limit: PHOTOS_PER_PAGE, offset: (pageNum - 1) * PHOTOS_PER_PAGE }
+        );
+        const publicPhotos = rawApprovedPhotos.filter(p => p.is_hidden !== true);
 
-          if (pageNum === 1) {
-            setSharedPhotos(approvedVisible);
-            setSharedHasMore(approvedVisible.length >= PHOTOS_PER_PAGE);
-          } else {
-            setSharedPhotos(prev => {
-              const existingIds = new Set(prev.map(p => p.id));
-              const uniqueNew = approvedVisible.filter(p => !existingIds.has(p.id));
-              return [...prev, ...uniqueNew];
-            });
-            if (approvedVisible.length < PHOTOS_PER_PAGE) setSharedHasMore(false);
-          }
+        // Shared tab = user's own photos + any additional public photos
+        const myIds = new Set(myAllPhotos.map(p => p.id));
+        const sharedCombined = [...myAllPhotos, ...publicPhotos.filter(p => !myIds.has(p.id))];
 
-          // Legacy "photos" array: merge my + approved (reuse fetched data)
-          const myIds = new Set(myAllPhotos.map(p => p.id));
-          newPhotos = [...myAllPhotos, ...approvedVisible.filter(p => !myIds.has(p.id))];
+        if (pageNum === 1) {
+          setSharedPhotos(sharedCombined);
+          setSharedHasMore(rawApprovedPhotos.length >= PHOTOS_PER_PAGE);
         } else {
-          newPhotos = myAllPhotos;
+          setSharedPhotos(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const uniqueNew = publicPhotos.filter(p => !existingIds.has(p.id));
+            return [...prev, ...uniqueNew];
+          });
+          if (rawApprovedPhotos.length < PHOTOS_PER_PAGE) setSharedHasMore(false);
         }
+
+        newPhotos = sharedCombined;
       }
 
       if (newPhotos.length < PHOTOS_PER_PAGE) setHasMore(false);
@@ -234,19 +243,21 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
 
   // ─── Real-time photo subscription (guest gallery) ─────────────────────────
   useEffect(() => {
-    if (isAdminView) return;
+    if (isAdminView || !event?.id) return;
+    const eventId = event.id;
 
     const channel = supabase
-      .channel('photos-realtime')
+      .channel(`photos-realtime-${eventId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'photos' },
+        { event: '*', schema: 'public', table: 'photos', filter: `event_id=eq.${eventId}` },
         (payload) => {
           const eventType = payload.eventType; // 'INSERT' | 'UPDATE' | 'DELETE'
           const photo = payload.new;
-          if (!photo) return;
+          const oldData = payload.old;
 
           if (eventType === 'INSERT') {
+            if (!photo) return;
             // Only show notification for other users' uploads
             if (photo.created_by && photo.created_by === currentUser?.email) return;
             const uploaderName = photo.guest_name || (photo.created_by ? photo.created_by.split('@')[0] : 'אורח');
@@ -254,32 +265,53 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             setTimeout(() => setLiveNotification(null), 5000);
           }
 
-          if (eventType === 'UPDATE' && photo.is_approved) {
-            const oldData = payload.old;
-            if (oldData && !oldData.is_approved) {
-              // Add the newly approved photo to the legacy gallery and shared tab
-              setPhotos(prev => {
-                if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
-                return [photo, ...prev];
-              });
-              setSharedPhotos(prev => {
-                if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
-                return [photo, ...prev];
-              });
-              // Update the photo in myPhotos if it's the user's own
+          if (eventType === 'UPDATE' && photo) {
+            const becameApproved = photo.is_approved && oldData && !oldData.is_approved;
+            const becameVisible = !photo.is_hidden && oldData && oldData.is_hidden;
+            const becameHidden = photo.is_hidden && oldData && !oldData.is_hidden;
+
+            if (becameApproved || becameVisible) {
+              // Photo is now public — add/update in shared tab
+              if (!photo.is_hidden) {
+                setSharedPhotos(prev => {
+                  if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
+                  return [photo, ...prev];
+                });
+                setPhotos(prev => {
+                  if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
+                  return [photo, ...prev];
+                });
+              }
+              // Always keep myPhotos up to date for the current user
               if (photo.created_by === currentUser?.email) {
                 setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
               }
               setLiveNotification({ id: Date.now(), message: 'תמונה חדשה עלתה לגלריה!', icon: '🖼️' });
               setTimeout(() => setLiveNotification(null), 5000);
             }
+
+            if (becameHidden) {
+              // Photo was hidden — remove from public views
+              setSharedPhotos(prev => prev.filter(p => p.id !== photo.id));
+              setPhotos(prev => prev.filter(p => p.id !== photo.id));
+              // Keep in myPhotos but update the record to reflect hidden state
+              if (photo.created_by === currentUser?.email) {
+                setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
+              }
+            }
+          }
+
+          if (eventType === 'DELETE' && oldData?.id) {
+            setPhotos(prev => prev.filter(p => p.id !== oldData.id));
+            setSharedPhotos(prev => prev.filter(p => p.id !== oldData.id));
+            setMyPhotos(prev => prev.filter(p => p.id !== oldData.id));
           }
         }
       )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [isAdminView, currentUser?.email]);
+  }, [isAdminView, event?.id, currentUser?.email]);
 
   // ─── Fetch next page (called by VirtuosoGrid endReached) ─────────────────
   const fetchNextPage = useCallback(() => {
@@ -502,6 +534,8 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             is_approved: false,
             is_hidden: false,
             guest_name: currentUser?.full_name || currentUser?.email || "אורח",
+            created_by: currentUser?.email || null,
+            device_uuid: currentUser?.email ? null : getOrCreateDeviceUUID(),
           };
 
           if (processedData?.thumbnail_url) {
@@ -514,7 +548,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             photoData.file_url = processedData.original_url; // legacy fallback
           } else {
             // Fallback: direct upload if processImage failed
-            const { file_url } = await memoriaService.storage.upload(photo.file);
+            const { file_url } = await memoriaService.storage.upload(photo.file, event.id);
             photoData.file_url = file_url;
           }
 

@@ -239,17 +239,25 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                   >
                     <ImageIcon className="w-4 h-4 ml-1.5 inline-block" />
                     התמונות שלי
+                    {g.myPhotos.length > 0 && (
+                      <span className="mr-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-white/20 text-white">
+                        {g.myPhotos.length}
+                      </span>
+                    )}
                   </TabsTrigger>
-                  {g.event?.auto_publish_guest_photos && (
-                    <TabsTrigger
-                      value="shared"
-                      aria-label="גלריה משותפת"
-                      className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-zinc-500"
-                    >
-                      <Users className="w-4 h-4 ml-1.5 inline-block" />
-                      גלריה משותפת
-                    </TabsTrigger>
-                  )}
+                  <TabsTrigger
+                    value="shared"
+                    aria-label="גלריה משותפת"
+                    className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-zinc-500"
+                  >
+                    <Users className="w-4 h-4 ml-1.5 inline-block" />
+                    גלריה משותפת
+                    {g.sharedPhotos.length > 0 && (
+                      <span className="mr-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-white/20 text-white">
+                        {g.sharedPhotos.length}
+                      </span>
+                    )}
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* ── My Photos tab ── */}
@@ -280,34 +288,32 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                 </TabsContent>
 
                 {/* ── Shared Gallery tab ── */}
-                {g.event?.auto_publish_guest_photos && (
-                  <TabsContent value="shared">
-                    {g.sharedPhotos.length > 0 ? (
-                      <PhotoGrid
-                        displayedPhotos={g.sharedPhotos}
-                        setSelectedIndex={g.setSelectedIndex}
-                        isAdminView={false}
-                        confirmDeleteId={g.confirmDeleteId}
-                        setConfirmDeleteId={g.setConfirmDeleteId}
-                        deletingId={g.deletingId}
-                        handleAdminDelete={g.handleAdminDelete}
-                        handleGuestDeletePhoto={g.handleGuestDeletePhoto}
-                        handleRequestDeletion={g.handleRequestDeletion}
-                        currentUser={g.currentUser}
-                        getDisplayUploaderName={g.getDisplayUploaderName}
-                        hasMore={g.sharedHasMore}
-                        isFetchingMore={g.isFetchingMore}
-                        fetchNextPage={g.fetchNextPage}
-                      />
-                    ) : (
-                      <div className="text-center py-24 sm:py-32 px-4">
-                        <Users className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 text-gray-600" />
-                        <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3">עדיין אין תמונות בגלריה הציבורית</h3>
-                        <p className="text-gray-400 text-base sm:text-lg max-w-md mx-auto">תמונות שיאושרו על ידי מנהל האירוע יופיעו כאן</p>
-                      </div>
-                    )}
-                  </TabsContent>
-                )}
+                <TabsContent value="shared">
+                  {g.sharedPhotos.length > 0 ? (
+                    <PhotoGrid
+                      displayedPhotos={g.sharedPhotos}
+                      setSelectedIndex={g.setSelectedIndex}
+                      isAdminView={false}
+                      confirmDeleteId={g.confirmDeleteId}
+                      setConfirmDeleteId={g.setConfirmDeleteId}
+                      deletingId={g.deletingId}
+                      handleAdminDelete={g.handleAdminDelete}
+                      handleGuestDeletePhoto={g.handleGuestDeletePhoto}
+                      handleRequestDeletion={g.handleRequestDeletion}
+                      currentUser={g.currentUser}
+                      getDisplayUploaderName={g.getDisplayUploaderName}
+                      hasMore={g.sharedHasMore}
+                      isFetchingMore={g.isFetchingMore}
+                      fetchNextPage={g.fetchNextPage}
+                    />
+                  ) : (
+                    <div className="text-center py-24 sm:py-32 px-4">
+                      <Users className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 text-gray-600" />
+                      <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3">עדיין אין תמונות בגלריה הציבורית</h3>
+                      <p className="text-gray-400 text-base sm:text-lg max-w-md mx-auto">תמונות שיאושרו על ידי מנהל האירוע יופיעו כאן</p>
+                    </div>
+                  )}
+                </TabsContent>
               </Tabs>
             )}
           </PullToRefresh>

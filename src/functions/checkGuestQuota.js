@@ -4,7 +4,7 @@ const GUEST_TIER_LIMITS = [10, 100, 250, 400, 600, 800, Infinity];
 
 /**
  * checkGuestQuota({ event_id })
- * Client-side implementation of the original Base44 serverless function.
+ * Enforces guest-tier and per-user upload limits before allowing a photo upload.
  * Returns { data: { allowed, reason?, quota_type?, remaining_slots? } }
  */
 export async function checkGuestQuota({ event_id }) {

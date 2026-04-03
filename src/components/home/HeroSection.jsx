@@ -10,9 +10,9 @@ export default function HeroSection({ onOpenDemo }) {
   const navigate = useNavigate();
 
   const eventPhotos = [
-    "https://base44.app/api/apps/6856836a59e22df6936b8f37/files/mp/public/6856836a59e22df6936b8f37/52635a7f9_9839c8a82_IMG_2643.jpg", 
-    "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6856836a59e22df6936b8f37/43a5300b6_image.jpeg", 
-    "https://base44.app/api/apps/6856836a59e22df6936b8f37/files/mp/public/6856836a59e22df6936b8f37/3a4ee61ed_b82c5cbf4_IMG_1200.jpg"  
+    "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=600&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=600&auto=format&fit=crop&q=80",
   ];
 
   // לוגיקה חכמה ליצירת אירוע

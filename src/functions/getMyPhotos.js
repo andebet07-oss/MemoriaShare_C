@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 /**
  * getMyPhotos({ event_id, device_uuid })
  * Fetches all photos uploaded by the current user (or device) for an event,
- * bypassing the is_approved filter (same as the original Base44 backend function).
+ * bypassing the is_approved filter so users always see their own pending photos.
  * Returns { data: { photos: Photo[] } }
  */
 export async function getMyPhotos({ event_id, device_uuid }) {
