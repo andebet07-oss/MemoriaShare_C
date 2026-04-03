@@ -1,0 +1,46 @@
+{
+  "name": "UploadDiagnostic",
+  "type": "object",
+  "properties": {
+    "photo_id": {
+      "type": "string",
+      "description": "ID \u05e9\u05dc \u05e8\u05e9\u05d5\u05de\u05ea \u05d4-Photo \u05e9\u05e0\u05d1\u05d3\u05e7\u05d4"
+    },
+    "event_id": {
+      "type": "string",
+      "description": "ID \u05e9\u05dc \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "has_file_urls": {
+      "type": "boolean",
+      "description": "\u05d4\u05d0\u05dd file_urls \u05e7\u05d9\u05d9\u05dd \u05d5\u05dc\u05d0 null"
+    },
+    "has_file_url": {
+      "type": "boolean",
+      "description": "\u05d4\u05d0\u05dd file_url (legacy) \u05e7\u05d9\u05d9\u05dd"
+    },
+    "file_urls_snapshot": {
+      "type": "string",
+      "description": "\u05e2\u05e8\u05da file_urls \u05db-JSON string \u05dc\u05e6\u05d5\u05e8\u05da \u05d0\u05d1\u05d7\u05d5\u05df"
+    },
+    "file_url_snapshot": {
+      "type": "string",
+      "description": "\u05e2\u05e8\u05da file_url (legacy)"
+    },
+    "guest_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05d0\u05d5\u05e8\u05d7 \u05e9\u05d4\u05e2\u05dc\u05d4"
+    },
+    "diagnosis": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "missing_file_urls",
+        "missing_both"
+      ],
+      "description": "\u05ea\u05d5\u05e6\u05d0\u05ea \u05d4\u05d0\u05d1\u05d7\u05d5\u05df"
+    }
+  },
+  "required": [
+    "photo_id"
+  ]
+}
