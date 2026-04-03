@@ -111,23 +111,23 @@ export default function HeroSection({ onOpenDemo }) {
             האורחים מצלמים, הכל באלבום אחד
           </p>
 
-          <div className="flex justify-center items-center gap-0 mb-16 h-[380px] md:h-[520px] relative z-20">
+          <div className="flex justify-center items-center gap-0 mb-16 h-[360px] md:h-[500px] relative z-20">
             <MiniIPhone
               image={eventPhotos[0]}
-              className="-rotate-12 translate-x-4 md:translate-x-2 translate-y-8 opacity-80 scale-[0.78] md:scale-[0.82] -mr-6 md:-mr-10"
+              className="-rotate-12 translate-y-8 opacity-85 scale-[0.72] md:scale-[0.78] -mr-16 md:-mr-24 z-10"
               delay={200}
               title="Party Night"
             />
             <MiniIPhone
               image={eventPhotos[1]}
-              className="z-20 scale-[0.88] md:scale-[0.92]"
+              className="z-30 scale-[0.88] md:scale-[0.92]"
               delay={0}
               title="Wedding Vibes"
               isCenter={true}
             />
             <MiniIPhone
               image={eventPhotos[2]}
-              className="rotate-12 -translate-x-4 md:-translate-x-2 translate-y-8 opacity-80 scale-[0.78] md:scale-[0.82] -ml-6 md:-ml-10"
+              className="rotate-12 translate-y-8 opacity-85 scale-[0.72] md:scale-[0.78] -ml-16 md:-ml-24 z-10"
               delay={400}
               title="Classic Ceremony"
             />
