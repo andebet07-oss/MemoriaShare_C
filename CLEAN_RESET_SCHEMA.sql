@@ -55,7 +55,7 @@ CREATE TABLE events (
   pin_code                  TEXT,
   created_by                TEXT        NOT NULL,  -- email of owner
   co_hosts                  TEXT[]      NOT NULL DEFAULT '{}',
-  date                      TIMESTAMPTZ,
+  date                      DATE,                    -- DATE (not TIMESTAMPTZ) to avoid timezone-shifting bugs
   cover_image               TEXT,
   guest_tier                INTEGER     NOT NULL DEFAULT 1,
   max_uploads_per_user      INTEGER     NOT NULL DEFAULT 15,
@@ -71,6 +71,7 @@ CREATE TABLE photos (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id        UUID        NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   file_url        TEXT,
+  path            TEXT,           -- storage path: {event_id}/{timestamp}_{filename}
   file_urls       JSONB,          -- { thumbnail, medium, original }
   guest_name      TEXT,
   created_by      TEXT,           -- email; NULL for anonymous guests
@@ -193,10 +194,13 @@ CREATE POLICY "profiles_insert_self"
 
 -- ── events ───────────────────────────────────────────────────
 
--- Public read — guests need to look up events by unique_code without auth
+-- Public read — only active events are exposed; owners can always see their own events
 CREATE POLICY "events_select_public"
   ON events FOR SELECT
-  USING (true);
+  USING (
+    is_active = true
+    OR auth.jwt() ->> 'email' = created_by
+  );
 
 -- Authenticated users can create events
 CREATE POLICY "events_insert_authenticated"
@@ -222,10 +226,21 @@ CREATE POLICY "events_delete_owner"
 
 -- ── photos ───────────────────────────────────────────────────
 
--- Public (non-hidden) photos readable by anyone — guests view the gallery
+-- Public photos: must be non-hidden AND (approved OR event has auto-publish enabled)
+-- This enforces the host moderation workflow when auto_publish_guest_photos = false
 CREATE POLICY "photos_select_public"
   ON photos FOR SELECT
-  USING (is_hidden = false);
+  USING (
+    is_hidden = false
+    AND (
+      is_approved = true
+      OR EXISTS (
+        SELECT 1 FROM events e
+        WHERE e.id = event_id
+          AND e.auto_publish_guest_photos = true
+      )
+    )
+  );
 
 -- Event owners and co-hosts can read ALL photos (including hidden ones)
 CREATE POLICY "photos_select_owner"
@@ -246,12 +261,26 @@ CREATE POLICY "photos_insert_public"
   ON photos FOR INSERT
   WITH CHECK (true);
 
--- Uploader (by email) or event owner can update
+-- Uploaders can update ONLY their own non-sensitive fields (guest_name, filter_applied).
+-- They may NEVER touch is_approved, is_hidden, or deletion_status.
+CREATE POLICY "photos_update_uploader"
+  ON photos FOR UPDATE
+  USING (
+    created_by IS NOT NULL
+    AND auth.jwt() ->> 'email' = created_by
+  )
+  WITH CHECK (
+    -- Prevent guests from self-approving or hiding their own photos
+    is_approved  = (SELECT is_approved  FROM photos WHERE id = photos.id)
+    AND is_hidden = (SELECT is_hidden    FROM photos WHERE id = photos.id)
+    AND deletion_status = (SELECT deletion_status FROM photos WHERE id = photos.id)
+  );
+
+-- Event owners and co-hosts can update ALL fields including moderation fields
 CREATE POLICY "photos_update_owner"
   ON photos FOR UPDATE
   USING (
-    (created_by IS NOT NULL AND auth.jwt() ->> 'email' = created_by)
-    OR EXISTS (
+    EXISTS (
       SELECT 1 FROM events e
       WHERE e.id = event_id
         AND (
