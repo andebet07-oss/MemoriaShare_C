@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Camera, Upload, Sparkles, CheckCircle, ImageIcon, Users } from "lucide-react";
+import { Camera, Upload, Sparkles, CheckCircle, ImageIcon, Users, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import useEventGallery from "@/hooks/useEventGallery";
 import GalleryHeader from "@/components/gallery/GalleryHeader";
@@ -10,6 +10,10 @@ import UploadManager from "@/components/gallery/UploadManager";
 import PhotoViewer from "@/components/gallery/PhotoViewer";
 import PullToRefresh from "@/components/PullToRefresh";
 import RealtimeNotification from "@/components/notifications/RealtimeNotification";
+import { useAuth } from "@/lib/AuthContext";
+import { supabase } from "@/lib/supabase";
+
+const GUEST_NAME_KEY = 'ms_guest_name';
 
 function EmptyState({ isAdminView, onUpload, disabled, title, subtitle }) {
   return (
@@ -35,6 +39,44 @@ function EmptyState({ isAdminView, onUpload, disabled, title, subtitle }) {
 
 export default function EventGallery({ eventCode: propEventCode, isAdminView = false, adminPhotos, onAdminPhotosChange }) {
   const g = useEventGallery({ propEventCode, isAdminView, adminPhotos, onAdminPhotosChange });
+  const { isLoadingAuth } = useAuth();
+
+  // ─── Guest Anonymous Auth + Guest Book ────────────────────────────────────
+  const [showGuestBook, setShowGuestBook] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [guestGreeting, setGuestGreeting] = useState('');
+  const [isSavingGuest, setIsSavingGuest] = useState(false);
+  // Ref (not state) to prevent the effect from re-firing after the async sign-in completes
+  const hasAttemptedAnonSignIn = useRef(false);
+
+  useEffect(() => {
+    if (isAdminView || isLoadingAuth) return;
+    if (!g.currentUser) {
+      if (hasAttemptedAnonSignIn.current) return; // already fired — wait for onAuthStateChange
+      hasAttemptedAnonSignIn.current = true;
+      supabase.auth.signInAnonymously()
+        .catch(err => console.error('Anonymous sign-in failed:', err));
+    } else if (g.currentUser.isAnonymous && !localStorage.getItem(GUEST_NAME_KEY)) {
+      // Anonymous user who hasn't filled in their name yet — show Guest Book
+      setShowGuestBook(true);
+    }
+  }, [isAdminView, isLoadingAuth, g.currentUser]);
+
+  const handleGuestBookSubmit = async (e) => {
+    e.preventDefault();
+    if (!guestName.trim()) return;
+    setIsSavingGuest(true);
+    try {
+      localStorage.setItem(GUEST_NAME_KEY, guestName.trim());
+      // Update anonymous user metadata so currentUser.full_name is populated
+      await supabase.auth.updateUser({ data: { full_name: guestName.trim(), guest_greeting: guestGreeting.trim() || null } });
+      setShowGuestBook(false);
+    } catch (err) {
+      console.error('Guest Book save failed:', err);
+    } finally {
+      setIsSavingGuest(false);
+    }
+  };
 
   // ─── Loading / Error / Not Found states ───────────────────────────────────
   if (g.isLoading) {
@@ -347,6 +389,65 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
         handleGuestDeletePhoto={g.handleGuestDeletePhoto}
         handleRequestDeletion={g.handleRequestDeletion}
       />
+
+      {/* ── Guest Book Modal ── */}
+      <AnimatePresence>
+        {showGuestBook && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-4 sm:p-6"
+            style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(0,0,0,0.75)' }}
+          >
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              className="w-full max-w-sm bg-[#111] border border-white/10 rounded-[28px] overflow-hidden shadow-2xl"
+            >
+              <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+              <form onSubmit={handleGuestBookSubmit} dir="rtl" className="p-7 flex flex-col gap-5">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">📸</div>
+                  <h2 className="text-white text-xl font-black">ברוכים הבאים!</h2>
+                  <p className="text-white/50 text-sm mt-1">ספרו לנו קצת עליכם לפני שתעלו תמונות</p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-white/70 text-sm font-medium">השם שלך <span className="text-red-400">*</span></label>
+                  <input
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder="ישראל ישראלי"
+                    autoFocus
+                    className="w-full bg-white/8 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-white/70 text-sm font-medium">ברכה לזוג <span className="text-white/30">(אופציונלי)</span></label>
+                  <textarea
+                    value={guestGreeting}
+                    onChange={(e) => setGuestGreeting(e.target.value)}
+                    placeholder="מאחלים לכם אהבה אין סופית... ✨"
+                    rows={2}
+                    className="w-full bg-white/8 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors text-sm resize-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSavingGuest || !guestName.trim()}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl transition-colors flex items-center justify-center gap-2 text-base"
+                >
+                  {isSavingGuest ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {isSavingGuest ? "שומר..." : "בואו נצלם! 🎉"}
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── FAB ── */}
       {!isAdminView && !g.isQuotaExhausted && !g.showCamera && g.pendingPhotos.length === 0 && g.selectedIndex === null && (

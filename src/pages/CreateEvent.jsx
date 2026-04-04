@@ -80,7 +80,7 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
     }
   }, [imgNaturalSize, onImageTransformChange]);
 
-  const displayImage = eventData.cover_image || "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6856836a59e22df6936b8f37/305fc46ef_IMG_0999.jpg";
+  const displayImage = eventData.cover_image || "/mockup.jpg";
   const transform = imageTransform || { x: 0, y: 0, scale: 1 };
 
   const getMinScale = () => {
@@ -238,7 +238,7 @@ export default function App() {
 
   const [eventData, setEventData] = useState({
     name: "", date: "", event_type: "wedding", description: "",
-    cover_image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6856836a59e22df6936b8f37/305fc46ef_IMG_0999.jpg",
+    cover_image: "",
     is_active: true, max_uploads_per_user: 15, privacy_mode: "immediate", guest_tier: 0, price: 0
   });
 
@@ -308,7 +308,7 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (!user?.email) {
+    if (!user?.id) {
       alert('יש להתחבר לפני יצירת אירוע');
       return;
     }
@@ -322,7 +322,7 @@ export default function App() {
         max_uploads_per_user: parseInt(eventData.max_uploads_per_user) || 15,
         guest_tier: parseInt(eventData.guest_tier) || 0,
         price: parseInt(eventData.price) || 0,
-        pin_code: generatedPin, created_by: user.email, photo_filter: 'none'
+        pin_code: generatedPin, created_by: user.id, photo_filter: 'none'
       });
       navigate(createPageUrl(`EventSuccess?id=${newEvent.id}`));
     } catch (error) {

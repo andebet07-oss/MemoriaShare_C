@@ -522,9 +522,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             binary += String.fromCharCode(...uint8Array.subarray(c, c + chunkSize));
           }
           const base64 = btoa(binary);
-          console.log("🟡 Calling processImage for:", photo.originalName || photo.file.name, "| base64 length:", base64.length);
           const processed = await processImage({ file_base64: base64, file_name: photo.originalName || photo.file.name });
-          console.log("🟣 processImage response:", JSON.stringify(processed));
           const processedData = processed?.data;
 
           let photoData = {
@@ -532,7 +530,8 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             filter_applied: photo.filter || 'none',
             is_approved: false,
             is_hidden: false,
-            guest_name: currentUser?.full_name || currentUser?.email || "אורח",
+            guest_name: localStorage.getItem('ms_guest_name') || currentUser?.full_name || currentUser?.email || "אורח",
+            guest_greeting: currentUser?.user_metadata?.guest_greeting || null,
             created_by: currentUser?.id || null,                  // UUID — matches auth.uid()
             device_uuid: null,                                    // deprecated; anonymous auth provides real uid
           };

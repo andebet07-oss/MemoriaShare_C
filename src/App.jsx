@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import HostOnboardingModal from '@/components/HostOnboardingModal';
 import GuestLayout from '@/components/GuestLayout';
 import EventPage from '@/pages/Event';
 import EventGallery from '@/pages/EventGallery';
@@ -21,7 +22,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -45,6 +46,8 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
+    <>
+    {user?.needsOnboarding && <HostOnboardingModal />}
     <Routes>
       {/* Guest routes - isolated from marketing site, no header/footer */}
       <Route path="/Event" element={
@@ -77,6 +80,7 @@ const AuthenticatedApp = () => {
       ))}
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </>
   );
 };
 

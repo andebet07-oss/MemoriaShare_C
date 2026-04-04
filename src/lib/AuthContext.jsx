@@ -28,24 +28,29 @@ async function fetchUserWithProfile(supabaseUser) {
   try {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, full_name, avatar_url')
+      .select('role, full_name, phone, avatar_url')
       .eq('id', supabaseUser.id)
       .maybeSingle();
 
     if (profile) {
-      return {
+      const merged = {
         ...base,
         role: profile.role || 'user',
         full_name: profile.full_name || base.full_name,
+        phone: profile.phone || '',
         avatar_url: profile.avatar_url || base.avatar_url,
       };
+      // needsOnboarding: only for real (non-anonymous) users missing full_name or phone
+      merged.needsOnboarding = !supabaseUser.is_anonymous && (!merged.full_name || !merged.phone);
+      return merged;
     }
   } catch (err) {
     // Non-fatal: profile table might not exist yet
     console.warn('AuthContext: could not fetch profile', err.message);
   }
 
-  return base;
+  // No profile row yet — non-anonymous users must complete onboarding
+  return { ...base, phone: '', needsOnboarding: !supabaseUser.is_anonymous };
 }
 
 export const AuthProvider = ({ children }) => {
@@ -79,6 +84,12 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const refreshUser = async () => {
+    const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+    const enriched = await fetchUserWithProfile(supabaseUser);
+    setUser(enriched);
+  };
+
   const logout = async (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
@@ -107,6 +118,7 @@ export const AuthProvider = ({ children }) => {
       appPublicSettings: null,
       logout,
       navigateToLogin,
+      refreshUser,
     }}>
       {children}
     </AuthContext.Provider>

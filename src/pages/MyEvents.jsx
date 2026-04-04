@@ -106,10 +106,10 @@ export default function MyEvents() {
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: events = [], isLoading } = useQuery({
-    queryKey: ['my-events', user?.email, user?.role],
+    queryKey: ['my-events', user?.id, user?.role],
     queryFn: async () => {
       if (user.role === 'admin') return memoriaService.events.list('-created_date');
-      return memoriaService.events.listByUser(user.email, '-created_date');
+      return memoriaService.events.listByUser(user.id, '-created_date');
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
