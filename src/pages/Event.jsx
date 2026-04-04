@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import memoriaService from "@/components/memoriaService";
-import { useAuth } from '@/lib/AuthContext';
+
 import { Button } from "@/components/ui/button";
 import { Calendar, Camera, Loader2, Lock, Users, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ import { checkGuestQuota } from "@/functions/checkGuestQuota";
 
 export default function EventPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+
   const [event, setEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -55,11 +55,8 @@ export default function EventPage() {
 
   const handleStartCapture = () => {
     if (!event) return;
-    if (isAuthenticated) {
-      navigate(createPageUrl(`EventGallery?code=${event.unique_code}`));
-    } else {
-      memoriaService.auth.redirectToLogin(window.location.href);
-    }
+    // Always navigate to the gallery — EventGallery handles anonymous sign-in and Guest Book itself
+    navigate(createPageUrl(`EventGallery?code=${event.unique_code}`));
   };
 
   if (isLoading) return (
