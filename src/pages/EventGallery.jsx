@@ -49,6 +49,8 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   );
   const [guestName, setGuestName] = useState('');
   const [guestGreeting, setGuestGreeting] = useState('');
+  const [isSavingGuest, setIsSavingGuest] = useState(false);
+  const [guestSaveError, setGuestSaveError] = useState('');
 
   // Ensure an anonymous session exists so uploads have a real auth.uid()
   const hasAttemptedAnonSignIn = useRef(false);
@@ -59,19 +61,28 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
       .catch(err => console.error('Anonymous sign-in failed:', err));
   }, [isAdminView, isLoadingAuth, g.currentUser]);
 
-  const handleGuestBookSubmit = (e) => {
+  const handleGuestBookSubmit = async (e) => {
     e.preventDefault();
     const name = guestName.trim();
     if (!name) return;
+    setIsSavingGuest(true);
+    setGuestSaveError('');
 
-    // Optimistic: persist locally and open the gallery immediately — no await
+    const { data, error } = await supabase.auth.updateUser({
+      data: { full_name: name, guest_greeting: guestGreeting.trim() || null }
+    });
+    console.error('GuestBook updateUser result:', { data, error });
+
+    if (error) {
+      setGuestSaveError('שגיאה בסנכרון מול השרת. אנא נסה שוב.');
+      setIsSavingGuest(false);
+      return;
+    }
+
+    // Server confirmed — now persist locally and open gallery
     localStorage.setItem(GUEST_NAME_KEY, name);
     setShowGuestBook(false);
-
-    // Sync name to Supabase auth metadata in the background (non-blocking)
-    supabase.auth.updateUser({
-      data: { full_name: name, guest_greeting: guestGreeting.trim() || null }
-    }).catch(err => console.error('Guest metadata sync failed (non-critical):', err));
+    setIsSavingGuest(false);
   };
 
   // ─── Guest Book Entry Gate — blocks ALL gallery content ─────────────────
@@ -117,12 +128,18 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                 className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors resize-none"
               />
             </div>
+            {guestSaveError && (
+              <p className="text-red-400 text-xs text-center -mb-1">{guestSaveError}</p>
+            )}
             <button
               type="submit"
-              disabled={!guestName.trim()}
+              disabled={isSavingGuest || !guestName.trim()}
               className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl transition-colors flex items-center justify-center gap-2 text-base active:scale-95"
             >
-              בואו נצלם! 🎉
+              {isSavingGuest
+                ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />שומר...</>
+                : 'בואו נצלם! 🎉'
+              }
             </button>
             <p className="text-center text-white/20 text-xs mt-1">Powered by MemoriaShare</p>
           </form>
