@@ -337,9 +337,14 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   // ─── Image utils ──────────────────────────────────────────────────────────
   const getDisplayUploaderName = (photo) => {
     if (!photo) return "אורח";
-    const email = photo.created_by || "";
-    if (email.includes("privaterelay.appleid.com")) return photo.guest_name || "משתמש אפל";
-    return photo.guest_name || (email && email !== "anonymous" ? email.split('@')[0] : "אורח");
+    // guest_name is the canonical display name (set in Guest Book or from Google profile)
+    if (photo.guest_name) return photo.guest_name;
+    // created_by is a UUID since migration — never parse it as an email
+    // uploader_email is a legacy field that may exist on older records
+    const legacyEmail = photo.uploader_email || "";
+    if (legacyEmail.includes("privaterelay.appleid.com")) return "משתמש אפל";
+    if (legacyEmail.includes("@")) return legacyEmail.split("@")[0];
+    return "אורח";
   };
 
   const drawDateStamp = (ctx, width, height) => {
@@ -531,7 +536,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             is_approved: false,
             is_hidden: false,
             guest_name: localStorage.getItem('ms_guest_name') || currentUser?.full_name || currentUser?.email || "אורח",
-            guest_greeting: currentUser?.user_metadata?.guest_greeting || null,
+            guest_greeting: localStorage.getItem('ms_guest_greeting') || currentUser?.user_metadata?.guest_greeting || null,
             created_by: currentUser?.id || null,                  // UUID — matches auth.uid()
             device_uuid: null,                                    // deprecated; anonymous auth provides real uid
           };

@@ -81,6 +81,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
 
     // Server confirmed — now persist locally and open gallery
     localStorage.setItem(GUEST_NAME_KEY, name);
+    if (guestGreeting.trim()) localStorage.setItem('ms_guest_greeting', guestGreeting.trim());
     setShowGuestBook(false);
     setIsSavingGuest(false);
   };
