@@ -72,7 +72,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     g.handleUploadClick(mode);
   };
 
-  // Silently sign in anonymously on page load so the session is ready before the first tap
+  // Sign in anonymously on page load; show Guest Book immediately if name not yet collected
   useEffect(() => {
     if (isAdminView || isLoadingAuth || hasAttemptedAnonSignIn.current) return;
     if (!g.currentUser) {
@@ -80,6 +80,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
       supabase.auth.signInAnonymously()
         .catch(err => console.error('Anonymous sign-in failed:', err));
     } else if (g.currentUser.isAnonymous && !localStorage.getItem(GUEST_NAME_KEY)) {
+      // Show immediately — guest must identify themselves before browsing
       setShowGuestBook(true);
     }
   }, [isAdminView, isLoadingAuth, g.currentUser]);
@@ -425,7 +426,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-4 sm:p-6"
-            style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(0,0,0,0.75)' }}
+            style={{ backdropFilter: 'blur(20px)', backgroundColor: 'rgba(0,0,0,0.85)' }}
           >
             <motion.div
               initial={{ y: 80, opacity: 0 }}
@@ -438,8 +439,8 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
               <form onSubmit={handleGuestBookSubmit} dir="rtl" className="p-7 flex flex-col gap-5">
                 <div className="text-center">
                   <div className="text-3xl mb-2">📸</div>
-                  <h2 className="text-white text-xl font-black">ברוכים הבאים!</h2>
-                  <p className="text-white/50 text-sm mt-1">ספרו לנו קצת עליכם לפני שתעלו תמונות</p>
+                  <h2 className="text-white text-xl font-black">{g.event?.name || "ברוכים הבאים!"}</h2>
+                  <p className="text-white/50 text-sm mt-1">שמחים שבאתם! רק שם וברכה קטנה ואנחנו מתחילים.</p>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-white/70 text-sm font-medium">השם שלך <span className="text-red-400">*</span></label>
@@ -448,8 +449,9 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="ישראל ישראלי"
+                    dir="rtl"
                     autoFocus
-                    className="w-full bg-white/8 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors text-sm"
+                    className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -459,7 +461,8 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                     onChange={(e) => setGuestGreeting(e.target.value)}
                     placeholder="מאחלים לכם אהבה אין סופית... ✨"
                     rows={2}
-                    className="w-full bg-white/8 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors text-sm resize-none"
+                    dir="rtl"
+                    className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors resize-none"
                   />
                 </div>
                 <button
@@ -470,6 +473,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                   {isSavingGuest ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   {isSavingGuest ? "שומר..." : "בואו נצלם! 🎉"}
                 </button>
+                <p className="text-center text-white/20 text-xs mt-1">Powered by MemoriaShare</p>
               </form>
             </motion.div>
           </motion.div>
