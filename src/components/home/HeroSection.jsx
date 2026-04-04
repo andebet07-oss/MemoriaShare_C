@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Play, X } from 'lucide-react';
@@ -111,7 +110,7 @@ export default function HeroSection({ onOpenDemo }) {
             האורחים מצלמים, הכל באלבום אחד
           </p>
 
-          <div className="flex justify-center items-center gap-0 mb-16 h-[360px] md:h-[500px] relative z-20">
+          <div dir="ltr" className="flex justify-center items-center gap-0 mb-16 h-[360px] md:h-[500px] relative z-20">
             <MiniIPhone
               image={eventPhotos[0]}
               className="-rotate-12 translate-y-8 translate-x-24 md:translate-x-32 opacity-85 scale-[0.72] md:scale-[0.78] z-10"
