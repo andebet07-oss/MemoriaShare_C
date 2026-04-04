@@ -1,39 +1,65 @@
-**Welcome to your Base44 project** 
+# MemoriaShare
 
-**About**
+אפליקציית שיתוף תמונות לאירועים בזמן אמת. האורחים מצלמים, הכל באלבום אחד.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+## פיצ'רים עיקריים
 
-This project contains everything you need to run your app locally.
+- **גלריה בזמן אמת** — Supabase Realtime מעדכן את הגלריה ללא רענון עמוד
+- **העלאת תמונות** — מצלמה ישירה או בחירה מהגלריה, דחיסה בצד הלקוח לפני העלאה
+- **אימות Google** — כניסה מהירה עם חשבון Google דרך Supabase Auth
+- **הרשאות RLS** — Row Level Security מגן על נתוני כל אירוע
+- **קישורי שיתוף + QR** — כל אירוע מקבל קישור ייחודי וקוד QR לאורחים
+- **גלריה פרטית / ציבורית** — לשונית "התמונות שלי" ו"גלריה משותפת" עם עדכון realtime
+- **מובייל ראשון** — עיצוב רספונסיבי מותאם לחוויית מובייל חלקה
 
-**Edit the code in your local development environment**
+## טכנולוגיות
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+| שכבה | טכנולוגיה |
+|---|---|
+| Frontend | React 18, Vite, Tailwind CSS, shadcn/ui |
+| Auth | Supabase Auth (Google OAuth) |
+| Database | Supabase (PostgreSQL + RLS) |
+| Storage | Supabase Storage |
+| Realtime | Supabase Realtime (postgres_changes) |
+| Deployment | Vercel |
 
-**Prerequisites:** 
+## הרצה מקומית
 
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
+```bash
+git clone <repo-url>
+cd MemoriaShare
+npm install
+```
+
+צור קובץ `.env.local` עם המשתנים הבאים:
 
 ```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
-
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
+VITE_SUPABASE_URL=https://<project>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon-key>
+VITE_SITE_URL=http://localhost:5173
 ```
 
-Run the app: `npm run dev`
+```bash
+npm run dev
+```
 
-**Publish your changes**
+## פריסה ל-Vercel
 
-Open [Base44.com](http://Base44.com) and click on Publish.
+1. דחוף את הקוד ל-GitHub
+2. חבר את ה-repo ב-[Vercel](https://vercel.com)
+3. הגדר את משתני הסביבה בלוח הבקרה של Vercel
+4. הוסף את כתובת ה-Vercel כ-Redirect URL ב-Supabase → Authentication → URL Configuration
 
-**Docs & Support**
+## מבנה תיקיות
 
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+```
+src/
+  components/    # רכיבי UI כלליים וספציפיים לגלריה
+  functions/     # לוגיקה צד-לקוח (quota, upload, deletion)
+  hooks/         # React hooks (useEventGallery, useRealtimeNotifications)
+  lib/           # Supabase client, AuthContext
+  pages/         # עמודים ראשיים (Home, CreateEvent, EventGallery, Dashboard)
+public/
+  manifest.json  # PWA manifest
+  favicon.svg
+```
