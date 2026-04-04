@@ -113,7 +113,7 @@ export default function HeroSection({ onOpenDemo }) {
           <div dir="ltr" className="flex justify-center items-center gap-0 mb-16 h-[360px] md:h-[500px] relative z-20">
             <MiniIPhone
               image={eventPhotos[0]}
-              className="-rotate-12 translate-y-8 translate-x-24 md:translate-x-32 opacity-85 scale-[0.72] md:scale-[0.78] z-10"
+              className="-rotate-12 translate-y-8 translate-x-32 md:translate-x-44 opacity-85 scale-[0.72] md:scale-[0.78] z-10"
               delay={200}
               title="Party Night"
             />
@@ -126,7 +126,7 @@ export default function HeroSection({ onOpenDemo }) {
             />
             <MiniIPhone
               image={eventPhotos[2]}
-              className="rotate-12 translate-y-8 -translate-x-24 md:-translate-x-32 opacity-85 scale-[0.72] md:scale-[0.78] z-10"
+              className="rotate-12 translate-y-8 -translate-x-32 md:-translate-x-44 opacity-85 scale-[0.72] md:scale-[0.78] z-10"
               delay={400}
               title="Classic Ceremony"
             />
