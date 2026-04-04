@@ -147,6 +147,20 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
+-- Helper: check admin role without triggering RLS (prevents 42P17 infinite recursion)
+-- SECURITY DEFINER bypasses RLS when this function evaluates the role check.
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
@@ -163,30 +177,20 @@ CREATE POLICY "profiles_select_self"
   ON profiles FOR SELECT
   USING (auth.uid() = id);
 
--- Super-admin can read ALL profiles (for AdminUsers page)
+-- Super-admin can read ALL profiles (uses is_admin() to avoid 42P17 recursion)
 CREATE POLICY "profiles_select_admin"
   ON profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid() AND p.role = 'admin'
-    )
-  );
+  USING (is_admin());
 
 -- Users can update their own profile
 CREATE POLICY "profiles_update_self"
   ON profiles FOR UPDATE
   USING (auth.uid() = id);
 
--- Super-admin can update any profile (for role management)
+-- Super-admin can update any profile (uses is_admin() to avoid 42P17 recursion)
 CREATE POLICY "profiles_update_admin"
   ON profiles FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid() AND p.role = 'admin'
-    )
-  );
+  USING (is_admin());
 
 -- Allow trigger / service role to insert (SECURITY DEFINER function bypasses RLS)
 -- but we also allow authenticated insert for safety

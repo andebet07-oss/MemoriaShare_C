@@ -595,7 +595,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
 
   const handleUploadClick = async (mode) => {
     if (!event) return;
-    if (!currentUser) { memoriaService.auth.redirectToLogin(window.location.href); return; }
+    if (!currentUser) return; // caller (EventGallery) handles auth gate for guest flow
     if (mode === 'camera') {
       setShowCamera(true);
     } else {

@@ -46,18 +46,40 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   const [guestName, setGuestName] = useState('');
   const [guestGreeting, setGuestGreeting] = useState('');
   const [isSavingGuest, setIsSavingGuest] = useState(false);
-  // Ref (not state) to prevent the effect from re-firing after the async sign-in completes
+  // Ref to avoid firing signInAnonymously twice during onAuthStateChange propagation
   const hasAttemptedAnonSignIn = useRef(false);
+  // Stores the upload mode ('camera'|'gallery') to resume after Guest Book is submitted
+  const pendingUploadMode = useRef(null);
 
-  useEffect(() => {
-    if (isAdminView || isLoadingAuth) return;
+  // Auth gate: called by every upload button instead of g.handleUploadClick directly.
+  // Ensures the guest has an anonymous session and has filled in the Guest Book before uploading.
+  const handleUploadWithAuth = (mode) => {
     if (!g.currentUser) {
-      if (hasAttemptedAnonSignIn.current) return; // already fired — wait for onAuthStateChange
+      // No session yet — sign in anonymously, then Guest Book, then upload
+      pendingUploadMode.current = mode;
+      hasAttemptedAnonSignIn.current = true;
+      supabase.auth.signInAnonymously()
+        .catch(err => console.error('Anonymous sign-in failed:', err));
+      return;
+    }
+    if (g.currentUser.isAnonymous && !localStorage.getItem(GUEST_NAME_KEY)) {
+      // Has session but hasn't filled in name — show Guest Book first
+      pendingUploadMode.current = mode;
+      setShowGuestBook(true);
+      return;
+    }
+    // Fully authenticated (anonymous or OAuth) with name set — proceed
+    g.handleUploadClick(mode);
+  };
+
+  // Silently sign in anonymously on page load so the session is ready before the first tap
+  useEffect(() => {
+    if (isAdminView || isLoadingAuth || hasAttemptedAnonSignIn.current) return;
+    if (!g.currentUser) {
       hasAttemptedAnonSignIn.current = true;
       supabase.auth.signInAnonymously()
         .catch(err => console.error('Anonymous sign-in failed:', err));
     } else if (g.currentUser.isAnonymous && !localStorage.getItem(GUEST_NAME_KEY)) {
-      // Anonymous user who hasn't filled in their name yet — show Guest Book
       setShowGuestBook(true);
     }
   }, [isAdminView, isLoadingAuth, g.currentUser]);
@@ -68,9 +90,14 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     setIsSavingGuest(true);
     try {
       localStorage.setItem(GUEST_NAME_KEY, guestName.trim());
-      // Update anonymous user metadata so currentUser.full_name is populated
       await supabase.auth.updateUser({ data: { full_name: guestName.trim(), guest_greeting: guestGreeting.trim() || null } });
       setShowGuestBook(false);
+      // Resume the upload that was interrupted by the Guest Book
+      if (pendingUploadMode.current) {
+        const mode = pendingUploadMode.current;
+        pendingUploadMode.current = null;
+        g.handleUploadClick(mode);
+      }
     } catch (err) {
       console.error('Guest Book save failed:', err);
     } finally {
@@ -211,11 +238,11 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
         {!g.isQuotaExhausted && !isAdminView && (
           <div className="py-2 -mx-4 sm:-mx-6">
             <div className="flex gap-3 sm:gap-4 justify-center px-4">
-              <Button onClick={() => g.handleUploadClick('camera')} disabled={g.isUploadingBatch}
+              <Button onClick={() => handleUploadWithAuth('camera')} disabled={g.isUploadingBatch}
                 className="bg-gradient-to-r from-white/15 to-white/10 hover:from-white/25 hover:to-white/20 text-white border border-white/20 rounded-2xl flex items-center gap-2 px-6 sm:px-8 py-4 font-semibold text-base sm:text-lg transition-all active:scale-95 shadow-lg">
                 <Camera className="w-5 h-5" /> צלמו עכשיו
               </Button>
-              <Button onClick={() => g.handleUploadClick('gallery')} disabled={g.isUploadingBatch}
+              <Button onClick={() => handleUploadWithAuth('gallery')} disabled={g.isUploadingBatch}
                 className="bg-gradient-to-r from-white/15 to-white/10 hover:from-white/25 hover:to-white/20 text-white border border-white/20 rounded-2xl flex items-center gap-2 px-6 sm:px-8 py-4 font-semibold text-base sm:text-lg transition-all active:scale-95 shadow-lg">
                 <Upload className="w-5 h-5" /> העלו מהגלריה
               </Button>
@@ -235,7 +262,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
           clearAllPendingPhotos={g.clearAllPendingPhotos}
           changePhotoFilter={g.changePhotoFilter}
           uploadAllPendingPhotos={g.uploadAllPendingPhotos}
-          handleUploadClick={g.handleUploadClick}
+          handleUploadClick={handleUploadWithAuth}
           showCamera={g.showCamera}
           setShowCamera={g.setShowCamera}
           handleCameraCapture={g.handleCameraCapture}
@@ -268,7 +295,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                   fetchNextPage={g.fetchNextPage}
                 />
               ) : (
-                <EmptyState isAdminView={isAdminView} onUpload={g.handleUploadClick} disabled={g.isUploadingBatch} />
+                <EmptyState isAdminView={isAdminView} onUpload={handleUploadWithAuth} disabled={g.isUploadingBatch} />
               )
             ) : (
               /* Guest: tabbed gallery */
@@ -322,7 +349,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                       fetchNextPage={undefined}
                     />
                   ) : (
-                    <EmptyState isAdminView={false} onUpload={g.handleUploadClick} disabled={g.isUploadingBatch}
+                    <EmptyState isAdminView={false} onUpload={handleUploadWithAuth} disabled={g.isUploadingBatch}
                       title="עדיין לא העלית תמונות"
                       subtitle="צלמו או העלו תמונות מהאירוע — הן יופיעו כאן"
                     />
@@ -454,11 +481,11 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
         <div className={`fixed left-1/2 -translate-x-1/2 z-40 transition-all duration-500 ${g.showFAB ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'}`}
           style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}>
           <div className="bg-black/70 backdrop-blur-xl border border-white/20 p-1.5 rounded-[24px] flex items-center gap-1.5 shadow-[0_20px_40px_rgba(0,0,0,0.8)]">
-            <Button onClick={() => g.handleUploadClick('camera')} disabled={g.isUploadingBatch}
+            <Button onClick={() => handleUploadWithAuth('camera')} disabled={g.isUploadingBatch}
               className="bg-white text-black hover:bg-gray-200 rounded-[20px] px-6 py-3 h-auto text-sm font-bold flex items-center gap-2 active:scale-95 transition-all shadow-lg">
               <Camera className="w-5 h-5" /> צילום
             </Button>
-            <Button onClick={() => g.handleUploadClick('gallery')} disabled={g.isUploadingBatch} variant="ghost"
+            <Button onClick={() => handleUploadWithAuth('gallery')} disabled={g.isUploadingBatch} variant="ghost"
               className="text-white hover:bg-white/10 rounded-[20px] px-5 py-3 h-auto text-sm font-bold flex items-center gap-2 active:scale-95 transition-all">
               <Upload className="w-5 h-5" /> גלריה
             </Button>
