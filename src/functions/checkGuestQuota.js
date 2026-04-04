@@ -24,14 +24,14 @@ export async function checkGuestQuota({ event_id }) {
       return { data: { allowed: false, reason: 'האירוע לא נמצא.' } };
     }
 
-    // Get current user (optional — guests can upload anonymously)
+    // Get current user (anonymous sign-in also returns a user with id)
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Exempt: event owner / co-host
+    // Exempt: super-admin (by email), event owner (by UUID), co-host (by email — legacy)
     if (user) {
       const isSuperAdmin = user.email === 'effitag@gmail.com';
-      const isCreator = event.created_by === user.email;
-      const isCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(user.email);
+      const isCreator = event.created_by === user.id;                                    // UUID comparison
+      const isCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(user.email); // email (legacy)
       if (isSuperAdmin || isCreator || isCoHost) {
         return { data: { allowed: true, exempt: true } };
       }
@@ -58,9 +58,9 @@ export async function checkGuestQuota({ event_id }) {
     const guestTier = event.guest_tier ?? 1;
     const maxGuests = GUEST_TIER_LIMITS[Math.min(guestTier, GUEST_TIER_LIMITS.length - 1)];
 
-    if (maxGuests !== Infinity && user?.email) {
-      const uniqueUsers = new Set(allPhotos.map(p => p.created_by).filter(Boolean));
-      const userAlreadyRegistered = uniqueUsers.has(user.email);
+    if (maxGuests !== Infinity && user?.id) {
+      const uniqueUsers = new Set(allPhotos.map(p => p.created_by).filter(Boolean));   // UUIDs
+      const userAlreadyRegistered = uniqueUsers.has(user.id);                          // UUID comparison
 
       if (!userAlreadyRegistered && uniqueUsers.size >= maxGuests) {
         return {
@@ -78,8 +78,8 @@ export async function checkGuestQuota({ event_id }) {
 
     // Rule 2: max_uploads_per_user
     const maxUploads = event.max_uploads_per_user || 15;
-    if (user?.email) {
-      const userUploads = allPhotos.filter(p => p.created_by === user.email).length;
+    if (user?.id) {
+      const userUploads = allPhotos.filter(p => p.created_by === user.id).length;      // UUID comparison
       if (userUploads >= maxUploads) {
         return {
           data: {
@@ -95,7 +95,7 @@ export async function checkGuestQuota({ event_id }) {
 
     // All checks passed
     let remainingSlots = null;
-    if (maxGuests !== Infinity && user?.email) {
+    if (maxGuests !== Infinity && user?.id) {
       const uniqueUsers = new Set(allPhotos.map(p => p.created_by).filter(Boolean));
       remainingSlots = Math.max(0, maxGuests - uniqueUsers.size);
     }

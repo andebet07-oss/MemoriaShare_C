@@ -20,7 +20,7 @@ export default function PhotoViewer({
   const [guestConfirmDelete, setGuestConfirmDelete] = useState(false);
   const [requestingDeletion, setRequestingDeletion] = useState(false);
 
-  const isOwnPhoto = !isAdminView && selectedPhoto && selectedPhoto.created_by === currentUser?.email;
+  const isOwnPhoto = !isAdminView && selectedPhoto && selectedPhoto.created_by === currentUser?.id;  // UUID comparison
   const uploadedAt = selectedPhoto?.created_date ? new Date(selectedPhoto.created_date) : null;
   const minutesAgo = uploadedAt ? (Date.now() - uploadedAt.getTime()) / 60000 : Infinity;
   const canDirectDelete = isOwnPhoto && !selectedPhoto?.is_approved && minutesAgo <= DIRECT_DELETE_WINDOW_MINUTES;

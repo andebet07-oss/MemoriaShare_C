@@ -375,12 +375,10 @@ export default function Dashboard() {
 
       if (currentEvent) {
         const isAdmin = currentUser.role === 'admin';
-        const isEventCreator = currentEvent.created_by === currentUser.email;
+        const isEventCreator = currentEvent.created_by === currentUser.id;  // UUID comparison
+        const isCoHost = Array.isArray(currentEvent.co_hosts) && currentEvent.co_hosts.includes(currentUser.email); // email (legacy)
 
-        const hasAccess = isAdmin ||
-                         isEventCreator ||
-                         (currentEvent.created_by && currentUser.email &&
-                          currentEvent.created_by.toLowerCase() === currentUser.email.toLowerCase());
+        const hasAccess = isAdmin || isEventCreator || isCoHost;
 
         if (!hasAccess) {
           setIsAuthorized(false);
@@ -469,7 +467,7 @@ export default function Dashboard() {
   };
 
   const isAdmin = currentUser?.role === 'admin';
-  const isEventCreator = event && currentUser && event.created_by === currentUser.email;
+  const isEventCreator = event && currentUser && event.created_by === currentUser.id;  // UUID comparison
   const canDelete = isAdmin || isEventCreator;
 
   // Real-time notifications for the host

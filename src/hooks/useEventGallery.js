@@ -113,13 +113,13 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   // even when multiple photos share the same timestamp (e.g. batch uploads).
   const STABLE_SORT = '-created_date,id';
 
-  // Helper: fetches ALL of the current user's photos via backend (service role)
-  // bypassing the is_approved filter. Falls back to device_uuid when email is missing.
-  const fetchMyPhotosFromBackend = useCallback(async (eventId, userEmail) => {
-    const deviceUUID = !userEmail ? (localStorage.getItem(DEVICE_UUID_KEY) || null) : null;
-    if (!userEmail && !deviceUUID) return [];
+  // Helper: fetches ALL of the current user's photos for an event.
+  // Uses auth.uid() (UUID) — works for both Google OAuth and anonymous guests.
+  // RLS photos_select_own policy ensures only own rows are returned.
+  const fetchMyPhotosFromBackend = useCallback(async (eventId, userId) => {
+    if (!userId) return [];
     try {
-      const res = await getMyPhotos({ event_id: eventId, device_uuid: deviceUUID });
+      const res = await getMyPhotos({ event_id: eventId });
       return res?.data?.photos || [];
     } catch (err) {
       console.error('fetchMyPhotos failed:', err);
@@ -127,7 +127,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     }
   }, []);
 
-  const fetchPhotosByPage = useCallback(async (eventId, pageNum, userIsOwner, eventData, userEmail = currentUser?.email) => {
+  const fetchPhotosByPage = useCallback(async (eventId, pageNum, userIsOwner, eventData, userId = currentUser?.id) => {
     try {
       setIsFetchingMore(true);
       let newPhotos = [];
@@ -141,7 +141,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         // ─── Tabbed guest view ────────────────────────────────────────────
         // Always fetch the user's own photos for the "My Photos" tab.
         // Only fetch shared (approved) photos when auto_publish_guest_photos is on.
-        const myAllPhotos = await fetchMyPhotosFromBackend(eventId, userEmail);
+        const myAllPhotos = await fetchMyPhotosFromBackend(eventId, userId);
 
         // Populate myPhotos state (all statuses, client-side hidden filter).
         // Note: getMyPhotos backend returns ALL user photos in one call (not paginated),
@@ -204,28 +204,27 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   const loadEventAndPhotos = useCallback(async () => {
     const eventCode = propEventCode || new URLSearchParams(window.location.search).get('code');
     if (!eventCode) { setIsLoading(false); return; }
-    // snapshot the email at call time — avoids closure staleness
-    const emailSnapshot = currentUser?.email || null;
+    // Snapshot user.id at call time — avoids closure staleness
+    const userIdSnapshot = currentUser?.id || null;
     try {
       const currentEventData = await memoriaService.events.getByCode(eventCode);
       if (currentEventData) {
         setEvent(currentEventData);
         let ownerOrAdmin = false;
         if (currentUser) {
-          const isCoHost = Array.isArray(currentEventData.co_hosts) && currentEventData.co_hosts.includes(currentUser.email);
-          ownerOrAdmin = currentUser.role === 'admin' || currentEventData.created_by === currentUser.email || isCoHost;
+          const isCoHost = Array.isArray(currentEventData.co_hosts) && currentEventData.co_hosts.includes(currentUser.email); // co_hosts is still email-based
+          ownerOrAdmin = currentUser.role === 'admin' || currentEventData.created_by === currentUser.id || isCoHost; // UUID comparison
           setIsOwner(ownerOrAdmin);
         }
-        // ספירת תמונות לפי אימייל — דרך backend כדי לעקוף פילטר is_approved
-        // Fallback to device_uuid when no email is available
-        const myAllPhotos = await fetchMyPhotosFromBackend(currentEventData.id, emailSnapshot);
+        // Count user's own uploads by UUID via RLS-protected query
+        const myAllPhotos = await fetchMyPhotosFromBackend(currentEventData.id, userIdSnapshot);
         setUserUploadedCount(myAllPhotos.length);
         if (!isAdminView) {
           setPage(1);
           setSharedPage(1);
           setHasMore(true);
           setSharedHasMore(true);
-          await fetchPhotosByPage(currentEventData.id, 1, ownerOrAdmin, currentEventData, emailSnapshot);
+          await fetchPhotosByPage(currentEventData.id, 1, ownerOrAdmin, currentEventData, userIdSnapshot);
         }
       }
     } catch (error) {
@@ -258,8 +257,8 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
 
           if (eventType === 'INSERT') {
             if (!photo) return;
-            // Only show notification for other users' uploads
-            if (photo.created_by && photo.created_by === currentUser?.email) return;
+            // Only show notification for other users' uploads (UUID comparison)
+            if (photo.created_by && photo.created_by === currentUser?.id) return;
             const uploaderName = photo.guest_name || (photo.created_by ? photo.created_by.split('@')[0] : 'אורח');
             setLiveNotification({ id: Date.now(), message: `${uploaderName} העלה תמונה חדשה 📸`, icon: '📸' });
             setTimeout(() => setLiveNotification(null), 5000);
@@ -282,8 +281,8 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
                   return [photo, ...prev];
                 });
               }
-              // Always keep myPhotos up to date for the current user
-              if (photo.created_by === currentUser?.email) {
+              // Always keep myPhotos up to date for the current user (UUID comparison)
+              if (photo.created_by === currentUser?.id) {
                 setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
               }
               setLiveNotification({ id: Date.now(), message: 'תמונה חדשה עלתה לגלריה!', icon: '🖼️' });
@@ -294,8 +293,8 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
               // Photo was hidden — remove from public views
               setSharedPhotos(prev => prev.filter(p => p.id !== photo.id));
               setPhotos(prev => prev.filter(p => p.id !== photo.id));
-              // Keep in myPhotos but update the record to reflect hidden state
-              if (photo.created_by === currentUser?.email) {
+              // Keep in myPhotos but update the record to reflect hidden state (UUID comparison)
+              if (photo.created_by === currentUser?.id) {
                 setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
               }
             }
@@ -424,11 +423,11 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   // ─── Upload actions ───────────────────────────────────────────────────────
   const getUserMaxUploads = useCallback(() => {
     if (!event || !currentUser) return event?.max_uploads_per_user || 15;
-    const isSuperAdmin = currentUser.email === 'effitag@gmail.com';
+    const isSuperAdmin = currentUser.email === 'effitag@gmail.com';      // super-admin still by email
     if (isSuperAdmin) return 200;
-    const isCreator = event.created_by === currentUser.email;
+    const isCreator = event.created_by === currentUser.id;               // UUID comparison
     if (isCreator) return 200;
-    const isCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(currentUser.email);
+    const isCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(currentUser.email); // co_hosts still email
     if (isCoHost) return 50;
     return event.max_uploads_per_user || 15;
   }, [event, currentUser]);
@@ -534,8 +533,8 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             is_approved: false,
             is_hidden: false,
             guest_name: currentUser?.full_name || currentUser?.email || "אורח",
-            created_by: currentUser?.email || null,
-            device_uuid: currentUser?.email ? null : getOrCreateDeviceUUID(),
+            created_by: currentUser?.id || null,                  // UUID — matches auth.uid()
+            device_uuid: null,                                    // deprecated; anonymous auth provides real uid
           };
 
           if (processedData?.thumbnail_url) {
@@ -705,7 +704,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
 
   // ─── Derived values ───────────────────────────────────────────────────────
   const isSuperAdmin = currentUser?.email === 'effitag@gmail.com';
-  const isOriginalCreator = !!(currentUser?.email && event?.created_by === currentUser.email);
+  const isOriginalCreator = !!(currentUser?.id && event?.created_by === currentUser.id);  // UUID comparison
   const isCoHost = !!(Array.isArray(event?.co_hosts) && event.co_hosts.includes(currentUser?.email));
 
   let eventMaxPhotos;

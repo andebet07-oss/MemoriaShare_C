@@ -17,7 +17,9 @@ async function fetchUserWithProfile(supabaseUser) {
   // Base user object — merge auth fields with metadata defaults
   const base = {
     ...supabaseUser,
+    id: supabaseUser.id,                                          // UUID — use this for created_by comparisons
     email: supabaseUser.email,
+    isAnonymous: supabaseUser.is_anonymous || false,             // true for Supabase Anonymous Sign-In guests
     full_name: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || '',
     avatar_url: meta.avatar_url || meta.picture || '',
     role: 'user', // default until profile row is loaded

@@ -17,7 +17,7 @@ export default function PhotoCard({
 }) {
   const isDeleting = deletingId === photo.id;
   const isConfirming = confirmDeleteId === photo.id;
-  const isOwnPhoto = !isAdminView && photo.created_by === currentUser?.email;
+  const isOwnPhoto = !isAdminView && photo.created_by === currentUser?.id;   // UUID comparison
 
   // Smart deletion: unapproved → direct delete (frees quota); approved → request deletion
   const canDirectDelete = isOwnPhoto && !photo.is_approved;

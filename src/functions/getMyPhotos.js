@@ -1,30 +1,27 @@
 import { supabase } from '@/lib/supabase';
 
 /**
- * getMyPhotos({ event_id, device_uuid })
- * Fetches all photos uploaded by the current user (or device) for an event,
- * bypassing the is_approved filter so users always see their own pending photos.
+ * getMyPhotos({ event_id })
+ * Fetches all photos uploaded by the current user for an event.
+ * Uses auth.uid() (UUID) — works for both Google OAuth users and anonymous guests.
+ * RLS `photos_select_own` policy ensures users only see their own rows.
  * Returns { data: { photos: Photo[] } }
  */
-export async function getMyPhotos({ event_id, device_uuid }) {
+export async function getMyPhotos({ event_id }) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
 
-    let query = supabase
-      .from('photos')
-      .select('*')
-      .eq('event_id', event_id)
-      .order('created_date', { ascending: false });
-
-    if (user?.email) {
-      query = query.eq('created_by', user.email);
-    } else if (device_uuid) {
-      query = query.eq('device_uuid', device_uuid);
-    } else {
+    if (!user?.id) {
       return { data: { photos: [] } };
     }
 
-    const { data: photos, error } = await query;
+    const { data: photos, error } = await supabase
+      .from('photos')
+      .select('*')
+      .eq('event_id', event_id)
+      .eq('created_by', user.id)
+      .order('created_date', { ascending: false });
+
     if (error) throw error;
 
     return { data: { photos: photos || [] } };

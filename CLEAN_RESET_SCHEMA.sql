@@ -53,8 +53,8 @@ CREATE TABLE events (
   name                      TEXT        NOT NULL,
   unique_code               TEXT        NOT NULL UNIQUE,
   pin_code                  TEXT,
-  created_by                TEXT        NOT NULL,  -- email of owner
-  co_hosts                  TEXT[]      NOT NULL DEFAULT '{}',
+  created_by                UUID        NOT NULL REFERENCES auth.users(id),  -- auth.uid() of owner
+  co_hosts                  TEXT[]      NOT NULL DEFAULT '{}',  -- emails; UUID migration deferred
   date                      DATE,                    -- DATE (not TIMESTAMPTZ) to avoid timezone-shifting bugs
   cover_image               TEXT,
   guest_tier                INTEGER     NOT NULL DEFAULT 1,
@@ -73,9 +73,10 @@ CREATE TABLE photos (
   file_url        TEXT,
   path            TEXT,           -- storage path: {event_id}/{timestamp}_{filename}
   file_urls       JSONB,          -- { thumbnail, medium, original }
-  guest_name      TEXT,
-  created_by      TEXT,           -- email; NULL for anonymous guests
-  device_uuid     TEXT,           -- anonymous guest fallback
+  guest_name      TEXT,           -- display name entered in Guest Book modal
+  guest_greeting  TEXT,           -- optional greeting message to host (from Guest Book modal)
+  created_by      UUID REFERENCES auth.users(id) ON DELETE SET NULL,  -- auth.uid(); set for all users incl. anonymous
+  device_uuid     TEXT,           -- legacy fallback; deprecated in favour of anonymous auth
   filter_applied  TEXT        NOT NULL DEFAULT 'none'
                                CHECK (filter_applied IN ('none','black_white','vintage','warm')),
   is_approved     BOOLEAN     NOT NULL DEFAULT FALSE,
@@ -194,40 +195,43 @@ CREATE POLICY "profiles_insert_self"
 
 -- ── events ───────────────────────────────────────────────────
 
--- Public read — only active events are exposed; owners can always see their own events
+-- Active events are public; owners can always see their own (even if deactivated)
 CREATE POLICY "events_select_public"
   ON events FOR SELECT
   USING (
     is_active = true
-    OR auth.jwt() ->> 'email' = created_by
+    OR auth.uid() = created_by
   );
 
--- Authenticated users can create events
+-- Only non-anonymous authenticated users (Google OAuth) can create events
+-- auth.email() is NULL for anonymous sign-ins, so this blocks guests from creating events
 CREATE POLICY "events_insert_authenticated"
   ON events FOR INSERT
-  WITH CHECK (auth.role() = 'authenticated');
+  WITH CHECK (
+    auth.role() = 'authenticated'
+    AND auth.email() IS NOT NULL
+  );
 
--- Creator or co-host can update
+-- Creator (by UUID) or co-host (by email, legacy) can update
 CREATE POLICY "events_update_owner"
   ON events FOR UPDATE
   USING (
-    auth.jwt() ->> 'email' = created_by
+    auth.uid() = created_by
     OR auth.jwt() ->> 'email' = ANY(co_hosts)
   )
   WITH CHECK (
-    auth.jwt() ->> 'email' = created_by
+    auth.uid() = created_by
     OR auth.jwt() ->> 'email' = ANY(co_hosts)
   );
 
 -- Only creator can delete
 CREATE POLICY "events_delete_owner"
   ON events FOR DELETE
-  USING (auth.jwt() ->> 'email' = created_by);
+  USING (auth.uid() = created_by);
 
 -- ── photos ───────────────────────────────────────────────────
 
--- Public photos: must be non-hidden AND (approved OR event has auto-publish enabled)
--- This enforces the host moderation workflow when auto_publish_guest_photos = false
+-- Public view: non-hidden AND (approved OR event has auto-publish on)
 CREATE POLICY "photos_select_public"
   ON photos FOR SELECT
   USING (
@@ -242,7 +246,13 @@ CREATE POLICY "photos_select_public"
     )
   );
 
--- Event owners and co-hosts can read ALL photos (including hidden ones)
+-- Users can always see their OWN photos regardless of approval or hidden status
+-- Fixes REGRESSION-001: guests must see their own pending uploads in "My Photos" tab
+CREATE POLICY "photos_select_own"
+  ON photos FOR SELECT
+  USING (auth.uid() = created_by);
+
+-- Event owners and co-hosts can read ALL photos (including hidden/unapproved)
 CREATE POLICY "photos_select_owner"
   ON photos FOR SELECT
   USING (
@@ -250,30 +260,31 @@ CREATE POLICY "photos_select_owner"
       SELECT 1 FROM events e
       WHERE e.id = event_id
         AND (
-          auth.jwt() ->> 'email' = e.created_by
+          auth.uid() = e.created_by
           OR auth.jwt() ->> 'email' = ANY(e.co_hosts)
         )
     )
   );
 
--- Anyone can upload — no auth required (guest upload flow)
-CREATE POLICY "photos_insert_public"
+-- Any authenticated user (incl. anonymous) can upload; created_by must match their uid
+CREATE POLICY "photos_insert_authenticated"
   ON photos FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (
+    auth.uid() IS NOT NULL
+    AND auth.uid() = created_by
+  );
 
--- Uploaders can update ONLY their own non-sensitive fields (guest_name, filter_applied).
--- They may NEVER touch is_approved, is_hidden, or deletion_status.
+-- Uploaders can update their own photos (guest_name, filter_applied, guest_greeting).
+-- Fixes REGRESSION-002: allows deletion_status='requested' and is_hidden=true.
+-- Blocks self-approval: is_approved must never change via this policy.
 CREATE POLICY "photos_update_uploader"
   ON photos FOR UPDATE
-  USING (
-    created_by IS NOT NULL
-    AND auth.jwt() ->> 'email' = created_by
-  )
+  USING (auth.uid() = created_by)
   WITH CHECK (
-    -- Prevent guests from self-approving or hiding their own photos
-    is_approved  = (SELECT is_approved  FROM photos WHERE id = photos.id)
-    AND is_hidden = (SELECT is_hidden    FROM photos WHERE id = photos.id)
-    AND deletion_status = (SELECT deletion_status FROM photos WHERE id = photos.id)
+    -- Guests can NEVER change their own approval status
+    is_approved = (SELECT is_approved FROM photos WHERE id = photos.id)
+    -- Guests may only set deletion_status to 'none' or 'requested' (not 'approved'/'denied')
+    AND deletion_status IN ('none', 'requested')
   );
 
 -- Event owners and co-hosts can update ALL fields including moderation fields
@@ -284,22 +295,22 @@ CREATE POLICY "photos_update_owner"
       SELECT 1 FROM events e
       WHERE e.id = event_id
         AND (
-          auth.jwt() ->> 'email' = e.created_by
+          auth.uid() = e.created_by
           OR auth.jwt() ->> 'email' = ANY(e.co_hosts)
         )
     )
   );
 
--- Uploader or event owner can delete
+-- Uploader or event owner/co-host can delete
 CREATE POLICY "photos_delete_owner"
   ON photos FOR DELETE
   USING (
-    auth.jwt() ->> 'email' = created_by
+    auth.uid() = created_by
     OR EXISTS (
       SELECT 1 FROM events e
       WHERE e.id = event_id
         AND (
-          auth.jwt() ->> 'email' = e.created_by
+          auth.uid() = e.created_by
           OR auth.jwt() ->> 'email' = ANY(e.co_hosts)
         )
     )

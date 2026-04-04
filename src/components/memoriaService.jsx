@@ -54,19 +54,19 @@ const memoriaService = {
       }
     },
 
-    listByUser: async (email, sort = '-created_date') => {
+    listByUser: async (userId, sort = '-created_date') => {
       try {
         const ascending = !sort.startsWith('-');
         const column = sort.replace(/^-/, '');
         const { data, error } = await supabase
           .from('events')
           .select('*')
-          .eq('created_by', email)
+          .eq('created_by', userId)                               // UUID — was email
           .order(column, { ascending });
         if (error) throw error;
         return data;
       } catch (error) {
-        console.error('MemoriaService [events.listByUser]: Failed to list events for user', email, error);
+        console.error('MemoriaService [events.listByUser]: Failed to list events for user', userId, error);
         throw error;
       }
     },
