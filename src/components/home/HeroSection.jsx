@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Play, X } from 'lucide-react';
@@ -110,23 +111,23 @@ export default function HeroSection({ onOpenDemo }) {
             האורחים מצלמים, הכל באלבום אחד
           </p>
 
-          <div dir="ltr" className="relative flex justify-center items-center gap-0 mb-16 h-[360px] md:h-[500px] z-20">
+          <div className="flex justify-center items-center gap-0 mb-16 h-[360px] md:h-[500px] relative z-20">
             <MiniIPhone
               image={eventPhotos[0]}
-              className="absolute -rotate-12 translate-y-8 right-1/2 translate-x-[110px] md:translate-x-[160px] opacity-85 scale-[0.72] md:scale-[0.78] z-10"
+              className="-rotate-12 translate-y-8 translate-x-24 md:translate-x-32 opacity-85 scale-[0.72] md:scale-[0.78] z-10"
               delay={200}
               title="Party Night"
             />
             <MiniIPhone
               image={eventPhotos[1]}
-              className="relative z-30 scale-[0.88] md:scale-[0.92]"
+              className="z-30 scale-[0.88] md:scale-[0.92]"
               delay={0}
               title="Wedding Vibes"
               isCenter={true}
             />
             <MiniIPhone
               image={eventPhotos[2]}
-              className="absolute rotate-12 translate-y-8 left-1/2 -translate-x-[110px] md:-translate-x-[160px] opacity-85 scale-[0.72] md:scale-[0.78] z-10"
+              className="rotate-12 translate-y-8 -translate-x-24 md:-translate-x-32 opacity-85 scale-[0.72] md:scale-[0.78] z-10"
               delay={400}
               title="Classic Ceremony"
             />
