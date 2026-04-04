@@ -60,7 +60,8 @@ export default function HostOnboardingModal() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="ישראל ישראלי"
-              className="w-full bg-white/8 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors text-sm"
+              dir="rtl"
+              className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors"
             />
           </div>
 
@@ -71,8 +72,8 @@ export default function HostOnboardingModal() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="050-0000000"
-              className="w-full bg-white/8 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors text-sm"
               dir="ltr"
+              className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white text-left text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors"
             />
           </div>
 
