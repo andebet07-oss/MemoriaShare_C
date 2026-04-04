@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Camera, Upload, Sparkles, CheckCircle, ImageIcon, Users, Loader2 } from "lucide-react";
+import { Camera, Upload, Sparkles, CheckCircle, ImageIcon, Users } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import useEventGallery from "@/hooks/useEventGallery";
 import GalleryHeader from "@/components/gallery/GalleryHeader";
@@ -49,7 +49,6 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   );
   const [guestName, setGuestName] = useState('');
   const [guestGreeting, setGuestGreeting] = useState('');
-  const [isSavingGuest, setIsSavingGuest] = useState(false);
 
   // Ensure an anonymous session exists so uploads have a real auth.uid()
   const hasAttemptedAnonSignIn = useRef(false);
@@ -60,21 +59,19 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
       .catch(err => console.error('Anonymous sign-in failed:', err));
   }, [isAdminView, isLoadingAuth, g.currentUser]);
 
-  const handleGuestBookSubmit = async (e) => {
+  const handleGuestBookSubmit = (e) => {
     e.preventDefault();
-    if (!guestName.trim()) return;
-    setIsSavingGuest(true);
-    try {
-      localStorage.setItem(GUEST_NAME_KEY, guestName.trim());
-      await supabase.auth.updateUser({ data: { full_name: guestName.trim(), guest_greeting: guestGreeting.trim() || null } });
-      setShowGuestBook(false);
-    } catch (err) {
-      console.error('Guest Book save failed:', err);
-      // Don't block the user — let them into the gallery even if metadata update fails
-      setShowGuestBook(false);
-    } finally {
-      setIsSavingGuest(false);
-    }
+    const name = guestName.trim();
+    if (!name) return;
+
+    // Optimistic: persist locally and open the gallery immediately — no await
+    localStorage.setItem(GUEST_NAME_KEY, name);
+    setShowGuestBook(false);
+
+    // Sync name to Supabase auth metadata in the background (non-blocking)
+    supabase.auth.updateUser({
+      data: { full_name: name, guest_greeting: guestGreeting.trim() || null }
+    }).catch(err => console.error('Guest metadata sync failed (non-critical):', err));
   };
 
   // ─── Guest Book Entry Gate — blocks ALL gallery content ─────────────────
@@ -122,11 +119,10 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
             </div>
             <button
               type="submit"
-              disabled={isSavingGuest || !guestName.trim()}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl transition-colors flex items-center justify-center gap-2 text-base"
+              disabled={!guestName.trim()}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl transition-colors flex items-center justify-center gap-2 text-base active:scale-95"
             >
-              {isSavingGuest ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {isSavingGuest ? "שומר..." : "בואו נצלם! 🎉"}
+              בואו נצלם! 🎉
             </button>
             <p className="text-center text-white/20 text-xs mt-1">Powered by MemoriaShare</p>
           </form>
