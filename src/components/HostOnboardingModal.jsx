@@ -23,9 +23,11 @@ export default function HostOnboardingModal() {
     try {
       const { error: dbErr } = await supabase
         .from("profiles")
-        .upsert({ id: user.id, email: user.email, full_name: fullName.trim(), phone: phone.trim(), updated_at: new Date().toISOString() })
-        .eq("id", user.id);
-      if (dbErr) throw dbErr;
+        .upsert({ id: user.id, email: user.email, full_name: fullName.trim(), phone: phone.trim(), updated_at: new Date().toISOString() });
+      if (dbErr) {
+        console.error("DETAILED_AUTH_ERROR:", dbErr);
+        throw dbErr;
+      }
       await refreshUser();
     } catch (err) {
       console.error("HostOnboarding: failed to save profile", err);
@@ -87,6 +89,16 @@ export default function HostOnboardingModal() {
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
             {isLoading ? "שומר..." : "בואו נתחיל →"}
           </button>
+
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => supabase.auth.signOut()}
+              className="text-white/40 text-sm underline underline-offset-2 hover:text-white transition-colors"
+            >
+              התנתקות
+            </button>
+          </div>
         </form>
       </div>
     </div>
