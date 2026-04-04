@@ -107,25 +107,97 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   };
 
   // ─── Loading / Error / Not Found states ───────────────────────────────────
+  // ── Derive the Guest Book gate: show BEFORE gallery reveals itself ───────────
+  // The modal is rendered at the top level (not inside loading early-returns)
+  // so it can appear immediately on top of the loading spinner.
+  const guestBookOverlay = !isAdminView && showGuestBook ? (
+    <AnimatePresence>
+      <motion.div
+        key="guestbook"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-4 sm:p-6"
+        style={{ backdropFilter: 'blur(20px)', backgroundColor: 'rgba(0,0,0,0.85)' }}
+      >
+        <motion.div
+          initial={{ y: 80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 60, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+          className="w-full max-w-sm bg-[#111] border border-white/10 rounded-[28px] overflow-hidden shadow-2xl"
+        >
+          <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+          <form onSubmit={handleGuestBookSubmit} dir="rtl" className="p-7 flex flex-col gap-5">
+            <div className="text-center">
+              <div className="text-3xl mb-2">📸</div>
+              <h2 className="text-white text-xl font-black">{g.event?.name || "ברוכים הבאים!"}</h2>
+              <p className="text-white/50 text-sm mt-1">שמחים שבאתם! רק שם וברכה קטנה ואנחנו מתחילים.</p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-white/70 text-sm font-medium">השם שלך <span className="text-red-400">*</span></label>
+              <input
+                type="text"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                placeholder="ישראל ישראלי"
+                dir="rtl"
+                autoFocus
+                className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-white/70 text-sm font-medium">ברכה לזוג <span className="text-white/30">(אופציונלי)</span></label>
+              <textarea
+                value={guestGreeting}
+                onChange={(e) => setGuestGreeting(e.target.value)}
+                placeholder="מאחלים לכם אהבה אין סופית... ✨"
+                rows={2}
+                dir="rtl"
+                className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors resize-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSavingGuest || !guestName.trim()}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl transition-colors flex items-center justify-center gap-2 text-base"
+            >
+              {isSavingGuest ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {isSavingGuest ? "שומר..." : "בואו נצלם! 🎉"}
+            </button>
+            <p className="text-center text-white/20 text-xs mt-1">Powered by MemoriaShare</p>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  ) : null;
+
+  // ── Loading / error states — modal still renders on top ───────────────────
   if (g.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-600 border-t-transparent mx-auto mb-4" />
-          <p className="text-gray-300 font-medium">טוען גלריה...</p>
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-black">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-600 border-t-transparent mx-auto mb-4" />
+            <p className="text-gray-300 font-medium">טוען גלריה...</p>
+          </div>
         </div>
-      </div>
+        {guestBookOverlay}
+      </>
     );
   }
 
   if (g.pageError === 'LOAD_ERROR') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-center px-4" dir="rtl">
-        <div className="text-5xl mb-4">⚠️</div>
-        <h1 className="text-2xl font-bold text-white mb-2">שגיאה בטעינת הגלריה</h1>
-        <p className="text-gray-400 mb-6">לא ניתן היה לטעון את נתוני האירוע. אנא בדוק את החיבור לאינטרנט ונסה שוב.</p>
-        <Button onClick={() => { g.loadEventAndPhotos(); }} className="bg-indigo-600 hover:bg-indigo-700 text-white min-h-[44px]">נסה שוב</Button>
-      </div>
+      <>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-black text-center px-4" dir="rtl">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-white mb-2">שגיאה בטעינת הגלריה</h1>
+          <p className="text-gray-400 mb-6">לא ניתן היה לטעון את נתוני האירוע. אנא בדוק את החיבור לאינטרנט ונסה שוב.</p>
+          <Button onClick={() => { g.loadEventAndPhotos(); }} className="bg-indigo-600 hover:bg-indigo-700 text-white min-h-[44px]">נסה שוב</Button>
+        </div>
+        {guestBookOverlay}
+      </>
     );
   }
 
@@ -418,67 +490,8 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
         handleRequestDeletion={g.handleRequestDeletion}
       />
 
-      {/* ── Guest Book Modal ── */}
-      <AnimatePresence>
-        {showGuestBook && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-4 sm:p-6"
-            style={{ backdropFilter: 'blur(20px)', backgroundColor: 'rgba(0,0,0,0.85)' }}
-          >
-            <motion.div
-              initial={{ y: 80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 60, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="w-full max-w-sm bg-[#111] border border-white/10 rounded-[28px] overflow-hidden shadow-2xl"
-            >
-              <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-              <form onSubmit={handleGuestBookSubmit} dir="rtl" className="p-7 flex flex-col gap-5">
-                <div className="text-center">
-                  <div className="text-3xl mb-2">📸</div>
-                  <h2 className="text-white text-xl font-black">{g.event?.name || "ברוכים הבאים!"}</h2>
-                  <p className="text-white/50 text-sm mt-1">שמחים שבאתם! רק שם וברכה קטנה ואנחנו מתחילים.</p>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-white/70 text-sm font-medium">השם שלך <span className="text-red-400">*</span></label>
-                  <input
-                    type="text"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    placeholder="ישראל ישראלי"
-                    dir="rtl"
-                    autoFocus
-                    className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-white/70 text-sm font-medium">ברכה לזוג <span className="text-white/30">(אופציונלי)</span></label>
-                  <textarea
-                    value={guestGreeting}
-                    onChange={(e) => setGuestGreeting(e.target.value)}
-                    placeholder="מאחלים לכם אהבה אין סופית... ✨"
-                    rows={2}
-                    dir="rtl"
-                    className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors resize-none"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isSavingGuest || !guestName.trim()}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl transition-colors flex items-center justify-center gap-2 text-base"
-                >
-                  {isSavingGuest ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  {isSavingGuest ? "שומר..." : "בואו נצלם! 🎉"}
-                </button>
-                <p className="text-center text-white/20 text-xs mt-1">Powered by MemoriaShare</p>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Guest Book rendered via guestBookOverlay variable (also covers loading state) */}
+      {guestBookOverlay}
 
       {/* ── FAB ── */}
       {!isAdminView && !g.isQuotaExhausted && !g.showCamera && g.pendingPhotos.length === 0 && g.selectedIndex === null && (
