@@ -63,9 +63,14 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     });
   }, [isAdminView]);
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // התיקון הסופי: סנכרון מלא מול ה-Database ומניעת שגיאת 403
-  // ═══════════════════════════════════════════════════════════════════════════
+  // Fail-safe: if localStorage already has the name (e.g. after a remount triggered
+  // by onAuthStateChange), close the gate immediately without waiting for any async call.
+  useEffect(() => {
+    if (!isAdminView && showGuestBook && localStorage.getItem(GUEST_NAME_KEY)) {
+      setShowGuestBook(false);
+    }
+  }, [showGuestBook, isAdminView]);
+
   const handleGuestBookSubmit = async (e) => {
     e.preventDefault();
     const name = guestName.trim();
@@ -75,9 +80,8 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     setGuestSaveError('');
 
     try {
-      // 1. וידוא שיש Session פעיל - קריטי למניעת 403 ב-updateUser
+      // Ensure we have an active session before calling updateUser (prevents 403).
       let { data: { session }, error: sessionErr } = await supabase.auth.getSession();
-      
       if (sessionErr) throw sessionErr;
 
       if (!session) {
@@ -86,33 +90,32 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
         session = signInData.session;
       }
 
-      // 2. כתיבה מוקדמת ל-localStorage לפני קריאת השרת.
-      // updateUser מפעיל onAuthStateChange שעלול לגרום ל-remount —
-      // אם הרכיב יתחיל מחדש, הוא ימצא את השם בזיכרון ויסגור את השער מיידית.
       const greetingTrimmed = guestGreeting.trim();
+
+      // ── FIRE-AND-FORGET UI ──────────────────────────────────────────────────
+      // Write to localStorage and close the modal NOW, before the server call.
+      // updateUser triggers onAuthStateChange → fetchUserWithProfile (async) →
+      // setUser → potential re-renders or remount. If EventGallery remounts while
+      // the await is in-flight, those setStates run on a dead instance and are
+      // silently dropped. Closing the UI first guarantees the guest sees the
+      // gallery regardless of what happens in the AuthContext pipeline.
       localStorage.setItem(GUEST_NAME_KEY, name);
       if (greetingTrimmed) localStorage.setItem('ms_guest_greeting', greetingTrimmed);
+      setShowGuestBook(false);
+      setIsSavingGuest(false);
 
-      // 3. עדכון בשרת — אם נכשל, נמחק את הערכים שנשמרו מקומית (rollback)
-      const { error: updateErr } = await supabase.auth.updateUser({
-        data: { full_name: name, display_name: name, guest_greeting: greetingTrimmed || null }
+      // Background sync — non-blocking for the UI.
+      supabase.auth.updateUser({
+        data: { full_name: name, display_name: name, guest_greeting: greetingTrimmed || null },
+      }).then(({ error: updateErr }) => {
+        if (updateErr) {
+          console.error('[GuestBook] Background sync failed:', updateErr.message);
+        }
       });
 
-      if (updateErr) {
-        localStorage.removeItem(GUEST_NAME_KEY);
-        if (greetingTrimmed) localStorage.removeItem('ms_guest_greeting');
-        if (updateErr.status === 403) {
-          throw new Error("חסימת אבטחה מהשרת (403). וודא שכתובת האתר מוגדרת ב-Supabase.");
-        }
-        throw updateErr;
-      }
-
-      setShowGuestBook(false);
-
     } catch (err) {
-      console.error('[GuestBook] Database Sync Error:', err.message);
+      console.error('[GuestBook] Submit error:', err.message);
       setGuestSaveError(err.message || 'שגיאה ברישום לשרת. נסה שוב.');
-    } finally {
       setIsSavingGuest(false);
     }
   };
