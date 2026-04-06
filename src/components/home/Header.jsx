@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from '@/lib/supabase';
-import { Heart, LogIn, LogOut, LayoutDashboard, X, User, Users } from "lucide-react";
+import { LogIn, LogOut, LayoutDashboard, X, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -100,11 +100,8 @@ export default function Header({ onlyMenu: _onlyMenu = false }) {
           </nav>
 
           {/* Logo - left side in RTL (visually right) */}
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div>
-              <h1 className="text-xl font-bold dark-chrome-text">MemoriaShare</h1>
-              <p className="text-gray-400 px-8 text-xs font-medium">משתפים רגעים</p>
-            </div>
+          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <img src="/LOGO.png" alt="MemoriaShare" className="h-10 w-auto object-contain" />
           </Link>
         </div>
       </header>
@@ -117,11 +114,8 @@ export default function Header({ onlyMenu: _onlyMenu = false }) {
 
           {/* Drawer Header: Logo + Close */}
           <div className="flex items-center justify-between p-6 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 premium-silver-gradient rounded-lg flex items-center justify-center metallic-glow">
-                <Heart className="w-5 h-5 text-black" />
-              </div>
-              <h2 className="text-xl font-bold dark-chrome-text">MemoriaShare</h2>
+            <div className="flex items-center">
+              <img src="/LOGO.png" alt="MemoriaShare" className="h-8 w-auto object-contain" />
             </div>
             <button onClick={closeMenu} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
               <X className="w-6 h-6" />

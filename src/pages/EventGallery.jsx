@@ -86,28 +86,25 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
         session = signInData.session;
       }
 
-      // 2. עדכון המשתמש ב-Supabase (רישום רשמי ב-Database)
-      // אנחנו משתמשים בשדות התקניים של הפרופיל
+      // 2. כתיבה מוקדמת ל-localStorage לפני קריאת השרת.
+      // updateUser מפעיל onAuthStateChange שעלול לגרום ל-remount —
+      // אם הרכיב יתחיל מחדש, הוא ימצא את השם בזיכרון ויסגור את השער מיידית.
+      const greetingTrimmed = guestGreeting.trim();
+      localStorage.setItem(GUEST_NAME_KEY, name);
+      if (greetingTrimmed) localStorage.setItem('ms_guest_greeting', greetingTrimmed);
+
+      // 3. עדכון בשרת — אם נכשל, נמחק את הערכים שנשמרו מקומית (rollback)
       const { error: updateErr } = await supabase.auth.updateUser({
-        data: { 
-          full_name: name, 
-          display_name: name,
-          guest_greeting: guestGreeting.trim() || null 
-        }
+        data: { full_name: name, display_name: name, guest_greeting: greetingTrimmed || null }
       });
 
       if (updateErr) {
-        // אם מדובר בשגיאת 403, נציג הודעה ברורה למשתמש במקום להיתקע
+        localStorage.removeItem(GUEST_NAME_KEY);
+        if (greetingTrimmed) localStorage.removeItem('ms_guest_greeting');
         if (updateErr.status === 403) {
           throw new Error("חסימת אבטחה מהשרת (403). וודא שכתובת האתר מוגדרת ב-Supabase.");
         }
         throw updateErr;
-      }
-
-      // 3. רק לאחר הצלחה בשרת - נשמור מקומית ונסגור
-      localStorage.setItem(GUEST_NAME_KEY, name);
-      if (guestGreeting.trim()) {
-        localStorage.setItem('ms_guest_greeting', guestGreeting.trim());
       }
 
       setShowGuestBook(false);
