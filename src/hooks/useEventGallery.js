@@ -474,6 +474,18 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
  
   const uploadAllPendingPhotos = async () => {
     if (pendingPhotos.length === 0) return;
+
+    // Resolve user ID directly from Supabase — never trust currentUser alone.
+    // AuthContext.currentUser can be null or stale while onAuthStateChange processes.
+    // RLS requires auth.uid() = created_by, so a null here causes a silent failure.
+    let { data: { user: liveUser } } = await supabase.auth.getUser();
+    if (!liveUser) {
+      const { data: signInData } = await supabase.auth.signInAnonymously();
+      liveUser = signInData?.user ?? null;
+    }
+    const liveUserId = liveUser?.id ?? null;
+    console.warn('[Upload] liveUserId:', liveUserId);
+
     const quota = await checkGuestQuota({ event_id: event.id });
     if (!quota?.data?.allowed) { alert(quota?.data?.reason || 'לא ניתן להעלות תמונות לאירוע זה.'); return; }
  
@@ -506,7 +518,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             is_hidden: false,
             guest_name: localStorage.getItem('ms_guest_name') || currentUser?.full_name || currentUser?.email || "אורח",
             guest_greeting: localStorage.getItem('ms_guest_greeting') || currentUser?.user_metadata?.guest_greeting || null,
-            created_by: currentUser?.id || null,
+            created_by: liveUserId,
             device_uuid: null,
           };
  
@@ -522,7 +534,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
           if (created) newlyUploaded.push(created);
           successCount++;
         } catch (err) {
-          console.error('❌ Failed to upload photo:', err?.message || err);
+          console.error('❌ Upload failed — created_by:', liveUserId, '| error:', err?.message || err);
           errorCount++;
         } finally {
           setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
@@ -556,7 +568,17 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
  
   const handleUploadClick = async (mode) => {
     if (!event) return;
-    if (!currentUser) return;
+
+    // Do NOT block on currentUser — AuthContext can lag behind the actual session.
+    // Anonymous users are authenticated in Supabase; check the live session instead.
+    if (!currentUser) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        await supabase.auth.signInAnonymously();
+      }
+      // uploadAllPendingPhotos will resolve the ID via getUser() before inserting.
+    }
+
     if (mode === 'camera') { setShowCamera(true); }
     else {
       if (fileInputRef.current) {

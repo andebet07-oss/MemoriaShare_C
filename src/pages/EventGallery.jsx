@@ -298,7 +298,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <div className="py-5 text-center">
           <p className="text-zinc-400 text-sm">
-            {g.userUploadedCount}/{g.eventMaxPhotos} תמונות • {g.currentUser?.full_name || g.currentUser?.email || "אורח"}
+            {g.userUploadedCount}/{g.eventMaxPhotos} תמונות • {localStorage.getItem('ms_guest_name') || g.currentUser?.full_name || g.currentUser?.email || "אורח"}
           </p>
           {g.isQuotaExhausted && (
             <p className="mt-1.5 text-amber-500 font-medium text-base flex items-center justify-center gap-1.5">
