@@ -8,11 +8,11 @@ import { checkGuestQuota } from "@/functions/checkGuestQuota";
 import { processImage } from "@/functions/processImage";
 import { requestPhotoDeletion } from "@/functions/requestPhotoDeletion";
 import { getMyPhotos } from "@/functions/getMyPhotos";
-
+ 
 const PHOTOS_PER_PAGE = 30;
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 const DEVICE_UUID_KEY = 'ms_device_uuid';
-
+ 
 /** Returns the persisted device UUID for anonymous guests, generating one on first call. */
 function getOrCreateDeviceUUID() {
   let uuid = localStorage.getItem(DEVICE_UUID_KEY);
@@ -22,11 +22,11 @@ function getOrCreateDeviceUUID() {
   }
   return uuid;
 }
-
+ 
 export default function useEventGallery({ propEventCode, isAdminView, adminPhotos, onAdminPhotosChange }) {
   const navigate = useNavigate();
   const { user: currentUser, isLoadingAuth } = useAuth();
-
+ 
   const [event, setEvent] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [myPhotos, setMyPhotos] = useState([]);
@@ -39,7 +39,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-
+ 
   const [pendingPhotos, setPendingPhotos] = useState([]);
   const [isUploadingBatch, setIsUploadingBatch] = useState(false);
   const [isPreparingFiles, setIsPreparingFiles] = useState(false);
@@ -47,25 +47,25 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   const [showPendingGallery, setShowPendingGallery] = useState(false);
   const [processingFilterId, setProcessingFilterId] = useState(null);
   const [selectedPendingIndex, setSelectedPendingIndex] = useState(null);
-
+ 
   const [showCamera, setShowCamera] = useState(false);
   const [showFAB, setShowFAB] = useState(false);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
-
+ 
   const [page, setPage] = useState(1);
   const [sharedPage, setSharedPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [sharedHasMore, setSharedHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [liveNotification, setLiveNotification] = useState(null);
-
+ 
   const fileInputRef = useRef(null);
   const observerTarget = useRef(null);
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
-
-  // Tab-aware displayed photos: admin → adminPhotos; owner → legacy photos; guest → per-tab
+ 
+  // Tab-aware displayed photos
   const displayedPhotos = isAdminView
     ? (adminPhotos || [])
     : isOwner
@@ -74,14 +74,14 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         ? myPhotos
         : sharedPhotos;
   const selectedPhoto = selectedIndex !== null ? displayedPhotos[selectedIndex] : null;
-
+ 
   // ─── FAB scroll visibility ───────────────────────────────────────────────
   useEffect(() => {
     const handleScroll = () => setShowFAB(window.scrollY > 350);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
+ 
   // ─── Keyboard navigation ─────────────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -92,7 +92,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedIndex, displayedPhotos.length]);
-
+ 
   // ─── Touch swipe ──────────────────────────────────────────────────────────
   const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; touchEndX.current = e.touches[0].clientX; };
   const handleTouchMove = (e) => { touchEndX.current = e.touches[0].clientX; };
@@ -101,21 +101,15 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     const diff = touchStartX.current - touchEndX.current;
     if (diff > 50) handleNextPhoto();
     else if (diff < -50) handlePrevPhoto();
-    touchStartX.current = null;
-    touchEndX.current = null;
+    touchStartX.current = null; touchEndX.current = null;
   };
-
+ 
   const handleNextPhoto = (e) => { if (e) e.stopPropagation(); if (selectedIndex < displayedPhotos.length - 1) setSelectedIndex(i => i + 1); };
   const handlePrevPhoto = (e) => { if (e) e.stopPropagation(); if (selectedIndex > 0) setSelectedIndex(i => i - 1); };
-
-  // ─── Fetch photos ─────────────────────────────────────────────────────────
-  // Sort: '-created_date' + stable secondary sort by id ensures consistent pagination
-  // even when multiple photos share the same timestamp (e.g. batch uploads).
+ 
+  // ─── Fetch helpers ────────────────────────────────────────────────────────
   const STABLE_SORT = '-created_date,id';
-
-  // Helper: fetches ALL of the current user's photos for an event.
-  // Uses auth.uid() (UUID) — works for both Google OAuth and anonymous guests.
-  // RLS photos_select_own policy ensures only own rows are returned.
+ 
   const fetchMyPhotosFromBackend = useCallback(async (eventId, userId) => {
     if (!userId) return [];
     try {
@@ -126,42 +120,28 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       return [];
     }
   }, []);
-
+ 
   const fetchPhotosByPage = useCallback(async (eventId, pageNum, userIsOwner, eventData, userId = currentUser?.id) => {
     try {
       setIsFetchingMore(true);
       let newPhotos = [];
-
+ 
       if (userIsOwner) {
-        // מנהל האירוע רואה את כל התמונות (כולל לא מאושרות)
         newPhotos = await memoriaService.photos.getByEvent(eventId, {}, STABLE_SORT, {
           limit: PHOTOS_PER_PAGE, offset: (pageNum - 1) * PHOTOS_PER_PAGE
         });
       } else {
-        // ─── Tabbed guest view ────────────────────────────────────────────
-        // Always fetch the user's own photos for the "My Photos" tab.
-        // Only fetch shared (approved) photos when auto_publish_guest_photos is on.
         const myAllPhotos = await fetchMyPhotosFromBackend(eventId, userId);
-
-        // Populate myPhotos state (all statuses, client-side hidden filter).
-        // Note: getMyPhotos backend returns ALL user photos in one call (not paginated),
-        // so we only need to set it on the first load. Subsequent pages only affect sharedPhotos.
-        if (pageNum === 1) {
-          // Show ALL user's own photos including pending/hidden ones
-          setMyPhotos(myAllPhotos);
-        }
-
-        // Always fetch shared gallery: approved + visible public photos + user's own
+        if (pageNum === 1) setMyPhotos(myAllPhotos);
+ 
         const rawApprovedPhotos = await memoriaService.photos.getByEvent(
           eventId, { is_approved: true }, STABLE_SORT,
           { limit: PHOTOS_PER_PAGE, offset: (pageNum - 1) * PHOTOS_PER_PAGE }
         );
         const publicPhotos = rawApprovedPhotos.filter(p => p.is_hidden !== true);
-
-        // Shared tab = user's own photos + any additional public photos
         const myIds = new Set(myAllPhotos.map(p => p.id));
         const sharedCombined = [...myAllPhotos, ...publicPhotos.filter(p => !myIds.has(p.id))];
-
+ 
         if (pageNum === 1) {
           setSharedPhotos(sharedCombined);
           setSharedHasMore(rawApprovedPhotos.length >= PHOTOS_PER_PAGE);
@@ -173,12 +153,11 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
           });
           if (rawApprovedPhotos.length < PHOTOS_PER_PAGE) setSharedHasMore(false);
         }
-
         newPhotos = sharedCombined;
       }
-
+ 
       if (newPhotos.length < PHOTOS_PER_PAGE) setHasMore(false);
-
+ 
       if (pageNum === 1) {
         setPhotos(prev => {
           const fetchedMap = new Map(newPhotos.map(p => [p.id, p]));
@@ -186,7 +165,6 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
           return [...optimisticPhotos, ...newPhotos];
         });
       } else {
-        // Strict deduplication: never add a photo whose id already exists
         setPhotos(prev => {
           const existingIds = new Set(prev.map(p => p.id));
           const uniqueNew = newPhotos.filter(p => !existingIds.has(p.id));
@@ -199,12 +177,70 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       setIsFetchingMore(false);
     }
   }, [currentUser, fetchMyPhotosFromBackend]);
-
-  // ─── Load event ───────────────────────────────────────────────────────────
+ 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SQUAD FIX: Phase 1 — Load event IMMEDIATELY (no auth needed).
+  // events_select_public RLS allows anyone to read active events.
+  // This ensures g.event is available for the Guest Book modal instantly,
+  // and the loading spinner resolves in <1s.
+  // ═══════════════════════════════════════════════════════════════════════════
+  const hasLoadedEvent = useRef(false);
+  useEffect(() => {
+    if (hasLoadedEvent.current) return;
+    hasLoadedEvent.current = true;
+    (async () => {
+      const eventCode = propEventCode || new URLSearchParams(window.location.search).get('code');
+      if (!eventCode) { setIsLoading(false); return; }
+      try {
+        const currentEventData = await memoriaService.events.getByCode(eventCode);
+        if (currentEventData) {
+          setEvent(currentEventData);
+        } else {
+          setPageError('LOAD_ERROR');
+        }
+      } catch (err) {
+        console.error('[Phase1] Event load failed:', err);
+        setPageError('LOAD_ERROR');
+      }
+      setIsLoading(false); // ← Spinner stops HERE, even before photos load
+    })();
+  }, [propEventCode]);
+ 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SQUAD FIX: Phase 2 — Load photos AFTER auth resolves.
+  // Needs currentUser for ownership checks and myPhotos fetching.
+  // Re-runs when currentUser changes (e.g., after signInAnonymously resolves).
+  // ═══════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (isLoadingAuth || !event) return;
+    const userIdSnapshot = currentUser?.id || null;
+    (async () => {
+      try {
+        let ownerOrAdmin = false;
+        if (currentUser) {
+          const isCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(currentUser.email);
+          ownerOrAdmin = currentUser.role === 'admin' || event.created_by === currentUser.id || isCoHost;
+          setIsOwner(ownerOrAdmin);
+        }
+        const myAllPhotos = await fetchMyPhotosFromBackend(event.id, userIdSnapshot);
+        setUserUploadedCount(myAllPhotos.length);
+        if (!isAdminView) {
+          setPage(1);
+          setSharedPage(1);
+          setHasMore(true);
+          setSharedHasMore(true);
+          await fetchPhotosByPage(event.id, 1, ownerOrAdmin, event, userIdSnapshot);
+        }
+      } catch (err) {
+        console.error('[Phase2] Photos load failed:', err);
+      }
+    })();
+  }, [currentUser, isLoadingAuth, event?.id]);
+ 
+  // ─── Full reload (kept for PullToRefresh) ─────────────────────────────────
   const loadEventAndPhotos = useCallback(async () => {
     const eventCode = propEventCode || new URLSearchParams(window.location.search).get('code');
     if (!eventCode) { setIsLoading(false); return; }
-    // Snapshot user.id at call time — avoids closure staleness
     const userIdSnapshot = currentUser?.id || null;
     try {
       const currentEventData = await memoriaService.events.getByCode(eventCode);
@@ -212,18 +248,14 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         setEvent(currentEventData);
         let ownerOrAdmin = false;
         if (currentUser) {
-          const isCoHost = Array.isArray(currentEventData.co_hosts) && currentEventData.co_hosts.includes(currentUser.email); // co_hosts is still email-based
-          ownerOrAdmin = currentUser.role === 'admin' || currentEventData.created_by === currentUser.id || isCoHost; // UUID comparison
+          const isCoHost = Array.isArray(currentEventData.co_hosts) && currentEventData.co_hosts.includes(currentUser.email);
+          ownerOrAdmin = currentUser.role === 'admin' || currentEventData.created_by === currentUser.id || isCoHost;
           setIsOwner(ownerOrAdmin);
         }
-        // Count user's own uploads by UUID via RLS-protected query
         const myAllPhotos = await fetchMyPhotosFromBackend(currentEventData.id, userIdSnapshot);
         setUserUploadedCount(myAllPhotos.length);
         if (!isAdminView) {
-          setPage(1);
-          setSharedPage(1);
-          setHasMore(true);
-          setSharedHasMore(true);
+          setPage(1); setSharedPage(1); setHasMore(true); setSharedHasMore(true);
           await fetchPhotosByPage(currentEventData.id, 1, ownerOrAdmin, currentEventData, userIdSnapshot);
         }
       }
@@ -233,120 +265,82 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     }
     setIsLoading(false);
   }, [propEventCode, currentUser, isAdminView, fetchPhotosByPage, fetchMyPhotosFromBackend]);
-
-  useEffect(() => {
-    if (!isLoadingAuth) {
-      loadEventAndPhotos();
-    }
-  }, [currentUser, isLoadingAuth]);
-
-  // ─── Real-time photo subscription (guest gallery) ─────────────────────────
+ 
+  // ─── Real-time photo subscription ─────────────────────────────────────────
   useEffect(() => {
     if (isAdminView || !event?.id) return;
     const eventId = event.id;
-
     const channel = supabase
       .channel(`photos-realtime-${eventId}`)
-      .on(
-        'postgres_changes',
+      .on('postgres_changes',
         { event: '*', schema: 'public', table: 'photos', filter: `event_id=eq.${eventId}` },
         (payload) => {
-          const eventType = payload.eventType; // 'INSERT' | 'UPDATE' | 'DELETE'
+          const eventType = payload.eventType;
           const photo = payload.new;
           const oldData = payload.old;
-
+ 
           if (eventType === 'INSERT') {
             if (!photo) return;
-            // Only show notification for other users' uploads (UUID comparison)
             if (photo.created_by && photo.created_by === currentUser?.id) return;
-            const uploaderName = photo.guest_name || (photo.created_by ? photo.created_by.split('@')[0] : 'אורח');
+            const uploaderName = photo.guest_name || 'אורח';
             setLiveNotification({ id: Date.now(), message: `${uploaderName} העלה תמונה חדשה 📸`, icon: '📸' });
             setTimeout(() => setLiveNotification(null), 5000);
           }
-
+ 
           if (eventType === 'UPDATE' && photo) {
             const becameApproved = photo.is_approved && oldData && !oldData.is_approved;
             const becameVisible = !photo.is_hidden && oldData && oldData.is_hidden;
             const becameHidden = photo.is_hidden && oldData && !oldData.is_hidden;
-
+ 
             if (becameApproved || becameVisible) {
-              // Photo is now public — add/update in shared tab
               if (!photo.is_hidden) {
-                setSharedPhotos(prev => {
-                  if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
-                  return [photo, ...prev];
-                });
-                setPhotos(prev => {
-                  if (prev.find(p => p.id === photo.id)) return prev.map(p => p.id === photo.id ? photo : p);
-                  return [photo, ...prev];
-                });
+                setSharedPhotos(prev => prev.find(p => p.id === photo.id) ? prev.map(p => p.id === photo.id ? photo : p) : [photo, ...prev]);
+                setPhotos(prev => prev.find(p => p.id === photo.id) ? prev.map(p => p.id === photo.id ? photo : p) : [photo, ...prev]);
               }
-              // Always keep myPhotos up to date for the current user (UUID comparison)
-              if (photo.created_by === currentUser?.id) {
-                setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
-              }
+              if (photo.created_by === currentUser?.id) setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
               setLiveNotification({ id: Date.now(), message: 'תמונה חדשה עלתה לגלריה!', icon: '🖼️' });
               setTimeout(() => setLiveNotification(null), 5000);
             }
-
+ 
             if (becameHidden) {
-              // Photo was hidden — remove from public views
               setSharedPhotos(prev => prev.filter(p => p.id !== photo.id));
               setPhotos(prev => prev.filter(p => p.id !== photo.id));
-              // Keep in myPhotos but update the record to reflect hidden state (UUID comparison)
-              if (photo.created_by === currentUser?.id) {
-                setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
-              }
+              if (photo.created_by === currentUser?.id) setMyPhotos(prev => prev.map(p => p.id === photo.id ? photo : p));
             }
           }
-
+ 
           if (eventType === 'DELETE' && oldData?.id) {
             setPhotos(prev => prev.filter(p => p.id !== oldData.id));
             setSharedPhotos(prev => prev.filter(p => p.id !== oldData.id));
             setMyPhotos(prev => prev.filter(p => p.id !== oldData.id));
           }
         }
-      )
-      .subscribe();
-
+      ).subscribe();
     return () => supabase.removeChannel(channel);
   }, [isAdminView, event?.id, currentUser?.email]);
-
-  // ─── Fetch next page (called by VirtuosoGrid endReached) ─────────────────
+ 
+  // ─── Fetch next page ──────────────────────────────────────────────────────
   const fetchNextPage = useCallback(() => {
     if (isFetchingMore || !event) return;
-    // Owner and "my-photos" tab use the standard page counter
     if (isOwner || activeTab === 'my-photos') {
       if (!hasMore) return;
-      setPage(prevPage => {
-        const nextPage = prevPage + 1;
-        fetchPhotosByPage(event.id, nextPage, isOwner, event);
-        return nextPage;
-      });
+      setPage(prev => { const n = prev + 1; fetchPhotosByPage(event.id, n, isOwner, event); return n; });
     } else {
-      // Shared tab pagination
       if (!sharedHasMore) return;
-      setSharedPage(prevPage => {
-        const nextPage = prevPage + 1;
-        fetchPhotosByPage(event.id, nextPage, isOwner, event);
-        return nextPage;
-      });
+      setSharedPage(prev => { const n = prev + 1; fetchPhotosByPage(event.id, n, isOwner, event); return n; });
     }
   }, [hasMore, sharedHasMore, isFetchingMore, event, isOwner, activeTab, fetchPhotosByPage]);
-
+ 
   // ─── Image utils ──────────────────────────────────────────────────────────
   const getDisplayUploaderName = (photo) => {
     if (!photo) return "אורח";
-    // guest_name is the canonical display name (set in Guest Book or from Google profile)
     if (photo.guest_name) return photo.guest_name;
-    // created_by is a UUID since migration — never parse it as an email
-    // uploader_email is a legacy field that may exist on older records
     const legacyEmail = photo.uploader_email || "";
     if (legacyEmail.includes("privaterelay.appleid.com")) return "משתמש אפל";
     if (legacyEmail.includes("@")) return legacyEmail.split("@")[0];
     return "אורח";
   };
-
+ 
   const drawDateStamp = (ctx, width, height) => {
     const now = new Date();
     const dateStr = `'${now.getFullYear().toString().slice(-2)}  ${(now.getMonth() + 1).toString().padStart(2, '0')}  ${now.getDate().toString().padStart(2, '0')}`;
@@ -354,15 +348,13 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     ctx.save();
     ctx.font = `bold ${fontSize}px "Courier New", monospace`;
     ctx.fillStyle = "rgba(255, 120, 0, 0.92)";
-    ctx.shadowBlur = 6;
-    ctx.shadowColor = "rgba(200, 80, 0, 0.5)";
+    ctx.shadowBlur = 6; ctx.shadowColor = "rgba(200, 80, 0, 0.5)";
     ctx.translate(width * 0.06, height * 0.92);
-    ctx.rotate(-Math.PI / 2);
-    ctx.textAlign = "left";
+    ctx.rotate(-Math.PI / 2); ctx.textAlign = "left";
     ctx.fillText(dateStr, 0, 0);
     ctx.restore();
   };
-
+ 
   const compressImage = (file, shouldFlip = false, filter = 'none') => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -394,7 +386,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       img.src = objectUrl;
     });
   };
-
+ 
   const generateWatermarkedBlob = (photo, eventName) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -424,33 +416,23 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       img.src = photo.file_urls?.original || photo.file_url;
     });
   };
-
+ 
   // ─── Upload actions ───────────────────────────────────────────────────────
   const getUserMaxUploads = useCallback(() => {
     if (!event || !currentUser) return event?.max_uploads_per_user || 15;
-    const isSuperAdmin = currentUser.email === 'effitag@gmail.com';      // super-admin still by email
-    if (isSuperAdmin) return 200;
-    const isCreator = event.created_by === currentUser.id;               // UUID comparison
-    if (isCreator) return 200;
-    const isCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(currentUser.email); // co_hosts still email
-    if (isCoHost) return 50;
+    if (currentUser.email === 'effitag@gmail.com') return 200;
+    if (event.created_by === currentUser.id) return 200;
+    if (Array.isArray(event.co_hosts) && event.co_hosts.includes(currentUser.email)) return 50;
     return event.max_uploads_per_user || 15;
   }, [event, currentUser]);
-
+ 
   const addToPendingPhotos = async (file, isFrontCamera = false, filterType = 'none') => {
-    if (!file.type.startsWith('image/')) {
-      alert('יש לבחור קובץ תמונה בלבד.');
-      return;
-    }
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      alert('גודל הקובץ חייב להיות עד 50MB.');
-      return;
-    }
+    if (!file.type.startsWith('image/')) { alert('יש לבחור קובץ תמונה בלבד.'); return; }
+    if (file.size > MAX_FILE_SIZE_BYTES) { alert('גודל הקובץ חייב להיות עד 50MB.'); return; }
     if (event) {
       const maxPhotos = getUserMaxUploads();
       if (userUploadedCount + pendingPhotos.length >= maxPhotos) {
-        alert(`הגעת למכסה המקסימלית (${maxPhotos} תמונות) לאירוע זה.`);
-        return;
+        alert(`הגעת למכסה המקסימלית (${maxPhotos} תמונות) לאירוע זה.`); return;
       }
     }
     try {
@@ -463,7 +445,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       alert('שגיאה בעיבוד התמונה. אנא נסה שוב.');
     }
   };
-
+ 
   const changePhotoFilter = async (photoId, newFilter) => {
     const photo = pendingPhotos.find(p => p.id === photoId);
     if (!photo) return;
@@ -474,7 +456,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     setPendingPhotos(prev => prev.map(p => p.id === photoId ? { ...p, file: processedFile, previewUrl: newPreviewUrl, filter: newFilter } : p));
     setProcessingFilterId(null);
   };
-
+ 
   const removeFromPendingPhotos = (photoId) => {
     setPendingPhotos(prev => {
       const photo = prev.find(p => p.id === photoId);
@@ -484,41 +466,28 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       return updated;
     });
   };
-
+ 
   const clearAllPendingPhotos = useCallback(() => {
-    setPendingPhotos(prev => {
-      prev.forEach(p => { if (p.previewUrl) URL.revokeObjectURL(p.previewUrl); });
-      return [];
-    });
+    setPendingPhotos(prev => { prev.forEach(p => { if (p.previewUrl) URL.revokeObjectURL(p.previewUrl); }); return []; });
     setShowPendingGallery(false);
   }, []);
-
+ 
   const uploadAllPendingPhotos = async () => {
     if (pendingPhotos.length === 0) return;
-
-    // ── Server-side quota check before uploading ──────────────────────────
-    // device_uuid is sent so per-device limit is enforced correctly
     const quota = await checkGuestQuota({ event_id: event.id });
-    if (!quota?.data?.allowed) {
-      const reason = quota?.data?.reason || 'לא ניתן להעלות תמונות לאירוע זה.';
-      alert(reason);
-      return;
-    }
-
+    if (!quota?.data?.allowed) { alert(quota?.data?.reason || 'לא ניתן להעלות תמונות לאירוע זה.'); return; }
+ 
     setIsUploadingBatch(true);
     setUploadProgress({ current: 0, total: pendingPhotos.length });
-
     const photosToUpload = [...pendingPhotos];
     const newlyUploaded = [];
-    let successCount = 0;
-    let errorCount = 0;
+    let successCount = 0, errorCount = 0;
     const batchSize = 3;
-
+ 
     for (let i = 0; i < photosToUpload.length; i += batchSize) {
       const batch = photosToUpload.slice(i, i + batchSize);
       await Promise.all(batch.map(async (photo) => {
         try {
-          // Convert file to base64 and process via backend (creates 3 resized versions)
           const arrayBuffer = await photo.file.arrayBuffer();
           const uint8Array = new Uint8Array(arrayBuffer);
           let binary = '';
@@ -529,7 +498,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
           const base64 = btoa(binary);
           const processed = await processImage({ file_base64: base64, file_name: photo.originalName || photo.file.name });
           const processedData = processed?.data;
-
+ 
           let photoData = {
             event_id: event.id,
             filter_applied: photo.filter || 'none',
@@ -537,52 +506,40 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             is_hidden: false,
             guest_name: localStorage.getItem('ms_guest_name') || currentUser?.full_name || currentUser?.email || "אורח",
             guest_greeting: localStorage.getItem('ms_guest_greeting') || currentUser?.user_metadata?.guest_greeting || null,
-            created_by: currentUser?.id || null,                  // UUID — matches auth.uid()
-            device_uuid: null,                                    // deprecated; anonymous auth provides real uid
+            created_by: currentUser?.id || null,
+            device_uuid: null,
           };
-
+ 
           if (processedData?.thumbnail_url) {
-            // New path: save multi-resolution versions
-            photoData.file_urls = {
-              thumbnail: processedData.thumbnail_url,
-              medium: processedData.medium_url,
-              original: processedData.original_url,
-            };
-            photoData.file_url = processedData.original_url; // legacy fallback
+            photoData.file_urls = { thumbnail: processedData.thumbnail_url, medium: processedData.medium_url, original: processedData.original_url };
+            photoData.file_url = processedData.original_url;
           } else {
-            // Fallback: direct upload if processImage failed
             const { file_url } = await memoriaService.storage.upload(photo.file, event.id);
             photoData.file_url = file_url;
           }
-
+ 
           const created = await memoriaService.photos.create(photoData);
           if (created) newlyUploaded.push(created);
           successCount++;
         } catch (err) {
-          console.error('❌ Failed to upload photo:', err?.message || err, '| photo:', photo.originalName);
+          console.error('❌ Failed to upload photo:', err?.message || err);
           errorCount++;
         } finally {
           setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
         }
       }));
     }
-
+ 
     pendingPhotos.forEach(p => { if (p.previewUrl) URL.revokeObjectURL(p.previewUrl); });
-    setPendingPhotos([]);
-    setShowPendingGallery(false);
-    setIsUploadingBatch(false);
-    setUploadProgress({ current: 0, total: 0 });
-
+    setPendingPhotos([]); setShowPendingGallery(false);
+    setIsUploadingBatch(false); setUploadProgress({ current: 0, total: 0 });
+ 
     if (successCount > 0) {
-      // Confetti + Haptic at the exact end of a successful batch
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#f3f3f3', '#e5e5e5', '#c4c4c4', '#ffffff', '#25D366'] });
       if (navigator.vibrate) navigator.vibrate(200);
-
       setUploadSuccess(true);
       setUserUploadedCount(prev => prev + successCount);
       if (!isAdminView) {
-        // הצג מיידית את כל התמונות שהאורח העלה (גם לפני אישור) —
-        // בשני המצבים (ציבורי + פרטי) המשתמש תמיד רואה את שלו
         const uploaded = newlyUploaded.filter(p => p);
         if (uploaded.length > 0) {
           const addOptimistic = prev => {
@@ -594,16 +551,14 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         }
       }
     }
-
-    if (errorCount > 0) alert(`${successCount} תמונות הועלו בהצלחה. ${errorCount} תמונות נכשלו.`);
+    if (errorCount > 0) alert(`${successCount} תמונות הועלו בהצלחה.\n${errorCount} תמונות נכשלו.`);
   };
-
+ 
   const handleUploadClick = async (mode) => {
     if (!event) return;
-    if (!currentUser) return; // caller (EventGallery) handles auth gate for guest flow
-    if (mode === 'camera') {
-      setShowCamera(true);
-    } else {
+    if (!currentUser) return;
+    if (mode === 'camera') { setShowCamera(true); }
+    else {
       if (fileInputRef.current) {
         fileInputRef.current.removeAttribute('capture');
         fileInputRef.current.dataset.cameraMode = 'gallery';
@@ -611,17 +566,15 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       }
     }
   };
-
-  const handleCameraCapture = async (file, filterType) => {
-    await addToPendingPhotos(file, false, 'none');
-  };
-
+ 
+  const handleCameraCapture = async (file, filterType) => { await addToPendingPhotos(file, false, 'none'); };
+ 
   const handleFinalUploadFromCamera = async () => {
     setShowCamera(false);
     await uploadAllPendingPhotos();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
+ 
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0 || !event) return;
@@ -633,7 +586,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       setIsPreparingFiles(false);
     }, 50);
   };
-
+ 
   // ─── Share / Download ─────────────────────────────────────────────────────
   const sharePhoto = async (photo) => {
     if (!navigator.share) return;
@@ -645,7 +598,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     } catch (error) { console.error('שגיאה בשיתוף:', error); }
     finally { setIsProcessingAction(false); }
   };
-
+ 
   const handleDownloadPhoto = async (photo) => {
     setIsProcessingAction(true);
     try {
@@ -658,42 +611,35 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     } catch { window.open(photo.file_url, '_blank'); }
     finally { setIsProcessingAction(false); }
   };
-
-  // ─── Guest direct delete (unapproved photos — frees quota immediately) ───
+ 
+  // ─── Delete handlers ──────────────────────────────────────────────────────
   const handleGuestDeletePhoto = async (photoId) => {
     const photo = photos.find(p => p.id === photoId) || myPhotos.find(p => p.id === photoId);
-    if (!photo || photo.is_approved) return; // מגן: לא ניתן למחוק מאושרות
-    setDeletingId(photoId);
-    setConfirmDeleteId(null);
+    if (!photo || photo.is_approved) return;
+    setDeletingId(photoId); setConfirmDeleteId(null);
     await memoriaService.photos.delete(photoId);
     setPhotos(prev => prev.filter(p => p.id !== photoId));
     setMyPhotos(prev => prev.filter(p => p.id !== photoId));
     setUserUploadedCount(prev => Math.max(0, prev - 1));
-    setSelectedIndex(null);
-    setDeletingId(null);
+    setSelectedIndex(null); setDeletingId(null);
   };
-
-  // ─── Guest deletion request (approved photos — moderation workflow) ──────
+ 
   const handleRequestDeletion = async (photoId) => {
     await requestPhotoDeletion({ photo_id: photoId });
-    // הסתר מיידית בממשק המקומי
-    const markRequested = p =>
-      p.id === photoId ? { ...p, is_hidden: true, deletion_status: 'requested' } : p;
+    const markRequested = p => p.id === photoId ? { ...p, is_hidden: true, deletion_status: 'requested' } : p;
     setPhotos(prev => prev.map(markRequested));
     setMyPhotos(prev => prev.map(markRequested));
     setSharedPhotos(prev => prev.map(markRequested));
     setSelectedIndex(null);
   };
-
-  // ─── Admin ────────────────────────────────────────────────────────────────
+ 
   const handleAdminDelete = async (photoId) => {
-    setDeletingId(photoId);
-    setConfirmDeleteId(null);
+    setDeletingId(photoId); setConfirmDeleteId(null);
     await memoriaService.photos.delete(photoId);
     if (onAdminPhotosChange) onAdminPhotosChange((adminPhotos || []).filter(p => p.id !== photoId));
     setDeletingId(null);
   };
-
+ 
   const handleDeleteFromFullScreen = async () => {
     if (!selectedPhoto) return;
     const currentIndex = selectedIndex;
@@ -705,36 +651,31 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     if (remaining.length === 0) setSelectedIndex(null);
     else if (currentIndex >= remaining.length) setSelectedIndex(remaining.length - 1);
   };
-
+ 
   // ─── Derived values ───────────────────────────────────────────────────────
   const isSuperAdmin = currentUser?.email === 'effitag@gmail.com';
-  const isOriginalCreator = !!(currentUser?.id && event?.created_by === currentUser.id);  // UUID comparison
+  const isOriginalCreator = !!(currentUser?.id && event?.created_by === currentUser.id);
   const isCoHost = !!(Array.isArray(event?.co_hosts) && event.co_hosts.includes(currentUser?.email));
-
+ 
   let eventMaxPhotos;
-  if (isSuperAdmin || isOriginalCreator) {
-    eventMaxPhotos = 200;
-  } else if (isCoHost) {
-    eventMaxPhotos = 50;
-  } else {
-    eventMaxPhotos = event?.max_uploads_per_user || 15;
-  }
-
+  if (isSuperAdmin || isOriginalCreator) eventMaxPhotos = 200;
+  else if (isCoHost) eventMaxPhotos = 50;
+  else eventMaxPhotos = event?.max_uploads_per_user || 15;
+ 
   const remainingPhotos = Math.max(0, eventMaxPhotos - userUploadedCount);
   const isQuotaExhausted = userUploadedCount >= eventMaxPhotos;
   const cameraMaxPhotos = remainingPhotos;
-
+ 
   const getCameraFormattedDate = (dateString) => {
     if (!dateString) return "";
     const d = new Date(dateString);
     return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
   };
-
+ 
   return {
-  // state
-  event, photos, myPhotos, sharedPhotos, activeTab, setActiveTab,
-  isLoading, pageError, isOwner, currentUser, navigate,
-  handleGuestDeletePhoto, handleRequestDeletion,
+    event, photos, myPhotos, sharedPhotos, activeTab, setActiveTab,
+    isLoading, pageError, isOwner, currentUser, navigate,
+    handleGuestDeletePhoto, handleRequestDeletion,
     liveNotification, setLiveNotification,
     userUploadedCount, uploadSuccess, setUploadSuccess,
     confirmDeleteId, setConfirmDeleteId, deletingId,
@@ -745,11 +686,8 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     selectedIndex, setSelectedIndex, selectedPhoto,
     page, hasMore, sharedHasMore, isFetchingMore,
     displayedPhotos,
-    // derived
     isSuperAdmin, eventMaxPhotos, remainingPhotos, isQuotaExhausted, cameraMaxPhotos,
-    // refs
     fileInputRef,
-    // handlers
     loadEventAndPhotos, fetchNextPage, handleUploadClick, handleCameraCapture, handleFinalUploadFromCamera,
     handleFileChange, addToPendingPhotos, changePhotoFilter, removeFromPendingPhotos, clearAllPendingPhotos,
     uploadAllPendingPhotos, sharePhoto, handleDownloadPhoto,
@@ -759,3 +697,4 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     getDisplayUploaderName, getCameraFormattedDate,
   };
 }
+ 
