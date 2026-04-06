@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Camera, Upload, Sparkles, CheckCircle, ImageIcon, Users } from "lucide-react";
@@ -14,6 +14,14 @@ import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 
 const GUEST_NAME_KEY = 'ms_guest_name';
+
+// ── Module-level gate ────────────────────────────────────────────────────────
+// This variable lives OUTSIDE the React component tree and survives any
+// re-mount triggered by AuthContext's onAuthStateChange firing after
+// signInAnonymously() or updateUser(). Even if EventGallery is torn down and
+// re-created by React's scheduler, this flag remains true and the new instance
+// initialises showGuestBook=false immediately — no async required.
+let _guestBookDismissed = false;
 
 function EmptyState({ isAdminView, onUpload, disabled, title, subtitle }) {
   return (
@@ -41,14 +49,26 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   const g = useEventGallery({ propEventCode, isAdminView, adminPhotos, onAdminPhotosChange });
   const { isLoadingAuth } = useAuth();
 
-  const [showGuestBook, setShowGuestBook] = useState(
-    !isAdminView && !localStorage.getItem(GUEST_NAME_KEY)
-  );
+  // Lazy initializer checks the module-level flag first, then localStorage.
+  // On any re-mount (e.g. triggered by onAuthStateChange), if _guestBookDismissed
+  // is already true the modal never flickers back open — no async needed.
+  const [showGuestBook, setShowGuestBook] = useState(() => {
+    if (isAdminView || _guestBookDismissed) return false;
+    return !localStorage.getItem(GUEST_NAME_KEY);
+  });
   const [guestName, setGuestName] = useState('');
   const [guestGreeting, setGuestGreeting] = useState('');
   const [isSavingGuest, setIsSavingGuest] = useState(false);
   const [guestSaveError, setGuestSaveError] = useState('');
 
+  // Single close function: sets both the module-level gate and React state.
+  const closeGuestBook = useCallback(() => {
+    _guestBookDismissed = true;
+    setIsSavingGuest(false);
+    setShowGuestBook(false);
+  }, []);
+
+  // ── Anonymous sign-in on mount ─────────────────────────────────────────────
   const hasAttemptedAnonSignIn = useRef(false);
   useEffect(() => {
     if (isAdminView || hasAttemptedAnonSignIn.current) return;
@@ -63,15 +83,24 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     });
   }, [isAdminView]);
 
-  // Fail-safe: if localStorage already has the name (e.g. after a remount triggered
-  // by onAuthStateChange), close the gate immediately without waiting for any async call.
+  // ── Fail-safe polling ──────────────────────────────────────────────────────
+  // Runs every 500ms for the first 3 seconds after mount.
+  // If GUEST_NAME_KEY appears in localStorage (written by this or a parallel
+  // instance), the gate is force-closed even if React state was reset by a
+  // concurrent auth event. This is the last line of defence.
   useEffect(() => {
-    if (!isAdminView && showGuestBook && localStorage.getItem(GUEST_NAME_KEY)) {
-      setShowGuestBook(false);
-    }
-  }, [showGuestBook, isAdminView]);
+    if (isAdminView) return;
+    const iv = setInterval(() => {
+      if (localStorage.getItem(GUEST_NAME_KEY)) {
+        closeGuestBook();
+      }
+    }, 500);
+    const t = setTimeout(() => clearInterval(iv), 3000);
+    return () => { clearInterval(iv); clearTimeout(t); };
+  }, [isAdminView, closeGuestBook]);
 
-  const handleGuestBookSubmit = async (e) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleGuestBookSubmit = async (/** @type {any} */ e) => {
     e.preventDefault();
     const name = guestName.trim();
     if (!name) return;
@@ -80,7 +109,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     setGuestSaveError('');
 
     try {
-      // Ensure we have an active session before calling updateUser (prevents 403).
+      // Ensure an active session exists before calling updateUser (prevents 403).
       let { data: { session }, error: sessionErr } = await supabase.auth.getSession();
       if (sessionErr) throw sessionErr;
 
@@ -92,30 +121,23 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
 
       const greetingTrimmed = guestGreeting.trim();
 
-      // ── FIRE-AND-FORGET UI ──────────────────────────────────────────────────
-      // Write to localStorage and close the modal NOW, before the server call.
-      // updateUser triggers onAuthStateChange → fetchUserWithProfile (async) →
-      // setUser → potential re-renders or remount. If EventGallery remounts while
-      // the await is in-flight, those setStates run on a dead instance and are
-      // silently dropped. Closing the UI first guarantees the guest sees the
-      // gallery regardless of what happens in the AuthContext pipeline.
+      // 1. Commit to localStorage — source of truth for the gate.
       localStorage.setItem(GUEST_NAME_KEY, name);
       if (greetingTrimmed) localStorage.setItem('ms_guest_greeting', greetingTrimmed);
-      setShowGuestBook(false);
-      setIsSavingGuest(false);
 
-      // Background sync — non-blocking for the UI.
+      // 2. Close the modal synchronously via the module-level gate.
+      //    This runs BEFORE updateUser so onAuthStateChange cannot race it.
+      closeGuestBook();
+
+      // 3. Background server sync — non-blocking for the UI.
       supabase.auth.updateUser({
         data: { full_name: name, display_name: name, guest_greeting: greetingTrimmed || null },
-      }).then(({ error: updateErr }) => {
-        if (updateErr) {
-          console.error('[GuestBook] Background sync failed:', updateErr.message);
-        }
-      });
+      }).catch(err => console.error('[GuestBook] Background sync failed:', err.message));
 
     } catch (err) {
-      console.error('[GuestBook] Submit error:', err.message);
-      setGuestSaveError(err.message || 'שגיאה ברישום לשרת. נסה שוב.');
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[GuestBook] Submit error:', msg);
+      setGuestSaveError(msg || 'שגיאה ברישום לשרת. נסה שוב.');
       setIsSavingGuest(false);
     }
   };
