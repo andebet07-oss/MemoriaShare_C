@@ -41,7 +41,6 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   const g = useEventGallery({ propEventCode, isAdminView, adminPhotos, onAdminPhotosChange });
   const { isLoadingAuth } = useAuth();
 
-  // ─── Guest Book Entry Gate ────────────────────────────────────────────────
   const [showGuestBook, setShowGuestBook] = useState(
     !isAdminView && !localStorage.getItem(GUEST_NAME_KEY)
   );
@@ -50,10 +49,6 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   const [isSavingGuest, setIsSavingGuest] = useState(false);
   const [guestSaveError, setGuestSaveError] = useState('');
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // SQUAD FIX: Fire anonymous sign-in immediately on mount.
-  // No dependency on isLoadingAuth — checks Supabase session directly.
-  // ═══════════════════════════════════════════════════════════════════════════
   const hasAttemptedAnonSignIn = useRef(false);
   useEffect(() => {
     if (isAdminView || hasAttemptedAnonSignIn.current) return;
@@ -69,19 +64,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   }, [isAdminView]);
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SQUAD FIX: handleGuestBookSubmit — guaranteed to never get stuck.
-  //
-  // Root cause of stuck "שומר..." spinner:
-  //   1. signInAnonymously() fires in background useEffect (takes 500ms-2s)
-  //   2. User clicks Submit before sign-in completes
-  //   3. updateUser() called with no session → throws or returns error
-  //   4. No try/catch/finally → setIsSavingGuest(false) never runs → STUCK
-  //
-  // Fix:
-  //   - Await signInAnonymously INSIDE the handler if no session exists
-  //   - Save to localStorage FIRST (critical path for photo uploads)
-  //   - updateUser is best-effort (non-blocking)
-  //   - finally block ALWAYS resets the spinner
+  // התיקון הסופי: סנכרון מלא מול ה-Database ומניעת שגיאת 403
   // ═══════════════════════════════════════════════════════════════════════════
   const handleGuestBookSubmit = async (e) => {
     e.preventDefault();
@@ -92,52 +75,51 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     setGuestSaveError('');
 
     try {
-      // Step 1: Ensure we have a Supabase session.
-      // If the background useEffect hasn't completed yet, do it here.
-      let { data: { session } } = await supabase.auth.getSession();
+      // 1. וידוא שיש Session פעיל - קריטי למניעת 403 ב-updateUser
+      let { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+      
+      if (sessionErr) throw sessionErr;
 
       if (!session) {
-        const { error: anonErr } = await supabase.auth.signInAnonymously();
-        if (anonErr) {
-          console.error('[GuestBook] signInAnonymously failed:', anonErr.message);
-          // Don't block — save locally and continue
-        } else {
-          const refreshed = await supabase.auth.getSession();
-          session = refreshed.data.session;
-        }
+        const { data: signInData, error: anonErr } = await supabase.auth.signInAnonymously();
+        if (anonErr) throw anonErr;
+        session = signInData.session;
       }
 
-      // Step 2: Save to localStorage FIRST — this is what photo uploads read.
+      // 2. עדכון המשתמש ב-Supabase (רישום רשמי ב-Database)
+      // אנחנו משתמשים בשדות התקניים של הפרופיל
+      const { error: updateErr } = await supabase.auth.updateUser({
+        data: { 
+          full_name: name, 
+          display_name: name,
+          guest_greeting: guestGreeting.trim() || null 
+        }
+      });
+
+      if (updateErr) {
+        // אם מדובר בשגיאת 403, נציג הודעה ברורה למשתמש במקום להיתקע
+        if (updateErr.status === 403) {
+          throw new Error("חסימת אבטחה מהשרת (403). וודא שכתובת האתר מוגדרת ב-Supabase.");
+        }
+        throw updateErr;
+      }
+
+      // 3. רק לאחר הצלחה בשרת - נשמור מקומית ונסגור
       localStorage.setItem(GUEST_NAME_KEY, name);
       if (guestGreeting.trim()) {
         localStorage.setItem('ms_guest_greeting', guestGreeting.trim());
       }
 
-      // Step 3: Best-effort sync to Supabase auth metadata.
-      // If this fails, the name is still in localStorage.
-      if (session) {
-        try {
-          await supabase.auth.updateUser({
-            data: { full_name: name, guest_greeting: guestGreeting.trim() || null }
-          });
-        } catch (updateErr) {
-          console.warn('[GuestBook] updateUser failed (non-fatal):', updateErr?.message);
-        }
-      }
-
-      // Step 4: Close the modal → gallery renders immediately
       setShowGuestBook(false);
 
     } catch (err) {
-      console.error('[GuestBook] Unexpected error:', err);
-      setGuestSaveError('שגיאה בשמירת השם. אנא נסה שוב.');
+      console.error('[GuestBook] Database Sync Error:', err.message);
+      setGuestSaveError(err.message || 'שגיאה ברישום לשרת. נסה שוב.');
     } finally {
-      // ALWAYS reset the spinner — no matter what happened
       setIsSavingGuest(false);
     }
   };
 
-  // ─── Guest Book Modal ─────────────────────────────────────────────────────
   if (showGuestBook) {
     return (
       <div className="fixed inset-0 z-50 bg-black flex items-center justify-center p-4 sm:p-6" dir="rtl"
@@ -202,7 +184,6 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     );
   }
 
-  // ─── Loading / Error / Not Found ──────────────────────────────────────────
   if (g.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
