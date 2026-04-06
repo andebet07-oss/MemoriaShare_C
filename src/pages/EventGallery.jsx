@@ -42,8 +42,6 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   const { isLoadingAuth } = useAuth();
 
   // ─── Guest Book Entry Gate ────────────────────────────────────────────────
-  // Initialized directly from localStorage — no useEffect needed.
-  // Admins and Google-auth hosts bypass the gate entirely.
   const [showGuestBook, setShowGuestBook] = useState(
     !isAdminView && !localStorage.getItem(GUEST_NAME_KEY)
   );
@@ -52,14 +50,25 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   const [isSavingGuest, setIsSavingGuest] = useState(false);
   const [guestSaveError, setGuestSaveError] = useState('');
 
-  // Ensure an anonymous session exists so uploads have a real auth.uid()
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SQUAD FIX: Ensure anonymous session exists IMMEDIATELY on mount.
+  // Fires without waiting for isLoadingAuth — checks Supabase session directly.
+  // signInAnonymously() is a no-op if a session already exists.
+  // ═══════════════════════════════════════════════════════════════════════════
   const hasAttemptedAnonSignIn = useRef(false);
   useEffect(() => {
-    if (isAdminView || isLoadingAuth || hasAttemptedAnonSignIn.current || g.currentUser) return;
-    hasAttemptedAnonSignIn.current = true;
-    supabase.auth.signInAnonymously()
-      .catch(err => console.error('Anonymous sign-in failed:', err));
-  }, [isAdminView, isLoadingAuth, g.currentUser]);
+    if (isAdminView || hasAttemptedAnonSignIn.current) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        hasAttemptedAnonSignIn.current = true;
+        return; // Already signed in (Google user or returning anon guest)
+      }
+      if (hasAttemptedAnonSignIn.current) return;
+      hasAttemptedAnonSignIn.current = true;
+      supabase.auth.signInAnonymously()
+        .catch(err => console.error('[GuestAuth] Anonymous sign-in failed:', err));
+    });
+  }, [isAdminView]);
 
   const handleGuestBookSubmit = async (e) => {
     e.preventDefault();
@@ -79,19 +88,16 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
       return;
     }
 
-    // Server confirmed — now persist locally and open gallery
     localStorage.setItem(GUEST_NAME_KEY, name);
     if (guestGreeting.trim()) localStorage.setItem('ms_guest_greeting', guestGreeting.trim());
     setShowGuestBook(false);
     setIsSavingGuest(false);
   };
 
-  // ─── Guest Book Entry Gate — blocks ALL gallery content ─────────────────
-  // showGuestBook is initialized from localStorage, so this fires before any render.
-  // The gallery does not mount at all until the guest submits their name.
+  // ─── Guest Book Modal — SQUAD FIX: fixed inset-0 z-50 items-center ──────
   if (showGuestBook) {
     return (
-      <div className="min-h-screen bg-black flex items-end sm:items-center justify-center p-4 sm:p-6" dir="rtl"
+      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center p-4 sm:p-6" dir="rtl"
         style={{ backdropFilter: 'blur(20px)' }}>
         <motion.div
           initial={{ y: 60, opacity: 0 }}
@@ -104,38 +110,47 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
             <div className="text-center">
               <div className="text-3xl mb-2">📸</div>
               <h2 className="text-white text-xl font-black">{g.event?.name || "ברוכים הבאים!"}</h2>
-              <p className="text-white/50 text-sm mt-1">שמחים שבאתם! רק שם וברכה קטנה ואנחנו מתחילים.</p>
+              <p className="text-white/50 text-sm mt-1">שמחים שבאתם! הכניסו את שמכם כדי להתחיל</p>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-white/70 text-sm font-medium">השם שלך <span className="text-red-400">*</span></label>
+
+            {guestSaveError && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2 text-center">
+                <p className="text-red-400 text-sm">{guestSaveError}</p>
+              </div>
+            )}
+
+            <div>
+              <label className="text-white/60 text-xs font-bold block mb-1.5">שם *</label>
               <input
                 type="text"
                 value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
-                placeholder="ישראל ישראלי"
-                dir="rtl"
+                onChange={e => setGuestName(e.target.value)}
+                placeholder="איך קוראים לך?"
+                required
+                maxLength={40}
                 autoFocus
-                className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors"
+                autoComplete="name"
+                enterKeyHint="next"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-base placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-white/70 text-sm font-medium">ברכה לזוג <span className="text-white/30">(אופציונלי)</span></label>
+
+            <div>
+              <label className="text-white/60 text-xs font-bold block mb-1.5">ברכה (אופציונלי)</label>
               <textarea
                 value={guestGreeting}
-                onChange={(e) => setGuestGreeting(e.target.value)}
-                placeholder="מאחלים לכם אהבה אין סופית... ✨"
+                onChange={e => setGuestGreeting(e.target.value)}
+                placeholder="השאירו ברכה חמה לבעלי השמחה..."
                 rows={2}
-                dir="rtl"
-                className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-right text-sm placeholder:text-white/30 focus:outline-none focus:border-indigo-500/60 transition-colors resize-none"
+                maxLength={500}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all resize-none"
               />
             </div>
-            {guestSaveError && (
-              <p className="text-red-400 text-xs text-center -mb-1">{guestSaveError}</p>
-            )}
+
             <button
               type="submit"
-              disabled={isSavingGuest || !guestName.trim()}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl transition-colors flex items-center justify-center gap-2 text-base active:scale-95"
+              disabled={!guestName.trim() || isSavingGuest}
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-40 text-white font-black py-4 rounded-2xl text-lg transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
             >
               {isSavingGuest
                 ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />שומר...</>
@@ -166,7 +181,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-center px-4" dir="rtl">
         <div className="text-5xl mb-4">⚠️</div>
         <h1 className="text-2xl font-bold text-white mb-2">שגיאה בטעינת הגלריה</h1>
-        <p className="text-gray-400 mb-6">לא ניתן היה לטעון את נתוני האירוע. אנא בדוק את החיבור לאינטרנט ונסה שוב.</p>
+        <p className="text-gray-400 mb-6">לא ניתן היה לטעון את נתוני האירוע.\nאנא בדוק את החיבור לאינטרנט ונסה שוב.</p>
         <Button onClick={() => { g.loadEventAndPhotos(); }} className="bg-indigo-600 hover:bg-indigo-700 text-white min-h-[44px]">נסה שוב</Button>
       </div>
     );
@@ -224,28 +239,14 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                   <div className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(37,211,102,0.08)', animationDuration: '2s' }} />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-2xl font-black text-white tracking-tight">הועלו בהצלחה! 🎉</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed">התמונות שלכם כבר באלבום.<br />שתפו עם החברים שלכם!</p>
+                  <h3 className="text-2xl font-black text-white tracking-tight">הועלו בהצלחה!</h3>
+                  <p className="text-gray-400 text-sm">
+                    כל התמונות עלו לאלבום
+                  </p>
                 </div>
-                {(() => {
-                  const galleryUrl = window.location.href;
-                  const msg = `היי! תראו את התמונות שצילמנו ב${g.event?.name || "האירוע"} 📸\n${galleryUrl}`;
-                  const waLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
-                  return (
-                    <a href={waLink} target="_blank" rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-white text-base transition-all active:scale-95 shadow-xl"
-                      style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)', boxShadow: '0 8px 24px rgba(37,211,102,0.3)' }}
-                    >
-                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white shrink-0">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.533 5.858L.057 23.59a.75.75 0 0 0 .91.91l5.732-1.476A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.725 9.725 0 0 1-4.952-1.352l-.355-.211-3.682.947.967-3.573-.232-.368A9.718 9.718 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/>
-                      </svg>
-                      שתפו עם חברים
-                    </a>
-                  );
-                })()}
-                <button onClick={() => g.setUploadSuccess(false)}
-                  className="w-full py-3.5 rounded-2xl font-semibold text-gray-400 text-sm transition-all active:scale-95 hover:text-white hover:bg-white/5 border border-white/5">
+                <button
+                  onClick={() => g.setUploadSuccess(false)}
+                  className="px-8 py-3 rounded-2xl text-sm font-bold text-white/70 hover:text-white hover:bg-white/5 border border-white/5">
                   חזרה לגלריה
                 </button>
               </div>
@@ -273,7 +274,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
           {g.isQuotaExhausted && (
             <p className="mt-1.5 text-amber-500 font-medium text-base flex items-center justify-center gap-1.5">
               <Sparkles className="w-4 h-4 shrink-0" />
-              איזה רגעים יפים! כל התמונות עלו לאלבום
+              איזה רגעים יפים! הגעת למכסה המקסימלית
             </p>
           )}
         </div>
@@ -320,7 +321,6 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
         <div className="pb-8 mt-6">
           <PullToRefresh onRefresh={g.loadEventAndPhotos} disabled={isAdminView}>
             {isAdminView || g.isOwner ? (
-              /* Admin / Owner: flat grid — no tabs needed */
               g.displayedPhotos.length > 0 ? (
                 <PhotoGrid
                   displayedPhotos={g.displayedPhotos}
@@ -342,7 +342,6 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                 <EmptyState isAdminView={isAdminView} onUpload={g.handleUploadClick} disabled={g.isUploadingBatch} />
               )
             ) : (
-              /* Guest: tabbed gallery */
               <Tabs value={g.activeTab} onValueChange={g.setActiveTab} dir="rtl">
                 <TabsList className="w-full bg-white/5 border border-white/10 rounded-2xl p-1 mb-6" aria-label="תצוגת גלריה">
                   <TabsTrigger
