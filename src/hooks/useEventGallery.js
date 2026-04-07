@@ -518,10 +518,16 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
 
       console.error('[Upload Trace] Step 4: Final liveUserId =', liveUserId ?? 'null — will proceed (RLS may block insert if null)');
 
-      // ── Step 2: Quota check ──────────────────────────────────────────────
-      // Pass liveUserId directly — checkGuestQuota must NOT call getUser() internally
-      console.error('[Upload Trace] Step 5: Checking quota for event:', event?.id, 'user:', liveUserId);
-      const quota = await checkGuestQuota({ event_id: event.id, user_id: liveUserId });
+      // ── Step 2: Quota check — pure function, zero network calls ─────────
+      // checkGuestQuota is now a pure function that uses already-loaded state.
+      // No supabase.from() or supabase.auth calls — eliminates mutex contention.
+      console.error('[Upload Trace] Step 5: Checking quota using existing event state.');
+      const quota = checkGuestQuota({
+        event,
+        user_id: liveUserId,
+        user_upload_count: userUploadedCount,
+        photos,
+      });
       console.error('[Upload Trace] Step 6: Quota result:', JSON.stringify(quota?.data));
       if (!quota?.data?.allowed) {
         alert(quota?.data?.reason || 'לא ניתן להעלות תמונות לאירוע זה.');
