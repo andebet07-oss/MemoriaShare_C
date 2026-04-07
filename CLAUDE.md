@@ -9,7 +9,7 @@ Read it in full before every task. Rules here override any default behavior.
 - **Product:** MemoriaShare — real-time event photo sharing PWA
 - **PRD:** `PRD.md` (authoritative product spec)
 - **Schema:** `CLEAN_RESET_SCHEMA.sql` (authoritative DB schema + RLS)
-- **Live URL:** `https://memoria-share-c.vercel.app`
+- **Live URL:** `https://memoriashare.com`
 - **Deployment:** Vercel (auto-deploy from `main`)
 - **Backend:** Supabase project (URL in `.env.local`)
 

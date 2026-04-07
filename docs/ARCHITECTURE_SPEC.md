@@ -36,7 +36,7 @@
 ## 2. THE EXACT GUEST FLOW (Steps A–F)
 
 ### Step A — Entry
-- Guest scans QR code → lands on `EventGallery` page.
+- Guest scans QR code → lands on `https://memoriashare.com/EventGallery?code=XXXX`.
 - If no valid Supabase session exists for this event, the upload button is visible but triggers the identity modal.
 
 ### Step B — Identity Request

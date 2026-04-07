@@ -22,7 +22,7 @@ const EventCard = React.memo(function EventCard({ event, onDelete, isAdmin = fal
 
   const handleCopyLink = (e) => {
     e.stopPropagation();
-    const url = `${window.location.origin}${createPageUrl(`Event?code=${event.unique_code}`)}`;
+    const url = `${import.meta.env.VITE_SITE_URL || window.location.origin}${createPageUrl(`Event?code=${event.unique_code}`)}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
