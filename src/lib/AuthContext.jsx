@@ -7,6 +7,11 @@ const AuthContext = createContext();
  * Fetch the app-level profile (role, full_name, avatar_url) for a Supabase user
  * and merge it onto the user object so callers get user.email, user.full_name,
  * user.role etc. in one place.
+ *
+ * WHY anonymous short-circuit: anonymous guests never have a profile row.
+ * Calling supabase.from('profiles').select() for them goes through _fetchWithAuth,
+ * which can contend the auth mutex while AuthContext is still processing getSession().
+ * Skipping it for anonymous users eliminates that contention entirely.
  */
 async function fetchUserWithProfile(supabaseUser) {
   if (!supabaseUser) return null;
@@ -22,8 +27,13 @@ async function fetchUserWithProfile(supabaseUser) {
     isAnonymous: supabaseUser.is_anonymous || false,             // true for Supabase Anonymous Sign-In guests
     full_name: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || '',
     avatar_url: meta.avatar_url || meta.picture || '',
-    role: 'user', // default until profile row is loaded
+    role: 'user',
   };
+
+  // Anonymous guests: no profile row, no DB call — return immediately
+  if (supabaseUser.is_anonymous) {
+    return { ...base, phone: '', needsOnboarding: false };
+  }
 
   try {
     const { data: profile } = await supabase
@@ -40,17 +50,16 @@ async function fetchUserWithProfile(supabaseUser) {
         phone: profile.phone || '',
         avatar_url: profile.avatar_url || base.avatar_url,
       };
-      // needsOnboarding: only for real (non-anonymous) users missing full_name or phone
-      merged.needsOnboarding = !supabaseUser.is_anonymous && (!merged.full_name || !merged.phone);
+      merged.needsOnboarding = !merged.full_name || !merged.phone;
       return merged;
     }
   } catch (err) {
-    // Non-fatal: profile table might not exist yet
+    // Non-fatal: profile table might not exist yet or network is down
     console.warn('AuthContext: could not fetch profile', err.message);
   }
 
-  // No profile row yet — non-anonymous users must complete onboarding
-  return { ...base, phone: '', needsOnboarding: !supabaseUser.is_anonymous };
+  // No profile row yet — host must complete onboarding
+  return { ...base, phone: '', needsOnboarding: true };
 }
 
 export const AuthProvider = ({ children }) => {
@@ -60,28 +69,64 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
-    // Resolve the current session immediately on mount
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (error) {
-        console.error('AuthContext: getSession failed', error);
-        setAuthError({ type: 'unknown', message: error.message });
+    // settle() is called exactly once — whichever path (getSession or onAuthStateChange)
+    // resolves first clears the loading state. The safety timer is the last resort.
+    let settled = false;
+    const settle = () => {
+      if (!settled) {
+        settled = true;
+        setIsLoadingAuth(false);
       }
-      const enriched = await fetchUserWithProfile(session?.user ?? null);
-      setUser(enriched);
-      setIsAuthenticated(!!enriched);
-      setIsLoadingAuth(false);
-    });
+    };
 
-    // Keep state in sync with Supabase auth events (login, logout, token refresh)
+    // Safety net: if nothing resolves within 8 seconds (e.g. network outage,
+    // Supabase project paused, or auth mutex deadlock), unblock the app anyway.
+    const safetyTimer = setTimeout(() => {
+      console.warn('AuthContext: session resolution timed out — unblocking app');
+      settle();
+    }, 8000);
+
+    // Resolve the current session immediately on mount.
+    // getSession() reads from localStorage — fast, no network unless token needs refresh.
+    supabase.auth.getSession()
+      .then(async ({ data: { session }, error }) => {
+        clearTimeout(safetyTimer);
+        if (error) {
+          console.error('AuthContext: getSession failed', error);
+          setAuthError({ type: 'unknown', message: error.message });
+        }
+        const enriched = await fetchUserWithProfile(session?.user ?? null);
+        setUser(enriched);
+        setIsAuthenticated(!!enriched);
+        settle();
+      })
+      .catch(err => {
+        // Destructuring error, network failure, or anything unexpected.
+        // Must still unblock the app — DO NOT leave isLoadingAuth = true.
+        clearTimeout(safetyTimer);
+        console.error('AuthContext: getSession threw unexpectedly', err);
+        settle();
+      });
+
+    // Keep state in sync with Supabase auth events (login, logout, token refresh).
+    // onAuthStateChange fires INITIAL_SESSION first, which also settles loading.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const enriched = await fetchUserWithProfile(session?.user ?? null);
-      setUser(enriched);
-      setIsAuthenticated(!!enriched);
-      setIsLoadingAuth(false);
-      setAuthError(null);
+      try {
+        const enriched = await fetchUserWithProfile(session?.user ?? null);
+        setUser(enriched);
+        setIsAuthenticated(!!enriched);
+        setAuthError(null);
+        settle();
+      } catch (err) {
+        console.error('AuthContext: onAuthStateChange handler threw', err);
+        settle();
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const refreshUser = async () => {

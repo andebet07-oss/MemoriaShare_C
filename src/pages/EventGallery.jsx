@@ -68,20 +68,21 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     setShowGuestBook(false);
   }, []);
 
-  // ── Anonymous sign-in on mount ─────────────────────────────────────────────
+  // ── Anonymous sign-in ──────────────────────────────────────────────────────
+  // WHY we wait for isLoadingAuth: AuthContext calls getSession() at mount.
+  // Calling getSession() again here simultaneously adds a second caller to the
+  // Supabase v2 auth mutex before the first one resolves — the root cause of
+  // the F5 black-screen hang. Instead, we simply wait for AuthContext to finish,
+  // then check if currentUser is null. If it is, THEN sign in anonymously.
+  // This makes AuthContext the single owner of session initialization.
   const hasAttemptedAnonSignIn = useRef(false);
   useEffect(() => {
-    if (isAdminView || hasAttemptedAnonSignIn.current) return;
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session || hasAttemptedAnonSignIn.current) {
-        hasAttemptedAnonSignIn.current = true;
-        return;
-      }
-      hasAttemptedAnonSignIn.current = true;
-      supabase.auth.signInAnonymously()
-        .catch(err => console.error('[GuestAuth] Anonymous sign-in failed:', err));
-    });
-  }, [isAdminView]);
+    if (isAdminView || isLoadingAuth || hasAttemptedAnonSignIn.current) return;
+    hasAttemptedAnonSignIn.current = true;
+    if (currentUser) return; // session already exists — nothing to do
+    supabase.auth.signInAnonymously()
+      .catch(err => console.error('[GuestAuth] Anonymous sign-in failed:', err));
+  }, [isAdminView, isLoadingAuth, currentUser]);
 
   // ── Fail-safe polling ──────────────────────────────────────────────────────
   // Runs every 500ms for the first 3 seconds after mount.
