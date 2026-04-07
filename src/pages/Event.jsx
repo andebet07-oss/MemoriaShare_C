@@ -44,12 +44,8 @@ export default function EventPage() {
   const checkEventQuota = (foundEvent) => {
     setIsCheckingQuota(true);
     try {
-<<<<<<< HEAD
-      const result = checkGuestQuota({ event: event });
-=======
       // Pure synchronous call — no network, no auth, no await
       const result = checkGuestQuota({ event: foundEvent });
->>>>>>> a419e5e (Update Uaj839320dasda7859234)
       setQuotaStatus(result?.data || result);
     } catch (error) {
       // On error, allow entry — don't block users due to network issues
