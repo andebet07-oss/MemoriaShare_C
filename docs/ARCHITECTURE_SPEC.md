@@ -2,7 +2,7 @@
 
 **Authority:** This document defines the canonical architecture for user identity, authentication, and the guest upload flow. All code, database policies, and future AI-assisted development MUST align with this specification.
 
-**Last updated:** 2026-04-07
+**Last updated:** 2026-04-07 (revised 2026-04-07 — auth bypass + modal sequencing)
 **Owner:** Lead Architect
 
 ---
@@ -50,7 +50,7 @@
   const { data, error } = await supabase.auth.signInAnonymously();
   ```
 - This returns a valid `UUID` (stored in `data.user.id`).
-- This step MUST complete before Step D. No race conditions permitted.
+- **Intentional sequencing:** The modal is closed and `localStorage` is written *before* `updateUser()` completes. This is by design — it prevents the `onAuthStateChange` event fired by `updateUser()` from racing with and reopening the modal. The module-level `_guestBookDismissed` gate in `EventGallery.jsx` makes this safe.
 
 ### Step D — Identity Registration
 - After obtaining the UUID, the system:
@@ -60,10 +60,13 @@
 
 ### Step E — Upload
 - Guest selects a photo.
-- The upload call attaches the anonymous UUID as `created_by`:
+- **Storage and DB insert both bypass `supabase-js` client methods** and use native `fetch` directly against the PostgREST and Storage REST APIs. This avoids `_fetchWithAuth`, which would re-enter the Supabase v2 auth mutex and cause a silent hang.
+- The JWT is read directly from `localStorage` via `_getJwt()` in `memoriaService.jsx`.
+- The anonymous UUID is resolved from `AuthContext` React state (`currentUser?.id`) — no `supabase.auth.getUser()` call is made in the upload path.
+- The upload call attaches the UUID as `created_by`:
   ```js
-  // photos table INSERT
-  { event_id, storage_path, created_by: supabase.auth.getUser().id, ... }
+  // resolved from AuthContext, not from a live auth call
+  { event_id, file_url, created_by: liveUserId, ... }
   ```
 - RLS policy on `photos` allows INSERT where `auth.uid() = created_by` for any authenticated user (including anonymous).
 - No email check occurs at any point during upload.

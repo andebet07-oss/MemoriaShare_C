@@ -473,7 +473,7 @@ export default function Dashboard() {
   // Real-time notifications for the host
   const { notifications, dismissNotification } = useRealtimeNotifications({
     eventId: event?.id,
-    currentUserEmail: currentUser?.email,
+    currentUserId: currentUser?.id,
     onNewPhoto: (photo) => {
       // Add the new photo to the moderation queue
       setPhotos(prev => [photo, ...prev]);

@@ -475,7 +475,6 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   }, []);
  
   const uploadAllPendingPhotos = async () => {
-    console.error('[Upload Trace] Step 0: uploadAllPendingPhotos called. pendingPhotos:', pendingPhotos.length);
     if (pendingPhotos.length === 0) return;
 
     let liveUserId = null;
@@ -484,71 +483,44 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       // ── Step 1: Resolve user ID — three-tier fallback, zero blocking ────────
       //
       // WHY: Supabase JS v2 auth uses an internal mutex to serialize operations.
-      // At mount time, AuthContext.getSession() + EventGallery.signInAnonymously()
-      // + GuestBook.signInAnonymously() all queue on that mutex. Any additional
-      // auth call from here joins the queue and may never resolve.
-      //
-      // TIER 1 — currentUser from AuthContext React state.
-      //   Set by onAuthStateChange after signInAnonymously() completes.
-      //   Zero Supabase calls. This is the correct path for 99% of uploads.
-      //
-      // TIER 2 — getSession() with a hard 2-second timeout.
-      //   Reads from localStorage. If the mutex is still contested, we don't
-      //   wait forever — Promise.race resolves with null after 2s.
-      //
-      // TIER 3 — signInAnonymously() as a last resort.
-      //   Only if both tiers above yield null (truly no session at all).
-
-      console.error('[Upload Trace] Step 1: Resolving user ID. currentUser?.id =', currentUser?.id ?? 'null');
+      // TIER 1 — currentUser from AuthContext React state (zero Supabase calls).
+      // TIER 2 — getSession() with 2s timeout (localStorage read, no network).
+      // TIER 3 — signInAnonymously() as last resort (truly no session).
 
       // Tier 1: AuthContext state — already set, no Supabase call needed
       liveUserId = currentUser?.id ?? null;
 
       if (!liveUserId) {
         // Tier 2: getSession() with timeout to avoid mutex contention hang
-        console.error('[Upload Trace] Step 2: currentUser null — trying getSession() with 2s timeout...');
         liveUserId = await Promise.race([
           supabase.auth.getSession().then(({ data }) => data?.session?.user?.id ?? null).catch(() => null),
           new Promise(resolve => setTimeout(() => resolve(null), 2000)),
         ]);
-        console.error('[Upload Trace] Step 2 result:', liveUserId ?? 'null (timed out or no session)');
       }
 
       if (!liveUserId) {
         // Tier 3: last resort — sign in fresh
-        console.error('[Upload Trace] Step 3: No session found — calling signInAnonymously()...');
         const { data: signInData, error: signInError } = await supabase.auth.signInAnonymously();
         if (signInError) throw new Error(`signInAnonymously failed: ${signInError.message}`);
         liveUserId = signInData?.user?.id ?? null;
-        console.error('[Upload Trace] Step 3 result:', liveUserId ?? 'null');
       }
 
-      console.error('[Upload Trace] Step 4: Final liveUserId =', liveUserId ?? 'null — will proceed (RLS may block insert if null)');
-
       // ── Step 2: Quota check — pure function, zero network calls ─────────
-      // checkGuestQuota is now a pure function that uses already-loaded state.
-      // No supabase.from() or supabase.auth calls — eliminates mutex contention.
-      console.error('[Upload Trace] Step 5: Checking quota using existing event state.');
       const quota = checkGuestQuota({
         event,
         user_id: liveUserId,
         user_upload_count: userUploadedCount,
         photos,
       });
-      console.error('[Upload Trace] Step 6: Quota result:', JSON.stringify(quota?.data));
       if (!quota?.data?.allowed) {
         alert(quota?.data?.reason || 'לא ניתן להעלות תמונות לאירוע זה.');
         return;
       }
 
       // ── Step 3: Upload batch ─────────────────────────────────────────────
-      // NOTE: processImage Edge Function is not deployed — skip base64 conversion
-      // and go directly to memoriaService.storage.upload() for every photo.
-      // Snapshot event.id here so TypeScript doesn't lose the type inside nested callbacks.
       // @ts-ignore — event is typed as null by useState(null) inference; runtime guard below covers the null case
       const eventId = event?.id;
       if (!eventId) throw new Error('אירוע לא נמצא — לא ניתן להעלות תמונות.');
-      console.error('[Upload Trace] Step 7: Starting batch upload. Total photos:', pendingPhotos.length);
       setIsUploadingBatch(true);
       setUploadProgress({ current: 0, total: pendingPhotos.length });
       const photosToUpload = [...pendingPhotos];
@@ -560,10 +532,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         const batch = photosToUpload.slice(i, i + batchSize);
         await Promise.all(batch.map(async (photo) => {
           try {
-            console.error('[Upload Trace] Step 8: Uploading photo to storage:', photo.originalName, 'size:', photo.file?.size);
-
             const { file_url, path } = await memoriaService.storage.upload(photo.file, eventId);
-            console.error('[Upload Trace] Step 9: Storage upload complete. file_url:', file_url);
 
             const photoData = {
               event_id: eventId,
@@ -581,13 +550,11 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
               device_uuid: null,
             };
 
-            console.error('[Upload Trace] Step 10: Inserting photo record into DB. created_by:', liveUserId);
             const created = await memoriaService.photos.create(photoData);
-            console.error('[Upload Trace] Step 11: DB insert result — id:', created?.id ?? 'null/failed');
             if (created) newlyUploaded.push(created);
             successCount++;
           } catch (err) {
-            console.error('[Upload Trace] ❌ Per-photo error — created_by:', liveUserId, '| error:', err?.message || err);
+            console.error('MemoriaService [upload]: per-photo error:', err instanceof Error ? err.message : err);
             errorCount++;
           } finally {
             setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
@@ -598,8 +565,6 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       pendingPhotos.forEach(p => { if (p.previewUrl) URL.revokeObjectURL(p.previewUrl); });
       setPendingPhotos([]); setShowPendingGallery(false);
       setIsUploadingBatch(false); setUploadProgress({ current: 0, total: 0 });
-
-      console.error('[Upload Trace] Step 14: Batch complete. success:', successCount, 'errors:', errorCount);
 
       if (successCount > 0) {
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#f3f3f3', '#e5e5e5', '#c4c4c4', '#ffffff', '#25D366'] });

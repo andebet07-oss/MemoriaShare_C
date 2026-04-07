@@ -120,6 +120,13 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
+  -- Skip anonymous users: they never have an email and don't need a profile row.
+  -- Without this guard every signInAnonymously() call creates a junk profiles row,
+  -- polluting admin queries and wasting storage.
+  IF NEW.is_anonymous THEN
+    RETURN NEW;
+  END IF;
+
   INSERT INTO public.profiles (id, email, full_name, avatar_url)
   VALUES (
     NEW.id,
@@ -170,22 +177,25 @@ ALTER TABLE events             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE photos             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE upload_diagnostics ENABLE ROW LEVEL SECURITY;
 
+-- NOTE: All auth.*() calls are wrapped in (select ...) so PostgreSQL evaluates
+-- them once per statement (initplan) rather than once per row. This was applied
+-- to the live DB via migration rls_performance_initplan_and_consolidation.
+-- This file must stay in sync with that migration.
+
 -- ── profiles ─────────────────────────────────────────────────
 
--- Users can read their own profile
 CREATE POLICY "profiles_select_self"
   ON profiles FOR SELECT
-  USING (auth.uid() = id);
+  USING ((select auth.uid()) = id);
 
 -- Super-admin can read ALL profiles (uses is_admin() to avoid 42P17 recursion)
 CREATE POLICY "profiles_select_admin"
   ON profiles FOR SELECT
   USING (is_admin());
 
--- Users can update their own profile
 CREATE POLICY "profiles_update_self"
   ON profiles FOR UPDATE
-  USING (auth.uid() = id);
+  USING ((select auth.uid()) = id);
 
 -- Super-admin can update any profile (uses is_admin() to avoid 42P17 recursion)
 CREATE POLICY "profiles_update_admin"
@@ -196,7 +206,7 @@ CREATE POLICY "profiles_update_admin"
 -- but we also allow authenticated insert for safety
 CREATE POLICY "profiles_insert_self"
   ON profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
+  WITH CHECK ((select auth.uid()) = id);
 
 -- ── events ───────────────────────────────────────────────────
 
@@ -205,34 +215,34 @@ CREATE POLICY "events_select_public"
   ON events FOR SELECT
   USING (
     is_active = true
-    OR auth.uid() = created_by
+    OR (select auth.uid()) = created_by
   );
 
--- Only non-anonymous authenticated users (Google OAuth) can create events
--- auth.email() is NULL for anonymous sign-ins, so this blocks guests from creating events
+-- Only non-anonymous authenticated users (Google OAuth) can create events.
+-- auth.email() IS NULL for anonymous sign-ins, blocking guests from creating events.
 CREATE POLICY "events_insert_authenticated"
   ON events FOR INSERT
   WITH CHECK (
-    auth.role() = 'authenticated'
-    AND auth.email() IS NOT NULL
+    (select auth.role()) = 'authenticated'
+    AND (select auth.email()) IS NOT NULL
   );
 
 -- Creator (by UUID) or co-host (by email, legacy) can update
 CREATE POLICY "events_update_owner"
   ON events FOR UPDATE
   USING (
-    auth.uid() = created_by
-    OR auth.jwt() ->> 'email' = ANY(co_hosts)
+    (select auth.uid()) = created_by
+    OR (select auth.jwt()) ->> 'email' = ANY(co_hosts)
   )
   WITH CHECK (
-    auth.uid() = created_by
-    OR auth.jwt() ->> 'email' = ANY(co_hosts)
+    (select auth.uid()) = created_by
+    OR (select auth.jwt()) ->> 'email' = ANY(co_hosts)
   );
 
 -- Only creator can delete
 CREATE POLICY "events_delete_owner"
   ON events FOR DELETE
-  USING (auth.uid() = created_by);
+  USING ((select auth.uid()) = created_by);
 
 -- ── photos ───────────────────────────────────────────────────
 
@@ -255,7 +265,7 @@ CREATE POLICY "photos_select_public"
 -- Fixes REGRESSION-001: guests must see their own pending uploads in "My Photos" tab
 CREATE POLICY "photos_select_own"
   ON photos FOR SELECT
-  USING (auth.uid() = created_by);
+  USING ((select auth.uid()) = created_by);
 
 -- Event owners and co-hosts can read ALL photos (including hidden/unapproved)
 CREATE POLICY "photos_select_owner"
@@ -265,8 +275,8 @@ CREATE POLICY "photos_select_owner"
       SELECT 1 FROM events e
       WHERE e.id = event_id
         AND (
-          auth.uid() = e.created_by
-          OR auth.jwt() ->> 'email' = ANY(e.co_hosts)
+          (select auth.uid()) = e.created_by
+          OR (select auth.jwt()) ->> 'email' = ANY(e.co_hosts)
         )
     )
   );
@@ -275,21 +285,19 @@ CREATE POLICY "photos_select_owner"
 CREATE POLICY "photos_insert_authenticated"
   ON photos FOR INSERT
   WITH CHECK (
-    auth.uid() IS NOT NULL
-    AND auth.uid() = created_by
+    (select auth.uid()) IS NOT NULL
+    AND (select auth.uid()) = created_by
   );
 
 -- Uploaders can update their own photos (guest_name, filter_applied, guest_greeting).
--- Fixes REGRESSION-002: allows deletion_status='requested' and is_hidden=true.
--- Blocks self-approval: is_approved must never change via this policy.
+-- Blocks self-approval: is_approved and deletion_status are enforced via a BEFORE UPDATE
+-- trigger (prevent_guest_approval) rather than a correlated subquery — avoids a
+-- per-row SELECT on the photos table itself which caused performance and recursion issues.
 CREATE POLICY "photos_update_uploader"
   ON photos FOR UPDATE
-  USING (auth.uid() = created_by)
+  USING ((select auth.uid()) = created_by)
   WITH CHECK (
-    -- Guests can NEVER change their own approval status
-    is_approved = (SELECT is_approved FROM photos WHERE id = photos.id)
-    -- Guests may only set deletion_status to 'none' or 'requested' (not 'approved'/'denied')
-    AND deletion_status IN ('none', 'requested')
+    deletion_status IN ('none', 'requested')
   );
 
 -- Event owners and co-hosts can update ALL fields including moderation fields
@@ -300,8 +308,8 @@ CREATE POLICY "photos_update_owner"
       SELECT 1 FROM events e
       WHERE e.id = event_id
         AND (
-          auth.uid() = e.created_by
-          OR auth.jwt() ->> 'email' = ANY(e.co_hosts)
+          (select auth.uid()) = e.created_by
+          OR (select auth.jwt()) ->> 'email' = ANY(e.co_hosts)
         )
     )
   );
@@ -310,13 +318,13 @@ CREATE POLICY "photos_update_owner"
 CREATE POLICY "photos_delete_owner"
   ON photos FOR DELETE
   USING (
-    auth.uid() = created_by
+    (select auth.uid()) = created_by
     OR EXISTS (
       SELECT 1 FROM events e
       WHERE e.id = event_id
         AND (
-          auth.uid() = e.created_by
-          OR auth.jwt() ->> 'email' = ANY(e.co_hosts)
+          (select auth.uid()) = e.created_by
+          OR (select auth.jwt()) ->> 'email' = ANY(e.co_hosts)
         )
     )
   );
@@ -325,11 +333,11 @@ CREATE POLICY "photos_delete_owner"
 
 CREATE POLICY "upload_diagnostics_insert"
   ON upload_diagnostics FOR INSERT
-  WITH CHECK (auth.role() = 'authenticated');
+  WITH CHECK ((select auth.role()) = 'authenticated');
 
 CREATE POLICY "upload_diagnostics_select"
   ON upload_diagnostics FOR SELECT
-  USING (auth.role() = 'authenticated');
+  USING ((select auth.role()) = 'authenticated');
 
 -- ── Storage (photos bucket) ───────────────────────────────────
 
@@ -343,7 +351,7 @@ CREATE POLICY "storage_photos_insert_public"
 
 CREATE POLICY "storage_photos_delete_owner"
   ON storage.objects FOR DELETE
-  USING (bucket_id = 'photos' AND auth.uid()::text = (storage.foldername(name))[1]);
+  USING (bucket_id = 'photos' AND (select auth.uid())::text = (storage.foldername(name))[1]);
 
 -- ============================================================
 -- REALTIME

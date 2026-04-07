@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
  *
  * Returns: { notifications, dismissNotification }
  */
-export default function useRealtimeNotifications({ eventId, onNewPhoto, onApprovedPhoto, currentUserEmail } = {}) {
+export default function useRealtimeNotifications({ eventId, onNewPhoto, onApprovedPhoto, currentUserId } = {}) {
   const [notifications, setNotifications] = useState([]);
   const seenIds = useRef(new Set());
 
@@ -44,11 +44,11 @@ export default function useRealtimeNotifications({ eventId, onNewPhoto, onApprov
             if (seenIds.current.has(photo.id)) return;
             seenIds.current.add(photo.id);
 
-            // Don't notify the uploader about their own photo
-            if (photo.created_by && photo.created_by === currentUserEmail) return;
+            // Don't notify the uploader about their own photo (compare UUID to UUID)
+            if (photo.created_by && photo.created_by === currentUserId) return;
 
             if (onNewPhoto) onNewPhoto(photo);
-            const uploaderName = photo.guest_name || (photo.created_by ? photo.created_by.split('@')[0] : 'אורח');
+            const uploaderName = photo.guest_name || 'אורח';
             addNotification({ message: `תמונה חדשה הועלתה על ידי ${uploaderName}`, icon: '📸' });
           }
 
@@ -65,7 +65,7 @@ export default function useRealtimeNotifications({ eventId, onNewPhoto, onApprov
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [eventId, currentUserEmail, addNotification, onNewPhoto, onApprovedPhoto]);
+  }, [eventId, currentUserId, addNotification, onNewPhoto, onApprovedPhoto]);
 
   return { notifications, dismissNotification };
 }
