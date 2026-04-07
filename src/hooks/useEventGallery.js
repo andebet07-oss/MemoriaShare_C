@@ -317,7 +317,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         }
       ).subscribe();
     return () => supabase.removeChannel(channel);
-  }, [isAdminView, event?.id, currentUser?.email]);
+  }, [isAdminView, event?.id, currentUser?.id]);
  
   // ─── Fetch next page ──────────────────────────────────────────────────────
   const fetchNextPage = useCallback(() => {
@@ -333,12 +333,8 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
  
   // ─── Image utils ──────────────────────────────────────────────────────────
   const getDisplayUploaderName = (photo) => {
-    if (!photo) return "אורח";
-    if (photo.guest_name) return photo.guest_name;
-    const legacyEmail = photo.uploader_email || "";
-    if (legacyEmail.includes("privaterelay.appleid.com")) return "משתמש אפל";
-    if (legacyEmail.includes("@")) return legacyEmail.split("@")[0];
-    return "אורח";
+    if (!photo) return null;
+    return photo.guest_name || null;
   };
  
   const drawDateStamp = (ctx, width, height) => {
@@ -484,7 +480,6 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       liveUser = signInData?.user ?? null;
     }
     const liveUserId = liveUser?.id ?? null;
-    console.warn('[Upload] liveUserId:', liveUserId);
 
     const quota = await checkGuestQuota({ event_id: event.id });
     if (!quota?.data?.allowed) { alert(quota?.data?.reason || 'לא ניתן להעלות תמונות לאירוע זה.'); return; }
@@ -516,7 +511,10 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
             filter_applied: photo.filter || 'none',
             is_approved: false,
             is_hidden: false,
-            guest_name: localStorage.getItem('ms_guest_name') || currentUser?.full_name || currentUser?.email || "אורח",
+            guest_name: localStorage.getItem('ms_guest_name')
+              || currentUser?.user_metadata?.display_name
+              || currentUser?.full_name
+              || null,
             guest_greeting: localStorage.getItem('ms_guest_greeting') || currentUser?.user_metadata?.guest_greeting || null,
             created_by: liveUserId,
             device_uuid: null,
