@@ -12,6 +12,7 @@ import HostOnboardingModal from '@/components/HostOnboardingModal';
 import GuestLayout from '@/components/GuestLayout';
 import EventPage from '@/pages/Event';
 import EventGallery from '@/pages/EventGallery';
+import { Analytics } from '@vercel/analytics/react';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -96,6 +97,7 @@ function App() {
             <AuthenticatedApp />
           </Router>
           <Toaster />
+          <Analytics />
         </QueryClientProvider>
       </AuthProvider>
     </GlobalErrorBoundary>
