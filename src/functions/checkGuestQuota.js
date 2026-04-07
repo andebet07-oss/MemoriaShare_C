@@ -3,17 +3,23 @@ import { supabase } from '@/lib/supabase';
 const GUEST_TIER_LIMITS = [10, 100, 250, 400, 600, 800, Infinity];
 
 /**
- * checkGuestQuota({ event_id })
+ * checkGuestQuota({ event_id, user_id })
+ *
  * Enforces guest-tier and per-user upload limits before allowing a photo upload.
  * Returns { data: { allowed, reason?, quota_type?, remaining_slots? } }
+ *
+ * IMPORTANT: user_id must be passed by the caller (from AuthContext or getSession).
+ * This function intentionally does NOT call supabase.auth.getUser() — that call
+ * contends with the Supabase v2 auth mutex and hangs when signInAnonymously() is
+ * still in flight at mount time.
  */
-export async function checkGuestQuota({ event_id }) {
+export async function checkGuestQuota({ event_id, user_id }) {
   try {
     if (!event_id) {
       return { data: { allowed: false, reason: 'חסר מזהה אירוע.' } };
     }
 
-    // Fetch event
+    // Fetch event — DB query uses the JWT from localStorage, unaffected by auth mutex
     const { data: event, error: eventError } = await supabase
       .from('events')
       .select('*')
@@ -24,17 +30,14 @@ export async function checkGuestQuota({ event_id }) {
       return { data: { allowed: false, reason: 'האירוע לא נמצא.' } };
     }
 
-    // Get current user (anonymous sign-in also returns a user with id)
-    const { data: { user } } = await supabase.auth.getUser();
+    // user_id is supplied by the caller — no auth client call needed
+    const uid = user_id ?? null;
 
-    // Exempt: super-admin (by email), event owner (by UUID), co-host (by email — legacy)
-    if (user) {
-      const isSuperAdmin = user.email === 'effitag@gmail.com';
-      const isCreator = event.created_by === user.id;                                    // UUID comparison
-      const isCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(user.email); // email (legacy)
-      if (isSuperAdmin || isCreator || isCoHost) {
-        return { data: { allowed: true, exempt: true } };
-      }
+    // Exempt: super-admin (handled via email on the enriched user object in the caller),
+    // event owner (UUID match), or co-host (email array — legacy)
+    // Note: email-based exemptions are handled upstream; here we only check UUID ownership
+    if (uid && uid === event.created_by) {
+      return { data: { allowed: true, exempt: true } };
     }
 
     // Rule 0: Event closure datetime
@@ -48,19 +51,19 @@ export async function checkGuestQuota({ event_id }) {
       };
     }
 
-    // Fetch all photos for this event
+    // Fetch all photos for this event to check tier + per-user limits
     const { data: allPhotos = [] } = await supabase
       .from('photos')
       .select('id, created_by')
       .eq('event_id', event_id);
 
-    // Rule 1: guest_tier — unique users
+    // Rule 1: guest_tier — unique uploaders
     const guestTier = event.guest_tier ?? 1;
     const maxGuests = GUEST_TIER_LIMITS[Math.min(guestTier, GUEST_TIER_LIMITS.length - 1)];
 
-    if (maxGuests !== Infinity && user?.id) {
-      const uniqueUsers = new Set(allPhotos.map(p => p.created_by).filter(Boolean));   // UUIDs
-      const userAlreadyRegistered = uniqueUsers.has(user.id);                          // UUID comparison
+    if (maxGuests !== Infinity && uid) {
+      const uniqueUsers = new Set(allPhotos.map(p => p.created_by).filter(Boolean));
+      const userAlreadyRegistered = uniqueUsers.has(uid);
 
       if (!userAlreadyRegistered && uniqueUsers.size >= maxGuests) {
         return {
@@ -78,8 +81,8 @@ export async function checkGuestQuota({ event_id }) {
 
     // Rule 2: max_uploads_per_user
     const maxUploads = event.max_uploads_per_user || 15;
-    if (user?.id) {
-      const userUploads = allPhotos.filter(p => p.created_by === user.id).length;      // UUID comparison
+    if (uid) {
+      const userUploads = allPhotos.filter(p => p.created_by === uid).length;
       if (userUploads >= maxUploads) {
         return {
           data: {
@@ -95,7 +98,7 @@ export async function checkGuestQuota({ event_id }) {
 
     // All checks passed
     let remainingSlots = null;
-    if (maxGuests !== Infinity && user?.id) {
+    if (maxGuests !== Infinity && uid) {
       const uniqueUsers = new Set(allPhotos.map(p => p.created_by).filter(Boolean));
       remainingSlots = Math.max(0, maxGuests - uniqueUsers.size);
     }
@@ -104,7 +107,7 @@ export async function checkGuestQuota({ event_id }) {
 
   } catch (error) {
     console.error('checkGuestQuota error:', error);
-    // On error, allow entry — don't block users due to network issues
+    // On network error allow the upload — quota is a UX guard, not a security gate
     return { data: { allowed: true } };
   }
 }

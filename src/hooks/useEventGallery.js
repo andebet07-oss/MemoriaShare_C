@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import confetti from 'canvas-confetti';
 import { supabase } from "@/lib/supabase";
 import { checkGuestQuota } from "@/functions/checkGuestQuota";
-import { processImage } from "@/functions/processImage";
 import { requestPhotoDeletion } from "@/functions/requestPhotoDeletion";
 import { getMyPhotos } from "@/functions/getMyPhotos";
  
@@ -520,8 +519,9 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       console.error('[Upload Trace] Step 4: Final liveUserId =', liveUserId ?? 'null — will proceed (RLS may block insert if null)');
 
       // ── Step 2: Quota check ──────────────────────────────────────────────
-      console.error('[Upload Trace] Step 5: Checking quota for event:', event?.id);
-      const quota = await checkGuestQuota({ event_id: event.id });
+      // Pass liveUserId directly — checkGuestQuota must NOT call getUser() internally
+      console.error('[Upload Trace] Step 5: Checking quota for event:', event?.id, 'user:', liveUserId);
+      const quota = await checkGuestQuota({ event_id: event.id, user_id: liveUserId });
       console.error('[Upload Trace] Step 6: Quota result:', JSON.stringify(quota?.data));
       if (!quota?.data?.allowed) {
         alert(quota?.data?.reason || 'לא ניתן להעלות תמונות לאירוע זה.');
@@ -529,6 +529,12 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       }
 
       // ── Step 3: Upload batch ─────────────────────────────────────────────
+      // NOTE: processImage Edge Function is not deployed — skip base64 conversion
+      // and go directly to memoriaService.storage.upload() for every photo.
+      // Snapshot event.id here so TypeScript doesn't lose the type inside nested callbacks.
+      // @ts-ignore — event is typed as null by useState(null) inference; runtime guard below covers the null case
+      const eventId = event?.id;
+      if (!eventId) throw new Error('אירוע לא נמצא — לא ניתן להעלות תמונות.');
       console.error('[Upload Trace] Step 7: Starting batch upload. Total photos:', pendingPhotos.length);
       setIsUploadingBatch(true);
       setUploadProgress({ current: 0, total: pendingPhotos.length });
@@ -541,24 +547,15 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         const batch = photosToUpload.slice(i, i + batchSize);
         await Promise.all(batch.map(async (photo) => {
           try {
-            console.error('[Upload Trace] Step 8: Processing photo:', photo.originalName, 'size:', photo.file?.size);
+            console.error('[Upload Trace] Step 8: Uploading photo to storage:', photo.originalName, 'size:', photo.file?.size);
 
-            const arrayBuffer = await photo.file.arrayBuffer();
-            const uint8Array = new Uint8Array(arrayBuffer);
-            let binary = '';
-            const chunkSize = 8192;
-            for (let c = 0; c < uint8Array.length; c += chunkSize) {
-              binary += String.fromCharCode(...uint8Array.subarray(c, c + chunkSize));
-            }
-            const base64 = btoa(binary);
-            console.error('[Upload Trace] Step 9: base64 encoded. Calling processImage Edge Function...');
+            const { file_url, path } = await memoriaService.storage.upload(photo.file, eventId);
+            console.error('[Upload Trace] Step 9: Storage upload complete. file_url:', file_url);
 
-            const processed = await processImage({ file_base64: base64, file_name: photo.originalName || photo.file.name });
-            const processedData = processed?.data;
-            console.error('[Upload Trace] Step 10: processImage result — thumbnail_url present:', !!processedData?.thumbnail_url);
-
-            let photoData = {
-              event_id: event.id,
+            const photoData = {
+              event_id: eventId,
+              file_url,
+              path,
               filter_applied: photo.filter || 'none',
               is_approved: false,
               is_hidden: false,
@@ -571,20 +568,9 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
               device_uuid: null,
             };
 
-            if (processedData?.thumbnail_url) {
-              console.error('[Upload Trace] Step 11a: Using Edge Function URLs.');
-              photoData.file_urls = { thumbnail: processedData.thumbnail_url, medium: processedData.medium_url, original: processedData.original_url };
-              photoData.file_url = processedData.original_url;
-            } else {
-              console.error('[Upload Trace] Step 11b: Edge Function unavailable — falling back to direct storage upload.');
-              const { file_url } = await memoriaService.storage.upload(photo.file, event.id);
-              console.error('[Upload Trace] Step 11c: Direct upload complete. file_url:', file_url);
-              photoData.file_url = file_url;
-            }
-
-            console.error('[Upload Trace] Step 12: Inserting photo record into DB. created_by:', liveUserId);
+            console.error('[Upload Trace] Step 10: Inserting photo record into DB. created_by:', liveUserId);
             const created = await memoriaService.photos.create(photoData);
-            console.error('[Upload Trace] Step 13: DB insert result — id:', created?.id ?? 'null/failed');
+            console.error('[Upload Trace] Step 11: DB insert result — id:', created?.id ?? 'null/failed');
             if (created) newlyUploaded.push(created);
             successCount++;
           } catch (err) {
