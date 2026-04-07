@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Camera, Upload, Sparkles, CheckCircle, ImageIcon, Users } from "lucide-react";
+import { Camera, Upload, Sparkles, CheckCircle, ImageIcon, Users, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import useEventGallery from "@/hooks/useEventGallery";
 import GalleryHeader from "@/components/gallery/GalleryHeader";
@@ -47,7 +47,7 @@ function EmptyState({ isAdminView, onUpload, disabled, title, subtitle }) {
 
 export default function EventGallery({ eventCode: propEventCode, isAdminView = false, adminPhotos, onAdminPhotosChange }) {
   const g = useEventGallery({ propEventCode, isAdminView, adminPhotos, onAdminPhotosChange });
-  const { isLoadingAuth } = useAuth();
+  const { user: currentUser, isLoadingAuth } = useAuth();
 
   // Lazy initializer checks the module-level flag first, then localStorage.
   // On any re-mount (e.g. triggered by onAuthStateChange), if _guestBookDismissed
@@ -98,6 +98,29 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     const t = setTimeout(() => clearInterval(iv), 3000);
     return () => { clearInterval(iv); clearTimeout(t); };
   }, [isAdminView, closeGuestBook]);
+
+  // ── Identity restoration ───────────────────────────────────────────────────
+  // When a returning anonymous guest has display_name in their auth metadata
+  // (set during a previous visit) but ms_guest_name is missing from localStorage
+  // (e.g., localStorage was cleared, different tab, or OS eviction), we restore
+  // it from user_metadata so the guest book never shows again for this session.
+  // This preserves the same auth.uid() → same My Photos + same quota.
+  useEffect(() => {
+    if (isAdminView || !currentUser?.isAnonymous) return;
+    const storedName = localStorage.getItem(GUEST_NAME_KEY);
+    if (storedName) return; // already set — nothing to restore
+
+    const metaName =
+      currentUser.user_metadata?.display_name ||
+      currentUser.user_metadata?.full_name;
+    if (!metaName) return; // first-time visitor — let the guest book show normally
+
+    // Returning guest: sync metadata → localStorage and dismiss the modal
+    localStorage.setItem(GUEST_NAME_KEY, metaName);
+    const greeting = currentUser.user_metadata?.guest_greeting;
+    if (greeting) localStorage.setItem('ms_guest_greeting', greeting);
+    closeGuestBook();
+  }, [currentUser?.id, isAdminView, closeGuestBook]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleGuestBookSubmit = async (/** @type {any} */ e) => {
@@ -348,6 +371,25 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
               ) : (
                 <EmptyState isAdminView={isAdminView} onUpload={g.handleUploadClick} disabled={g.isUploadingBatch} />
               )
+            ) : !g.event.auto_publish_guest_photos ? (
+              /* Public gallery is OFF — guests see only their own photos */
+              <>
+                <div className="flex items-center justify-center gap-2 mb-5 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/50 text-sm">
+                  <EyeOff className="w-4 h-4 shrink-0" />
+                  <span>הגלריה הציבורית מושבתת. תוכל לראות רק את התמונות שלך.</span>
+                </div>
+                {g.myPhotos.length > 0 ? (
+                  <PhotoGrid displayedPhotos={g.myPhotos} setSelectedIndex={g.setSelectedIndex}
+                    isAdminView={false} confirmDeleteId={g.confirmDeleteId} setConfirmDeleteId={g.setConfirmDeleteId}
+                    deletingId={g.deletingId} handleAdminDelete={g.handleAdminDelete}
+                    handleGuestDeletePhoto={g.handleGuestDeletePhoto} handleRequestDeletion={g.handleRequestDeletion}
+                    currentUser={g.currentUser} getDisplayUploaderName={g.getDisplayUploaderName}
+                    hasMore={false} isFetchingMore={false} fetchNextPage={undefined} />
+                ) : (
+                  <EmptyState isAdminView={false} onUpload={g.handleUploadClick} disabled={g.isUploadingBatch}
+                    title="עדיין לא העלית תמונות" subtitle="צלמו או העלו תמונות מהאירוע — הן יופיעו כאן" />
+                )}
+              </>
             ) : (
               <Tabs value={g.activeTab} onValueChange={g.setActiveTab} dir="rtl">
                 <TabsList className="w-full bg-white/5 border border-white/10 rounded-2xl p-1 mb-6" aria-label="תצוגת גלריה">

@@ -239,7 +239,7 @@ export default function App() {
   const [eventData, setEventData] = useState({
     name: "", date: "", event_type: "wedding", description: "",
     cover_image: "",
-    is_active: true, max_uploads_per_user: 15, privacy_mode: "immediate", guest_tier: 0, price: 0
+    is_active: true, max_uploads_per_user: 15, privacy_mode: "manual", guest_tier: 0, price: 0
   });
 
   const [isUploading, setIsUploading] = useState(false);

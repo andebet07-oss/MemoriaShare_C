@@ -112,7 +112,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   const fetchMyPhotosFromBackend = useCallback(async (eventId, userId) => {
     if (!userId) return [];
     try {
-      const res = await getMyPhotos({ event_id: eventId });
+      const res = await getMyPhotos({ event_id: eventId, user_id: userId });
       return res?.data?.photos || [];
     } catch (err) {
       console.error('fetchMyPhotos failed:', err);
@@ -132,27 +132,34 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       } else {
         const myAllPhotos = await fetchMyPhotosFromBackend(eventId, userId);
         if (pageNum === 1) setMyPhotos(myAllPhotos);
- 
-        const rawApprovedPhotos = await memoriaService.photos.getByEvent(
-          eventId, { is_approved: true }, STABLE_SORT,
-          { limit: PHOTOS_PER_PAGE, offset: (pageNum - 1) * PHOTOS_PER_PAGE }
-        );
-        const publicPhotos = rawApprovedPhotos.filter(p => p.is_hidden !== true);
-        const myIds = new Set(myAllPhotos.map(p => p.id));
-        const sharedCombined = [...myAllPhotos, ...publicPhotos.filter(p => !myIds.has(p.id))];
- 
-        if (pageNum === 1) {
-          setSharedPhotos(sharedCombined);
-          setSharedHasMore(rawApprovedPhotos.length >= PHOTOS_PER_PAGE);
+
+        // When the host has disabled the public gallery, guests see only their own photos.
+        // Skip the shared fetch entirely so no other guest's photos leak through.
+        if (!eventData?.auto_publish_guest_photos) {
+          if (pageNum === 1) { setSharedPhotos([]); setSharedHasMore(false); }
+          newPhotos = myAllPhotos;
         } else {
-          setSharedPhotos(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const uniqueNew = publicPhotos.filter(p => !existingIds.has(p.id));
-            return [...prev, ...uniqueNew];
-          });
-          if (rawApprovedPhotos.length < PHOTOS_PER_PAGE) setSharedHasMore(false);
+          const rawApprovedPhotos = await memoriaService.photos.getByEvent(
+            eventId, { is_approved: true }, STABLE_SORT,
+            { limit: PHOTOS_PER_PAGE, offset: (pageNum - 1) * PHOTOS_PER_PAGE }
+          );
+          const publicPhotos = rawApprovedPhotos.filter(p => p.is_hidden !== true);
+          const myIds = new Set(myAllPhotos.map(p => p.id));
+          const sharedCombined = [...myAllPhotos, ...publicPhotos.filter(p => !myIds.has(p.id))];
+
+          if (pageNum === 1) {
+            setSharedPhotos(sharedCombined);
+            setSharedHasMore(rawApprovedPhotos.length >= PHOTOS_PER_PAGE);
+          } else {
+            setSharedPhotos(prev => {
+              const existingIds = new Set(prev.map(p => p.id));
+              const uniqueNew = publicPhotos.filter(p => !existingIds.has(p.id));
+              return [...prev, ...uniqueNew];
+            });
+            if (rawApprovedPhotos.length < PHOTOS_PER_PAGE) setSharedHasMore(false);
+          }
+          newPhotos = sharedCombined;
         }
-        newPhotos = sharedCombined;
       }
  
       if (newPhotos.length < PHOTOS_PER_PAGE) setHasMore(false);
@@ -626,14 +633,13 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   const handleUploadClick = async (mode) => {
     if (!event) return;
 
-    // Do NOT block on currentUser — AuthContext can lag behind the actual session.
-    // Anonymous users are authenticated in Supabase; check the live session instead.
+    // Ensure a session exists before opening camera/picker.
+    // getSession() reads from localStorage — no network, no mutex contention.
     if (!currentUser) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         await supabase.auth.signInAnonymously();
       }
-      // uploadAllPendingPhotos will resolve the ID via getUser() before inserting.
     }
 
     if (mode === 'camera') { setShowCamera(true); }
