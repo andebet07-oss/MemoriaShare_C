@@ -42,7 +42,7 @@ export default function EventPage() {
   const checkEventQuota = async (eventId) => {
     setIsCheckingQuota(true);
     try {
-      const result = await checkGuestQuota({ event_id: eventId });
+      const result = checkGuestQuota({ event: event });
       setQuotaStatus(result?.data || result);
     } catch (error) {
       // On error, allow entry — don't block users due to network issues
