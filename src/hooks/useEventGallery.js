@@ -469,99 +469,141 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   }, []);
  
   const uploadAllPendingPhotos = async () => {
+    console.error('[Upload Trace] Step 0: uploadAllPendingPhotos called. pendingPhotos:', pendingPhotos.length);
     if (pendingPhotos.length === 0) return;
 
-    // Resolve user ID directly from Supabase — never trust currentUser alone.
-    // AuthContext.currentUser can be null or stale while onAuthStateChange processes.
-    // RLS requires auth.uid() = created_by, so a null here causes a silent failure.
-    let { data: { user: liveUser } } = await supabase.auth.getUser();
-    if (!liveUser) {
-      const { data: signInData } = await supabase.auth.signInAnonymously();
-      liveUser = signInData?.user ?? null;
-    }
-    const liveUserId = liveUser?.id ?? null;
+    let liveUserId = null;
 
-    const quota = await checkGuestQuota({ event_id: event.id });
-    if (!quota?.data?.allowed) { alert(quota?.data?.reason || 'לא ניתן להעלות תמונות לאירוע זה.'); return; }
- 
-    setIsUploadingBatch(true);
-    setUploadProgress({ current: 0, total: pendingPhotos.length });
-    const photosToUpload = [...pendingPhotos];
-    const newlyUploaded = [];
-    let successCount = 0, errorCount = 0;
-    const batchSize = 3;
- 
-    for (let i = 0; i < photosToUpload.length; i += batchSize) {
-      const batch = photosToUpload.slice(i, i + batchSize);
-      await Promise.all(batch.map(async (photo) => {
-        try {
-          const arrayBuffer = await photo.file.arrayBuffer();
-          const uint8Array = new Uint8Array(arrayBuffer);
-          let binary = '';
-          const chunkSize = 8192;
-          for (let c = 0; c < uint8Array.length; c += chunkSize) {
-            binary += String.fromCharCode(...uint8Array.subarray(c, c + chunkSize));
+    try {
+      // ── Step 1: Resolve auth ─────────────────────────────────────────────
+      console.error('[Upload Trace] Step 1: Resolving auth session...');
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw new Error(`getUser failed: ${authError.message}`);
+
+      let liveUser = authData?.user ?? null;
+      console.error('[Upload Trace] Step 2: liveUser from getUser:', liveUser?.id ?? 'null');
+
+      if (!liveUser) {
+        console.error('[Upload Trace] Step 2a: No session — calling signInAnonymously...');
+        const { data: signInData, error: signInError } = await supabase.auth.signInAnonymously();
+        if (signInError) throw new Error(`signInAnonymously failed: ${signInError.message}`);
+        liveUser = signInData?.user ?? null;
+        console.error('[Upload Trace] Step 2b: Anonymous user after sign-in:', liveUser?.id ?? 'null');
+      }
+
+      liveUserId = liveUser?.id ?? null;
+      console.error('[Upload Trace] Step 3: liveUserId resolved to:', liveUserId);
+
+      // ── Step 2: Quota check ──────────────────────────────────────────────
+      console.error('[Upload Trace] Step 4: Checking quota for event:', event?.id);
+      const quota = await checkGuestQuota({ event_id: event.id });
+      console.error('[Upload Trace] Step 5: Quota result:', JSON.stringify(quota?.data));
+      if (!quota?.data?.allowed) {
+        alert(quota?.data?.reason || 'לא ניתן להעלות תמונות לאירוע זה.');
+        return;
+      }
+
+      // ── Step 3: Upload batch ─────────────────────────────────────────────
+      console.error('[Upload Trace] Step 6: Starting batch upload. Total photos:', pendingPhotos.length);
+      setIsUploadingBatch(true);
+      setUploadProgress({ current: 0, total: pendingPhotos.length });
+      const photosToUpload = [...pendingPhotos];
+      const newlyUploaded = [];
+      let successCount = 0, errorCount = 0;
+      const batchSize = 3;
+
+      for (let i = 0; i < photosToUpload.length; i += batchSize) {
+        const batch = photosToUpload.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (photo) => {
+          try {
+            console.error('[Upload Trace] Step 7: Processing photo:', photo.originalName, 'size:', photo.file?.size);
+
+            const arrayBuffer = await photo.file.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            let binary = '';
+            const chunkSize = 8192;
+            for (let c = 0; c < uint8Array.length; c += chunkSize) {
+              binary += String.fromCharCode(...uint8Array.subarray(c, c + chunkSize));
+            }
+            const base64 = btoa(binary);
+            console.error('[Upload Trace] Step 8: base64 encoded. Calling processImage Edge Function...');
+
+            const processed = await processImage({ file_base64: base64, file_name: photo.originalName || photo.file.name });
+            const processedData = processed?.data;
+            console.error('[Upload Trace] Step 9: processImage result — thumbnail_url present:', !!processedData?.thumbnail_url);
+
+            let photoData = {
+              event_id: event.id,
+              filter_applied: photo.filter || 'none',
+              is_approved: false,
+              is_hidden: false,
+              guest_name: localStorage.getItem('ms_guest_name')
+                || currentUser?.user_metadata?.display_name
+                || currentUser?.full_name
+                || null,
+              guest_greeting: localStorage.getItem('ms_guest_greeting') || currentUser?.user_metadata?.guest_greeting || null,
+              created_by: liveUserId,
+              device_uuid: null,
+            };
+
+            if (processedData?.thumbnail_url) {
+              console.error('[Upload Trace] Step 10a: Using Edge Function URLs.');
+              photoData.file_urls = { thumbnail: processedData.thumbnail_url, medium: processedData.medium_url, original: processedData.original_url };
+              photoData.file_url = processedData.original_url;
+            } else {
+              console.error('[Upload Trace] Step 10b: Edge Function unavailable — falling back to direct storage upload.');
+              const { file_url } = await memoriaService.storage.upload(photo.file, event.id);
+              console.error('[Upload Trace] Step 10c: Direct upload complete. file_url:', file_url);
+              photoData.file_url = file_url;
+            }
+
+            console.error('[Upload Trace] Step 11: Inserting photo record into DB. created_by:', liveUserId);
+            const created = await memoriaService.photos.create(photoData);
+            console.error('[Upload Trace] Step 12: DB insert result — id:', created?.id ?? 'null/failed');
+            if (created) newlyUploaded.push(created);
+            successCount++;
+          } catch (err) {
+            console.error('[Upload Trace] ❌ Per-photo error — created_by:', liveUserId, '| error:', err?.message || err);
+            errorCount++;
+          } finally {
+            setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
           }
-          const base64 = btoa(binary);
-          const processed = await processImage({ file_base64: base64, file_name: photo.originalName || photo.file.name });
-          const processedData = processed?.data;
- 
-          let photoData = {
-            event_id: event.id,
-            filter_applied: photo.filter || 'none',
-            is_approved: false,
-            is_hidden: false,
-            guest_name: localStorage.getItem('ms_guest_name')
-              || currentUser?.user_metadata?.display_name
-              || currentUser?.full_name
-              || null,
-            guest_greeting: localStorage.getItem('ms_guest_greeting') || currentUser?.user_metadata?.guest_greeting || null,
-            created_by: liveUserId,
-            device_uuid: null,
-          };
- 
-          if (processedData?.thumbnail_url) {
-            photoData.file_urls = { thumbnail: processedData.thumbnail_url, medium: processedData.medium_url, original: processedData.original_url };
-            photoData.file_url = processedData.original_url;
-          } else {
-            const { file_url } = await memoriaService.storage.upload(photo.file, event.id);
-            photoData.file_url = file_url;
+        }));
+      }
+
+      pendingPhotos.forEach(p => { if (p.previewUrl) URL.revokeObjectURL(p.previewUrl); });
+      setPendingPhotos([]); setShowPendingGallery(false);
+      setIsUploadingBatch(false); setUploadProgress({ current: 0, total: 0 });
+
+      console.error('[Upload Trace] Step 13: Batch complete. success:', successCount, 'errors:', errorCount);
+
+      if (successCount > 0) {
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#f3f3f3', '#e5e5e5', '#c4c4c4', '#ffffff', '#25D366'] });
+        if (navigator.vibrate) navigator.vibrate(200);
+        setUploadSuccess(true);
+        setUserUploadedCount(prev => prev + successCount);
+        if (!isAdminView) {
+          const uploaded = newlyUploaded.filter(p => p);
+          if (uploaded.length > 0) {
+            const addOptimistic = prev => {
+              const existingIds = new Set(prev.map(p => p.id));
+              return [...uploaded.filter(p => !existingIds.has(p.id)).reverse(), ...prev];
+            };
+            setPhotos(addOptimistic);
+            setMyPhotos(addOptimistic);
           }
- 
-          const created = await memoriaService.photos.create(photoData);
-          if (created) newlyUploaded.push(created);
-          successCount++;
-        } catch (err) {
-          console.error('❌ Upload failed — created_by:', liveUserId, '| error:', err?.message || err);
-          errorCount++;
-        } finally {
-          setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
-        }
-      }));
-    }
- 
-    pendingPhotos.forEach(p => { if (p.previewUrl) URL.revokeObjectURL(p.previewUrl); });
-    setPendingPhotos([]); setShowPendingGallery(false);
-    setIsUploadingBatch(false); setUploadProgress({ current: 0, total: 0 });
- 
-    if (successCount > 0) {
-      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#f3f3f3', '#e5e5e5', '#c4c4c4', '#ffffff', '#25D366'] });
-      if (navigator.vibrate) navigator.vibrate(200);
-      setUploadSuccess(true);
-      setUserUploadedCount(prev => prev + successCount);
-      if (!isAdminView) {
-        const uploaded = newlyUploaded.filter(p => p);
-        if (uploaded.length > 0) {
-          const addOptimistic = prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            return [...uploaded.filter(p => !existingIds.has(p.id)).reverse(), ...prev];
-          };
-          setPhotos(addOptimistic);
-          setMyPhotos(addOptimistic);
         }
       }
+      if (errorCount > 0) alert(`${successCount} תמונות הועלו בהצלחה.\n${errorCount} תמונות נכשלו.`);
+
+    } catch (outerErr) {
+      // Catches any exception thrown BEFORE or AFTER the batch loop —
+      // e.g. getUser() network failure, signInAnonymously() error, quota check throw.
+      console.error('[Upload Trace] ❌ OUTER CATCH — upload aborted before batch started:', outerErr?.message || outerErr);
+      setIsUploadingBatch(false);
+      setUploadProgress({ current: 0, total: 0 });
+      alert('שגיאה בתהליך ההעלאה. אנא בדוק את החיבור לאינטרנט ונסה שוב.');
     }
-    if (errorCount > 0) alert(`${successCount} תמונות הועלו בהצלחה.\n${errorCount} תמונות נכשלו.`);
   };
  
   const handleUploadClick = async (mode) => {
