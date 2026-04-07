@@ -29,8 +29,10 @@ export default function EventPage() {
         const found = await memoriaService.events.getByCode(eventCode);
         if (found) {
           setEvent(found);
-          // Check quota immediately after loading the event
-          await checkEventQuota(found.id);
+          // Pass the raw fetched object directly — do NOT use the `event` state variable
+          // here because setEvent is async and `event` will still be null at this point.
+          // checkGuestQuota is a pure synchronous function — no await needed.
+          checkEventQuota(found);
         }
       } catch (error) {
         console.error('שגיאה בטעינת האירוע:', error);
@@ -39,10 +41,15 @@ export default function EventPage() {
     setIsLoading(false);
   };
 
-  const checkEventQuota = async (eventId) => {
+  const checkEventQuota = (foundEvent) => {
     setIsCheckingQuota(true);
     try {
+<<<<<<< HEAD
       const result = checkGuestQuota({ event: event });
+=======
+      // Pure synchronous call — no network, no auth, no await
+      const result = checkGuestQuota({ event: foundEvent });
+>>>>>>> a419e5e (Update Uaj839320dasda7859234)
       setQuotaStatus(result?.data || result);
     } catch (error) {
       // On error, allow entry — don't block users due to network issues
