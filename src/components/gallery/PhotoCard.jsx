@@ -28,7 +28,7 @@ export default function PhotoCard({
 
   return (
     <div
-      className="relative aspect-[9/16] bg-gray-800/50 rounded-2xl overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg border border-white/5 animate-in fade-in zoom-in-95"
+      className="relative aspect-square bg-gray-800/50 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg border border-white/5 animate-in fade-in zoom-in-95"
       onClick={() => setSelectedIndex(index)}
     >
       <img

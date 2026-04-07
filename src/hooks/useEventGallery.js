@@ -60,7 +60,6 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   const [liveNotification, setLiveNotification] = useState(null);
  
   const fileInputRef = useRef(null);
-  const observerTarget = useRef(null);
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
  
