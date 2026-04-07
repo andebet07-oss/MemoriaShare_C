@@ -476,12 +476,15 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
 
     try {
       // ── Step 1: Resolve auth ─────────────────────────────────────────────
-      console.error('[Upload Trace] Step 1: Resolving auth session...');
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError) throw new Error(`getUser failed: ${authError.message}`);
+      // Use getSession() (local cache) instead of getUser() (network request).
+      // getUser() makes a live /auth/v1/user call that can hang indefinitely
+      // while the anonymous session from mount is still being processed.
+      console.error('[Upload Trace] Step 1: Resolving auth session (local cache)...');
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw new Error(`getSession failed: ${sessionError.message}`);
 
-      let liveUser = authData?.user ?? null;
-      console.error('[Upload Trace] Step 2: liveUser from getUser:', liveUser?.id ?? 'null');
+      let liveUser = sessionData?.session?.user ?? null;
+      console.error('[Upload Trace] Step 2: liveUser from getSession:', liveUser?.id ?? 'null');
 
       if (!liveUser) {
         console.error('[Upload Trace] Step 2a: No session — calling signInAnonymously...');
