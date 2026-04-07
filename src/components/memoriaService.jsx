@@ -1,5 +1,20 @@
 import { supabase } from '@/lib/supabase';
 
+// Reads the current JWT from the Supabase localStorage session.
+// Used by methods that must bypass supabase-js _fetchWithAuth to avoid
+// auth mutex contention when signInAnonymously() is still in flight.
+function _getJwt() {
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  try {
+    const storageKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+    if (storageKey) {
+      const session = JSON.parse(localStorage.getItem(storageKey));
+      if (session?.access_token) return session.access_token;
+    }
+  } catch { /* non-fatal */ }
+  return supabaseAnonKey;
+}
+
 /**
  * Memoria Service Layer
  * Centralizes all Supabase calls with consistent error logging
@@ -205,18 +220,32 @@ const memoriaService = {
     },
 
     create: async (photoData) => {
-      try {
-        const { data, error } = await supabase
-          .from('photos')
-          .insert(photoData)
-          .select()
-          .single();
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('MemoriaService [photos.create]: Failed to create photo record', error);
-        throw error;
+      // WHY native fetch: supabase.from().insert() calls _fetchWithAuth which
+      // checks session expiry and may call refreshSession() — re-entering the
+      // auth mutex that signInAnonymously() holds at mount time (same hang as storage).
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const jwt = _getJwt();
+
+      const response = await fetch(`${supabaseUrl}/rest/v1/photos`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'apikey': supabaseAnonKey,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation',
+        },
+        body: JSON.stringify(photoData),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('MemoriaService [photos.create]: Failed to create photo record', response.status, errText);
+        throw new Error(`DB insert failed (${response.status}): ${errText}`);
       }
+
+      const rows = await response.json();
+      return Array.isArray(rows) ? rows[0] : rows;
     },
 
     delete: async (id) => {
@@ -286,19 +315,7 @@ const memoriaService = {
       const ext = (file.name || 'photo').split('.').pop() || 'jpg';
       const path = `${eventId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
-      // Read the JWT from the Supabase session in localStorage.
-      // Falls back to the anon key — the storage INSERT policy has no auth.uid() check,
-      // so any valid key is accepted for the bucket write.
-      let jwt = supabaseAnonKey;
-      try {
-        const storageKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-        if (storageKey) {
-          const session = JSON.parse(localStorage.getItem(storageKey));
-          if (session?.access_token) jwt = session.access_token;
-        }
-      } catch {
-        // Non-fatal — anon key fallback is sufficient for public bucket INSERT
-      }
+      const jwt = _getJwt();
 
       const uploadUrl = `${supabaseUrl}/storage/v1/object/photos/${path}`;
 
