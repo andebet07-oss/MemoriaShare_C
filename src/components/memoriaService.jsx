@@ -270,25 +270,58 @@ const memoriaService = {
      * Upload a file to the Supabase 'photos' storage bucket.
      * Returns an object with the public URL of the uploaded file.
      * Path: {eventId}/{timestamp}_{filename}
+     *
+     * WHY native fetch instead of supabase.storage.upload():
+     * In @supabase/supabase-js v2.x, storage.upload() calls _fetchWithAuth which
+     * checks whether the session token needs refreshing before every request.
+     * If the anonymous session is near expiry, refreshSession() is invoked — this
+     * re-enters the same auth mutex that signInAnonymously() holds at mount time,
+     * causing a silent indefinite hang. Using native fetch with the JWT read
+     * directly from localStorage bypasses this entirely.
      */
     upload: async (file, eventId = 'general') => {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const ext = (file.name || 'photo').split('.').pop() || 'jpg';
+      const path = `${eventId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+      // Read the JWT from the Supabase session in localStorage.
+      // Falls back to the anon key — the storage INSERT policy has no auth.uid() check,
+      // so any valid key is accepted for the bucket write.
+      let jwt = supabaseAnonKey;
       try {
-        const ext = file.name.split('.').pop();
-        const path = `${eventId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        const { data, error } = await supabase.storage
-          .from('photos')
-          .upload(path, file, { upsert: false });
-        if (error) throw error;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('photos')
-          .getPublicUrl(data.path);
-
-        return { file_url: publicUrl, path: data.path };
-      } catch (error) {
-        console.error('MemoriaService [storage.upload]: Failed to upload file', error);
-        throw error;
+        const storageKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+        if (storageKey) {
+          const session = JSON.parse(localStorage.getItem(storageKey));
+          if (session?.access_token) jwt = session.access_token;
+        }
+      } catch {
+        // Non-fatal — anon key fallback is sufficient for public bucket INSERT
       }
+
+      const uploadUrl = `${supabaseUrl}/storage/v1/object/photos/${path}`;
+
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'apikey': supabaseAnonKey,
+          'Content-Type': file.type || 'image/jpeg',
+          'x-upsert': 'false',
+        },
+        body: file,
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Storage upload failed (${response.status}): ${errText}`);
+      }
+
+      // Public URL is deterministic for public buckets — no extra network call needed
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/photos/${path}`;
+
+      return { file_url: publicUrl, path };
     },
 
     /**
