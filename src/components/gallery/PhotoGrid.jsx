@@ -36,6 +36,9 @@ export default function PhotoGrid({
   hasMore,
   isFetchingMore,
   fetchNextPage,
+  isSelectionMode = false,
+  selectedPhotoIds,
+  onToggleSelect,
 }) {
   // ── Stable components object ─────────────────────────────────────────────
   // Footer needs isFetchingMore, so it cannot be static. useMemo keyed on the
@@ -79,6 +82,9 @@ export default function PhotoGrid({
           handleRequestDeletion={handleRequestDeletion}
           currentUser={currentUser}
           getDisplayUploaderName={getDisplayUploaderName}
+          isSelectionMode={isSelectionMode}
+          isSelected={selectedPhotoIds?.has(photo.id) ?? false}
+          onToggleSelect={onToggleSelect}
         />
       );
     },
@@ -94,6 +100,9 @@ export default function PhotoGrid({
       handleRequestDeletion,
       currentUser,
       getDisplayUploaderName,
+      isSelectionMode,
+      selectedPhotoIds,
+      onToggleSelect,
     ]
   );
 

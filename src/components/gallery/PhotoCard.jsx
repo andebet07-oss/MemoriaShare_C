@@ -1,5 +1,5 @@
 import React from "react";
-import { Loader2, Trash2, User, Clock, EyeOff } from "lucide-react";
+import { Loader2, Trash2, User, Clock, EyeOff, Check } from "lucide-react";
 
 export default function PhotoCard({
   photo,
@@ -14,6 +14,9 @@ export default function PhotoCard({
   handleRequestDeletion,
   currentUser,
   getDisplayUploaderName,
+  isSelectionMode = false,
+  isSelected = false,
+  onToggleSelect,
 }) {
   const isDeleting = deletingId === photo.id;
   const isConfirming = confirmDeleteId === photo.id;
@@ -28,8 +31,8 @@ export default function PhotoCard({
 
   return (
     <div
-      className="relative aspect-square bg-gray-800/50 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg border border-white/5 animate-in fade-in zoom-in-95"
-      onClick={() => setSelectedIndex(index)}
+      className={`relative aspect-square bg-gray-800/50 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg animate-in fade-in zoom-in-95 border ${isSelectionMode && isSelected ? 'border-indigo-500 ring-2 ring-indigo-500' : 'border-white/5'}`}
+      onClick={() => isSelectionMode ? onToggleSelect?.(photo.id) : setSelectedIndex(index)}
     >
       <img
         src={thumbnailUrl}
@@ -141,6 +144,20 @@ export default function PhotoCard({
         <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl">
           <Loader2 className="w-5 h-5 text-white animate-spin" />
         </div>
+      )}
+
+      {/* Selection overlay */}
+      {isSelectionMode && (
+        <>
+          <div className={`absolute inset-0 transition-colors duration-150 pointer-events-none ${isSelected ? 'bg-black/50' : 'bg-black/10'}`} />
+          <div className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-150 pointer-events-none ${
+            isSelected
+              ? 'bg-indigo-500 border-2 border-white scale-110'
+              : 'bg-black/40 border-2 border-white/50'
+          }`}>
+            {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+          </div>
+        </>
       )}
     </div>
   );
