@@ -314,7 +314,7 @@ function EventSettingsTab({ event, onEventUpdate }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, isLoadingAuth } = useAuth();
   const [event, setEvent] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -326,9 +326,10 @@ export default function Dashboard() {
   const [deletingModId, setDeletingModId] = useState(null);
 
   useEffect(() => {
+    if (isLoadingAuth) return;
     window.scrollTo(0, 0);
     loadDashboardData();
-  }, []);
+  }, [isLoadingAuth, currentUser]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);

@@ -79,37 +79,24 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    // Safety net: if nothing resolves within 8 seconds (e.g. network outage,
-    // Supabase project paused, or auth mutex deadlock), unblock the app anyway.
+    // Safety net: if nothing resolves within 10 seconds (network outage,
+    // Supabase project paused, OAuth processing stall), unblock the app anyway.
     const safetyTimer = setTimeout(() => {
       console.warn('AuthContext: session resolution timed out — unblocking app');
       settle();
-    }, 8000);
+    }, 10000);
 
-    // Resolve the current session immediately on mount.
-    // getSession() reads from localStorage — fast, no network unless token needs refresh.
-    supabase.auth.getSession()
-      .then(async ({ data: { session }, error }) => {
-        clearTimeout(safetyTimer);
-        if (error) {
-          console.error('AuthContext: getSession failed', error);
-          setAuthError({ type: 'unknown', message: error.message });
-        }
-        const enriched = await fetchUserWithProfile(session?.user ?? null);
-        setUser(enriched);
-        setIsAuthenticated(!!enriched);
-        settle();
-      })
-      .catch(err => {
-        // Destructuring error, network failure, or anything unexpected.
-        // Must still unblock the app — DO NOT leave isLoadingAuth = true.
-        clearTimeout(safetyTimer);
-        console.error('AuthContext: getSession threw unexpectedly', err);
-        settle();
-      });
-
-    // Keep state in sync with Supabase auth events (login, logout, token refresh).
-    // onAuthStateChange fires INITIAL_SESSION first, which also settles loading.
+    // WHY no getSession() call here:
+    // When a Google OAuth redirect lands (URL contains #access_token=…), the
+    // Supabase client's initialize() acquires the internal auth mutex to process
+    // the hash. Calling getSession() simultaneously races for the same mutex —
+    // both block each other indefinitely. This was the root cause of the Dashboard
+    // hang after sign-in.
+    //
+    // onAuthStateChange fires INITIAL_SESSION as its very first event, AFTER
+    // initialize() completes (including OAuth hash processing). This makes it the
+    // single correct place to resolve the initial session — no mutex contention,
+    // no race, always delivers the real user (including the just-signed-in host).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       try {
         const enriched = await fetchUserWithProfile(session?.user ?? null);
