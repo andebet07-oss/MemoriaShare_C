@@ -26,6 +26,13 @@ export default function Home() {
           <FAQ />
           <FinalCTA />
         </main>
+        <footer className="py-8 border-t border-white/5">
+          <div className="flex items-center justify-center gap-4 text-sm text-slate-500">
+            <a href="/privacy.html" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
+            <span>·</span>
+            <a href="/terms.html" className="hover:text-slate-300 transition-colors">Terms of Service</a>
+          </div>
+        </footer>
       </div>
 
       {/* חלון הדגמה מרכזי ואחיד */}
