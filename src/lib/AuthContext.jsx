@@ -4,62 +4,68 @@ import { supabase } from '@/lib/supabase';
 const AuthContext = createContext();
 
 /**
- * Fetch the app-level profile (role, full_name, avatar_url) for a Supabase user
- * and merge it onto the user object so callers get user.email, user.full_name,
- * user.role etc. in one place.
- *
- * WHY anonymous short-circuit: anonymous guests never have a profile row.
- * Calling supabase.from('profiles').select() for them goes through _fetchWithAuth,
- * which can contend the auth mutex while AuthContext is still processing getSession().
- * Skipping it for anonymous users eliminates that contention entirely.
+ * Build a base user object from a Supabase auth user — NO database calls.
+ * Uses only the data already present in the JWT / user_metadata.
+ * This is safe to call while the auth mutex may be held (token refresh in progress).
  */
-async function fetchUserWithProfile(supabaseUser) {
+function buildBaseUser(supabaseUser) {
   if (!supabaseUser) return null;
-
-  // Supabase OAuth stores name/picture in user_metadata
   const meta = supabaseUser.user_metadata || {};
-
-  // Base user object — merge auth fields with metadata defaults
-  const base = {
+  return {
     ...supabaseUser,
-    id: supabaseUser.id,                                          // UUID — use this for created_by comparisons
+    id: supabaseUser.id,
     email: supabaseUser.email,
-    isAnonymous: supabaseUser.is_anonymous || false,             // true for Supabase Anonymous Sign-In guests
+    isAnonymous: supabaseUser.is_anonymous || false,
     full_name: meta.full_name || meta.name || supabaseUser.email?.split('@')[0] || '',
     avatar_url: meta.avatar_url || meta.picture || '',
     role: 'user',
+    phone: '',
+    needsOnboarding: false,
   };
+}
 
-  // Anonymous guests: no profile row, no DB call — return immediately
-  if (supabaseUser.is_anonymous) {
-    return { ...base, phone: '', needsOnboarding: false };
-  }
+/**
+ * Enrich a base user with DB profile data (role, phone, full_name override).
+ * Called in the background AFTER the auth state has already settled.
+ * Uses an AbortController so it never hangs indefinitely.
+ */
+async function enrichWithProfile(baseUser, setUser) {
+  if (!baseUser || baseUser.isAnonymous) return;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000);
 
   try {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, full_name, phone, avatar_url')
-      .eq('id', supabaseUser.id)
-      .maybeSingle();
+      .eq('id', baseUser.id)
+      .maybeSingle()
+      .abortSignal(controller.signal);
+
+    clearTimeout(timer);
 
     if (profile) {
-      const merged = {
-        ...base,
-        role: profile.role || 'user',
-        full_name: profile.full_name || base.full_name,
-        phone: profile.phone || '',
-        avatar_url: profile.avatar_url || base.avatar_url,
-      };
-      merged.needsOnboarding = !merged.full_name || !merged.phone;
-      return merged;
+      setUser(prev => {
+        // Guard: don't overwrite if a newer auth event already changed the user
+        if (!prev || prev.id !== baseUser.id) return prev;
+        const enriched = {
+          ...prev,
+          role: profile.role || 'user',
+          full_name: profile.full_name || prev.full_name,
+          phone: profile.phone || '',
+          avatar_url: profile.avatar_url || prev.avatar_url,
+        };
+        enriched.needsOnboarding = !enriched.full_name || !enriched.phone;
+        return enriched;
+      });
     }
   } catch (err) {
-    // Non-fatal: profile table might not exist yet or network is down
-    console.warn('AuthContext: could not fetch profile', err.message);
+    clearTimeout(timer);
+    if (err.name !== 'AbortError') {
+      console.warn('AuthContext: background profile fetch failed', err.message);
+    }
   }
-
-  // No profile row yet — host must complete onboarding
-  return { ...base, phone: '', needsOnboarding: true };
 }
 
 export const AuthProvider = ({ children }) => {
@@ -95,38 +101,33 @@ export const AuthProvider = ({ children }) => {
 
     if (!isOAuthCallback) {
       // Normal page load / refresh: read the persisted session from localStorage.
-      // getSession() is a synchronous localStorage read wrapped in a microtask —
-      // it does NOT acquire the auth mutex and returns immediately.
-      supabase.auth.getSession().then(async ({ data: { session } }) => {
-        try {
-          const enriched = await fetchUserWithProfile(session?.user ?? null);
-          setUser(enriched);
-          setIsAuthenticated(!!enriched);
-          setAuthError(null);
-        } catch (err) {
-          console.warn('AuthContext: getSession profile fetch failed', err.message);
-        }
+      // buildBaseUser() makes NO DB calls and NO mutex acquisitions — instant.
+      // Profile enrichment happens in the background after settle().
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        const base = buildBaseUser(session?.user ?? null);
+        setUser(base);
+        setIsAuthenticated(!!base);
+        setAuthError(null);
         settle();
+        // Enrich with DB profile data in the background (non-blocking)
+        if (base) enrichWithProfile(base, setUser);
       }).catch((err) => {
         console.error('AuthContext: getSession threw', err);
         settle();
       });
     }
 
-    // onAuthStateChange handles every subsequent auth event (SIGNED_IN after
-    // OAuth, SIGNED_OUT, TOKEN_REFRESHED, etc.) and also fires INITIAL_SESSION
-    // on OAuth callbacks so that path is fully covered.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      try {
-        const enriched = await fetchUserWithProfile(session?.user ?? null);
-        setUser(enriched);
-        setIsAuthenticated(!!enriched);
-        setAuthError(null);
-        settle();
-      } catch (err) {
-        console.error('AuthContext: onAuthStateChange handler threw', err);
-        settle();
-      }
+    // onAuthStateChange handles SIGNED_IN (after OAuth), SIGNED_OUT,
+    // TOKEN_REFRESHED, and INITIAL_SESSION on OAuth callbacks.
+    // Same pattern: settle immediately with base user, enrich in background.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const base = buildBaseUser(session?.user ?? null);
+      setUser(base);
+      setIsAuthenticated(!!base);
+      setAuthError(null);
+      settle();
+      // Enrich with DB profile data in the background (non-blocking)
+      if (base) enrichWithProfile(base, setUser);
     });
 
     return () => {
@@ -137,8 +138,9 @@ export const AuthProvider = ({ children }) => {
 
   const refreshUser = async () => {
     const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-    const enriched = await fetchUserWithProfile(supabaseUser);
-    setUser(enriched);
+    const base = buildBaseUser(supabaseUser);
+    setUser(base);
+    if (base) await enrichWithProfile(base, setUser);
   };
 
   const logout = async (shouldRedirect = true) => {
