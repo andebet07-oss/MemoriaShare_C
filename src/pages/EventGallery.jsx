@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Camera, Upload, Sparkles, CheckCircle, ImageIcon, Users, EyeOff, CheckSquare, Check, Trash2, X } from "lucide-react";
+import { Camera, Upload, Sparkles, CheckCircle, ImageIcon, Users, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import useEventGallery from "@/hooks/useEventGallery";
 import GalleryHeader from "@/components/gallery/GalleryHeader";
@@ -363,28 +363,12 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
           <PullToRefresh onRefresh={g.loadEventAndPhotos} disabled={isAdminView}>
             {isAdminView || g.isOwner ? (
               g.displayedPhotos.length > 0 ? (
-                <>
-                  <div className="flex justify-end px-1 mb-2">
-                    <button
-                      onClick={g.toggleSelectionMode}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                        g.isSelectionMode
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white/10 text-white/70 hover:bg-white/20'
-                      }`}
-                    >
-                      <CheckSquare className="w-4 h-4" />
-                      {g.isSelectionMode ? 'ביטול בחירה' : 'בחירה מרובה'}
-                    </button>
-                  </div>
-                  <PhotoGrid displayedPhotos={g.displayedPhotos} setSelectedIndex={g.setSelectedIndex}
-                    isAdminView={isAdminView} confirmDeleteId={g.confirmDeleteId} setConfirmDeleteId={g.setConfirmDeleteId}
-                    deletingId={g.deletingId} handleAdminDelete={g.handleAdminDelete}
-                    handleGuestDeletePhoto={g.handleGuestDeletePhoto} handleRequestDeletion={g.handleRequestDeletion}
-                    currentUser={g.currentUser} getDisplayUploaderName={g.getDisplayUploaderName}
-                    hasMore={g.hasMore} isFetchingMore={g.isFetchingMore} fetchNextPage={g.fetchNextPage}
-                    isSelectionMode={g.isSelectionMode} selectedPhotoIds={g.selectedPhotoIds} onToggleSelect={g.togglePhotoSelection} />
-                </>
+                <PhotoGrid displayedPhotos={g.displayedPhotos} setSelectedIndex={g.setSelectedIndex}
+                  isAdminView={isAdminView} confirmDeleteId={g.confirmDeleteId} setConfirmDeleteId={g.setConfirmDeleteId}
+                  deletingId={g.deletingId} handleAdminDelete={g.handleAdminDelete}
+                  handleGuestDeletePhoto={g.handleGuestDeletePhoto} handleRequestDeletion={g.handleRequestDeletion}
+                  currentUser={g.currentUser} getDisplayUploaderName={g.getDisplayUploaderName}
+                  hasMore={g.hasMore} isFetchingMore={g.isFetchingMore} fetchNextPage={g.fetchNextPage} />
               ) : (
                 <EmptyState isAdminView={isAdminView} onUpload={g.handleUploadClick} disabled={g.isUploadingBatch} />
               )
@@ -475,47 +459,6 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
         processingFilterId={g.processingFilterId} currentUser={g.currentUser}
         handleGuestDeletePhoto={g.handleGuestDeletePhoto} handleRequestDeletion={g.handleRequestDeletion}
       />
-
-      {/* Bulk moderation sticky bar */}
-      {g.isSelectionMode && g.selectedPhotoIds.size > 0 && (
-        <div
-          className="fixed bottom-0 left-0 w-full z-50 bg-zinc-900/95 backdrop-blur-md border-t border-white/10 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] animate-in slide-in-from-bottom duration-200"
-          dir="rtl"
-        >
-          <div className="flex items-center justify-between max-w-lg mx-auto">
-            <span className="text-white/70 text-sm font-medium">{g.selectedPhotoIds.size} נבחרו</span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => g.handleBulkAction('approve')}
-                className="flex items-center gap-1 px-3 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold active:scale-95 transition-transform"
-              >
-                <Check className="w-4 h-4" />
-                אישור
-              </button>
-              <button
-                onClick={() => g.handleBulkAction('hide')}
-                className="flex items-center gap-1 px-3 py-2 rounded-xl bg-amber-600 text-white text-sm font-semibold active:scale-95 transition-transform"
-              >
-                <EyeOff className="w-4 h-4" />
-                הסתרה
-              </button>
-              <button
-                onClick={() => g.handleBulkAction('delete')}
-                className="flex items-center gap-1 px-3 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold active:scale-95 transition-transform"
-              >
-                <Trash2 className="w-4 h-4" />
-                מחיקה
-              </button>
-              <button
-                onClick={g.toggleSelectionMode}
-                className="p-2 rounded-xl bg-white/10 text-white/70 active:scale-95 transition-transform"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {!isAdminView && !g.isQuotaExhausted && !g.showCamera && g.pendingPhotos.length === 0 && g.selectedIndex === null && (
         <div className={`fixed left-1/2 -translate-x-1/2 z-40 transition-all duration-500 ${g.showFAB ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'}`}

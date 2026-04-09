@@ -59,9 +59,6 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [liveNotification, setLiveNotification] = useState(null);
 
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState(new Set());
-
   const fileInputRef = useRef(null);
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
@@ -704,70 +701,6 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     else if (currentIndex >= remaining.length) setSelectedIndex(remaining.length - 1);
   };
  
-  // ─── Bulk selection & action ──────────────────────────────────────────────
-  const toggleSelectionMode = useCallback(() => {
-    setIsSelectionMode(prev => {
-      if (prev) setSelectedPhotoIds(new Set());
-      return !prev;
-    });
-  }, []);
-
-  const togglePhotoSelection = useCallback((photoId) => {
-    setSelectedPhotoIds(prev => {
-      const next = new Set(prev);
-      if (next.has(photoId)) next.delete(photoId);
-      else next.add(photoId);
-      return next;
-    });
-  }, []);
-
-  const handleBulkAction = useCallback(async (actionType) => {
-    const ids = [...selectedPhotoIds];
-    if (ids.length === 0) return;
-
-    // Optimistic UI — update local state immediately
-    if (actionType === 'approve') {
-      const patch = p => ids.includes(p.id) ? { ...p, is_approved: true, is_hidden: false } : p;
-      setPhotos(prev => prev.map(patch));
-      setSharedPhotos(prev => prev.map(patch));
-      setMyPhotos(prev => prev.map(patch));
-    } else if (actionType === 'hide') {
-      const patch = p => ids.includes(p.id) ? { ...p, is_hidden: true } : p;
-      setPhotos(prev => prev.map(patch));
-      setSharedPhotos(prev => prev.filter(p => !ids.includes(p.id)));
-      setMyPhotos(prev => prev.map(patch));
-    } else if (actionType === 'delete') {
-      setPhotos(prev => prev.filter(p => !ids.includes(p.id)));
-      setSharedPhotos(prev => prev.filter(p => !ids.includes(p.id)));
-      setMyPhotos(prev => prev.filter(p => !ids.includes(p.id)));
-    }
-
-    // Clear selection immediately so the bar disappears
-    setSelectedPhotoIds(new Set());
-    setIsSelectionMode(false);
-
-    // Concurrent DB calls, batched into chunks of 50 to avoid mobile network overload
-    const CHUNK = 50;
-    try {
-      for (let i = 0; i < ids.length; i += CHUNK) {
-        const chunk = ids.slice(i, i + CHUNK);
-        if (actionType === 'approve') {
-          await Promise.all(chunk.map(id =>
-            memoriaService.photos.update(id, { is_approved: true, is_hidden: false })
-          ));
-        } else if (actionType === 'hide') {
-          await Promise.all(chunk.map(id =>
-            memoriaService.photos.update(id, { is_hidden: true })
-          ));
-        } else if (actionType === 'delete') {
-          await Promise.all(chunk.map(id => memoriaService.photos.delete(id)));
-        }
-      }
-    } catch (err) {
-      console.error('[BulkAction] Failed:', err.message);
-    }
-  }, [selectedPhotoIds]);
-
   // ─── Derived values ───────────────────────────────────────────────────────
   const isSuperAdmin = currentUser?.email === 'effitag@gmail.com';
   const isOriginalCreator = !!(currentUser?.id && event?.created_by === currentUser.id);
@@ -807,7 +740,6 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     loadEventAndPhotos, fetchNextPage, handleUploadClick, handleCameraCapture, handleFinalUploadFromCamera,
     handleFileChange, addToPendingPhotos, changePhotoFilter, removeFromPendingPhotos, clearAllPendingPhotos,
     uploadAllPendingPhotos, sharePhoto, handleDownloadPhoto,
-    isSelectionMode, selectedPhotoIds, toggleSelectionMode, togglePhotoSelection, handleBulkAction,
     handleAdminDelete, handleDeleteFromFullScreen,
     handleNextPhoto, handlePrevPhoto,
     handleTouchStart, handleTouchMove, handleTouchEnd,

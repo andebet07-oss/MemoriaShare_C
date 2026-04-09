@@ -69,34 +69,53 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
-    // settle() is called exactly once — whichever path (getSession or onAuthStateChange)
-    // resolves first clears the loading state. The safety timer is the last resort.
+    // settle() fires exactly once — whichever path resolves first wins.
+    // The safety timer is the last resort.
     let settled = false;
     const settle = () => {
       if (!settled) {
         settled = true;
+        clearTimeout(safetyTimer);
         setIsLoadingAuth(false);
       }
     };
 
-    // Safety net: if nothing resolves within 10 seconds (network outage,
-    // Supabase project paused, OAuth processing stall), unblock the app anyway.
+    // Safety net: unblock the app if nothing resolves within 10 seconds.
     const safetyTimer = setTimeout(() => {
       console.warn('AuthContext: session resolution timed out — unblocking app');
       settle();
     }, 10000);
 
-    // WHY no getSession() call here:
-    // When a Google OAuth redirect lands (URL contains #access_token=…), the
-    // Supabase client's initialize() acquires the internal auth mutex to process
-    // the hash. Calling getSession() simultaneously races for the same mutex —
-    // both block each other indefinitely. This was the root cause of the Dashboard
-    // hang after sign-in.
-    //
-    // onAuthStateChange fires INITIAL_SESSION as its very first event, AFTER
-    // initialize() completes (including OAuth hash processing). This makes it the
-    // single correct place to resolve the initial session — no mutex contention,
-    // no race, always delivers the real user (including the just-signed-in host).
+    // Detect an in-progress OAuth redirect (hash contains the token Supabase
+    // is about to consume). In this case we must NOT call getSession() because
+    // initialize() already holds the auth mutex to process the hash — a
+    // concurrent getSession() would deadlock. For OAuth we rely solely on
+    // onAuthStateChange INITIAL_SESSION, which fires after initialize() finishes.
+    const isOAuthCallback = window.location.hash.includes('access_token');
+
+    if (!isOAuthCallback) {
+      // Normal page load / refresh: read the persisted session from localStorage.
+      // getSession() is a synchronous localStorage read wrapped in a microtask —
+      // it does NOT acquire the auth mutex and returns immediately.
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+        try {
+          const enriched = await fetchUserWithProfile(session?.user ?? null);
+          setUser(enriched);
+          setIsAuthenticated(!!enriched);
+          setAuthError(null);
+        } catch (err) {
+          console.warn('AuthContext: getSession profile fetch failed', err.message);
+        }
+        settle();
+      }).catch((err) => {
+        console.error('AuthContext: getSession threw', err);
+        settle();
+      });
+    }
+
+    // onAuthStateChange handles every subsequent auth event (SIGNED_IN after
+    // OAuth, SIGNED_OUT, TOKEN_REFRESHED, etc.) and also fires INITIAL_SESSION
+    // on OAuth callbacks so that path is fully covered.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       try {
         const enriched = await fetchUserWithProfile(session?.user ?? null);

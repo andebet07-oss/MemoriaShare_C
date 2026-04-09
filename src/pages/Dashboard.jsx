@@ -25,7 +25,8 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
-  Archive
+  Archive,
+  X
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
@@ -37,6 +38,7 @@ import CoHostsManager from "../components/dashboard/CoHostsManager";
 import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
 import RealtimeNotification from "@/components/notifications/RealtimeNotification";
 import DeletionRequestsPanel from "@/components/dashboard/DeletionRequestsPanel";
+import PhotoCard from "@/components/gallery/PhotoCard";
 
 function ExportArchiveCard({ eventId, eventName }) {
   const [status, setStatus] = useState('idle');
@@ -322,8 +324,7 @@ export default function Dashboard() {
   const [pageError, setPageError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [qrFgColor, setQrFgColor] = useState("#000000");
-  const [approvingId, setApprovingId] = useState(null);
-  const [deletingModId, setDeletingModId] = useState(null);
+  const [selectedModerationIds, setSelectedModerationIds] = useState(new Set());
 
   useEffect(() => {
     if (isLoadingAuth) return;
@@ -445,26 +446,41 @@ export default function Dashboard() {
     }
   };
 
-  const handleApprovePhoto = async (photoId) => {
-    setApprovingId(photoId);
-    try {
-      await memoriaService.photos.approve(photoId);
-      setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, is_approved: true } : p));
-    } catch (error) {
-      console.error('שגיאה באישור תמונה:', error);
-    }
-    setApprovingId(null);
+  const toggleModerationPhoto = (photoId) => {
+    setSelectedModerationIds(prev => {
+      const next = new Set(prev);
+      if (next.has(photoId)) next.delete(photoId);
+      else next.add(photoId);
+      return next;
+    });
   };
 
-  const handleDeleteModPhoto = async (photoId) => {
-    setDeletingModId(photoId);
-    try {
-      await memoriaService.photos.delete(photoId);
-      setPhotos(prev => prev.filter(p => p.id !== photoId));
-    } catch (error) {
-      console.error('שגיאה במחיקת תמונה:', error);
+  const handleBulkModerationAction = async (actionType) => {
+    const ids = [...selectedModerationIds];
+    if (!ids.length) return;
+
+    // Optimistic UI
+    if (actionType === 'approve') {
+      setPhotos(prev => prev.map(p => ids.includes(p.id) ? { ...p, is_approved: true } : p));
+    } else if (actionType === 'delete') {
+      setPhotos(prev => prev.filter(p => !ids.includes(p.id)));
     }
-    setDeletingModId(null);
+    setSelectedModerationIds(new Set());
+
+    // Chunked concurrent DB calls (max 50 per batch)
+    const CHUNK = 50;
+    try {
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const chunk = ids.slice(i, i + CHUNK);
+        if (actionType === 'approve') {
+          await Promise.all(chunk.map(id => memoriaService.photos.approve(id)));
+        } else if (actionType === 'delete') {
+          await Promise.all(chunk.map(id => memoriaService.photos.delete(id)));
+        }
+      }
+    } catch (err) {
+      console.error('[BulkModeration] Failed:', err.message);
+    }
   };
 
   const isAdmin = currentUser?.role === 'admin';
@@ -706,55 +722,70 @@ export default function Dashboard() {
                           <p className="text-sm text-gray-400">אין תמונות הממתינות לאישור</p>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-3">
-                          {unapprovedPhotos.map((photo) => {
-                            const isApproving = approvingId === photo.id;
-                            const isDeleting = deletingModId === photo.id;
-                            return (
-                              <div key={photo.id} className="relative rounded-xl overflow-hidden bg-[#2a2a2a]">
-                                <div className="aspect-square">
-                                  <img
-                                    src={photo.file_url}
-                                    alt="תמונה ממתינה"
-                                    loading="lazy"
-                                    className={`w-full h-full object-cover ${isApproving || isDeleting ? 'opacity-40' : ''}`}
-                                  />
-                                  {(isApproving || isDeleting) && (
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                      <Loader2 className="w-6 h-6 text-white animate-spin" />
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="p-2 text-right">
-                                  <p className="text-[10px] text-gray-500 truncate mb-2">
-                                    {photo.guest_name || (photo.created_by && photo.created_by !== 'anonymous' ? photo.created_by.split('@')[0] : 'אורח')}
-                                  </p>
-                                  <div className="flex gap-1.5">
-                                    <Button
-                                      onClick={() => handleApprovePhoto(photo.id)}
-                                      disabled={isApproving || isDeleting}
-                                      className="flex-1 bg-green-700 hover:bg-green-600 text-white text-[11px] font-bold h-8 rounded-lg transition-all"
-                                    >
-                                      {isApproving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'אשר'}
-                                    </Button>
-                                    <Button
-                                      onClick={() => handleDeleteModPhoto(photo.id)}
-                                      disabled={isApproving || isDeleting}
-                                      className="flex-1 bg-red-700 hover:bg-red-600 text-white text-[11px] font-bold h-8 rounded-lg transition-all"
-                                    >
-                                      {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'מחק'}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                        <>
+                          <p className="text-xs text-gray-500 text-right mb-3">הקש על תמונות לבחירה, ולאחר מכן בחר פעולה</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {unapprovedPhotos.map((photo, index) => (
+                              <PhotoCard
+                                key={photo.id}
+                                photo={photo}
+                                index={index}
+                                setSelectedIndex={() => {}}
+                                isAdminView={false}
+                                confirmDeleteId={null}
+                                setConfirmDeleteId={() => {}}
+                                deletingId={null}
+                                handleAdminDelete={() => {}}
+                                handleGuestDeletePhoto={() => {}}
+                                handleRequestDeletion={() => {}}
+                                currentUser={currentUser}
+                                getDisplayUploaderName={() => ''}
+                                isSelectionMode={true}
+                                isSelected={selectedModerationIds.has(photo.id)}
+                                onToggleSelect={toggleModerationPhoto}
+                              />
+                            ))}
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
                 );
               })()}
+
+              {/* Bulk moderation sticky bar */}
+              {selectedModerationIds.size > 0 && (
+                <div
+                  className="fixed bottom-0 left-0 w-full z-50 bg-zinc-900/95 backdrop-blur-md border-t border-white/10 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] animate-in slide-in-from-bottom duration-200"
+                  dir="rtl"
+                >
+                  <div className="flex items-center justify-between max-w-lg mx-auto">
+                    <span className="text-white/70 text-sm font-medium">{selectedModerationIds.size} נבחרו</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleBulkModerationAction('approve')}
+                        className="flex items-center gap-1 px-3 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold active:scale-95 transition-transform"
+                      >
+                        <Check className="w-4 h-4" />
+                        אישור
+                      </button>
+                      <button
+                        onClick={() => handleBulkModerationAction('delete')}
+                        className="flex items-center gap-1 px-3 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold active:scale-95 transition-transform"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        מחיקה
+                      </button>
+                      <button
+                        onClick={() => setSelectedModerationIds(new Set())}
+                        className="p-2 rounded-xl bg-white/10 text-white/70 active:scale-95 transition-transform"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="settings">
