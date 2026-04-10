@@ -31,7 +31,7 @@ export default function PhotoCard({
 
   return (
     <div
-      className={`relative aspect-square bg-gray-800/50 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg animate-in fade-in zoom-in-95 border ${isSelectionMode && isSelected ? 'border-indigo-500 ring-2 ring-indigo-500' : 'border-white/5'}`}
+      className={`relative aspect-square bg-gray-800/50 overflow-hidden cursor-pointer active:opacity-80 transition-opacity duration-150 ${isSelectionMode && isSelected ? 'ring-2 ring-inset ring-indigo-500' : ''}`}
       onClick={() => isSelectionMode ? onToggleSelect?.(photo.id) : setSelectedIndex(index)}
     >
       <img
@@ -67,17 +67,17 @@ export default function PhotoCard({
 
       {/* כפתור בקשת הסרה (אחרי 15 דקות) */}
       {canRequestDeletion && !isDeleting && !isConfirming && (
-        <div className="absolute bottom-2 left-2">
+        <div className="absolute bottom-1.5 left-1.5">
           <button onClick={(e) => { e.stopPropagation(); handleRequestDeletion(photo.id); }}
-            className="w-7 h-7 bg-orange-500/80 backdrop-blur-sm rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-lg">
-            <EyeOff className="w-3.5 h-3.5 text-white" />
+            className="w-6 h-6 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center active:scale-90 transition-all hover:bg-black/60">
+            <EyeOff className="w-3 h-3 text-white/80" />
           </button>
         </div>
       )}
 
       {/* אישור מחיקה ישירה */}
       {canDirectDelete && isConfirming && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-2 rounded-xl">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-2">
           <p className="text-white text-[10px] font-bold text-center">למחוק תמונה זו?</p>
           <div className="flex gap-1.5">
             <button onClick={(e) => { e.stopPropagation(); handleGuestDeletePhoto(photo.id); }}
@@ -89,7 +89,7 @@ export default function PhotoCard({
       )}
 
       {isDeleting && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl">
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
           <Loader2 className="w-5 h-5 text-white animate-spin" />
         </div>
       )}
