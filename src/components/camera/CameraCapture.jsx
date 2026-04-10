@@ -18,7 +18,7 @@ export default function CameraCapture({
   const streamRef = useRef(null);
   
   const [isFrontCamera, setIsFrontCamera] = useState(initialFrontCamera);
-  const [flashMode, setFlashMode] = useState('off'); // 'off' | 'auto' | 'on'
+  const [flashMode, setFlashMode] = useState('off'); // 'off' | 'on'
   const [isVintage, setIsVintage] = useState(true);
   const videoTrackRef = useRef(null);
   const capturePhotoRef = useRef(null);
@@ -29,6 +29,7 @@ export default function CameraCapture({
   const [showQuickGallery, setShowQuickGallery] = useState(false);
   const [shutterEffect, setShutterEffect] = useState(false);
   const [frontFlash, setFrontFlash] = useState(false);
+  const [blackFrame, setBlackFrame] = useState(false);
   const [pulseMagazine, setPulseMagazine] = useState(false); 
   
   const torchSupported = useRef(false);
@@ -85,15 +86,29 @@ export default function CameraCapture({
         throw new Error("Browser does not support camera API");
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: isFrontCamera ? "user" : "environment", width: { ideal: 1920 }, height: { ideal: 1080 }, aspectRatio: { ideal: 16 / 9 } },
-        audio: false
-      });
-      
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: isFrontCamera ? "user" : "environment", width: { ideal: 1920 }, height: { ideal: 1080 }, aspectRatio: { ideal: 16 / 9 } },
+          audio: false
+        });
+      } catch (constraintErr) {
+        if (constraintErr.name === 'OverconstrainedError') {
+          // Fallback: minimal constraints — device doesn't support the ideal resolution
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: isFrontCamera ? "user" : "environment" },
+            audio: false
+          });
+        } else {
+          throw constraintErr;
+        }
+      }
+
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => videoRef.current.play();
+        videoRef.current.onloadedmetadata = () =>
+          videoRef.current.play().catch(err => console.warn('[CameraCapture] play() failed:', err));
       }
       
       const videoTrack = stream.getVideoTracks()[0];
@@ -111,8 +126,6 @@ export default function CameraCapture({
         errorMessage = "לא נמצאה מצלמה במכשיר. ודאו שמצלמה זמינה ונסו שוב.";
       } else if (err.name === 'NotReadableError') {
         errorMessage = "המצלמה תפוסה על ידי אפליקציה אחרת. סגרו את האפליקציה האחרת ונסו שוב.";
-      } else if (err.name === 'OverconstrainedError') {
-        errorMessage = "המצלמה אינה תומכת בהגדרות הנדרשות. נסו שוב.";
       } else {
         errorMessage = "לא ניתן לגשת למצלמה. אנא וודאו שאישרתם הרשאות ונסו לפתוח בדפדפן רגיל (כרום/ספארי).";
       }
@@ -123,6 +136,7 @@ export default function CameraCapture({
 
   const stopCamera = () => {
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    videoTrackRef.current = null;
   };
 
   const drawDateStamp = (ctx, width, height) => {
@@ -196,6 +210,10 @@ export default function CameraCapture({
         }
       }
     } else {
+      // Black frame (25ms) → white flash: simulates native mechanical shutter
+      setBlackFrame(true);
+      await new Promise(r => setTimeout(r, 25));
+      setBlackFrame(false);
       setShutterEffect(true);
       setTimeout(() => setShutterEffect(false), 150);
     }
@@ -228,7 +246,7 @@ export default function CameraCapture({
     // שלב 4: כיבוי פלאש/טורצ' לאחר הצילום
     if (shouldUseFlash) {
       if (isFrontCamera) {
-        setFrontFlash(false);
+        setTimeout(() => setFrontFlash(false), 100);
       } else if (torchSupported.current && videoTrackRef.current) {
         try {
           await videoTrackRef.current.applyConstraints({ advanced: [{ torch: false }] });
@@ -250,8 +268,7 @@ export default function CameraCapture({
     capturePhotoRef.current = capturePhoto;
   });
 
-  const cycleFlash = () =>
-    setFlashMode(prev => prev === 'off' ? 'auto' : prev === 'auto' ? 'on' : 'off');
+  const cycleFlash = () => setFlashMode(prev => prev === 'off' ? 'on' : 'off');
 
   const handleFinishAndUpload = () => {
     if (pendingPhotos.length > 0 && onFinalUpload) onFinalUpload();
@@ -260,6 +277,8 @@ export default function CameraCapture({
   return (
     <div className="fixed inset-0 z-[9999] bg-black overflow-hidden flex flex-col font-sans select-none" dir="rtl">
       
+      {/* שאטר שחור — 25ms לפני השאטר הלבן, מדמה תריס מכני */}
+      <div className={`absolute inset-0 bg-black z-[115] pointer-events-none transition-opacity duration-75 ${blackFrame ? 'opacity-100' : 'opacity-0'}`}></div>
       {/* שאטר לבן — פידבק ויזואלי כשהפלאש כבוי */}
       <div className={`absolute inset-0 bg-white z-[110] transition-opacity duration-150 pointer-events-none ${shutterEffect ? 'opacity-80' : 'opacity-0'}`}></div>
       <div className={`absolute inset-0 bg-[#FFF5EC] z-[101] pointer-events-none transition-opacity ${frontFlash ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDuration: frontFlash ? '50ms' : '200ms' }}></div>
@@ -323,17 +342,8 @@ export default function CameraCapture({
             <button onClick={() => setIsVintage(!isVintage)} className={`w-12 h-12 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-xl active:scale-90 ${isVintage ? 'bg-indigo-600 border-indigo-400 text-white shadow-indigo-600/40' : 'bg-white/10 border-white/10 text-white'}`}>
               <Wand2 className="w-5 h-5" />
             </button>
-            <button onClick={cycleFlash} className={`w-12 h-12 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-xl active:scale-90 ${flashMode === 'on' ? 'bg-amber-400 border-amber-300 text-black shadow-amber-400/40' : flashMode === 'auto' ? 'bg-amber-400/50 border-amber-300/50 text-black' : 'bg-white/10 border-white/10 text-white'}`}>
-              {flashMode === 'off' ? (
-                <ZapOff className="w-5 h-5" />
-              ) : flashMode === 'auto' ? (
-                <span className="relative flex items-center justify-center">
-                  <Zap className="w-5 h-5" />
-                  <span className="absolute -top-2 -right-2 text-[9px] font-black leading-none">A</span>
-                </span>
-              ) : (
-                <Zap className="w-5 h-5" />
-              )}
+            <button onClick={cycleFlash} className={`w-12 h-12 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-xl active:scale-90 ${flashMode === 'on' ? 'bg-amber-400 border-amber-300 text-black shadow-amber-400/40' : 'bg-white/10 border-white/10 text-white'}`}>
+              {flashMode === 'off' ? <ZapOff className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
             </button>
           </div>
         )}

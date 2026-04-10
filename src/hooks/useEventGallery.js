@@ -40,6 +40,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   const [deletingId, setDeletingId] = useState(null);
  
   const [pendingPhotos, setPendingPhotos] = useState([]);
+  const pendingPhotosRef = useRef([]);
   const [isUploadingBatch, setIsUploadingBatch] = useState(false);
   const [isPreparingFiles, setIsPreparingFiles] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
@@ -73,6 +74,16 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         : sharedPhotos;
   const selectedPhoto = selectedIndex !== null ? displayedPhotos[selectedIndex] : null;
  
+  // Keep ref in sync so unmount cleanup can revoke ObjectURLs without stale closure
+  useEffect(() => { pendingPhotosRef.current = pendingPhotos; }, [pendingPhotos]);
+
+  // Revoke all pending ObjectURLs when the hook unmounts (user navigates away)
+  useEffect(() => {
+    return () => {
+      pendingPhotosRef.current.forEach(p => { if (p.previewUrl) URL.revokeObjectURL(p.previewUrl); });
+    };
+  }, []);
+
   // ─── FAB scroll visibility ───────────────────────────────────────────────
   useEffect(() => {
     const handleScroll = () => setShowFAB(window.scrollY > 350);
