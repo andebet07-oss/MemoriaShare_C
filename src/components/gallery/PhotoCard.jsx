@@ -31,7 +31,7 @@ export default function PhotoCard({
 
   return (
     <div
-      className={`relative aspect-square bg-gray-800/50 overflow-hidden cursor-pointer active:opacity-80 transition-opacity duration-150 ${isSelectionMode && isSelected ? 'ring-2 ring-inset ring-indigo-500' : ''}`}
+      className={`relative aspect-[4/5] bg-gray-800/50 overflow-hidden cursor-pointer active:opacity-80 transition-opacity duration-150 ${isSelectionMode && isSelected ? 'ring-2 ring-inset ring-indigo-500' : ''}`}
       onClick={() => isSelectionMode ? onToggleSelect?.(photo.id) : setSelectedIndex(index)}
     >
       <img
@@ -70,7 +70,7 @@ export default function PhotoCard({
         <div className="absolute bottom-1.5 left-1.5">
           <button onClick={(e) => { e.stopPropagation(); handleRequestDeletion(photo.id); }}
             className="w-6 h-6 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center active:scale-90 transition-all hover:bg-black/60">
-            <EyeOff className="w-3 h-3 text-white/80" />
+            <Trash2 className="w-3 h-3 text-white/80" />
           </button>
         </div>
       )}
