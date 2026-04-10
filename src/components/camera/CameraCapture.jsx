@@ -275,127 +275,136 @@ export default function CameraCapture({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black overflow-hidden flex flex-col font-sans select-none" dir="rtl">
-      
+    <div className="fixed inset-0 z-[9999] bg-black overflow-hidden font-sans select-none" dir="rtl">
+
       {/* שאטר שחור — 25ms לפני השאטר הלבן, מדמה תריס מכני */}
-      <div className={`absolute inset-0 bg-black z-[115] pointer-events-none transition-opacity duration-75 ${blackFrame ? 'opacity-100' : 'opacity-0'}`}></div>
+      <div className={`absolute inset-0 bg-black z-[115] pointer-events-none transition-opacity duration-75 ${blackFrame ? 'opacity-100' : 'opacity-0'}`} />
       {/* שאטר לבן — פידבק ויזואלי כשהפלאש כבוי */}
-      <div className={`absolute inset-0 bg-white z-[110] transition-opacity duration-150 pointer-events-none ${shutterEffect ? 'opacity-80' : 'opacity-0'}`}></div>
-      <div className={`absolute inset-0 bg-[#FFF5EC] z-[101] pointer-events-none transition-opacity ${frontFlash ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDuration: frontFlash ? '50ms' : '200ms' }}></div>
-      
-      {/* Header UI */}
-      <div className="absolute top-0 left-0 right-0 z-40 px-6 pt-12 pb-10 flex flex-col items-center text-center bg-gradient-to-b from-black/80 to-transparent">
-        <button onClick={onClose} className="absolute right-6 top-12 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white border border-white/10 active:scale-90 shadow-lg">
-          <X className="w-5 h-5" />
-        </button>
-        <div className="text-white font-bold text-[17px] tracking-[0.25em] uppercase drop-shadow-md tracking-widest">{eventName}</div>
+      <div className={`absolute inset-0 bg-white z-[110] transition-opacity duration-150 pointer-events-none ${shutterEffect ? 'opacity-80' : 'opacity-0'}`} />
+      <div className={`absolute inset-0 bg-[#FFF5EC] z-[101] pointer-events-none transition-opacity ${frontFlash ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDuration: frontFlash ? '50ms' : '200ms' }} />
+
+      {/* ── LAYER 0: Full-screen video background ── */}
+      {!cameraError && (
+        <video ref={videoRef} autoPlay playsInline muted
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ transform: isFrontCamera ? 'scaleX(-1)' : 'none', filter: isVintage ? vintageFilterStyle : 'none', transition: 'transform 400ms ease-in-out, filter 300ms ease' }}
+        />
+      )}
+
+      {/* Camera error screen */}
+      {cameraError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-50 bg-zinc-900">
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+            <CameraOff className="w-10 h-10 text-red-500" />
+          </div>
+          <h3 className="text-2xl font-black text-white mb-3">שגיאת מצלמה</h3>
+          <p className="text-gray-400 text-sm mb-8 leading-relaxed max-w-xs mx-auto">{cameraError}</p>
+          <button onClick={onClose} className="bg-white text-black px-8 py-3.5 rounded-full font-bold shadow-xl active:scale-95 transition-transform">
+            חזור לגלריה
+          </button>
+        </div>
+      )}
+
+      {/* Brief black cover during device rotation to prevent visible distortion */}
+      {isRotating && <div className="absolute inset-0 bg-black z-50" />}
+
+      {isLoading && !cameraError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black z-50">
+          <div className="w-12 h-12 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+        </div>
+      )}
+
+      {isQuotaExhausted && !cameraError && (
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center animate-in fade-in">
+          <AlertCircle className="w-16 h-16 text-amber-500 mb-4" />
+          <h3 className="text-xl font-black text-white mb-2">מימשת את כל המכסה שלך</h3>
+          <p className="text-white/60 text-sm mb-8">לא ניתן לצלם תמונות נוספות באירוע זה. תודה על ה-POV המדהים שלך!</p>
+          <button onClick={onClose} className="bg-white text-black px-8 py-3 rounded-2xl font-bold">סגור מצלמה</button>
+        </div>
+      )}
+
+      {/* ── LAYER 1: TOP — Header text (pointer-events-none so video tap-to-focus works) ── */}
+      <div className="absolute top-0 left-0 right-0 z-40 px-5 pt-12 pb-16 flex flex-col items-center text-center bg-gradient-to-b from-black/50 to-transparent pointer-events-none">
+        <div className="text-white font-bold text-[17px] tracking-[0.25em] uppercase drop-shadow-md">{eventName}</div>
         <div className="text-white/70 text-[10px] tracking-[0.2em] mt-1">{eventDate}</div>
         <div className="text-white/30 text-[9px] tracking-widest mt-1">MEMORIA • LIVE POV</div>
       </div>
+      {/* Close button — sibling so it receives pointer events independently */}
+      <button onClick={onClose} className="absolute right-5 top-12 z-40 w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white border border-white/10 active:scale-90 shadow-lg">
+        <X className="w-5 h-5" />
+      </button>
 
-      {/* Viewfinder */}
-      <div className="relative flex-1 bg-black overflow-hidden flex items-center justify-center">
-        {cameraError ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-50 bg-zinc-900">
-            <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
-              <CameraOff className="w-10 h-10 text-red-500" />
+      {/* ── LAYER 2: Bottom scrim — legibility vignette behind controls ── */}
+      <div className="absolute bottom-0 left-0 right-0 h-56 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none z-[55]" />
+
+      {/* ── LAYER 3: Floating bottom controls ── */}
+      {!cameraError && (
+        <div className="absolute bottom-0 left-0 right-0 z-[60] px-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)' }}>
+
+          {/* Secondary controls pill — floating above shutter */}
+          <div className="flex items-center justify-center gap-4 mb-5">
+            <button onClick={() => setIsFrontCamera(!isFrontCamera)}
+              className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 shadow-lg transition-all">
+              <RotateCw className="w-4 h-4" />
+            </button>
+            <button onClick={() => setIsVintage(!isVintage)}
+              className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-lg active:scale-90 ${isVintage ? 'bg-indigo-500/80 border-indigo-400/60 text-white' : 'bg-black/40 border-white/15 text-white/60'}`}>
+              <Wand2 className="w-4 h-4" />
+            </button>
+            <button onClick={cycleFlash}
+              className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-lg active:scale-90 ${flashMode === 'on' ? 'bg-amber-400/90 border-amber-300/60 text-black' : 'bg-black/40 border-white/15 text-white/60'}`}>
+              {flashMode === 'off' ? <ZapOff className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Main action row */}
+          <div className="flex items-center justify-between">
+
+            {/* Counter — bare number, no box */}
+            <div className="flex flex-col items-center w-16">
+              <span
+                key={shotsRemaining}
+                className={`text-[2.5rem] font-black leading-none tracking-tighter drop-shadow-[0_2px_6px_rgba(0,0,0,1)] ${shotsRemaining === 0 ? 'text-red-400' : 'text-white'} ${counterPop ? 'scale-125' : 'scale-100'} transition-transform duration-150`}
+                style={{ display: 'inline-block', fontVariantNumeric: 'tabular-nums' }}
+              >
+                {shotsRemaining}
+              </span>
+              <span className="text-white/40 text-[8px] font-bold uppercase tracking-wider mt-0.5 drop-shadow-sm">נותרו</span>
             </div>
-            <h3 className="text-2xl font-black text-white mb-3">שגיאת מצלמה</h3>
-            <p className="text-gray-400 text-sm mb-8 leading-relaxed max-w-xs mx-auto">{cameraError}</p>
-            <button onClick={onClose} className="bg-white text-black px-8 py-3.5 rounded-full font-bold shadow-xl active:scale-95 transition-transform">
-              חזור לגלריה
+
+            {/* Shutter button — unchanged design */}
+            <button onClick={capturePhoto} disabled={shotsRemaining <= 0 || isLoading || isQuotaExhausted || !!cameraError}
+              className="relative w-24 h-24 flex items-center justify-center active:scale-90 transition-transform duration-150 disabled:opacity-50 group">
+              <div className="absolute w-full h-full rounded-full border-[3px] border-white/30 transition-all group-active:border-white/60" />
+              <div className="w-[76px] h-[76px] rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.4)] flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent opacity-50" />
+              </div>
             </button>
-          </div>
-        ) : (
-          <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" 
-            style={{ transform: isFrontCamera ? 'scaleX(-1)' : 'none', filter: isVintage ? vintageFilterStyle : 'none', transition: 'transform 400ms ease-in-out, filter 300ms ease' }} />
-        )}
 
-        {/* Brief black cover during device rotation to prevent visible distortion */}
-        {isRotating && <div className="absolute inset-0 bg-black z-50" />}
-        
-        {isLoading && !cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black z-50">
-            <div className="w-12 h-12 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
-          </div>
-        )}
-
-        {isQuotaExhausted && !cameraError && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center animate-in fade-in">
-              <AlertCircle className="w-16 h-16 text-amber-500 mb-4" />
-              <h3 className="text-xl font-black text-white mb-2">מימשת את כל המכסה שלך</h3>
-              <p className="text-white/60 text-sm mb-8">לא ניתן לצלם תמונות נוספות באירוע זה. תודה על ה-POV המדהים שלך!</p>
-              <button onClick={onClose} className="bg-white text-black px-8 py-3 rounded-2xl font-bold">סגור מצלמה</button>
-          </div>
-        )}
-      </div>
-
-      {/* Interaction Bar */}
-      <div className="bg-black px-10 pt-4 relative z-[60]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 3.5rem)' }}>
-
-        {/* Camera Controls Row */}
-        {!cameraError && (
-          <div className="flex items-center justify-center gap-8 mb-4">
-            <button onClick={() => setIsFrontCamera(!isFrontCamera)} className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 shadow-xl transition-all">
-              <RotateCw className="w-5 h-5" />
-            </button>
-            <button onClick={() => setIsVintage(!isVintage)} className={`w-12 h-12 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-xl active:scale-90 ${isVintage ? 'bg-indigo-600 border-indigo-400 text-white shadow-indigo-600/40' : 'bg-white/10 border-white/10 text-white'}`}>
-              <Wand2 className="w-5 h-5" />
-            </button>
-            <button onClick={cycleFlash} className={`w-12 h-12 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-xl active:scale-90 ${flashMode === 'on' ? 'bg-amber-400 border-amber-300 text-black shadow-amber-400/40' : 'bg-white/10 border-white/10 text-white'}`}>
-              {flashMode === 'off' ? <ZapOff className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
-            </button>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between gap-6 h-24">
-          
-          <div className="flex flex-col items-center w-20">
-            <div className="relative h-12 w-full flex items-center justify-center overflow-hidden bg-white/5 rounded-xl border border-white/10 shadow-inner">
-                <span
-                  key={shotsRemaining}
-                  className={`text-2xl font-bold tracking-tighter transition-all duration-150 ${shotsRemaining === 0 ? 'text-red-500 animate-pulse' : 'text-white'} ${counterPop ? 'scale-125' : 'scale-100'}`}
-                  style={{ display: 'inline-block', fontVariantNumeric: 'tabular-nums' }}
-                >
-                    {shotsRemaining}
-                </span>
-            </div>
-            <span className="text-white/30 text-[8px] font-black mt-2 text-center leading-tight">עוד {shotsRemaining} רגעים<br/>לאלבום</span>
-          </div>
-
-          <div className="relative">
-             <button onClick={capturePhoto} disabled={shotsRemaining <= 0 || isLoading || isQuotaExhausted || cameraError}
-                className="relative w-24 h-24 flex items-center justify-center active:scale-90 transition-transform duration-150 disabled:opacity-50 group"
-             >
-                <div className="absolute w-full h-full rounded-full border-[3px] border-white/30 transition-all group-active:border-white/60"></div>
-                <div className="w-[76px] h-[76px] rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.4)] flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent opacity-50"></div>
-                </div>
-             </button>
-          </div>
-
-          <div className="relative w-20 flex flex-col items-center justify-center gap-2">
-            <button onClick={() => setShowQuickGallery(!showQuickGallery)} disabled={!!cameraError}
-                className={`relative w-16 h-20 active:scale-95 transition-all duration-300 disabled:opacity-50 ${pulseMagazine ? 'scale-110 rotate-3' : 'scale-100'}`}
-            >
+            {/* Gallery bubble */}
+            <div className="w-16 flex justify-center">
+              <button onClick={() => setShowQuickGallery(!showQuickGallery)} disabled={!!cameraError}
+                className={`relative w-14 h-[4.5rem] active:scale-95 transition-all duration-300 disabled:opacity-50 ${pulseMagazine ? 'scale-110 rotate-3' : 'scale-100'}`}
+              >
                 {pendingPhotos.length > 0 ? (
-                <div className="relative w-full h-full">
-                    <div className="absolute inset-0 bg-white/20 rounded-[14px] translate-x-2 -translate-y-1 rotate-6 border border-white/30 shadow-lg"></div>
-                    <img src={pendingPhotos[pendingPhotos.length - 1].previewUrl} 
-                        className="w-full h-full object-cover rounded-[14px] border-[3px] border-white shadow-2xl relative z-10" alt="Last POV" />
-                    <div className="absolute -top-2 -left-2 bg-indigo-600 text-white text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center z-20 shadow-lg border-[2px] border-black">
+                  <div className="relative w-full h-full">
+                    <div className="absolute inset-0 bg-white/20 rounded-[12px] translate-x-1.5 -translate-y-0.5 rotate-6 border border-white/30 shadow-lg" />
+                    <img src={pendingPhotos[pendingPhotos.length - 1].previewUrl}
+                      className="w-full h-full object-cover rounded-[12px] border-[2.5px] border-white shadow-2xl relative z-10" alt="Last POV" />
+                    <div className="absolute -top-1.5 -left-1.5 bg-indigo-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center z-20 shadow-lg border-[2px] border-black">
                       {pendingPhotos.length}
                     </div>
-                </div>
+                  </div>
                 ) : (
-                <div className="w-full h-full rounded-xl border-2 border-white/20 border-dashed flex items-center justify-center text-white/20 bg-white/5">
-                    <ImageIcon className="w-6 h-6" />
-                </div>
+                  <div className="w-full h-full rounded-xl border-2 border-white/20 border-dashed flex items-center justify-center text-white/20 bg-white/5">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
                 )}
-            </button>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* --- אלבום אופקי משופר --- */}
       <div 
