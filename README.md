@@ -6,6 +6,7 @@
 
 - **גלריה בזמן אמת** — Supabase Realtime מעדכן את הגלריה ללא רענון עמוד
 - **העלאת תמונות** — מצלמה ישירה או בחירה מהגלריה, דחיסה בצד הלקוח לפני העלאה
+- **מצלמת POV נייטיב** — ממשק מצלמה full-screen עם שכבות glassmorphism צפות, פילטר וינטג׳ בזמן אמת (CSS filter), אפקט תריס מכני (black frame → white flash), פלאש קדמי ופלאש torch, תמיכה ב-iOS Safari וב-Android Chrome, תיקון אוטומטי ל-OverconstrainedError
 - **אימות Google** — כניסה מהירה עם חשבון Google דרך Supabase Auth
 - **הרשאות RLS** — Row Level Security מגן על נתוני כל אירוע
 - **קישורי שיתוף + QR** — כל אירוע מקבל קישור ייחודי וקוד QR לאורחים
@@ -61,5 +62,5 @@ src/
   pages/         # עמודים ראשיים (Home, CreateEvent, EventGallery, Dashboard)
 public/
   manifest.json  # PWA manifest
-  favicon.svg
+  favicon.png
 ```

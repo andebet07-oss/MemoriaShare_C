@@ -135,6 +135,60 @@ useEffect(() => {
 - Never expose `VITE_SUPABASE_SERVICE_ROLE_KEY` in frontend code.
 - User email is PII — do not log it, display it minimally, never store it in localStorage.
 
+### 3.6 WebRTC Camera & Full-Screen Overlay Rules
+
+Hard lessons from the `CameraCapture.jsx` refactor (April 2026). Violating these causes FPS drops, black screens on iOS, or squished viewfinders in landscape.
+
+**Rule: CSS filter on live video. Canvas only at capture.**
+- ❌ Never run `getImageData`/`putImageData` on a live video stream for real-time visual effects. Pixel-loop at 30 fps destroys framerate on mid-range Android.
+- ✅ Apply visual filters to the live feed via CSS `filter:` on the `<video>` element.
+- ✅ Use Canvas pixel manipulation **only at capture time** (single frame snapshot — not continuously).
+
+**Rule: Full-screen camera = `fixed inset-0`, all layers `absolute`. Never `flex flex-col`.**
+- ❌ Do not wrap the camera in a `flex flex-col` root with the control bar as a real flex item. In landscape, the bar consumes 40–50% of screen height, squishing the viewfinder to a sliver.
+- ✅ Root: `fixed inset-0 overflow-hidden` — no flex.
+- ✅ `<video>`: `absolute inset-0 w-full h-full object-cover` — true full-screen background.
+- ✅ Every UI layer (header, controls, overlays, scrim): `absolute` with explicit `z-index` stacking.
+- ✅ Bottom floating bar: `paddingBottom: calc(env(safe-area-inset-bottom, 0px) + Npx)` — never hardcode pixels; iOS home indicator height varies by device.
+
+**Rule: `getUserMedia` must have an `OverconstrainedError` fallback.**
+```js
+// ✅ Ideal constraints first, minimal fallback on OverconstrainedError
+let stream;
+try {
+  stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } }
+  });
+} catch (e) {
+  if (e.name === 'OverconstrainedError') {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
+  } else throw e;
+}
+```
+
+**Rule: Safari iOS WebRTC — three required attributes + play guard.**
+- `<video>` MUST have `autoPlay playsInline muted` — omitting any silently breaks playback on iOS Safari.
+- Always chain `.catch()` on `.play()`: `videoRef.current.play().catch(err => console.warn(...))`.
+- `videoTrack.getCapabilities()` can return `{}` on Safari — always guard capability reads.
+
+**Rule: Hardware torch requires a capabilities guard.**
+```js
+const capabilities = videoTrack.getCapabilities?.() ?? {};
+if (capabilities.torch) {
+  await videoTrack.applyConstraints({ advanced: [{ torch: true }] });
+}
+// ❌ Calling applyConstraints with torch on an unsupported device throws — never skip the guard.
+```
+
+**Rule: ObjectURL lifecycle — every `createObjectURL` needs a matched `revokeObjectURL`.**
+- Revoke on: individual photo removal, full batch clear, AND component unmount.
+- In the unmount cleanup `useEffect`, state is stale. Use a `ref` that shadows the state array:
+```js
+const pendingPhotosRef = useRef([]);
+useEffect(() => { pendingPhotosRef.current = pendingPhotos; }, [pendingPhotos]);
+useEffect(() => () => pendingPhotosRef.current.forEach(p => URL.revokeObjectURL(p.previewUrl)), []);
+```
+
 ---
 
 ## 4. The "Read-Before-Write" Protocol (Zero Hallucination)
@@ -207,6 +261,12 @@ public/
   manifest.json                   ← PWA config
 vercel.json                        ← SPA rewrite rule
 ```
+
+---
+
+## 7. Plan Mode Output Rules
+
+When operating in Plan Mode, limit planning output to concise bullet points and strictly under 100 words. Be direct, code-focused, and avoid unnecessary verbosity.
 
 ---
 
