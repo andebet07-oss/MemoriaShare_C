@@ -1,0 +1,20 @@
+# Build and dependencies
+dist/
+node_modules/
+.vite/
+
+# Assets that Claude shouldn't read
+public/
+src/assets/
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.mp4
+
+# Environment variables
+.env*
+
+# Logs and system files
+*.log
+.DS_Store
