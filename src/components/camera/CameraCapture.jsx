@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 // הנה התיקון שהפיל אותנו: נוספו Camera ו-CameraOff לשורת הייבוא!
-import { X, RotateCw, Zap, ZapOff, Wand2, Image as ImageIcon, Trash2, ChevronDown, Send, AlertCircle, CameraOff, Camera } from "lucide-react";
+import { X, RotateCw, Zap, ZapOff, Wand2, Image as ImageIcon, Trash2, ChevronDown, Send, AlertCircle, CameraOff, Camera, Lock } from "lucide-react";
 
 export default function CameraCapture({ 
   onCapture, 
@@ -34,6 +34,8 @@ export default function CameraCapture({
   
   const torchSupported = useRef(false);
   const vintageFilterStyle = "sepia(0.4) contrast(0.85) brightness(1.1) saturate(1.2)";
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const ZOOM_LEVELS = [0.5, 1, 2];
   
   const shotsRemaining = Math.max(0, maxPhotos - pendingPhotos.length);
   const [counterPop, setCounterPop] = useState(false);
@@ -268,6 +270,17 @@ export default function CameraCapture({
     capturePhotoRef.current = capturePhoto;
   });
 
+  const applyZoom = async (level) => {
+    setZoomLevel(level);
+    const track = videoTrackRef.current;
+    if (!track) return;
+    const capabilities = track.getCapabilities?.() ?? {};
+    if (capabilities.zoom) {
+      try { await track.applyConstraints({ advanced: [{ zoom: level }] }); } catch { /* fall back to CSS scale */ }
+    }
+    // CSS scale fallback is handled by the video element's style binding
+  };
+
   const cycleFlash = () => setFlashMode(prev => prev === 'off' ? 'on' : 'off');
 
   const handleFinishAndUpload = () => {
@@ -287,7 +300,7 @@ export default function CameraCapture({
       {!cameraError && (
         <video ref={videoRef} autoPlay playsInline muted
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ transform: isFrontCamera ? 'scaleX(-1)' : 'none', filter: isVintage ? vintageFilterStyle : 'none', transition: 'transform 400ms ease-in-out, filter 300ms ease' }}
+          style={{ transform: isFrontCamera ? `scaleX(-1) scale(${zoomLevel})` : zoomLevel !== 1 ? `scale(${zoomLevel})` : 'none', filter: isVintage ? vintageFilterStyle : 'none', transition: 'transform 400ms ease-in-out, filter 300ms ease' }}
         />
       )}
 
@@ -339,69 +352,138 @@ export default function CameraCapture({
 
       {/* ── LAYER 3: Floating bottom controls ── */}
       {!cameraError && (
-        <div className="absolute bottom-0 left-0 right-0 z-[60] px-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)' }}>
+        <div className="absolute bottom-0 left-0 right-0 z-[60] px-5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}>
 
-          {/* Secondary controls pill — floating above shutter */}
-          <div className="flex items-center justify-center gap-4 mb-5">
-            <button onClick={() => setIsFrontCamera(!isFrontCamera)}
-              className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 shadow-lg transition-all">
-              <RotateCw className="w-4 h-4" />
-            </button>
-            <button onClick={() => setIsVintage(!isVintage)}
-              className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-lg active:scale-90 ${isVintage ? 'bg-indigo-500/80 border-indigo-400/60 text-white' : 'bg-black/40 border-white/15 text-white/60'}`}>
-              <Wand2 className="w-4 h-4" />
-            </button>
+          {/* Row 1: Flash (far left) | Vintage (center) | Flip (far right) */}
+          <div className="flex items-center justify-between mb-3" dir="ltr">
+            {/* Flash — far left */}
             <button onClick={cycleFlash}
-              className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-lg active:scale-90 ${flashMode === 'on' ? 'bg-amber-400/90 border-amber-300/60 text-black' : 'bg-black/40 border-white/15 text-white/60'}`}>
-              {flashMode === 'off' ? <ZapOff className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+              className={`w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center transition-all active:scale-90 ${flashMode === 'on' ? 'bg-amber-400/90 text-black' : 'bg-black/30 text-white'}`}
+              style={{ border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 12px rgba(0,0,0,0.35)' }}>
+              {flashMode === 'off'
+                ? <ZapOff strokeWidth={1.5} className="w-5 h-5" />
+                : <Zap strokeWidth={1.5} className="w-5 h-5" />}
+            </button>
+            {/* Vintage — center */}
+            <button onClick={() => setIsVintage(!isVintage)}
+              className={`w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center transition-all active:scale-90 ${isVintage ? 'bg-indigo-500/80 text-white' : 'bg-black/30 text-white/70'}`}
+              style={{ border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 12px rgba(0,0,0,0.35)' }}>
+              <Wand2 strokeWidth={1.5} className="w-5 h-5" />
+            </button>
+            {/* Flip — far right */}
+            <button onClick={() => setIsFrontCamera(!isFrontCamera)}
+              className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center transition-all active:scale-90"
+              style={{ border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 12px rgba(0,0,0,0.35)' }}>
+              <RotateCw strokeWidth={1.5} className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Main action row */}
-          <div className="flex items-center justify-between">
+          {/* Row 2: Zoom pill */}
+          <div className="flex items-center justify-center mb-4">
+            <div className="flex bg-black/35 backdrop-blur-md rounded-full px-1 py-1 gap-0.5" style={{ border: '0.5px solid rgba(255,255,255,0.15)' }} dir="ltr">
+              {ZOOM_LEVELS.map(z => (
+                <button key={z} onClick={() => applyZoom(z)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${zoomLevel === z ? 'bg-white text-black shadow-sm' : 'text-white/70 active:text-white'}`}>
+                  {z === 1 ? '1×' : `${z}×`}
+                </button>
+              ))}
+            </div>
+          </div>
 
-            {/* Counter — bare number, no box */}
-            <div className="flex flex-col items-center w-16">
+          {/* Row 3: Counter | Shutter | Photo Stack */}
+          <div className="flex items-center justify-between px-2" dir="ltr">
+
+            {/* Counter — two-row: "25 נותרו" then shots-taken below */}
+            <div className="flex flex-col items-start w-[68px]" style={{ gap: 0 }}>
+              {/* Row 1: large number + label on same baseline */}
+              <div className={`flex items-baseline gap-1.5 ${counterPop ? 'scale-110' : 'scale-100'} transition-transform duration-150 origin-left`}>
+                <span
+                  key={shotsRemaining}
+                  className={`text-[2.6rem] font-black leading-none ${shotsRemaining === 0 ? 'text-red-400' : 'text-white'}`}
+                  style={{ fontVariantNumeric: 'tabular-nums', textShadow: '0 2px 16px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,1)' }}
+                >
+                  {shotsRemaining}
+                </span>
+                <span className="text-white/70 text-[11px] font-semibold leading-none pb-0.5"
+                  style={{ textShadow: '0 1px 8px rgba(0,0,0,0.95)' }}>
+                  נותרו
+                </span>
+              </div>
+              {/* Row 2: shots taken (thin smaller number) */}
               <span
-                key={shotsRemaining}
-                className={`text-[2.5rem] font-black leading-none tracking-tighter drop-shadow-[0_2px_6px_rgba(0,0,0,1)] ${shotsRemaining === 0 ? 'text-red-400' : 'text-white'} ${counterPop ? 'scale-125' : 'scale-100'} transition-transform duration-150`}
-                style={{ display: 'inline-block', fontVariantNumeric: 'tabular-nums' }}
+                className="text-white/35 text-xl font-light leading-none -mt-0.5"
+                style={{ fontVariantNumeric: 'tabular-nums', textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}
               >
-                {shotsRemaining}
+                {pendingPhotos.length}
               </span>
-              <span className="text-white/40 text-[8px] font-bold uppercase tracking-wider mt-0.5 drop-shadow-sm">נותרו</span>
             </div>
 
-            {/* Shutter button — unchanged design */}
-            <button onClick={capturePhoto} disabled={shotsRemaining <= 0 || isLoading || isQuotaExhausted || !!cameraError}
-              className="relative w-24 h-24 flex items-center justify-center active:scale-90 transition-transform duration-150 disabled:opacity-50 group">
-              <div className="absolute w-full h-full rounded-full border-[3px] border-white/30 transition-all group-active:border-white/60" />
-              <div className="w-[76px] h-[76px] rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.4)] flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent opacity-50" />
-              </div>
+            {/* Native iOS shutter — thick outer ring + dark gap + white disc */}
+            <button
+              onClick={shotsRemaining > 0 ? capturePhoto : undefined}
+              disabled={isLoading || isQuotaExhausted || shotsRemaining <= 0 || !!cameraError}
+              className="relative w-[82px] h-[82px] flex items-center justify-center active:scale-95 transition-transform duration-100 disabled:cursor-default"
+            >
+              {shotsRemaining > 0 ? (
+                <>
+                  {/* Thick white outer ring — the "gap" between ring and disc is the button bg */}
+                  <div className="absolute inset-0 rounded-full border-[5px] border-white/90"
+                    style={{ boxShadow: '0 0 20px rgba(255,255,255,0.15), inset 0 0 0 1px rgba(255,255,255,0.05)' }} />
+                  {/* Inner white disc */}
+                  <div className="w-[62px] h-[62px] rounded-full bg-white"
+                    style={{ boxShadow: '0 0 0 1.5px rgba(0,0,0,0.08), 0 6px 24px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.9)' }} />
+                </>
+              ) : (
+                <>
+                  {/* Dimmed outer ring */}
+                  <div className="absolute inset-0 rounded-full border-[5px] border-white/30" />
+                  {/* Grey disc with dark padlock */}
+                  <div className="w-[62px] h-[62px] rounded-full flex items-center justify-center"
+                    style={{ background: 'linear-gradient(145deg,#6b7280,#4b5563)', boxShadow: '0 0 0 1.5px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.4)' }}>
+                    <Lock strokeWidth={2} className="w-[22px] h-[22px] text-gray-900/60" />
+                  </div>
+                </>
+              )}
             </button>
 
-            {/* Gallery bubble */}
-            <div className="w-16 flex justify-center">
-              <button onClick={() => setShowQuickGallery(!showQuickGallery)} disabled={!!cameraError}
-                className={`relative w-14 h-[4.5rem] active:scale-95 transition-all duration-300 disabled:opacity-50 ${pulseMagazine ? 'scale-110 rotate-3' : 'scale-100'}`}
-              >
-                {pendingPhotos.length > 0 ? (
-                  <div className="relative w-full h-full">
-                    <div className="absolute inset-0 bg-white/20 rounded-[12px] translate-x-1.5 -translate-y-0.5 rotate-6 border border-white/30 shadow-lg" />
-                    <img src={pendingPhotos[pendingPhotos.length - 1].previewUrl}
-                      className="w-full h-full object-cover rounded-[12px] border-[2.5px] border-white shadow-2xl relative z-10" alt="Last POV" />
-                    <div className="absolute -top-1.5 -left-1.5 bg-indigo-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center z-20 shadow-lg border-[2px] border-black">
-                      {pendingPhotos.length}
-                    </div>
+            {/* Photo Stack */}
+            <button onClick={() => setShowQuickGallery(!showQuickGallery)} disabled={!!cameraError}
+              className={`relative w-[58px] h-[58px] active:scale-95 transition-all duration-300 disabled:opacity-50 ${pulseMagazine ? 'scale-110' : 'scale-100'}`}
+            >
+              {pendingPhotos.length > 0 ? (
+                <div className="relative w-full h-full">
+                  {/* Back layer */}
+                  <div className="absolute inset-0 rounded-2xl border-[1.5px] border-white/50 shadow-2xl -rotate-6"
+                    style={{ background: '#b8aea0', transformOrigin: 'center 82%' }} />
+                  {/* Middle layer */}
+                  <div className="absolute inset-0 rounded-2xl border-[1.5px] border-white/60 shadow-xl rotate-3"
+                    style={{ background: '#ddd6cc', transformOrigin: 'center 82%' }} />
+                  {/* Front photo */}
+                  <img
+                    src={pendingPhotos[pendingPhotos.length - 1].previewUrl}
+                    className="absolute inset-0 w-full h-full object-cover rounded-2xl z-10 -rotate-1"
+                    style={{ border: '2px solid rgba(255,255,255,0.9)', boxShadow: '0 6px 24px rgba(0,0,0,0.55)', transformOrigin: 'center 82%' }}
+                    alt="Last POV"
+                  />
+                  {/* Badge */}
+                  <div className="absolute -top-2 -right-2 bg-blue-600 text-white text-[11px] font-black w-[22px] h-[22px] rounded-full flex items-center justify-center z-20 border-[2.5px] border-white shadow-xl">
+                    {pendingPhotos.length}
                   </div>
-                ) : (
-                  <div className="w-full h-full rounded-xl border-2 border-white/20 border-dashed flex items-center justify-center text-white/20 bg-white/5">
-                    <ImageIcon className="w-5 h-5" />
+                </div>
+              ) : (
+                <div className="relative w-full h-full">
+                  {/* Ghost stack — empty state */}
+                  <div className="absolute inset-0 rounded-2xl border border-white/15 bg-white/5 -rotate-6"
+                    style={{ transformOrigin: 'center 82%' }} />
+                  <div className="absolute inset-0 rounded-2xl border border-white/15 bg-white/5 rotate-3"
+                    style={{ transformOrigin: 'center 82%' }} />
+                  <div className="absolute inset-0 rounded-2xl border-[1.5px] border-dashed border-white/25 flex items-center justify-center text-white/30 bg-white/5 z-10">
+                    <ImageIcon strokeWidth={1.5} className="w-5 h-5" />
                   </div>
-                )}
-              </button>
-            </div>
+                </div>
+              )}
+            </button>
+
           </div>
         </div>
       )}
