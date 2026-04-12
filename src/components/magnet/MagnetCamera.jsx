@@ -18,6 +18,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   const [frontFlash, setFrontFlash] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastResult, setLastResult] = useState(null); // 'success' | 'error'
+  // UX-03: synchronous counter to block rapid double-taps before remainingPrints prop updates
+  const capturedCountRef = useRef(0);
 
   const vintageStyle = "sepia(0.4) contrast(0.85) brightness(1.1) saturate(1.2)";
   const isQuotaExhausted = remainingPrints <= 0;
@@ -57,7 +59,11 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   const stopCamera = () => { streamRef.current?.getTracks().forEach(t => t.stop()); videoTrackRef.current = null; };
 
   const captureAndPrint = async () => {
+    // UX-03: synchronous guard fires before any async work — blocks double-taps that
+    // arrive before the parent updates the remainingPrints prop after a capture.
     if (isQuotaExhausted || isSubmitting || !videoRef.current) return;
+    if (capturedCountRef.current >= remainingPrints) return;
+    capturedCountRef.current += 1;
     setIsSubmitting(true);
     setLastResult(null);
 
@@ -107,6 +113,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
       if (photo?.id) {
         memoriaService.photos.delete(photo.id).catch(() => {});
       }
+      // UX-03: quota was not consumed — release the slot so the guest can retry
+      capturedCountRef.current = Math.max(0, capturedCountRef.current - 1);
       setLastResult('error');
     } finally {
       setIsSubmitting(false);

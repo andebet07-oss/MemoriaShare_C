@@ -293,15 +293,18 @@ CREATE POLICY "events_insert_authenticated"
   );
 
 -- Creator (by UUID) or co-host (by email, legacy) can update
+-- UX-04: admins can update any event, not just the ones they created
 CREATE POLICY "events_update_owner"
   ON events FOR UPDATE
   USING (
     (select auth.uid()) = created_by
     OR (select auth.jwt()) ->> 'email' = ANY(co_hosts)
+    OR is_admin()
   )
   WITH CHECK (
     (select auth.uid()) = created_by
     OR (select auth.jwt()) ->> 'email' = ANY(co_hosts)
+    OR is_admin()
   );
 
 -- Only creator can delete
