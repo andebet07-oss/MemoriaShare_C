@@ -108,6 +108,7 @@ CREATE TABLE leads (
   details     TEXT,
   status      TEXT        NOT NULL DEFAULT 'new'
                 CHECK (status IN ('new', 'contacted', 'converted', 'closed')),
+  is_paid     BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -484,3 +485,70 @@ BEGIN
   ALTER PUBLICATION supabase_realtime ADD TABLE print_jobs;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END$$;
+
+-- ============================================================
+-- ADMIN NOTIFICATIONS
+-- Stores in-app notifications for admin users.
+-- Used to alert on new MagnetLead submissions.
+-- ============================================================
+DROP TRIGGER  IF EXISTS trg_notify_new_lead       ON leads;
+DROP FUNCTION IF EXISTS notify_on_new_lead();
+DROP TABLE    IF EXISTS admin_notifications;
+
+CREATE TABLE admin_notifications (
+  id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  type        text        NOT NULL,           -- e.g. 'new_lead'
+  payload     jsonb       NOT NULL DEFAULT '{}',
+  is_read     boolean     NOT NULL DEFAULT false,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+-- RLS: only admins may read/update notifications
+ALTER TABLE admin_notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "notifications_select_admin"
+  ON admin_notifications FOR SELECT
+  USING (is_admin());
+
+CREATE POLICY "notifications_update_admin"
+  ON admin_notifications FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Trigger: insert a notification row whenever a new lead is submitted
+CREATE OR REPLACE FUNCTION notify_on_new_lead()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO admin_notifications (type, payload)
+  VALUES (
+    'new_lead',
+    jsonb_build_object(
+      'lead_id',    NEW.id,
+      'full_name',  NEW.full_name,
+      'phone',      NEW.phone,
+      'event_date', NEW.event_date,
+      'details',    NEW.details,
+      'created_at', NEW.created_at
+    )
+  );
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_notify_new_lead
+  AFTER INSERT ON leads
+  FOR EACH ROW EXECUTE FUNCTION notify_on_new_lead();
+
+-- Optional: pg_net HTTP webhook variant (uncomment + set your webhook URL)
+-- CREATE OR REPLACE FUNCTION notify_lead_webhook()
+-- RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+-- BEGIN
+--   PERFORM net.http_post(
+--     url     := 'https://your-webhook-endpoint.example.com/leads',
+--     headers := '{"Content-Type": "application/json"}'::jsonb,
+--     body    := row_to_json(NEW)::text
+--   );
+--   RETURN NEW;
+-- END;
+-- $$;
+-- CREATE TRIGGER trg_lead_webhook AFTER INSERT ON leads FOR EACH ROW EXECUTE FUNCTION notify_lead_webhook();
