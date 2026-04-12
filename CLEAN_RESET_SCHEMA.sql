@@ -12,6 +12,8 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS handle_new_user();
 
 DROP TABLE IF EXISTS upload_diagnostics CASCADE;
+DROP TABLE IF EXISTS print_jobs         CASCADE;
+DROP TABLE IF EXISTS leads              CASCADE;
 DROP TABLE IF EXISTS photos             CASCADE;
 DROP TABLE IF EXISTS events             CASCADE;
 DROP TABLE IF EXISTS profiles           CASCADE;
@@ -63,6 +65,11 @@ CREATE TABLE events (
   upload_closure_datetime   TIMESTAMPTZ,
   auto_publish_guest_photos BOOLEAN     NOT NULL DEFAULT FALSE,
   is_active                 BOOLEAN     NOT NULL DEFAULT TRUE,
+  -- V2: dual-product columns
+  event_type                TEXT        NOT NULL DEFAULT 'share'
+                              CHECK (event_type IN ('share', 'magnet')),
+  overlay_frame_url         TEXT,        -- Magnet only: storage path to PNG frame
+  print_quota_per_device    INTEGER     NOT NULL DEFAULT 3,  -- Magnet only: max prints per guest user
   created_date              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_date              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -88,6 +95,30 @@ CREATE TABLE photos (
   updated_date    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ── leads ────────────────────────────────────────────────────
+CREATE TABLE leads (
+  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name   TEXT        NOT NULL,
+  phone       TEXT        NOT NULL,
+  event_date  DATE,
+  details     TEXT,
+  status      TEXT        NOT NULL DEFAULT 'new'
+                CHECK (status IN ('new', 'contacted', 'converted', 'closed')),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ── print_jobs ───────────────────────────────────────────────
+CREATE TABLE print_jobs (
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id       UUID        NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  photo_id       UUID        NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+  guest_user_id  UUID        REFERENCES auth.users(id) ON DELETE SET NULL,
+  status         TEXT        NOT NULL DEFAULT 'pending'
+                   CHECK (status IN ('pending', 'printing', 'ready', 'rejected')),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ── upload_diagnostics ───────────────────────────────────────
 CREATE TABLE upload_diagnostics (
   id                 UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -103,12 +134,14 @@ CREATE TABLE upload_diagnostics (
 );
 
 -- ── Indexes ──────────────────────────────────────────────────
-CREATE INDEX idx_photos_event_id       ON photos(event_id);
-CREATE INDEX idx_photos_event_approved ON photos(event_id, is_approved);
-CREATE INDEX idx_photos_created_by     ON photos(created_by);
-CREATE INDEX idx_photos_device_uuid    ON photos(device_uuid);
-CREATE INDEX idx_events_unique_code    ON events(unique_code);
-CREATE INDEX idx_events_created_by     ON events(created_by);
+CREATE INDEX idx_photos_event_id         ON photos(event_id);
+CREATE INDEX idx_photos_event_approved   ON photos(event_id, is_approved);
+CREATE INDEX idx_photos_created_by       ON photos(created_by);
+CREATE INDEX idx_photos_device_uuid      ON photos(device_uuid);
+CREATE INDEX idx_events_unique_code      ON events(unique_code);
+CREATE INDEX idx_events_created_by       ON events(created_by);
+CREATE INDEX idx_print_jobs_event_id     ON print_jobs(event_id);
+CREATE INDEX idx_print_jobs_guest        ON print_jobs(event_id, guest_user_id);
 
 -- ============================================================
 -- TRIGGER: auto-create profile on first sign-up
@@ -176,6 +209,8 @@ ALTER TABLE profiles           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE photos             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE upload_diagnostics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE leads              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE print_jobs         ENABLE ROW LEVEL SECURITY;
 
 -- NOTE: All auth.*() calls are wrapped in (select ...) so PostgreSQL evaluates
 -- them once per statement (initplan) rather than once per row. This was applied
@@ -339,6 +374,38 @@ CREATE POLICY "upload_diagnostics_select"
   ON upload_diagnostics FOR SELECT
   USING ((select auth.role()) = 'authenticated');
 
+-- ── leads ─────────────────────────────────────────────────────
+
+CREATE POLICY "leads_insert_public"
+  ON leads FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "leads_select_admin"
+  ON leads FOR SELECT
+  USING (is_admin());
+
+CREATE POLICY "leads_update_admin"
+  ON leads FOR UPDATE
+  USING (is_admin());
+
+-- ── print_jobs ────────────────────────────────────────────────
+
+CREATE POLICY "print_jobs_insert_guest"
+  ON print_jobs FOR INSERT
+  WITH CHECK ((select auth.uid()) = guest_user_id);
+
+CREATE POLICY "print_jobs_select_own"
+  ON print_jobs FOR SELECT
+  USING ((select auth.uid()) = guest_user_id);
+
+CREATE POLICY "print_jobs_select_admin"
+  ON print_jobs FOR SELECT
+  USING (is_admin());
+
+CREATE POLICY "print_jobs_update_admin"
+  ON print_jobs FOR UPDATE
+  USING (is_admin());
+
 -- ── Storage (photos bucket) ───────────────────────────────────
 
 CREATE POLICY "storage_photos_select_public"
@@ -357,10 +424,17 @@ CREATE POLICY "storage_photos_delete_owner"
 -- REALTIME
 -- Enable on photos so the gallery receives live-update events.
 -- ============================================================
-ALTER TABLE photos REPLICA IDENTITY FULL;
+ALTER TABLE photos      REPLICA IDENTITY FULL;
+ALTER TABLE print_jobs  REPLICA IDENTITY FULL;
 
 DO $$
 BEGIN
   ALTER PUBLICATION supabase_realtime ADD TABLE photos;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END$$;
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE print_jobs;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END$$;

@@ -12,6 +12,8 @@ import HostOnboardingModal from '@/components/HostOnboardingModal';
 import GuestLayout from '@/components/GuestLayout';
 import EventPage from '@/pages/Event';
 import EventGallery from '@/pages/EventGallery';
+import MagnetLead from '@/pages/MagnetLead';
+import AdminDashboard from '@/pages/AdminDashboard';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -60,6 +62,16 @@ const AuthenticatedApp = () => {
         <GuestLayout>
           <EventGallery />
         </GuestLayout>
+      } />
+      <Route path="/MagnetLead" element={
+        <GuestLayout>
+          <MagnetLead />
+        </GuestLayout>
+      } />
+      <Route path="/AdminDashboard" element={
+        <LayoutWrapper currentPageName="AdminDashboard">
+          <AdminDashboard />
+        </LayoutWrapper>
       } />
 
       {/* Main app routes with standard layout */}

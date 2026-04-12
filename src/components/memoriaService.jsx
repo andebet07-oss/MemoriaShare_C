@@ -122,7 +122,7 @@ const memoriaService = {
         // privacy_mode → auto_publish_guest_photos (immediate = true, manual = false).
         const {
           privacy_mode,
-          event_type,   // form-only
+          event_type,   // pass through only valid DB values
           description,  // form-only
           price,        // form-only (pricing display)
           qr_code,      // form-only
@@ -132,6 +132,8 @@ const memoriaService = {
 
         const eventData = {
           ...rest,
+          // Allow 'share'/'magnet'; ignore legacy UI values like 'wedding'
+          ...(event_type === 'share' || event_type === 'magnet' ? { event_type } : {}),
           auto_publish_guest_photos:
             rest.auto_publish_guest_photos ??
             (privacy_mode === 'immediate' ? true : false),
@@ -294,6 +296,53 @@ const memoriaService = {
     },
   },
 
+  leads: {
+    create: async (leadData) => {
+      try {
+        const { data, error } = await supabase
+          .from('leads')
+          .insert(leadData)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [leads.create]: Failed to create lead', error);
+        throw error;
+      }
+    },
+
+    list: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('leads')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [leads.list]: Failed to list leads', error);
+        throw error;
+      }
+    },
+
+    update: async (id, updates) => {
+      try {
+        const { data, error } = await supabase
+          .from('leads')
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [leads.update]: Failed to update lead', id, error);
+        throw error;
+      }
+    },
+  },
+
   storage: {
     /**
      * Upload a file to the Supabase 'photos' storage bucket.
@@ -338,6 +387,36 @@ const memoriaService = {
       // Public URL is deterministic for public buckets — no extra network call needed
       const publicUrl = `${supabaseUrl}/storage/v1/object/public/photos/${path}`;
 
+      return { file_url: publicUrl, path };
+    },
+
+    /**
+     * Upload an overlay frame PNG for a Magnet event.
+     * Path: overlays/{eventId}/frame.png (upsert — replaces if re-uploaded)
+     */
+    uploadOverlay: async (file, eventId) => {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const path = `overlays/${eventId}/frame.png`;
+      const jwt = _getJwt();
+
+      const response = await fetch(`${supabaseUrl}/storage/v1/object/photos/${path}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'apikey': supabaseAnonKey,
+          'Content-Type': file.type || 'image/png',
+          'x-upsert': 'true',
+        },
+        body: file,
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Overlay upload failed (${response.status}): ${errText}`);
+      }
+
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/photos/${path}`;
       return { file_url: publicUrl, path };
     },
 

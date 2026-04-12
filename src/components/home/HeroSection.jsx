@@ -133,16 +133,41 @@ export default function HeroSection({ onOpenDemo }) {
             />
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
-            <button onClick={handleCreateEventClick} className="w-full sm:w-64 py-4 px-8 bg-white text-black font-bold rounded-full hover:scale-105 transition-all shadow-xl">
-              צור אירוע חדש
+          {/* Dual-product CTA */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch max-w-xl mx-auto mb-6">
+
+            {/* Card 1 — MemoriaShare */}
+            <button
+              onClick={handleCreateEventClick}
+              className="group flex-1 flex flex-col items-center gap-3 py-6 px-6 bg-white text-black rounded-2xl hover:scale-[1.03] active:scale-[0.98] transition-all shadow-2xl"
+            >
+              <span className="text-3xl">📸</span>
+              <div className="text-center">
+                <p className="font-extrabold text-base leading-tight">אלבום דיגיטלי משותף</p>
+                <p className="text-black/50 text-xs mt-1 font-medium">כל האורחים מצלמים · הכל במקום אחד</p>
+              </div>
             </button>
-            
-            <button onClick={onOpenDemo} className="w-full sm:w-64 py-4 px-8 bg-white/5 text-white font-semibold rounded-full border border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all flex items-center justify-center">
-              <Play className="w-4 h-4 ml-2 fill-current" />
-              צפו בהדגמה
+
+            {/* Card 2 — MemoriaMagnet */}
+            <button
+              onClick={() => navigate('/MagnetLead')}
+              className="group flex-1 flex flex-col items-center gap-3 py-6 px-6 bg-white/6 border border-white/15 backdrop-blur-xl text-white rounded-2xl hover:bg-white/10 hover:scale-[1.03] active:scale-[0.98] transition-all"
+            >
+              <span className="text-3xl">🧲</span>
+              <div className="text-center">
+                <p className="font-extrabold text-base leading-tight">שירות הדפסת מגנטים</p>
+                <p className="text-white/45 text-xs mt-1 font-medium">הדפסה חיה באירוע · מגנטים כמזכרת</p>
+              </div>
+              <span className="text-[10px] font-semibold tracking-widest text-violet-400 uppercase bg-violet-500/15 border border-violet-500/25 rounded-full px-2.5 py-0.5">
+                Premium
+              </span>
             </button>
           </div>
+
+          <button onClick={onOpenDemo} className="mx-auto flex items-center justify-center gap-2 py-2.5 px-6 bg-transparent text-white/50 hover:text-white/80 transition-colors text-sm">
+            <Play className="w-3.5 h-3.5 fill-current" />
+            צפו בהדגמה
+          </button>
         </div>
       </div>
 

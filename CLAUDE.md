@@ -271,3 +271,27 @@ When operating in Plan Mode, limit planning output to concise bullet points and 
 ---
 
 *Last updated: April 2026. Update this file whenever a significant architectural decision is made.*
+
+---
+
+# Memoria Platform - Global AI Guidelines
+
+## 1. Token Efficiency & Workflow Rules (CRITICAL)
+* *Be Concise:* No long-winded explanations. Output only necessary plans or targeted code.
+* *Targeted Edits Only:* DO NOT output or rewrite entire files. Use precise line replacements or tool-assisted AST edits.
+* *Ask Before Complex Actions:* For database schema changes or multi-file architectural shifts, output a structured Plan (.md) and WAIT for approval before modifying code.
+
+## 2. Localization & Styling
+* *Language Split:* ALL user-facing UI text must be in Hebrew (RTL). All code variables, logs, and internal documentation must be in English.
+* *Styling Paradigm:* Tailwind CSS. Native iOS aesthetic. Use backdrop-blur for floating elements and avoid solid blocks that cover camera views.
+
+## 3. Core Architecture: Dual-Product System
+* *DO NO HARM:* The platform runs two core products. You MUST isolate logic using conditional checks (e.g., event_type === 'share' || 'magnet') and NEVER break existing MemoriaShare flows when building MemoriaMagnet.
+
+* *Product 1: MemoriaShare (Legacy)*
+  - Self-service logic. Guests autonomously create events and upload photos to digital albums.
+
+* *Product 2: MemoriaMagnet (New Premium Service)*
+  - Managed service logic. Admin creates events.
+  - Guests have a print quota, a "Send to Print" action (instead of upload), and real-time status tracking.
+  - Requires a secure Operator Print Station dashboard for the admin.
