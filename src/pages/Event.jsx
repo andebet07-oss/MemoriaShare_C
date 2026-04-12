@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import memoriaService from "@/components/memoriaService";
+import MagnetGuestPage from "@/pages/MagnetGuestPage";
 
 import { Button } from "@/components/ui/button";
 import { Calendar, Camera, Loader2, Lock, Users, Clock } from "lucide-react";
@@ -76,6 +77,11 @@ export default function EventPage() {
       </div>
     </div>
   );
+
+  // Magnet events have their own full guest experience
+  if (event.event_type === 'magnet') {
+    return <MagnetGuestPage event={event} />;
+  }
 
   if (!event.is_active) {
     return (

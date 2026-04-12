@@ -14,6 +14,7 @@ import EventPage from '@/pages/Event';
 import EventGallery from '@/pages/EventGallery';
 import MagnetLead from '@/pages/MagnetLead';
 import AdminDashboard from '@/pages/AdminDashboard';
+import PrintStation from '@/pages/PrintStation';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -73,6 +74,7 @@ const AuthenticatedApp = () => {
           <AdminDashboard />
         </LayoutWrapper>
       } />
+      <Route path="/PrintStation/:eventId" element={<PrintStation />} />
 
       {/* Main app routes with standard layout */}
       <Route path="/" element={

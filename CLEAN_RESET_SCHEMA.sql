@@ -69,7 +69,7 @@ CREATE TABLE events (
   event_type                TEXT        NOT NULL DEFAULT 'share'
                               CHECK (event_type IN ('share', 'magnet')),
   overlay_frame_url         TEXT,        -- Magnet only: storage path to PNG frame
-  print_quota_per_device    INTEGER     NOT NULL DEFAULT 3,  -- Magnet only: max prints per guest user
+  print_quota_per_device    INTEGER     NOT NULL DEFAULT 5,  -- Magnet only: max prints per guest user
   created_date              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_date              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

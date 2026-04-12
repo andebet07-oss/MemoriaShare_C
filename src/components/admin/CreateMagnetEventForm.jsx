@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Loader2, CheckCircle, Upload, Copy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Loader2, CheckCircle, Upload, Copy, Monitor } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import { useAuth } from '@/lib/AuthContext';
 
-const INITIAL = { name: '', date: '', print_quota_per_device: 3, unique_code: '' };
+const INITIAL = { name: '', date: '', print_quota_per_device: 5, unique_code: '' };
 
 export default function CreateMagnetEventForm() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState(INITIAL);
   const [overlayFile, setOverlayFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,7 +48,7 @@ export default function CreateMagnetEventForm() {
         await memoriaService.events.update(event.id, { overlay_frame_url: file_url });
       }
 
-      setSuccess({ event_code: event.unique_code, pin_code: event.pin_code });
+      setSuccess({ event_code: event.unique_code, pin_code: event.pin_code, event_id: event.id });
       setForm(INITIAL);
       setOverlayFile(null);
     } catch (err) {
@@ -70,9 +72,18 @@ export default function CreateMagnetEventForm() {
         </button>
       </div>
       <p className="text-white/40 text-sm mt-2">PIN: {success.pin_code}</p>
-      <button onClick={() => setSuccess(null)} className="mt-6 px-5 py-2.5 bg-white/8 border border-white/10 text-white text-sm rounded-xl hover:bg-white/12 transition-colors">
-        צור אירוע נוסף
-      </button>
+      <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
+        <button
+          onClick={() => navigate(`/PrintStation/${success.event_id}`)}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold rounded-xl transition-colors"
+        >
+          <Monitor className="w-4 h-4" />
+          פתח Print Station
+        </button>
+        <button onClick={() => setSuccess(null)} className="px-5 py-2.5 bg-white/8 border border-white/10 text-white text-sm rounded-xl hover:bg-white/12 transition-colors">
+          צור אירוע נוסף
+        </button>
+      </div>
     </div>
   );
 

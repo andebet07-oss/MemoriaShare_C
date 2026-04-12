@@ -343,6 +343,70 @@ const memoriaService = {
     },
   },
 
+  printJobs: {
+    create: async ({ event_id, photo_id, guest_user_id }) => {
+      try {
+        const { data, error } = await supabase
+          .from('print_jobs')
+          .insert({ event_id, photo_id, guest_user_id })
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [printJobs.create]: Failed to create print job', error);
+        throw error;
+      }
+    },
+
+    getByUser: async (eventId, userId) => {
+      try {
+        const { data, error } = await supabase
+          .from('print_jobs')
+          .select('*')
+          .eq('event_id', eventId)
+          .eq('guest_user_id', userId)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('MemoriaService [printJobs.getByUser]: Failed to fetch print jobs', error);
+        throw error;
+      }
+    },
+
+    updateStatus: async (id, status) => {
+      try {
+        const { data, error } = await supabase
+          .from('print_jobs')
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq('id', id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [printJobs.updateStatus]: Failed to update status', id, error);
+        throw error;
+      }
+    },
+
+    getByEvent: async (eventId) => {
+      try {
+        const { data, error } = await supabase
+          .from('print_jobs')
+          .select('*, photos(file_url, file_urls, guest_name)')
+          .eq('event_id', eventId)
+          .order('created_at', { ascending: true });
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('MemoriaService [printJobs.getByEvent]: Failed to fetch event print jobs', error);
+        throw error;
+      }
+    },
+  },
+
   storage: {
     /**
      * Upload a file to the Supabase 'photos' storage bucket.
