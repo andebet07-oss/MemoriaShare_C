@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, CheckCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import memoriaService from '@/components/memoriaService';
 import PrintJobCard from './PrintJobCard';
@@ -7,6 +7,7 @@ import PrintJobCard from './PrintJobCard';
 export default function PrintQueue({ event }) {
   const [jobs, setJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBulkMarking, setIsBulkMarking] = useState(false);
   const channelRef = useRef(null);
 
   const fetchJobs = async () => {
@@ -58,6 +59,18 @@ export default function PrintQueue({ event }) {
     setJobs(prev => prev.map(j => j.id === updatedJob.id ? { ...j, ...updatedJob } : j));
   };
 
+  const handleMarkAllReady = async () => {
+    setIsBulkMarking(true);
+    try {
+      await Promise.all(printing.map(job => memoriaService.printJobs.updateStatus(job.id, 'ready')));
+      fetchJobs();
+    } catch {
+      // non-fatal
+    } finally {
+      setIsBulkMarking(false);
+    }
+  };
+
   const pending = jobs.filter(j => j.status === 'pending');
   const printing = jobs.filter(j => j.status === 'printing');
   const settled = jobs.filter(j => j.status === 'ready' || j.status === 'rejected');
@@ -106,7 +119,38 @@ export default function PrintQueue({ event }) {
       )}
 
       {renderSection('ממתינים להדפסה', pending, 'bg-yellow-400')}
-      {renderSection('בתהליך הדפסה', printing, 'bg-blue-400')}
+
+      {printing.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-400" />
+              <h3 className="text-white/70 text-sm font-semibold">בתהליך הדפסה ({printing.length})</h3>
+            </div>
+            <button
+              onClick={handleMarkAllReady}
+              disabled={isBulkMarking}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
+            >
+              {isBulkMarking
+                ? <Loader2 className="w-3 h-3 animate-spin" />
+                : <CheckCheck className="w-3 h-3" />}
+              סמן הכל כמוכן
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {printing.map(job => (
+              <PrintJobCard
+                key={job.id}
+                job={job}
+                overlayFrameUrl={event.overlay_frame_url}
+                onUpdate={handleUpdate}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {renderSection('הושלמו / נדחו', settled, 'bg-white/30')}
     </div>
   );

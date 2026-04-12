@@ -12,12 +12,25 @@ const STATUS_CONFIG = {
 
 export default function PrintJobCard({ job, overlayFrameUrl, onUpdate }) {
   const [isActing, setIsActing] = useState(false);
+  const [isReprinting, setIsReprinting] = useState(false);
   const [popupError, setPopupError] = useState(false);
 
   const cfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.pending;
   const photoUrl = job.photos?.file_urls?.original ?? job.photos?.file_url;
   const thumbUrl = job.photos?.file_urls?.thumbnail ?? job.photos?.file_url;
   const guestName = job.photos?.guest_name;
+
+  const handleReprint = async () => {
+    setIsReprinting(true);
+    setPopupError(false);
+    try {
+      await applyOverlayFrame(photoUrl, overlayFrameUrl);
+    } catch (e) {
+      if (e.message === 'POPUP_BLOCKED') setPopupError(true);
+    } finally {
+      setIsReprinting(false);
+    }
+  };
 
   const act = async (newStatus, printFirst = false) => {
     setIsActing(true);
@@ -66,6 +79,20 @@ export default function PrintJobCard({ job, overlayFrameUrl, onUpdate }) {
         {popupError && <p className="text-orange-400 text-[10px] mt-1">אפשרו חלונות קופצים להדפסה</p>}
       </div>
 
+      {/* Re-print for ready jobs — no status change, printer-jam recovery */}
+      {job.status === 'ready' && (
+        <div className="px-3 pb-3">
+          <button
+            onClick={handleReprint}
+            disabled={isReprinting}
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/35 hover:text-white/60 text-xs rounded-xl transition-colors disabled:opacity-50"
+          >
+            {isReprinting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Printer className="w-3 h-3" />}
+            הדפס שוב
+          </button>
+        </div>
+      )}
+
       {/* Actions */}
       {!isSettled && (
         <div className="px-3 pb-3 flex gap-2">
@@ -80,14 +107,25 @@ export default function PrintJobCard({ job, overlayFrameUrl, onUpdate }) {
             </button>
           )}
           {job.status === 'printing' && (
-            <button
-              onClick={() => act('ready')}
-              disabled={isActing}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors"
-            >
-              {isActing ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-              מוכן
-            </button>
+            <>
+              <button
+                onClick={() => act('ready')}
+                disabled={isActing}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors"
+              >
+                {isActing ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                מוכן
+              </button>
+              {/* Re-print without status change — for printer-jam recovery */}
+              <button
+                onClick={handleReprint}
+                disabled={isReprinting}
+                title="הדפס שוב"
+                className="w-8 h-8 flex items-center justify-center bg-white/8 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/30 text-white/40 hover:text-blue-400 rounded-xl transition-colors shrink-0 disabled:opacity-50"
+              >
+                {isReprinting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Printer className="w-3 h-3" />}
+              </button>
+            </>
           )}
           <button
             onClick={() => act('rejected')}

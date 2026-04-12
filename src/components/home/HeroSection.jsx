@@ -98,17 +98,23 @@ export default function HeroSection({ onOpenDemo }) {
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <div className="text-center" dir="rtl">
 
-          <div className="inline-flex items-center justify-center px-4 py-1.5 mb-8 rounded-full border border-white/10 bg-white/5 backdrop-blur-md relative z-30">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full border border-white/10 bg-white/5 backdrop-blur-md relative z-30">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+            <span className="text-white/50 text-xs font-medium tracking-widest uppercase">Memoria · פלטפורמת זיכרונות</span>
           </div>
 
-          <h1 className="text-6xl md:text-8xl lg:text-9xl font-extrabold mb-6 tracking-tight relative z-30">
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
-              Memoria
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-5 tracking-tight relative z-30 leading-tight">
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+              הזיכרונות שלכם
+            </span>
+            <br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white/80 to-white/25">
+              מכל הזוויות
             </span>
           </h1>
 
-          <p className="text-xl md:text-3xl text-white/90 mb-4 max-w-2xl mx-auto font-light leading-tight relative z-30">
-            האורחים מצלמים, הכל באלבום אחד
+          <p className="text-base md:text-lg text-white/55 mb-4 max-w-lg mx-auto font-light leading-relaxed relative z-30">
+            כל אורח מצלם מהטלפון שלו — הכל מתכנס אוטומטית לגלריה אחת שלכם, בזמן אמת
           </p>
 
           <div className="flex justify-center items-center gap-0 mb-16 h-[360px] md:h-[500px] relative z-20">
@@ -144,7 +150,7 @@ export default function HeroSection({ onOpenDemo }) {
               <span className="text-3xl">📸</span>
               <div className="text-center">
                 <p className="font-extrabold text-base leading-tight">אלבום דיגיטלי משותף</p>
-                <p className="text-black/50 text-xs mt-1 font-medium">כל האורחים מצלמים · הכל במקום אחד</p>
+                <p className="text-black/50 text-xs mt-1 font-medium">בלי אפליקציה · גלריה חיה · להורדה מיד</p>
               </div>
             </button>
 
@@ -155,8 +161,8 @@ export default function HeroSection({ onOpenDemo }) {
             >
               <span className="text-3xl">🧲</span>
               <div className="text-center">
-                <p className="font-extrabold text-base leading-tight">שירות הדפסת מגנטים</p>
-                <p className="text-white/45 text-xs mt-1 font-medium">הדפסה חיה באירוע · מגנטים כמזכרת</p>
+                <p className="font-extrabold text-base leading-tight">הדפסת מגנטים חיה</p>
+                <p className="text-white/45 text-xs mt-1 font-medium">צולמים · מודפסים · נלקחים הביתה</p>
               </div>
               <span className="text-[10px] font-semibold tracking-widest text-violet-400 uppercase bg-violet-500/15 border border-violet-500/25 rounded-full px-2.5 py-0.5">
                 Premium

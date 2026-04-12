@@ -18,6 +18,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   const [frontFlash, setFrontFlash] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastResult, setLastResult] = useState(null); // 'success' | 'error'
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
   // UX-03: synchronous counter to block rapid double-taps before remainingPrints prop updates
   const capturedCountRef = useRef(0);
 
@@ -59,9 +60,11 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   const stopCamera = () => { streamRef.current?.getTracks().forEach(t => t.stop()); videoTrackRef.current = null; };
 
   const captureAndPrint = async () => {
+    // Show friendly modal instead of silently blocking when quota is exhausted
+    if (isQuotaExhausted) { setShowQuotaModal(true); return; }
     // UX-03: synchronous guard fires before any async work — blocks double-taps that
     // arrive before the parent updates the remainingPrints prop after a capture.
-    if (isQuotaExhausted || isSubmitting || !videoRef.current) return;
+    if (isSubmitting || !videoRef.current) return;
     if (capturedCountRef.current >= remainingPrints) return;
     capturedCountRef.current += 1;
     setIsSubmitting(true);
@@ -176,8 +179,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
           V
         </button>
 
-        {/* Shutter */}
-        <button onClick={captureAndPrint} disabled={isQuotaExhausted || isSubmitting || isLoading}
+        {/* Shutter — never disabled when quota exhausted; tap fires the quota modal instead */}
+        <button onClick={captureAndPrint} disabled={isSubmitting || isLoading}
           className="relative w-20 h-20 rounded-full border-[3px] border-white/80 p-1.5 bg-transparent disabled:opacity-50 transition-transform active:scale-95">
           {isSubmitting
             ? <div className="w-full h-full rounded-full bg-white/80 flex items-center justify-center"><Loader2 className="w-6 h-6 text-black animate-spin" /></div>
@@ -191,6 +194,38 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
           <RotateCw className="w-4 h-4 text-white/70" />
         </button>
       </div>
+
+      {/* Quota exhausted modal — bottom sheet */}
+      {showQuotaModal && (
+        <div className="absolute inset-0 z-[200] flex items-end" dir="rtl">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowQuotaModal(false)} />
+          {/* Sheet */}
+          <div className="relative w-full bg-[#111] rounded-t-3xl border-t border-white/10 px-6 pb-10 pt-5 shadow-2xl"
+            style={{ paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 24px)` }}>
+            {/* Drag handle */}
+            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5" />
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-white font-black text-lg leading-snug mb-2">מכסת ההדפסות הסתיימה</p>
+                <p className="text-white/55 text-sm leading-relaxed">
+                  ניצלת את כל ההדפסות שלך לאירוע זה. נשמח להדפיס עבורך תמונות נוספות בעמדת המפעיל!
+                </p>
+              </div>
+              <button
+                onClick={() => setShowQuotaModal(false)}
+                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-0.5 hover:bg-white/20 transition-colors">
+                <X className="w-4 h-4 text-white/70" />
+              </button>
+            </div>
+            <button
+              onClick={() => setShowQuotaModal(false)}
+              className="mt-5 w-full py-3.5 bg-white/8 border border-white/12 text-white/80 font-semibold rounded-2xl hover:bg-white/12 transition-all text-sm">
+              הבנתי
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

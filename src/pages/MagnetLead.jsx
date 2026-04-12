@@ -17,7 +17,7 @@ function MagnetPhoneMockup({ eventName, date }) {
     : '02.08.2026';
 
   return (
-    <div className="relative w-[150px] h-[310px] sm:w-[170px] sm:h-[350px] md:w-[260px] md:h-[530px] bg-zinc-900 rounded-[2.2rem] md:rounded-[3rem] p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto">
+    <div className="relative w-[150px] h-[310px] sm:w-[170px] sm:h-[350px] md:w-[260px] md:h-[530px] bg-zinc-900 rounded-[2.2rem] md:rounded-[3rem] p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto transform scale-[0.65] -mt-16 sm:scale-100 sm:mt-0 origin-top">
 
       {/* Dynamic Island */}
       <div className="absolute top-2.5 md:top-4 left-1/2 -translate-x-1/2 w-14 md:w-20 h-3.5 md:h-6 bg-black rounded-full z-[60] flex items-center justify-end px-2 md:px-3 shadow-inner">
@@ -195,7 +195,7 @@ export default function MagnetLead() {
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
 
         {/* ── Left — Phone Mockup ── */}
-        <div className="flex-none lg:flex-1 w-full lg:w-[45%] bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden pt-3 pb-2">
+        <div className="flex-none lg:flex-1 w-full lg:w-[45%] bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden pt-0 sm:pt-3 pb-0 sm:pb-2">
           <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]" />
           <div className="h-full w-full flex items-center justify-center py-3 relative z-10">
             <MagnetPhoneMockup eventName={formData.event_name} date={formData.event_date} />
@@ -371,6 +371,7 @@ export default function MagnetLead() {
       </div>
 
       <style>{`
+        input[type="date"] { color-scheme: dark; }
         input[type="date"]::-webkit-calendar-picker-indicator {
           width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer;
         }

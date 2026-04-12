@@ -9,6 +9,7 @@ import HeroSection from '../components/home/HeroSection';
 import Features from '../components/home/Features';
 import Testimonials from '../components/home/Testimonials';
 import FAQ from '../components/home/FAQ';
+import HowItWorks from '../components/home/HowItWorks';
 import FinalCTA from '../components/home/FinalCTA';
 
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
           {/* העברת הפונקציה לפתיחת הדגמה לרכיבים */}
           <HeroSection onOpenDemo={() => setShowDemo(true)} />
           <Features />
+          <HowItWorks />
           <Testimonials />
           <FAQ />
           <FinalCTA />
