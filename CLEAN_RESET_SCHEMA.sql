@@ -11,6 +11,9 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS handle_new_user();
 
+DROP TRIGGER IF EXISTS trg_enforce_print_quota ON print_jobs;
+DROP FUNCTION IF EXISTS enforce_print_quota();
+
 DROP TABLE IF EXISTS upload_diagnostics CASCADE;
 DROP TABLE IF EXISTS print_jobs         CASCADE;
 DROP TABLE IF EXISTS leads              CASCADE;
@@ -22,9 +25,10 @@ DROP TABLE IF EXISTS profiles           CASCADE;
 -- Drop old storage policies before recreating
 DO $$
 BEGIN
-  DROP POLICY IF EXISTS "storage_photos_select_public" ON storage.objects;
-  DROP POLICY IF EXISTS "storage_photos_insert_public" ON storage.objects;
-  DROP POLICY IF EXISTS "storage_photos_delete_owner"  ON storage.objects;
+  DROP POLICY IF EXISTS "storage_photos_select_public"   ON storage.objects;
+  DROP POLICY IF EXISTS "storage_photos_insert_public"   ON storage.objects;
+  DROP POLICY IF EXISTS "storage_overlays_insert_admin"  ON storage.objects;
+  DROP POLICY IF EXISTS "storage_photos_delete_owner"    ON storage.objects;
 EXCEPTION WHEN others THEN NULL;
 END$$;
 
@@ -200,6 +204,32 @@ AS $$
     WHERE id = auth.uid() AND role = 'admin'
   );
 $$;
+
+-- ── SEC-01: Server-side print quota enforcement ──────────────
+-- Fires BEFORE INSERT on print_jobs so even direct REST API calls
+-- are blocked when the guest has reached their event quota.
+-- SECURITY DEFINER so it can read events.print_quota_per_device
+-- regardless of the caller's RLS context.
+CREATE OR REPLACE FUNCTION enforce_print_quota()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF (
+    SELECT COUNT(*) FROM print_jobs
+    WHERE event_id     = NEW.event_id
+      AND guest_user_id = NEW.guest_user_id
+      AND status        != 'rejected'
+  ) >= (
+    SELECT print_quota_per_device FROM events WHERE id = NEW.event_id
+  ) THEN
+    RAISE EXCEPTION 'PRINT_QUOTA_EXCEEDED';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_enforce_print_quota
+  BEFORE INSERT ON print_jobs
+  FOR EACH ROW EXECUTE FUNCTION enforce_print_quota();
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -412,9 +442,22 @@ CREATE POLICY "storage_photos_select_public"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'photos');
 
+-- SEC-02: guest/public uploads are blocked from writing to overlays/
 CREATE POLICY "storage_photos_insert_public"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'photos');
+  WITH CHECK (
+    bucket_id = 'photos'
+    AND (storage.foldername(name))[1] != 'overlays'
+  );
+
+-- SEC-02: only admins may write overlay frames
+CREATE POLICY "storage_overlays_insert_admin"
+  ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'photos'
+    AND (storage.foldername(name))[1] = 'overlays'
+    AND is_admin()
+  );
 
 CREATE POLICY "storage_photos_delete_owner"
   ON storage.objects FOR DELETE

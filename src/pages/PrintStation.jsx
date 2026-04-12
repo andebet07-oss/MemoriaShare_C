@@ -41,6 +41,20 @@ export default function PrintStation() {
     </div>
   );
 
+  // SEC-03: Print Station is exclusively for Magnet events.
+  // Prevent accidental access to Share events via direct URL.
+  if (event.event_type !== 'magnet') return (
+    <div className="fixed inset-0 bg-[#0a0a0a] flex items-center justify-center" dir="rtl">
+      <div className="text-center max-w-sm px-6">
+        <ShieldOff className="w-12 h-12 text-yellow-500/60 mx-auto mb-4" />
+        <p className="text-white font-bold text-xl mb-1">אירוע לא תואם</p>
+        <p className="text-white/40 text-sm">
+          Print Station מיועד לאירועי מגנט בלבד. אירוע זה הוא מסוג "{event.event_type}".
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white" dir="rtl">
 

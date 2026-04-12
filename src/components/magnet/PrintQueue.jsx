@@ -32,8 +32,16 @@ export default function PrintQueue({ event }) {
         { event: '*', schema: 'public', table: 'print_jobs', filter: `event_id=eq.${event.id}` },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            // Re-fetch to get the joined photos data
-            fetchJobs();
+            // Optimistically add the new job immediately so the card appears
+            // without waiting for the network round-trip. The `photos` join data
+            // is absent from the realtime payload, so the thumbnail will be blank
+            // briefly — the background fetchJobs() hydrates it a moment later.
+            setJobs(prev => {
+              // Deduplicate: ignore if already present (e.g., from a prior fetch)
+              if (prev.some(j => j.id === payload.new.id)) return prev;
+              return [...prev, { ...payload.new, photos: null }];
+            });
+            fetchJobs(); // background refresh to hydrate joined photo data
           } else if (payload.eventType === 'UPDATE') {
             setJobs(prev => prev.map(j => j.id === payload.new.id ? { ...j, ...payload.new } : j));
           }

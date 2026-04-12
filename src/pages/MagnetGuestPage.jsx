@@ -28,6 +28,34 @@ export default function MagnetGuestPage({ event }) {
     fetchPrintJobs();
   }, [user?.id, event?.id]);
 
+  // Realtime: update guest's job statuses without requiring a page refresh.
+  // Filter by event_id server-side (single-column Supabase filter limit),
+  // then guard on guest_user_id client-side so we only mutate our own rows.
+  useEffect(() => {
+    if (!user?.id || !event?.id) return;
+
+    const channel = supabase
+      .channel(`guest-prints-${event.id}-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'print_jobs',
+          filter: `event_id=eq.${event.id}`,
+        },
+        (payload) => {
+          if (payload.new.guest_user_id !== user.id) return;
+          setPrintJobs(prev =>
+            prev.map(j => j.id === payload.new.id ? { ...j, ...payload.new } : j)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [user?.id, event?.id]);
+
   const fetchPrintJobs = async () => {
     setIsLoadingJobs(true);
     try {
@@ -52,7 +80,7 @@ export default function MagnetGuestPage({ event }) {
   );
 
   const usedPrints = printJobs.filter(j => j.status !== 'rejected').length;
-  const remainingPrints = Math.max(0, (event.print_quota_per_device ?? 3) - usedPrints);
+  const remainingPrints = Math.max(0, (event.print_quota_per_device ?? 5) - usedPrints);
   const pendingCount = printJobs.filter(j => j.status === 'pending').length;
   const readyCount = printJobs.filter(j => j.status === 'ready').length;
 

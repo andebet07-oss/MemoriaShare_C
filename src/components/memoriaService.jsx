@@ -363,7 +363,7 @@ const memoriaService = {
       try {
         const { data, error } = await supabase
           .from('print_jobs')
-          .select('*')
+          .select('*, photos(file_url, file_urls, guest_name)')
           .eq('event_id', eventId)
           .eq('guest_user_id', userId)
           .order('created_at', { ascending: false });

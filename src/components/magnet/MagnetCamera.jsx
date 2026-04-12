@@ -68,6 +68,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
     setShutterEffect(true);
     setTimeout(() => setShutterEffect(false), 150);
 
+    // BUG-01: hoist photo so the catch block can run compensating delete
+    let photo = null;
     try {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -75,6 +77,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       ctx.save();
+      // BUG-02: apply vintage filter to canvas so captured frame matches the live preview
+      if (isVintage) ctx.filter = vintageStyle;
       if (isFrontCamera) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       ctx.restore();
@@ -83,7 +87,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
       const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
       const { file_url, path } = await memoriaService.storage.upload(file, event.id);
-      const photo = await memoriaService.photos.create({
+      photo = await memoriaService.photos.create({
         event_id: event.id,
         file_url,
         path,
@@ -99,6 +103,10 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
       onPrintJobCreated();
     } catch (err) {
       console.error('[MagnetCamera] captureAndPrint failed:', err);
+      // BUG-01: photo was created but print job failed — delete the orphan to keep storage clean
+      if (photo?.id) {
+        memoriaService.photos.delete(photo.id).catch(() => {});
+      }
       setLastResult('error');
     } finally {
       setIsSubmitting(false);
