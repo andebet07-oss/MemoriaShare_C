@@ -1,10 +1,12 @@
 import React from "react";
 import Header from "@/components/home/Header";
 
-const PAGES_WITHOUT_HEADER = ["Home", "Event", "EventGallery", "EventSuccess"];
+const PAGES_WITHOUT_HEADER = ["Home", "Event", "EventGallery", "EventSuccess", "CreateEvent", "CreateMagnetEvent"];
+const PAGES_WITHOUT_FOOTER = ["Event", "EventGallery", "EventSuccess", "CreateEvent", "CreateMagnetEvent"];
 
 export default function Layout({ children, currentPageName }) {
   const showHeader = !PAGES_WITHOUT_HEADER.includes(currentPageName);
+  const showFooter = !PAGES_WITHOUT_FOOTER.includes(currentPageName);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col" dir="rtl">
@@ -172,13 +174,15 @@ export default function Layout({ children, currentPageName }) {
 
 
       {/* Footer */}
-      <footer className="bg-black border-t border-gray-800 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-          <p className="text-gray-400">
-            © {new Date().getFullYear()} Memoria. כל הזכויות שמורות.
-          </p>
-        </div>
-      </footer>
+      {showFooter && (
+        <footer className="bg-black border-t border-gray-800 mt-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+            <p className="text-gray-400">
+              © {new Date().getFullYear()} Memoria. כל הזכויות שמורות.
+            </p>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }

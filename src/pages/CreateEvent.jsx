@@ -140,9 +140,9 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
   };
 
   return (
-    // גודל האייפון מבוסס dvh — פרופורציונלי לגובה המסך כדי שלא יהיה צורך בגלילה
+    // גודל האייפון מבוסס dvh — פרופורציונלי לגובה המסך. יחס 9:19.5 (iPhone)
     <div className="relative bg-zinc-900 p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto transition-transform duration-500"
-      style={{ width: 'clamp(97px, 18.5dvh, 200px)', height: 'clamp(200px, 38dvh, 410px)', borderRadius: 'clamp(1.5rem, 3.5dvh, 3rem)' }}>
+      style={{ width: 'clamp(130px, 19dvh, 200px)', height: 'clamp(268px, 39dvh, 410px)', borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)' }}>
       
       {isDesignMode &&
       <div className="absolute inset-0 rounded-[2.2rem] md:rounded-[3rem] ring-2 ring-indigo-500 z-[70] pointer-events-none animate-pulse" />
@@ -448,7 +448,7 @@ export default function App() {
                                    צמצמנו דרמטית את כל ה-pt/pb וה-space-y כדי שכל המידע ייכנס.
                                 */}
           <div className="flex-1 overflow-hidden px-4 flex flex-col justify-center items-center">
-            <div className="w-full max-w-sm mx-auto w-full flex flex-col justify-center items-center py-0">
+            <div className="w-full max-w-sm mx-auto flex flex-col justify-center items-center">
               
               {/* Step 1 */}
               {currentStep === 1 &&
