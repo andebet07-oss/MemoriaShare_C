@@ -10,22 +10,27 @@ import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
 
 // Polaroid-style magnet preview
-function MagnetPreview({ eventData = {}, overlayPreview = null }) {
+function MagnetPreview({ eventData = {}, overlayPreview = null, previewH, previewW }) {
   const formattedDate = eventData.date
     ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
         .format(new Date(eventData.date + 'T00:00:00'))
     : "02.25.2026";
 
+  // Polaroid ratio: 3:4 photo area + bottom label strip
+  const cardH = previewH || 'clamp(148px, 40dvh, 340px)';
+  const cardW = previewW || 'clamp(111px, 30dvh, 255px)';
+
   return (
-    <div className="relative flex items-center justify-center" style={{ height: 'clamp(180px, 36dvh, 320px)' }}>
+    <div className="relative flex items-center justify-center h-full w-full">
       {/* Polaroid frame */}
       <div
         className="relative bg-white shadow-[0_20px_50px_rgba(0,0,0,0.7)] flex flex-col"
         style={{
-          width: 'clamp(120px, 22dvh, 200px)',
-          height: 'clamp(148px, 28dvh, 248px)',
+          width: cardW,
+          height: cardH,
           padding: '6px 6px 0 6px',
           borderRadius: '2px',
+          transition: 'width 0.5s ease-out, height 0.5s ease-out',
         }}
       >
         {/* Photo area */}
@@ -237,6 +242,12 @@ export default function CreateMagnetEvent() {
 
   const progressPercentage = currentStep / totalSteps * 100;
 
+  // Step 2 = calendar — shrink preview to give calendar full room
+  const isCalendarStep = currentStep === 2;
+  const previewAreaH = isCalendarStep ? '30dvh' : '45dvh';
+  const previewH     = isCalendarStep ? 'clamp(74px, 22dvh, 200px)'  : 'clamp(148px, 40dvh, 340px)';
+  const previewW     = isCalendarStep ? 'clamp(55px, 16.5dvh, 150px)' : 'clamp(111px, 30dvh, 255px)';
+
   return (
     <div className="flex flex-col w-full h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden" dir="rtl"
       style={{ fontFamily: "'Heebo', 'Assistant', sans-serif" }}>
@@ -250,10 +261,11 @@ export default function CreateMagnetEvent() {
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
 
         {/* Preview area */}
-        <div className="flex-none w-full h-[40dvh] lg:flex-1 lg:h-auto bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2">
+        <div className="flex-none w-full lg:flex-1 bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2"
+          style={{ height: previewAreaH, transition: 'height 0.5s ease-out' }}>
           <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]" />
           <div className="relative z-10 w-full flex items-center justify-center h-full">
-            <MagnetPreview eventData={form} overlayPreview={overlayPreview} />
+            <MagnetPreview eventData={form} overlayPreview={overlayPreview} previewH={previewH} previewW={previewW} />
           </div>
         </div>
 

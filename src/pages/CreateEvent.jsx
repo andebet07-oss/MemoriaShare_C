@@ -47,7 +47,7 @@ async function compressImage(file) {
  * --- קומפוננטת אייפון יוקרתית ---
  * מידות קשיחות כדי לשמור על הפרופורציה המושלמת של המכשיר
  */
-function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onImageTransformChange }) {
+function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onImageTransformChange, phoneH, phoneW }) {
   const formattedDate = eventData.date ?
   new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(eventData.date)).replace(/\./g, '.') :
   "02.25.2026";
@@ -141,8 +141,8 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
 
   return (
     // גודל האייפון מבוסס dvh — פרופורציונלי לגובה המסך. יחס 9:19.5 (iPhone)
-    <div className="relative bg-zinc-900 p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto transition-transform duration-500"
-      style={{ width: 'clamp(130px, 19dvh, 200px)', height: 'clamp(268px, 39dvh, 410px)', borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)' }}>
+    <div className="relative bg-zinc-900 p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto"
+      style={{ width: phoneW || 'clamp(132px, 20dvh, 215px)', height: phoneH || 'clamp(286px, 43dvh, 450px)', borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)', transition: 'width 0.5s ease-out, height 0.5s ease-out' }}>
       
       {isDesignMode &&
       <div className="absolute inset-0 rounded-[2.2rem] md:rounded-[3rem] ring-2 ring-indigo-500 z-[70] pointer-events-none animate-pulse" />
@@ -406,6 +406,12 @@ export default function App() {
   const displayPreviewImage = localPreviewUrl || coverImagePreview;
   const progressPercentage = currentStep / totalSteps * 100;
 
+  // Calendar step needs more vertical room — shrink the phone preview to give it space
+  const isCalendarStep = currentStep === 3;
+  const phoneAreaH = isCalendarStep ? '30dvh' : '45dvh';
+  const phoneH     = isCalendarStep ? 'clamp(100px, 27dvh, 280px)' : 'clamp(143px, 43dvh, 450px)';
+  const phoneW     = isCalendarStep ? 'clamp(49px,  12.5dvh, 130px)' : 'clamp(66px, 20dvh, 208px)';
+
   return (
     // הוספת 100dvh קריטית כדי למנוע את קפיצות ה-Scrollbar בדפדפן הנייד. overflow-hidden נועל את המסך.
     <div className="flex flex-col w-full h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden" dir="rtl" style={{ fontFamily: "'Heebo', 'Assistant', sans-serif" }}>
@@ -418,7 +424,8 @@ export default function App() {
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
         
         {/* אזור עליון - אייפון. flex-none מונע ממנו להידחס */}
-        <div className="flex-none w-full h-[40dvh] lg:flex-1 lg:h-auto bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2">
+        <div className="flex-none w-full lg:flex-1 bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2"
+          style={{ height: phoneAreaH, transition: 'height 0.5s ease-out' }}>
           <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]"></div>
           <div className="h-full w-full flex items-center justify-center py-3 relative z-10">
             <div className="relative">
@@ -426,7 +433,9 @@ export default function App() {
                 eventData={{ ...eventData, cover_image: displayPreviewImage }}
                 imageTransform={imageTransform}
                 isDesignMode={isDesignMode}
-                onImageTransformChange={setImageTransform} />
+                onImageTransformChange={setImageTransform}
+                phoneH={phoneH}
+                phoneW={phoneW} />
               {/* Upload progress overlay */}
               {isUploading &&
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-[2.2rem] md:rounded-[3rem] z-[80]">
