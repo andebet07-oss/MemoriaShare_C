@@ -1,17 +1,12 @@
-import { useState } from 'react';
+import React from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { ShieldOff } from 'lucide-react';
+import { ShieldOff, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import LeadsPanel from '@/components/admin/LeadsPanel';
-import CreateMagnetEventForm from '@/components/admin/CreateMagnetEventForm';
-
-const TABS = [
-  { key: 'leads', label: 'ניהול לידים' },
-  { key: 'create', label: 'יצירת אירוע מגנט' },
-];
 
 export default function AdminDashboard() {
   const { user, isLoadingAuth } = useAuth();
-  const [activeTab, setActiveTab] = useState('leads');
+  const navigate = useNavigate();
 
   if (isLoadingAuth) return (
     <div className="fixed inset-0 flex items-center justify-center">
@@ -34,32 +29,23 @@ export default function AdminDashboard() {
       <div className="max-w-3xl mx-auto">
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-extrabold text-white">לוח בקרה מנהל</h1>
-          <p className="text-white/40 text-sm mt-1">MemoriaMagnet — ניהול לידים ואירועים</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold text-white">לוח בקרה מנהל</h1>
+            <p className="text-white/40 text-sm mt-1">MemoriaMagnet — ניהול לידים ואירועים</p>
+          </div>
+          <button
+            onClick={() => navigate('/CreateMagnetEvent')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold rounded-xl transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            אירוע חדש
+          </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-white/5 border border-white/8 rounded-2xl mb-8 w-fit">
-          {TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === tab.key
-                  ? 'bg-white text-black shadow'
-                  : 'text-white/50 hover:text-white/80'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
+        {/* Leads panel */}
         <div className="bg-white/4 border border-white/8 rounded-3xl p-6">
-          {activeTab === 'leads' && <LeadsPanel />}
-          {activeTab === 'create' && <CreateMagnetEventForm />}
+          <LeadsPanel />
         </div>
       </div>
     </div>

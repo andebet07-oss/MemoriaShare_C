@@ -140,8 +140,9 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
   };
 
   return (
-    // מידות קשיחות של אייפון. אנחנו לא משתמשים ב-aspect-ratio כדי למנוע את העיוות
-    <div className="relative w-[180px] h-[370px] sm:w-[200px] sm:h-[410px] md:w-[260px] md:h-[530px] bg-zinc-900 rounded-[2.2rem] md:rounded-[3rem] p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto transition-transform duration-500">
+    // גודל האייפון מבוסס dvh — פרופורציונלי לגובה המסך כדי שלא יהיה צורך בגלילה
+    <div className="relative bg-zinc-900 p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto transition-transform duration-500"
+      style={{ width: 'clamp(97px, 18.5dvh, 200px)', height: 'clamp(200px, 38dvh, 410px)', borderRadius: 'clamp(1.5rem, 3.5dvh, 3rem)' }}>
       
       {isDesignMode &&
       <div className="absolute inset-0 rounded-[2.2rem] md:rounded-[3rem] ring-2 ring-indigo-500 z-[70] pointer-events-none animate-pulse" />
@@ -261,8 +262,8 @@ function InlineCalendar({ value, onChange }) {
   };
 
   return (
-    <div className="bg-[#161616] border border-white/10 rounded-2xl p-4" dir="ltr">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-[#161616] border border-white/10 rounded-2xl p-3" dir="ltr">
+      <div className="flex items-center justify-between mb-2">
         <button type="button" onClick={prevMonth} className="w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -271,13 +272,13 @@ function InlineCalendar({ value, onChange }) {
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
-      <div className="grid grid-cols-7 mb-1">
-        {hebrewDays.map(d => <div key={d} className="text-center text-white/25 text-[10px] font-bold py-1">{d}</div>)}
+      <div className="grid grid-cols-7 mb-0.5">
+        {hebrewDays.map(d => <div key={d} className="text-center text-white/25 text-[10px] font-bold py-0.5">{d}</div>)}
       </div>
-      <div className="grid grid-cols-7 gap-y-0.5">
+      <div className="grid grid-cols-7">
         {cells.map((day, i) => (
           <button key={i} type="button" onClick={() => handleDay(day)}
-            className={`h-8 w-full flex items-center justify-center text-sm font-medium rounded-full transition-colors
+            className={`h-7 w-full flex items-center justify-center text-sm font-medium rounded-full transition-colors
               ${!day ? 'invisible pointer-events-none' : ''}
               ${day && isPast(day) ? 'text-white/20 pointer-events-none' : ''}
               ${day && isSel(day) ? 'bg-indigo-600 text-white shadow-md' : ''}
@@ -417,7 +418,7 @@ export default function App() {
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
         
         {/* אזור עליון - אייפון. flex-none מונע ממנו להידחס */}
-        <div className="flex-none lg:flex-1 w-full lg:w-[45%] bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden pt-3 pb-2">
+        <div className="flex-none w-full h-[40dvh] lg:flex-1 lg:h-auto bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2">
           <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]"></div>
           <div className="h-full w-full flex items-center justify-center py-3 relative z-10">
             <div className="relative">
@@ -446,7 +447,7 @@ export default function App() {
           {/* אמצע: הטופס עצמו מתמרכז בצורה מושלמת ב-View-port הנותר.
                                    צמצמנו דרמטית את כל ה-pt/pb וה-space-y כדי שכל המידע ייכנס.
                                 */}
-          <div className="flex-1 overflow-y-auto px-4 flex flex-col justify-center items-center">
+          <div className="flex-1 overflow-hidden px-4 flex flex-col justify-center items-center">
             <div className="w-full max-w-sm mx-auto w-full flex flex-col justify-center items-center py-0">
               
               {/* Step 1 */}
@@ -498,7 +499,7 @@ export default function App() {
 
               {/* Step 3 - תאריך ושעת סגירת העלאות */}
               {currentStep === 3 &&
-              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 w-full flex flex-col gap-3">
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
                     <h2 className="text-lg font-bold tracking-tight">מתי חוגגים?</h2>
                     <p className="text-sm text-white/45">בחרו תאריך — העלאת תמונות תיסגר אוטומטית אחריו</p>
@@ -518,37 +519,6 @@ export default function App() {
                     }}
                   />
                   {errors.date && <p className="text-red-500 text-sm font-bold text-center animate-pulse">{errors.date}</p>}
-
-                  {/* בחירת שעת סגירת העלאות - מופיע רק לאחר בחירת תאריך */}
-                  {eventData.date && (() => {
-                  const eventDateObj = new Date(eventData.date + 'T00:00:00');
-                  const minDt = new Date(eventDateObj);minDt.setDate(minDt.getDate() + 1);
-                  const maxDt = new Date(eventDateObj);maxDt.setDate(maxDt.getDate() + 2);
-                  const minStr = minDt.toISOString().slice(0, 16);
-                  const maxStr = maxDt.toISOString().slice(0, 16);
-                  const currentVal = eventData.upload_closure_datetime || minStr;
-                  const displayVal = currentVal ? new Date(currentVal).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-                  return (
-                   <div>
-                       <h2 className="text-base font-black tracking-tight text-center mb-1">תאריך סגירת העלאות</h2>
-                       <p className="text-gray-500 text-[10px] font-light text-center mb-1.5">בחר את התאריך בו יסגרו העלאות התמונות</p>
-                        <div className="relative group">
-                          <div className="w-full h-10 bg-[#161616] border border-gray-800 rounded-xl flex items-center justify-center gap-3 transition-all group-hover:border-gray-600 shadow-inner">
-                            <ChevronLeft className="w-4 h-4 text-indigo-400 rotate-90" />
-                            <span className="text-sm font-bold text-white">{displayVal}</span>
-                          </div>
-                          <input
-                          type="datetime-local"
-                          value={currentVal}
-                          min={minStr}
-                          max={maxStr}
-                          onChange={(e) => handleInputChange('upload_closure_datetime', e.target.value)}
-                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                          style={{ colorScheme: 'dark' }} />
-                        </div>
-                      </div>);
-
-                })()}
                 </div>
               }
 

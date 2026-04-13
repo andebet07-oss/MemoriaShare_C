@@ -49,6 +49,7 @@
  */
 import AdminUsers from './pages/AdminUsers';
 import CreateEvent from './pages/CreateEvent';
+import CreateMagnetEvent from './pages/CreateMagnetEvent';
 import Dashboard from './pages/Dashboard';
 import Event from './pages/Event';
 import EventGallery from './pages/EventGallery';
@@ -61,6 +62,7 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "AdminUsers": AdminUsers,
     "CreateEvent": CreateEvent,
+    "CreateMagnetEvent": CreateMagnetEvent,
     "Dashboard": Dashboard,
     "Event": Event,
     "EventGallery": EventGallery,
