@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Play, X } from 'lucide-react';
+import { Play, X, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 
@@ -15,21 +15,19 @@ export default function HeroSection({ onOpenDemo }) {
     "/right_PhoneMoucup_hero.jpeg",
   ];
 
-  // לוגיקה חכמה ליצירת אירוע
   const handleCreateEventClick = () => {
     if (isAuthenticated) {
       navigate(createPageUrl("CreateEvent"));
     } else {
-      // יפנה להתחברות ויחזור אוטומטית לעמוד היצירה
       const returnUrl = `${window.location.origin}${createPageUrl("CreateEvent")}`;
       supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: returnUrl } });
     }
   };
 
   const MiniIPhone = ({ image, className = "", delay = 0, title = "Event Name", isCenter = false }) => (
-    <div 
+    <div
       className={`relative transform transition-all duration-1000 ${className}`}
-      style={{ 
+      style={{
         animation: `floating ${4 + delay/500}s ease-in-out infinite`,
         animationDelay: `${delay}ms`,
       }}
@@ -39,7 +37,7 @@ export default function HeroSection({ onOpenDemo }) {
         <div className="w-full h-full bg-black rounded-[2.3rem] overflow-hidden relative border border-white/10">
           <img src={image} className="w-full h-full object-cover object-center opacity-90" alt="event" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10"></div>
-          
+
           <div className="absolute inset-0 z-20 flex flex-col justify-between pointer-events-none">
             <div className="flex justify-between items-start px-3 md:px-4 pt-3 md:pt-4">
                <X className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-white drop-shadow-lg" />
@@ -68,12 +66,10 @@ export default function HeroSection({ onOpenDemo }) {
                      <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
                         <circle cx="12" cy="13" r="3"/>
-                        <path d="M3 6.5c0-.28.22-.5.5-.5s.5.22.5.5c0 1.38.84 2.57 2.04 3.08l-.42.9C4.34 9.74 3 8.3 3 6.5zm18 0c0-.28-.22-.5-.5-.5s-.5.22-.5.5c0 1.8-1.34 3.24-3.62 3.98l-.42-.9C17.16 9.07 18 7.88 18 6.5z" opacity="0.6"/>
-                        <path d="M3 17.5c0 .28.22.5.5.5s.5-.22.5-.5c0-1.38.84-2.57 2.04-3.08l-.42-.9C4.34 14.26 3 15.7 3 17.5zm18 0c0 .28-.22.5-.5.5s-.5-.22-.5-.5c0-1.8-1.34-3.24-3.62-3.98l-.42.9c1.2.51 2.04 1.7 2.04 3.08z" opacity="0.6"/>
                      </svg>
                   </div>
                </div>
-               
+
                <div className="flex justify-between items-center">
                   <div className="text-left">
                      <p className="text-white text-[6px] md:text-[8px] font-bold leading-none drop-shadow-lg">15 SHOTS</p>
@@ -138,42 +134,31 @@ export default function HeroSection({ onOpenDemo }) {
               title="Classic Ceremony"
             />
           </div>
-          
-          {/* Dual-product CTA */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch max-w-xl mx-auto mb-6">
 
-            {/* Card 1 — MemoriaShare */}
+          {/* Primary CTA — MemoriaShare */}
+          <div className="flex flex-col items-center gap-5 mb-6">
             <button
               onClick={handleCreateEventClick}
-              className="group flex-1 flex flex-col items-center gap-3 py-6 px-6 bg-white text-black rounded-2xl hover:scale-[1.03] active:scale-[0.98] transition-all shadow-2xl"
+              className="px-10 py-4 bg-white text-black font-bold text-base rounded-full hover:bg-white/90 active:scale-[0.98] transition-all shadow-[0_0_40px_rgba(255,255,255,0.15)]"
             >
-              <span className="text-3xl">📸</span>
-              <div className="text-center">
-                <p className="font-extrabold text-base leading-tight">אלבום דיגיטלי משותף</p>
-                <p className="text-black/50 text-xs mt-1 font-medium">בלי אפליקציה · גלריה חיה · להורדה מיד</p>
-              </div>
+              צרו אירוע עכשיו — בחינם
             </button>
 
-            {/* Card 2 — MemoriaMagnet */}
+            {/* Secondary link — MemoriaMagnet, elegant and understated */}
             <button
               onClick={() => navigate('/MagnetLead')}
-              className="group flex-1 flex flex-col items-center gap-3 py-6 px-6 bg-white/6 border border-white/15 backdrop-blur-xl text-white rounded-2xl hover:bg-white/10 hover:scale-[1.03] active:scale-[0.98] transition-all"
+              className="group flex items-center gap-2 text-white/35 hover:text-white/65 transition-colors text-sm"
             >
-              <span className="text-3xl">🧲</span>
-              <div className="text-center">
-                <p className="font-extrabold text-base leading-tight">הדפסת מגנטים חיה</p>
-                <p className="text-white/45 text-xs mt-1 font-medium">צולמים · מודפסים · נלקחים הביתה</p>
-              </div>
-              <span className="text-[10px] font-semibold tracking-widest text-violet-400 uppercase bg-violet-500/15 border border-violet-500/25 rounded-full px-2.5 py-0.5">
-                Premium
-              </span>
+              <span>מעוניינים בהדפסת מגנטים חיה באירוע?</span>
+              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             </button>
           </div>
 
-          <button onClick={onOpenDemo} className="mx-auto flex items-center justify-center gap-2 py-2.5 px-6 bg-transparent text-white/50 hover:text-white/80 transition-colors text-sm">
+          <button onClick={onOpenDemo} className="mx-auto flex items-center justify-center gap-2 py-2.5 px-6 bg-transparent text-white/35 hover:text-white/60 transition-colors text-sm">
             <Play className="w-3.5 h-3.5 fill-current" />
             צפו בהדגמה
           </button>
+
         </div>
       </div>
 

@@ -4,52 +4,34 @@ import { Download, Zap, Lock, QrCode, Smartphone, Magnet } from "lucide-react";
 const BENEFITS = [
   {
     icon: QrCode,
-    gradient: "from-violet-500/15 to-violet-500/5",
-    border: "border-violet-500/20",
-    iconColor: "text-violet-400",
     title: "בלי אפליקציה, בלי הרשמה",
     desc: "האורחים סורקים QR מהמצלמה ומעלים תמונות מיד — שום התקנה, שום סיסמה.",
   },
   {
     icon: Zap,
-    gradient: "from-yellow-500/15 to-yellow-500/5",
-    border: "border-yellow-500/20",
-    iconColor: "text-yellow-400",
     title: "גלריה חיה בזמן אמת",
     desc: "כל תמונה מופיעה מיידית לכל המוזמנים. ראו את האירוע מתפתח מכל הזוויות בו-זמנית.",
   },
   {
     icon: Lock,
-    gradient: "from-emerald-500/15 to-emerald-500/5",
-    border: "border-emerald-500/20",
-    iconColor: "text-emerald-400",
     title: "פרטיות ואבטחה מלאה",
     desc: "הגלריה שלכם מוגנת בקוד PIN פרטי. בטוח ומסודר הרבה יותר מקבוצת וואטסאפ.",
   },
   {
     icon: Download,
-    gradient: "from-blue-500/15 to-blue-500/5",
-    border: "border-blue-500/20",
-    iconColor: "text-blue-400",
     title: "הורדה מלאה בקליק",
     desc: "אחרי האירוע, כל הגלריה אצלכם בקובץ אחד. כל התמונות, לנצח.",
   },
   {
     icon: Smartphone,
-    gradient: "from-pink-500/15 to-pink-500/5",
-    border: "border-pink-500/20",
-    iconColor: "text-pink-400",
     title: "עובד על כל טלפון",
     desc: "אייפון, אנדרואיד, גרסה ישנה — לא משנה. כל אורח יכול לצלם ולשתף.",
   },
   {
     icon: Magnet,
-    gradient: "from-violet-600/20 to-violet-900/10",
-    border: "border-violet-500/30",
-    iconColor: "text-violet-300",
     title: "מגנטים מודפסים חי",
     desc: "שדרגו לחוויה פרמיום — האורחים מצלמים והמגנטים מודפסים ממש באירוע.",
-    premium: true,
+    subtle: true,
   },
 ];
 
@@ -71,18 +53,17 @@ export default function Features() {
           {BENEFITS.map((b, i) => (
             <div
               key={i}
-              className={`relative p-6 rounded-2xl bg-gradient-to-br ${b.gradient} border ${b.border} backdrop-blur-sm hover:scale-[1.02] transition-transform duration-200`}
+              className={`relative p-6 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5
+                ${b.subtle
+                  ? 'bg-white/[0.03] border-violet-500/15 hover:border-violet-500/25'
+                  : 'bg-white/[0.03] border-white/[0.07] hover:border-white/[0.12]'
+                }`}
             >
-              {b.premium && (
-                <span className="absolute top-4 left-4 text-[9px] font-bold tracking-widest text-violet-400 uppercase bg-violet-500/15 border border-violet-500/25 rounded-full px-2 py-0.5">
-                  Premium
-                </span>
-              )}
-              <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 ${b.iconColor}`}>
-                <b.icon className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center mb-4">
+                <b.icon className="w-5 h-5 text-white/60" />
               </div>
               <h3 className="text-white font-bold text-base mb-2">{b.title}</h3>
-              <p className="text-white/50 text-sm leading-relaxed">{b.desc}</p>
+              <p className="text-white/40 text-sm leading-relaxed">{b.desc}</p>
             </div>
           ))}
         </div>

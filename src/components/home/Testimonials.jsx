@@ -36,7 +36,7 @@ export default function Testimonials() {
             <div key={idx} className="bg-gradient-to-br from-neutral-900/80 to-neutral-950/70 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-gray-400/20 transition-all duration-300 hover:-translate-y-1">
               <div className="flex items-center mb-4 gap-1">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 text-gray-300 fill-gray-300" />
+                  <Star key={i} className="w-5 h-5 text-amber-400 fill-amber-400" />
                 ))}
               </div>
               <p className="text-lg text-gray-200 mb-6 leading-relaxed">"{testimonial.text}"</p>
