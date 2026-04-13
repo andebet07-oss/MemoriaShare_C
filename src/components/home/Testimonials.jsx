@@ -1,48 +1,41 @@
 import React from "react";
-import { Star } from "lucide-react";
 
 export default function Testimonials() {
   const testimonials = [
     {
       name: "יעל ויונתן",
-      event: "חתונה",
+      event: "חתונה · 320 אורחים",
       text: "קיבלנו מאות תמונות מדהימות מהאורחים שלנו. זה היה פשוט, אלגנטי והוסיף כל כך הרבה לאירוע.",
-      rating: 5
     },
     {
-      name: "דניאל לוי", 
-      event: "בר מצווה",
+      name: "דניאל לוי",
+      event: "בר מצווה · 180 אורחים",
       text: "הדרך הכי נוחה לאסוף תמונות מכל המשפחה. כולם השתתפו וזה יצר מזכרת מדהימה.",
-      rating: 5
     },
     {
       name: "מיכל כהן",
-      event: "יום הולדת", 
+      event: "אירוע פרטי · 85 אורחים",
       text: "האורחים התלהבו מהפשטות ומהרעיון. במקום לרדוף אחרי תמונות, הכל היה שם.",
-      rating: 5
     }
   ];
 
   return (
-    <section id="testimonials" className="py-24 bg-gradient-to-b from-transparent to-black/30" dir="rtl">
+    <section id="testimonials" className="py-16 md:py-24 bg-gradient-to-b from-transparent to-black/30" dir="rtl">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-100">הם כבר השתמשו ב-Memoria</h2>
-          <p className="text-xl text-gray-400">אלפי לקוחות מרוצים לא טועים.</p>
+        <div className="text-center mb-12">
+          <p className="text-violet-400 text-xs font-bold tracking-widest uppercase mb-3">מה אומרים עלינו?</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">הם כבר השתמשו ב-Memoria</h2>
+          <p className="text-white/40 text-base">אלפי לקוחות מרוצים לא טועים.</p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((testimonial, idx) => (
-            <div key={idx} className="bg-gradient-to-br from-neutral-900/80 to-neutral-950/70 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-gray-400/20 transition-all duration-300 hover:-translate-y-1">
-              <div className="flex items-center mb-4 gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 text-amber-400 fill-amber-400" />
-                ))}
-              </div>
-              <p className="text-lg text-gray-200 mb-6 leading-relaxed">"{testimonial.text}"</p>
-              <div className="border-t border-white/10 pt-4">
-                <div className="font-bold text-white">{testimonial.name}</div>
-                <div className="text-gray-400 text-sm">{testimonial.event}</div>
+            <div key={idx} className="bg-gradient-to-br from-neutral-900/80 to-neutral-950/70 backdrop-blur-sm rounded-2xl p-7 border border-white/[0.07] hover:border-white/[0.12] transition-all duration-300 hover:-translate-y-0.5">
+              <span className="text-white/10 text-5xl font-serif leading-none select-none block mb-2">"</span>
+              <p className="text-white/70 text-base mb-6 leading-relaxed">{testimonial.text}</p>
+              <div className="border-t border-white/[0.07] pt-4">
+                <div className="font-bold text-white text-sm">{testimonial.name}</div>
+                <div className="text-white/35 text-xs mt-0.5">{testimonial.event}</div>
               </div>
             </div>
           ))}

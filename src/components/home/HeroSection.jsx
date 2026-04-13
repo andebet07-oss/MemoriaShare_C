@@ -1,37 +1,15 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Play, X, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/lib/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { Play } from 'lucide-react';
 
-export default function HeroSection({ onOpenDemo }) {
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-
+export default function HeroSection({ onOpenDemo, onOpenChooser }) {
   const eventPhotos = [
     "/Left_PhoneMoucup_hero.jpeg",
     "/Center_PhoneMoucup_hero.jpeg",
     "/right_PhoneMoucup_hero.jpeg",
   ];
 
-  const handleCreateEventClick = () => {
-    if (isAuthenticated) {
-      navigate(createPageUrl("CreateEvent"));
-    } else {
-      const returnUrl = `${window.location.origin}${createPageUrl("CreateEvent")}`;
-      supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: returnUrl } });
-    }
-  };
-
-  const MiniIPhone = ({ image, className = "", delay = 0, title = "Event Name", isCenter = false }) => (
-    <div
-      className={`relative transform transition-all duration-1000 ${className}`}
-      style={{
-        animation: `floating ${4 + delay/500}s ease-in-out infinite`,
-        animationDelay: `${delay}ms`,
-      }}
-    >
+  const MiniIPhone = ({ image, className = "", title = "Event Name", isCenter = false }) => (
+    <div className={`relative transform ${className}`}>
       <div className={`absolute -inset-10 bg-white/${isCenter ? '20' : '5'} blur-[60px] rounded-full -z-10`}></div>
       <div className={`relative ${isCenter ? 'w-48 md:w-72 h-[380px] md:h-[560px]' : 'w-40 md:w-60 h-[320px] md:h-[480px]'} bg-[#0c0c0c] rounded-[2.8rem] p-2 md:p-3 shadow-2xl border border-white/20`}>
         <div className="w-full h-full bg-black rounded-[2.3rem] overflow-hidden relative border border-white/10">
@@ -40,10 +18,8 @@ export default function HeroSection({ onOpenDemo }) {
 
           <div className="absolute inset-0 z-20 flex flex-col justify-between pointer-events-none">
             <div className="flex justify-between items-start px-3 md:px-4 pt-3 md:pt-4">
-               <X className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-white drop-shadow-lg" />
                <div className="text-center flex-1 px-2">
                   <p className="text-white text-[7px] md:text-[9px] font-semibold leading-tight drop-shadow-lg">{title}</p>
-                  <p className="text-white/60 text-[5px] md:text-[7px] drop-shadow-lg">235 participants</p>
                </div>
                <div className="flex flex-col gap-1.5 md:gap-2">
                   <div className="w-2 h-2 md:w-2.5 md:h-2.5 border border-white/60 rounded-sm backdrop-blur-sm"></div>
@@ -96,7 +72,7 @@ export default function HeroSection({ onOpenDemo }) {
 
           <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full border border-white/10 bg-white/5 backdrop-blur-md relative z-30">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-            <span className="text-white/50 text-xs font-medium tracking-widest uppercase">Memoria · פלטפורמת זיכרונות</span>
+            <span className="text-white/50 text-xs font-medium tracking-widest uppercase">פלטפורמת האירועים של ישראל</span>
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-5 tracking-tight relative z-30 leading-tight">
@@ -117,40 +93,27 @@ export default function HeroSection({ onOpenDemo }) {
             <MiniIPhone
               image={eventPhotos[0]}
               className="-rotate-12 translate-y-8 translate-x-24 md:translate-x-32 opacity-85 scale-[0.72] md:scale-[0.78] z-10"
-              delay={200}
               title="Party Night"
             />
             <MiniIPhone
               image={eventPhotos[1]}
               className="z-30 scale-[0.88] md:scale-[0.92]"
-              delay={0}
               title="Wedding Vibes"
               isCenter={true}
             />
             <MiniIPhone
               image={eventPhotos[2]}
               className="rotate-12 translate-y-8 -translate-x-24 md:-translate-x-32 opacity-85 scale-[0.72] md:scale-[0.78] z-10"
-              delay={400}
               title="Classic Ceremony"
             />
           </div>
 
-          {/* Primary CTA — MemoriaShare */}
           <div className="flex flex-col items-center gap-5 mb-6">
             <button
-              onClick={handleCreateEventClick}
+              onClick={onOpenChooser}
               className="px-10 py-4 bg-white text-black font-bold text-base rounded-full hover:bg-white/90 active:scale-[0.98] transition-all shadow-[0_0_40px_rgba(255,255,255,0.15)]"
             >
-              צרו אירוע עכשיו — בחינם
-            </button>
-
-            {/* Secondary link — MemoriaMagnet, elegant and understated */}
-            <button
-              onClick={() => navigate('/MagnetLead')}
-              className="group flex items-center gap-2 text-white/35 hover:text-white/65 transition-colors text-sm"
-            >
-              <span>מעוניינים בהדפסת מגנטים חיה באירוע?</span>
-              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+              צרו אירוע
             </button>
           </div>
 
@@ -161,14 +124,6 @@ export default function HeroSection({ onOpenDemo }) {
 
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes floating {
-          0% { transform: translateY(0px) rotate(var(--tw-rotate)) scale(var(--tw-scale-x)); }
-          50% { transform: translateY(-20px) rotate(var(--tw-rotate)) scale(var(--tw-scale-x)); }
-          100% { transform: translateY(0px) rotate(var(--tw-rotate)) scale(var(--tw-scale-x)); }
-        }
-      `}} />
     </div>
   );
 }

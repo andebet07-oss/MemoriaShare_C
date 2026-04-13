@@ -141,35 +141,37 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
 
   return (
     // גודל האייפון מבוסס dvh — פרופורציונלי לגובה המסך. יחס 9:19.5 (iPhone)
-    <div className="relative bg-zinc-900 p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto"
-      style={{ width: phoneW || 'clamp(170px, 25dvh, 240px)', height: phoneH || 'clamp(145px, 54dvh, 480px)', borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)', transition: 'width 0.5s ease-out, height 0.5s ease-out' }}>
-      
+    <div className="relative bg-zinc-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto"
+      style={{ width: phoneW || 'clamp(170px, 25dvh, 240px)', height: phoneH || 'clamp(145px, 54dvh, 480px)', borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)', padding: 'clamp(4px, 0.8dvh, 8px)', transition: 'width 0.5s ease-out, height 0.5s ease-out' }}>
+
       {isDesignMode &&
-      <div className="absolute inset-0 rounded-[2.2rem] md:rounded-[3rem] ring-2 ring-indigo-500 z-[70] pointer-events-none animate-pulse" />
+      <div className="absolute inset-0 ring-2 ring-indigo-500 z-[70] pointer-events-none animate-pulse" style={{ borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)' }} />
       }
 
       {/* Dynamic Island */}
-      <div className="absolute top-2.5 md:top-4 left-1/2 -translate-x-1/2 w-14 md:w-20 h-3.5 md:h-6 bg-black rounded-full z-[60] flex items-center justify-end px-2 md:px-3 shadow-inner">
-         <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-[#111] border border-white/5 shadow-sm"></div>
+      <div className="absolute left-1/2 -translate-x-1/2 bg-black rounded-full z-[60] flex items-center justify-end shadow-inner"
+        style={{ top: 'clamp(8px, 1.5dvh, 18px)', width: 'clamp(44px, 8.5dvh, 76px)', height: 'clamp(13px, 2.2dvh, 22px)', paddingRight: 'clamp(6px, 1dvh, 12px)' }}>
+        <div className="rounded-full bg-[#111] border border-white/5 shadow-sm" style={{ width: 'clamp(4px, 0.75dvh, 6px)', height: 'clamp(4px, 0.75dvh, 6px)' }}></div>
       </div>
-      
+
       {/* Inner Screen */}
       <div
         ref={screenRef}
-        className="relative w-full h-full bg-black rounded-[1.9rem] md:rounded-[2.6rem] overflow-hidden flex flex-col border border-black shadow-inner"
+        className="relative w-full h-full bg-black overflow-hidden flex flex-col border border-black shadow-inner"
+        style={{ borderRadius: 'clamp(1.6rem, 3dvh, 2.6rem)', touchAction: isDesignMode ? 'none' : 'auto' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{ touchAction: isDesignMode ? 'none' : 'auto' }}>
+        onTouchEnd={handleTouchEnd}>
 
         
         {/* iOS Status Bar */}
-        <div className="absolute top-0 left-0 right-0 h-8 md:h-10 z-50 flex items-center justify-between px-4 md:px-5 pointer-events-none opacity-90">
-          <span className="text-[9px] md:text-[11px] font-bold text-white tracking-tight">9:41</span>
+        <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between pointer-events-none opacity-90"
+          style={{ height: 'clamp(28px, 4.5dvh, 42px)', paddingLeft: 'clamp(10px, 1.8dvh, 20px)', paddingRight: 'clamp(10px, 1.8dvh, 20px)' }}>
+          <span className="font-bold text-white tracking-tight" style={{ fontSize: 'clamp(7px, 1.2dvh, 11px)' }}>9:41</span>
           <div className="flex items-center gap-1">
-            <Signal size={9} fill="white" className="text-white" />
-            <Wifi size={9} className="text-white" />
-            <BatteryFull size={11} fill="white" className="text-white" />
+            <Signal size={8} fill="white" className="text-white" />
+            <Wifi size={8} className="text-white" />
+            <BatteryFull size={10} fill="white" className="text-white" />
           </div>
         </div>
         
@@ -203,16 +205,18 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-10 pointer-events-none"></div>
         
         {/* Content */}
-        <div className={`absolute bottom-0 left-0 right-0 p-3 md:p-6 pb-5 md:pb-8 z-20 flex flex-col items-center text-center pointer-events-none transition-opacity duration-300 ${isDesignMode ? 'opacity-20' : 'opacity-100'}`} dir="rtl">
-          <h1 className="text-white font-bold text-[13px] md:text-[20px] leading-tight mb-0.5 drop-shadow-2xl" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div className={`absolute bottom-0 left-0 right-0 z-20 flex flex-col items-center text-center pointer-events-none transition-opacity duration-300 ${isDesignMode ? 'opacity-20' : 'opacity-100'}`} dir="rtl"
+          style={{ padding: 'clamp(8px, 1.3dvh, 24px)', paddingBottom: 'clamp(10px, 1.8dvh, 32px)' }}>
+          <h1 className="text-white font-bold leading-tight mb-0.5 drop-shadow-2xl" style={{ fontSize: 'clamp(11px, 2dvh, 20px)', fontFamily: "'Inter', sans-serif" }}>
             {eventData.name || "Sarah & Daniel"}
           </h1>
-          <p className="text-white/70 font-medium text-[8px] md:text-[11px] mb-3 md:mb-5 tracking-[0.1em] drop-shadow-md">
+          <p className="text-white/70 font-medium tracking-[0.1em] drop-shadow-md" style={{ fontSize: 'clamp(7px, 1.2dvh, 11px)', marginBottom: 'clamp(8px, 1.5dvh, 20px)' }}>
             {formattedDate}
           </p>
-          
-          <button className="w-[90%] bg-white text-black font-bold text-[10px] md:text-[13px] py-2 md:py-3 rounded-[0.6rem] flex items-center justify-center gap-1.5 shadow-[0_8px_20px_rgba(255,255,255,0.2)] pointer-events-none">
-             Take Photos
+
+          <button className="w-[90%] bg-white text-black font-bold rounded-[0.6rem] flex items-center justify-center gap-1.5 shadow-[0_8px_20px_rgba(255,255,255,0.2)] pointer-events-none"
+            style={{ fontSize: 'clamp(8px, 1.4dvh, 13px)', paddingTop: 'clamp(5px, 1dvh, 12px)', paddingBottom: 'clamp(5px, 1dvh, 12px)' }}>
+            Take Photos
             <ChevronRight className="w-2.5 h-2.5 opacity-70" />
           </button>
         </div>
@@ -223,7 +227,7 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
           </div>
         }
 
-        <div className="absolute bottom-1 md:bottom-1.5 left-1/2 -translate-x-1/2 w-[35%] h-1 bg-white/40 rounded-full z-30 pointer-events-none"></div>
+        <div className="absolute left-1/2 -translate-x-1/2 w-[35%] h-1 bg-white/40 rounded-full z-30 pointer-events-none" style={{ bottom: 'clamp(3px, 0.5dvh, 6px)' }}></div>
       </div>
     </div>);
 
@@ -462,7 +466,7 @@ export default function App() {
               
               {/* Step 1 */}
               {currentStep === 1 &&
-              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 text-center space-y-2 w-full">
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
                   <h2 className="text-lg font-bold tracking-tight mb-1">מה האירוע שאתם חוגגים?</h2>
                   <p className="text-sm text-white/45 mb-2">השם שיופיע לאורחים כשיפתחו את המצלמה</p>
                   <div className="w-full">
@@ -480,7 +484,7 @@ export default function App() {
 
               {/* Step 2 */}
               {currentStep === 2 &&
-              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 text-center space-y-2 w-full">
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
                   <h2 className="text-lg font-bold tracking-tight mb-1">איך תיראה ההזמנה?</h2>
                   <p className="text-sm text-white/45 mb-2">הרקע שיופיע לאורחים לפני שהם פותחים מצלמה</p>
                   <div className="grid grid-cols-2 gap-3 w-fullpt-2">
@@ -509,7 +513,7 @@ export default function App() {
 
               {/* Step 3 - תאריך ושעת סגירת העלאות */}
               {currentStep === 3 &&
-              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 w-full flex flex-col gap-2">
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
                     <h2 className="text-lg font-bold tracking-tight">מתי חוגגים?</h2>
                     <p className="text-sm text-white/45">בחרו תאריך — העלאת תמונות תיסגר אוטומטית אחריו</p>
@@ -534,7 +538,7 @@ export default function App() {
 
               {/* Step 4 - מגבלת תמונות */}
               {currentStep === 4 &&
-              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 w-full flex flex-col gap-2">
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
                     <h2 className="text-lg font-bold tracking-tight">כמה תמונות לכל אורח?</h2>
                     <p className="text-sm text-white/45">כל אורח יוכל להעלות עד המספר שתבחרו</p>
@@ -557,7 +561,7 @@ export default function App() {
 
               {/* Step 5 */}
               {currentStep === 5 &&
-              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 text-center w-full">
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center w-full">
                   <h2 className="text-lg font-bold tracking-tight mb-1">כמה אורחים מגיעים?</h2>
                   <div className="grid grid-cols-7 gap-1 mb-2" dir="ltr">
                     {pricingTiers.map((tier, index) =>
@@ -596,7 +600,7 @@ export default function App() {
             
             <div className="w-full max-w-sm mx-auto flex gap-3 items-center">
               {currentStep === 1 ?
-              <Link to="/" className="w-9 h-9 bg-[#161616] text-gray-400 rounded-xl flex items-center justify-center transition-all active:scale-90 border border-gray-800 shrink-0 hover:text-white">
+              <Link to="/" className="w-11 h-11 bg-[#161616] text-gray-400 rounded-xl flex items-center justify-center transition-all active:scale-90 border border-gray-800 shrink-0 hover:text-white">
                   <Home className="w-4 h-4" />
                 </Link> :
 

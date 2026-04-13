@@ -2,7 +2,7 @@ import React from "react";
 import Header from "@/components/home/Header";
 
 const PAGES_WITHOUT_HEADER = ["Home", "Event", "EventGallery", "EventSuccess", "CreateEvent", "CreateMagnetEvent"];
-const PAGES_WITHOUT_FOOTER = ["Event", "EventGallery", "EventSuccess", "CreateEvent", "CreateMagnetEvent"];
+const PAGES_WITHOUT_FOOTER = ["Home", "Event", "EventGallery", "EventSuccess", "CreateEvent", "CreateMagnetEvent"];
 
 export default function Layout({ children, currentPageName }) {
   const showHeader = !PAGES_WITHOUT_HEADER.includes(currentPageName);

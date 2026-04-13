@@ -277,7 +277,7 @@ export default function CreateMagnetEvent() {
 
               {/* Step 1 — Name */}
               {currentStep === 1 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 text-center space-y-2 w-full">
+                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
                   <h2 className="text-lg font-bold tracking-tight mb-1">מה שם האירוע?</h2>
                   <p className="text-sm text-white/45 mb-2">השם שיופיע על המגנט ובממשק האורחים</p>
                   <Input
@@ -293,7 +293,7 @@ export default function CreateMagnetEvent() {
 
               {/* Step 2 — Date */}
               {currentStep === 2 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 w-full flex flex-col gap-2">
+                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
                     <h2 className="text-lg font-bold tracking-tight">מתי האירוע?</h2>
                     <p className="text-sm text-white/45">תאריך האירוע שיופיע על המגנטים</p>
@@ -305,7 +305,7 @@ export default function CreateMagnetEvent() {
 
               {/* Step 3 — Print quota */}
               {currentStep === 3 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 w-full flex flex-col gap-3">
+                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
                     <h2 className="text-lg font-bold tracking-tight">כמה הדפסות לאורח?</h2>
                     <p className="text-sm text-white/45">כל אורח יוכל להדפיס עד המספר שתבחרו</p>
@@ -334,7 +334,7 @@ export default function CreateMagnetEvent() {
 
               {/* Step 4 — Overlay design (optional) */}
               {currentStep === 4 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 w-full flex flex-col gap-3">
+                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
                     <h2 className="text-lg font-bold tracking-tight">הוסיפו מסגרת עיצוב</h2>
                     <p className="text-sm text-white/45">קובץ PNG שיוטבע על כל מגנט — אופציונלי</p>

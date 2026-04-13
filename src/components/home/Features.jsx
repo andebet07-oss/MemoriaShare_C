@@ -30,7 +30,7 @@ const BENEFITS = [
   {
     icon: Magnet,
     title: "מגנטים מודפסים חי",
-    desc: "שדרגו לחוויה פרמיום — האורחים מצלמים והמגנטים מודפסים ממש באירוע.",
+    desc: "צוות מקצועי, עמדת הדפסה, מגנטים איכותיים — חוויה שהאורחים לא ישכחו.",
     subtle: true,
   },
 ];
@@ -55,12 +55,17 @@ export default function Features() {
               key={i}
               className={`relative p-6 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5
                 ${b.subtle
-                  ? 'bg-white/[0.03] border-violet-500/15 hover:border-violet-500/25'
+                  ? 'bg-white/[0.03] border-violet-500/15 hover:border-violet-500/25 sm:col-span-2 lg:col-span-1'
                   : 'bg-white/[0.03] border-white/[0.07] hover:border-white/[0.12]'
                 }`}
             >
-              <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center mb-4">
-                <b.icon className="w-5 h-5 text-white/60" />
+              <div className="flex items-start gap-3 mb-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${b.subtle ? 'bg-violet-500/10 border border-violet-500/20' : 'bg-white/[0.06] border border-white/[0.08]'}`}>
+                  <b.icon className={`w-5 h-5 ${b.subtle ? 'text-violet-400/70' : 'text-white/60'}`} />
+                </div>
+                {b.subtle && (
+                  <span className="text-[10px] font-bold tracking-wider uppercase text-violet-400/80 bg-violet-500/10 px-2 py-0.5 rounded-full mt-2.5">פרמיום</span>
+                )}
               </div>
               <h3 className="text-white font-bold text-base mb-2">{b.title}</h3>
               <p className="text-white/40 text-sm leading-relaxed">{b.desc}</p>
