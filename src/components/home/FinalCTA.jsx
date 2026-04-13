@@ -12,7 +12,7 @@ export default function FinalCTA({ onOpenChooser }) {
             <br />
             במקום אחד
           </h2>
-          <p className="text-white/40 text-base">פשוט. אלגנטי. בחינם.</p>
+          <p className="text-white/40 text-base">פשוט. אלגנטי. זיכרונות לכל החיים.</p>
         </div>
 
         <div className="flex justify-center">

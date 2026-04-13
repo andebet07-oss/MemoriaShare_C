@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Magnet, ArrowLeft } from 'lucide-react';
+import { Camera, Magnet } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { createPageUrl } from '@/utils';
@@ -12,6 +12,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from '@/components/ui/dialog';
 
 function ChooserContent({ onClose }) {
@@ -34,47 +35,36 @@ function ChooserContent({ onClose }) {
   };
 
   return (
-    <div className="px-6 pt-4 pb-[max(2rem,env(safe-area-inset-bottom,2rem))]" dir="rtl">
+    <div className="px-5 pt-4 pb-[max(2rem,env(safe-area-inset-bottom,2rem))]" dir="rtl">
       <div className="text-center mb-6">
         <h2 className="text-xl font-bold text-white">מה תרצו ליצור?</h2>
-        <p className="text-sm text-white/50 mt-1">בחרו את החוויה שמתאימה לאירוע שלכם</p>
+        <p className="text-sm text-white/45 mt-1">בחרו את החוויה שמתאימה לאירוע שלכם</p>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {/* Digital Album */}
         <button
           onClick={handleDigitalAlbum}
-          className="w-full px-5 py-5 bg-white/[0.04] border border-white/[0.08] rounded-2xl hover:bg-white/[0.07] hover:border-white/[0.15] transition-all active:scale-[0.98] text-right flex items-center gap-4"
+          className="flex flex-col items-center text-center p-5 bg-white/[0.04] border border-white/[0.08] rounded-2xl hover:bg-indigo-950/30 hover:border-indigo-500/20 transition-all active:scale-[0.97] group"
         >
-          <div className="w-11 h-11 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0">
-            <Camera className="w-5 h-5 text-white/70" />
+          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center mb-3 group-hover:bg-indigo-500/15 transition-colors">
+            <Camera className="w-7 h-7 text-indigo-300/70" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-white font-semibold text-base leading-tight">אלבום דיגיטלי</span>
-              <span className="text-[10px] font-bold tracking-wider uppercase text-violet-400/80 bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">חינם</span>
-            </div>
-            <p className="text-white/40 text-sm leading-snug">האורחים מצלמים, הכל מתכנס לגלריה אחת</p>
-          </div>
-          <ArrowLeft className="w-4 h-4 text-white/20 shrink-0" />
+          <span className="text-white font-bold text-sm leading-tight mb-1">אלבום דיגיטלי</span>
+          <p className="text-white/35 text-xs leading-snug">גלריה חיה לכל האורחים</p>
         </button>
 
         {/* Magnet Experience */}
         <button
           onClick={handleMagnet}
-          className="w-full px-5 py-5 bg-white/[0.04] border border-violet-500/15 rounded-2xl hover:bg-white/[0.06] hover:border-violet-500/30 transition-all active:scale-[0.98] text-right flex items-center gap-4"
+          className="flex flex-col items-center text-center p-5 bg-white/[0.04] border border-violet-500/15 rounded-2xl hover:bg-violet-950/30 hover:border-violet-500/30 transition-all active:scale-[0.97] group relative overflow-hidden"
         >
-          <div className="w-11 h-11 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
-            <Magnet className="w-5 h-5 text-violet-400/70" />
+          <span className="absolute top-2.5 left-2.5 text-[9px] font-black tracking-wider uppercase text-violet-400/80 bg-violet-500/10 px-1.5 py-0.5 rounded-full">פרמיום</span>
+          <div className="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-3 group-hover:bg-violet-500/15 transition-colors">
+            <Magnet className="w-7 h-7 text-violet-400/70" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-white font-semibold text-base leading-tight">חוויית מגנטים מלאה</span>
-              <span className="text-[10px] font-bold tracking-wider uppercase text-violet-400/80 bg-violet-500/10 px-2 py-0.5 rounded-full shrink-0">פרמיום</span>
-            </div>
-            <p className="text-white/40 text-sm leading-snug">הצוות שלנו מגיע — מגנטים מודפסים ממש באירוע</p>
-          </div>
-          <ArrowLeft className="w-4 h-4 text-violet-400/30 shrink-0" />
+          <span className="text-white font-bold text-sm leading-tight mb-1">חוויית מגנטים</span>
+          <p className="text-white/35 text-xs leading-snug">הדפסה חיה ממש באירוע</p>
         </button>
       </div>
     </div>
@@ -99,6 +89,7 @@ export default function ProductChooser({ open, onOpenChange }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#0F0F0F] border-white/10 rounded-2xl max-w-md p-0 overflow-hidden [&>button]:text-white/40 [&>button]:hover:text-white/80 [&>button]:hover:bg-white/10 [&>button]:rounded-full">
+        <DialogTitle className="sr-only">בחירת סוג אירוע</DialogTitle>
         <ChooserContent onClose={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>

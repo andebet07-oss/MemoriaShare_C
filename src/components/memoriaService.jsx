@@ -299,13 +299,10 @@ const memoriaService = {
   leads: {
     create: async (leadData) => {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('leads')
-          .insert(leadData)
-          .select()
-          .single();
+          .insert(leadData);
         if (error) throw error;
-        return data;
       } catch (error) {
         console.error('MemoriaService [leads.create]: Failed to create lead', error);
         throw error;
