@@ -262,23 +262,23 @@ function InlineCalendar({ value, onChange }) {
   };
 
   return (
-    <div className="bg-[#161616] border border-white/10 rounded-2xl p-3" dir="ltr">
-      <div className="flex items-center justify-between mb-2">
-        <button type="button" onClick={prevMonth} className="w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
-          <ChevronLeft className="w-4 h-4" />
+    <div className="bg-[#161616] border border-white/10 rounded-2xl p-4 w-full" dir="ltr">
+      <div className="flex items-center justify-between mb-3">
+        <button type="button" onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+          <ChevronLeft className="w-5 h-5" />
         </button>
-        <span className="text-white text-sm font-bold">{hebrewMonths[viewMonth]} {viewYear}</span>
-        <button type="button" onClick={nextMonth} className="w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
-          <ChevronRight className="w-4 h-4" />
+        <span className="text-white text-base font-bold">{hebrewMonths[viewMonth]} {viewYear}</span>
+        <button type="button" onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+          <ChevronRight className="w-5 h-5" />
         </button>
       </div>
-      <div className="grid grid-cols-7 mb-0.5">
-        {hebrewDays.map(d => <div key={d} className="text-center text-white/25 text-[10px] font-bold py-0.5">{d}</div>)}
+      <div className="grid grid-cols-7 mb-1">
+        {hebrewDays.map(d => <div key={d} className="text-center text-white/30 text-xs font-bold py-1">{d}</div>)}
       </div>
       <div className="grid grid-cols-7">
         {cells.map((day, i) => (
           <button key={i} type="button" onClick={() => handleDay(day)}
-            className={`h-7 w-full flex items-center justify-center text-sm font-medium rounded-full transition-colors
+            className={`h-9 w-full flex items-center justify-center text-base font-medium rounded-full transition-colors
               ${!day ? 'invisible pointer-events-none' : ''}
               ${day && isPast(day) ? 'text-white/20 pointer-events-none' : ''}
               ${day && isSel(day) ? 'bg-indigo-600 text-white shadow-md' : ''}
@@ -406,12 +406,11 @@ export default function App() {
   const displayPreviewImage = localPreviewUrl || coverImagePreview;
   const progressPercentage = currentStep / totalSteps * 100;
 
-  // Calendar step shrinks the phone preview to give the calendar full room.
-  // Non-calendar: large phone matching POV.camera proportions (~42% viewport width, ~56% height).
+  // On the calendar step, hide the phone area entirely — give the calendar the full screen.
+  // On all other steps, show large phone matching POV.camera proportions.
   const isCalendarStep = currentStep === 3;
-  const phoneAreaH = isCalendarStep ? '30dvh' : '56dvh';
-  const phoneH     = isCalendarStep ? 'clamp(100px, 27dvh, 280px)' : 'clamp(145px, 54dvh, 480px)';
-  const phoneW     = isCalendarStep ? 'clamp(49px,  12.5dvh, 130px)' : 'clamp(170px, 25dvh, 240px)';
+  const phoneH = 'clamp(145px, 54dvh, 480px)';
+  const phoneW = 'clamp(170px, 25dvh, 240px)';
 
   return (
     // הוספת 100dvh קריטית כדי למנוע את קפיצות ה-Scrollbar בדפדפן הנייד. overflow-hidden נועל את המסך.
@@ -424,30 +423,30 @@ export default function App() {
 
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
         
-        {/* אזור עליון - אייפון. flex-none מונע ממנו להידחס */}
-        <div className="flex-none w-full lg:flex-1 bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2"
-          style={{ height: phoneAreaH, transition: 'height 0.5s ease-out' }}>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]"></div>
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(255,255,255,0.03) 0%, transparent 70%)' }}></div>
-          <div className="h-full w-full flex items-center justify-center py-3 relative z-10">
-            <div className="relative">
-              <PhoneMockup
-                eventData={{ ...eventData, cover_image: displayPreviewImage }}
-                imageTransform={imageTransform}
-                isDesignMode={isDesignMode}
-                onImageTransformChange={setImageTransform}
-                phoneH={phoneH}
-                phoneW={phoneW} />
-              {/* Upload progress overlay */}
-              {isUploading &&
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-[2.2rem] md:rounded-[3rem] z-[80]">
-                  <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
-                  <p className="text-white text-[10px] font-bold tracking-widest">מעלה...</p>
-                </div>
-              }
+        {/* אזור אייפון — מוסתר בשלב בחירת התאריך כדי לפנות מקום מלא ללוח השנה */}
+        {!isCalendarStep && (
+          <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]"></div>
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(255,255,255,0.03) 0%, transparent 70%)' }}></div>
+            <div className="h-full w-full flex items-center justify-center py-3 relative z-10">
+              <div className="relative">
+                <PhoneMockup
+                  eventData={{ ...eventData, cover_image: displayPreviewImage }}
+                  imageTransform={imageTransform}
+                  isDesignMode={isDesignMode}
+                  onImageTransformChange={setImageTransform}
+                  phoneH={phoneH}
+                  phoneW={phoneW} />
+                {isUploading &&
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-[2.2rem] md:rounded-[3rem] z-[80]">
+                    <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+                    <p className="text-white text-[10px] font-bold tracking-widest">מעלה...</p>
+                  </div>
+                }
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* אזור הטופס - הפתרון לבעיית החיתוך */}
         {/* אנחנו משתמשים ב-overflow-hidden כאן. במקום לתת לכפתורים לדרוס את האייפון,
@@ -458,7 +457,7 @@ export default function App() {
           {/* אמצע: הטופס עצמו מתמרכז בצורה מושלמת ב-View-port הנותר.
                                    צמצמנו דרמטית את כל ה-pt/pb וה-space-y כדי שכל המידע ייכנס.
                                 */}
-          <div className="flex-1 overflow-hidden px-4 flex flex-col justify-center items-center">
+          <div className={`flex-1 overflow-hidden px-4 flex flex-col items-center ${isCalendarStep ? 'justify-start pt-6' : 'justify-center'}`}>
             <div className="w-full max-w-sm mx-auto flex flex-col justify-center items-center">
               
               {/* Step 1 */}

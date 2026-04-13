@@ -90,23 +90,23 @@ function InlineCalendar({ value, onChange }) {
   };
 
   return (
-    <div className="bg-[#161616] border border-white/10 rounded-2xl p-3" dir="ltr">
-      <div className="flex items-center justify-between mb-2">
-        <button type="button" onClick={prevMonth} className="w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
-          <ChevronLeft className="w-4 h-4" />
+    <div className="bg-[#161616] border border-white/10 rounded-2xl p-4 w-full" dir="ltr">
+      <div className="flex items-center justify-between mb-3">
+        <button type="button" onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+          <ChevronLeft className="w-5 h-5" />
         </button>
-        <span className="text-white text-sm font-bold">{hebrewMonths[viewMonth]} {viewYear}</span>
-        <button type="button" onClick={nextMonth} className="w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
-          <ChevronRight className="w-4 h-4" />
+        <span className="text-white text-base font-bold">{hebrewMonths[viewMonth]} {viewYear}</span>
+        <button type="button" onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+          <ChevronRight className="w-5 h-5" />
         </button>
       </div>
-      <div className="grid grid-cols-7 mb-0.5">
-        {hebrewDays.map(d => <div key={d} className="text-center text-white/25 text-[10px] font-bold py-0.5">{d}</div>)}
+      <div className="grid grid-cols-7 mb-1">
+        {hebrewDays.map(d => <div key={d} className="text-center text-white/30 text-xs font-bold py-1">{d}</div>)}
       </div>
       <div className="grid grid-cols-7">
         {cells.map((day, i) => (
           <button key={i} type="button" onClick={() => handleDay(day)}
-            className={`h-7 w-full flex items-center justify-center text-sm font-medium rounded-full transition-colors
+            className={`h-9 w-full flex items-center justify-center text-base font-medium rounded-full transition-colors
               ${!day ? 'invisible pointer-events-none' : ''}
               ${day && isPast(day) ? 'text-white/20 pointer-events-none' : ''}
               ${day && isSel(day) ? 'bg-violet-600 text-white shadow-md' : ''}
@@ -242,12 +242,10 @@ export default function CreateMagnetEvent() {
 
   const progressPercentage = currentStep / totalSteps * 100;
 
-  // Step 2 = calendar — shrink preview to give the calendar full room.
-  // Non-calendar: large polaroid matching POV proportions.
+  // On the calendar step (step 2), hide the preview entirely.
   const isCalendarStep = currentStep === 2;
-  const previewAreaH = isCalendarStep ? '30dvh' : '56dvh';
-  const previewH     = isCalendarStep ? 'clamp(74px,  22dvh, 200px)'  : 'clamp(145px, 50dvh, 420px)';
-  const previewW     = isCalendarStep ? 'clamp(55px,  16.5dvh, 150px)' : 'clamp(109px, 37.5dvh, 315px)';
+  const previewH = 'clamp(145px, 50dvh, 420px)';
+  const previewW = 'clamp(109px, 37.5dvh, 315px)';
 
   return (
     <div className="flex flex-col w-full h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden" dir="rtl"
@@ -261,19 +259,20 @@ export default function CreateMagnetEvent() {
 
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
 
-        {/* Preview area */}
-        <div className="flex-none w-full lg:flex-1 bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2"
-          style={{ height: previewAreaH, transition: 'height 0.5s ease-out' }}>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]" />
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(139,92,246,0.05) 0%, transparent 70%)' }} />
-          <div className="relative z-10 w-full flex items-center justify-center h-full">
-            <MagnetPreview eventData={form} overlayPreview={overlayPreview} previewH={previewH} previewW={previewW} />
+        {/* Preview area — hidden on calendar step to give full screen to the calendar */}
+        {!isCalendarStep && (
+          <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]" />
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(139,92,246,0.05) 0%, transparent 70%)' }} />
+            <div className="relative z-10 w-full flex items-center justify-center h-full">
+              <MagnetPreview eventData={form} overlayPreview={overlayPreview} previewH={previewH} previewW={previewW} />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Form area */}
         <div className="flex-1 bg-[#0a0a0a] z-10 flex flex-col relative min-h-0 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
-          <div className="flex-1 overflow-hidden px-4 flex flex-col justify-center items-center">
+          <div className={`flex-1 overflow-hidden px-4 flex flex-col items-center ${isCalendarStep ? 'justify-start pt-6' : 'justify-center'}`}>
             <div className="w-full max-w-sm mx-auto flex flex-col justify-center items-center">
 
               {/* Step 1 — Name */}
