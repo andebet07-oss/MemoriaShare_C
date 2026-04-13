@@ -142,7 +142,7 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
   return (
     // גודל האייפון מבוסס dvh — פרופורציונלי לגובה המסך. יחס 9:19.5 (iPhone)
     <div className="relative bg-zinc-900 p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto"
-      style={{ width: phoneW || 'clamp(132px, 20dvh, 215px)', height: phoneH || 'clamp(286px, 43dvh, 450px)', borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)', transition: 'width 0.5s ease-out, height 0.5s ease-out' }}>
+      style={{ width: phoneW || 'clamp(170px, 25dvh, 240px)', height: phoneH || 'clamp(145px, 54dvh, 480px)', borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)', transition: 'width 0.5s ease-out, height 0.5s ease-out' }}>
       
       {isDesignMode &&
       <div className="absolute inset-0 rounded-[2.2rem] md:rounded-[3rem] ring-2 ring-indigo-500 z-[70] pointer-events-none animate-pulse" />
@@ -406,11 +406,12 @@ export default function App() {
   const displayPreviewImage = localPreviewUrl || coverImagePreview;
   const progressPercentage = currentStep / totalSteps * 100;
 
-  // Calendar step needs more vertical room — shrink the phone preview to give it space
+  // Calendar step shrinks the phone preview to give the calendar full room.
+  // Non-calendar: large phone matching POV.camera proportions (~42% viewport width, ~56% height).
   const isCalendarStep = currentStep === 3;
-  const phoneAreaH = isCalendarStep ? '30dvh' : '45dvh';
-  const phoneH     = isCalendarStep ? 'clamp(100px, 27dvh, 280px)' : 'clamp(143px, 43dvh, 450px)';
-  const phoneW     = isCalendarStep ? 'clamp(49px,  12.5dvh, 130px)' : 'clamp(66px, 20dvh, 208px)';
+  const phoneAreaH = isCalendarStep ? '30dvh' : '56dvh';
+  const phoneH     = isCalendarStep ? 'clamp(100px, 27dvh, 280px)' : 'clamp(145px, 54dvh, 480px)';
+  const phoneW     = isCalendarStep ? 'clamp(49px,  12.5dvh, 130px)' : 'clamp(170px, 25dvh, 240px)';
 
   return (
     // הוספת 100dvh קריטית כדי למנוע את קפיצות ה-Scrollbar בדפדפן הנייד. overflow-hidden נועל את המסך.
@@ -427,6 +428,7 @@ export default function App() {
         <div className="flex-none w-full lg:flex-1 bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2"
           style={{ height: phoneAreaH, transition: 'height 0.5s ease-out' }}>
           <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]"></div>
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(255,255,255,0.03) 0%, transparent 70%)' }}></div>
           <div className="h-full w-full flex items-center justify-center py-3 relative z-10">
             <div className="relative">
               <PhoneMockup

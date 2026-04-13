@@ -16,9 +16,9 @@ function MagnetPreview({ eventData = {}, overlayPreview = null, previewH, previe
         .format(new Date(eventData.date + 'T00:00:00'))
     : "02.25.2026";
 
-  // Polaroid ratio: 3:4 photo area + bottom label strip
-  const cardH = previewH || 'clamp(148px, 40dvh, 340px)';
-  const cardW = previewW || 'clamp(111px, 30dvh, 255px)';
+  // Polaroid ratio: 3:4 (width:height = 0.75). 37.5/50 = 0.75 ✓
+  const cardH = previewH || 'clamp(145px, 50dvh, 420px)';
+  const cardW = previewW || 'clamp(109px, 37.5dvh, 315px)';
 
   return (
     <div className="relative flex items-center justify-center h-full w-full">
@@ -242,11 +242,12 @@ export default function CreateMagnetEvent() {
 
   const progressPercentage = currentStep / totalSteps * 100;
 
-  // Step 2 = calendar — shrink preview to give calendar full room
+  // Step 2 = calendar — shrink preview to give the calendar full room.
+  // Non-calendar: large polaroid matching POV proportions.
   const isCalendarStep = currentStep === 2;
-  const previewAreaH = isCalendarStep ? '30dvh' : '45dvh';
-  const previewH     = isCalendarStep ? 'clamp(74px, 22dvh, 200px)'  : 'clamp(148px, 40dvh, 340px)';
-  const previewW     = isCalendarStep ? 'clamp(55px, 16.5dvh, 150px)' : 'clamp(111px, 30dvh, 255px)';
+  const previewAreaH = isCalendarStep ? '30dvh' : '56dvh';
+  const previewH     = isCalendarStep ? 'clamp(74px,  22dvh, 200px)'  : 'clamp(145px, 50dvh, 420px)';
+  const previewW     = isCalendarStep ? 'clamp(55px,  16.5dvh, 150px)' : 'clamp(109px, 37.5dvh, 315px)';
 
   return (
     <div className="flex flex-col w-full h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden" dir="rtl"
@@ -264,6 +265,7 @@ export default function CreateMagnetEvent() {
         <div className="flex-none w-full lg:flex-1 bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2"
           style={{ height: previewAreaH, transition: 'height 0.5s ease-out' }}>
           <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(139,92,246,0.05) 0%, transparent 70%)' }} />
           <div className="relative z-10 w-full flex items-center justify-center h-full">
             <MagnetPreview eventData={form} overlayPreview={overlayPreview} previewH={previewH} previewW={previewW} />
           </div>
