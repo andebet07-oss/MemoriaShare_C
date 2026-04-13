@@ -8,9 +8,9 @@ import {
   BatteryFull,
   Signal,
   Wifi,
-  Calendar,
   Check,
   ChevronRight,
+  ChevronLeft,
   X,
   Home } from
 "lucide-react";
@@ -141,7 +141,7 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
 
   return (
     // מידות קשיחות של אייפון. אנחנו לא משתמשים ב-aspect-ratio כדי למנוע את העיוות
-    <div className="relative w-[150px] h-[310px] sm:w-[170px] sm:h-[350px] md:w-[260px] md:h-[530px] bg-zinc-900 rounded-[2.2rem] md:rounded-[3rem] p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto transition-transform duration-500">
+    <div className="relative w-[180px] h-[370px] sm:w-[200px] sm:h-[410px] md:w-[260px] md:h-[530px] bg-zinc-900 rounded-[2.2rem] md:rounded-[3rem] p-[5px] md:p-[8px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto transition-transform duration-500">
       
       {isDesignMode &&
       <div className="absolute inset-0 rounded-[2.2rem] md:rounded-[3rem] ring-2 ring-indigo-500 z-[70] pointer-events-none animate-pulse" />
@@ -228,6 +228,70 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
 
 }
 
+/**
+ * Custom inline calendar — fully dark-themed, replaces native <input type="date">
+ */
+function InlineCalendar({ value, onChange }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const selected = value ? new Date(value + 'T00:00:00') : null;
+  const [viewYear, setViewYear] = useState(selected ? selected.getFullYear() : today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(selected ? selected.getMonth() : today.getMonth());
+
+  const hebrewDays = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+  const hebrewMonths = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
+  const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
+
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const isPast = (d) => new Date(viewYear, viewMonth, d) < today;
+  const isSel = (d) => selected && selected.getFullYear() === viewYear && selected.getMonth() === viewMonth && selected.getDate() === d;
+  const isToday = (d) => today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === d;
+
+  const handleDay = (d) => {
+    if (!d || isPast(d)) return;
+    onChange(`${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  };
+
+  return (
+    <div className="bg-[#161616] border border-white/10 rounded-2xl p-4" dir="ltr">
+      <div className="flex items-center justify-between mb-3">
+        <button type="button" onClick={prevMonth} className="w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <span className="text-white text-sm font-bold">{hebrewMonths[viewMonth]} {viewYear}</span>
+        <button type="button" onClick={nextMonth} className="w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="grid grid-cols-7 mb-1">
+        {hebrewDays.map(d => <div key={d} className="text-center text-white/25 text-[10px] font-bold py-1">{d}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-y-0.5">
+        {cells.map((day, i) => (
+          <button key={i} type="button" onClick={() => handleDay(day)}
+            className={`h-8 w-full flex items-center justify-center text-sm font-medium rounded-full transition-colors
+              ${!day ? 'invisible pointer-events-none' : ''}
+              ${day && isPast(day) ? 'text-white/20 pointer-events-none' : ''}
+              ${day && isSel(day) ? 'bg-indigo-600 text-white shadow-md' : ''}
+              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-indigo-500/40 text-white' : ''}
+              ${day && !isPast(day) && !isSel(day) ? 'text-white/75 hover:bg-white/[0.08]' : ''}
+            `}>
+            {day || ''}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -289,6 +353,12 @@ export default function App() {
   };
 
   const todayStr = new Date().toISOString().split('T')[0];
+
+  const isCurrentStepValid = () => {
+    if (currentStep === 1) return eventData.name.trim().length > 0;
+    if (currentStep === 3) return !!(eventData.date && eventData.date >= todayStr);
+    return true;
+  };
 
   const validateStep = (step) => {
     const newErrors = {};
@@ -381,9 +451,9 @@ export default function App() {
               
               {/* Step 1 */}
               {currentStep === 1 &&
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-center space-y-2 w-full">
-                  <h2 className="text-base font-black tracking-tight mb-1">איך תרצו לקרוא לאירוע?</h2>
-                  <p className="text-gray-500 text-[10px] font-light mb-2 tracking-tight">הכותרת שתופיע לאורחים שלכם בטלפון</p>
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 text-center space-y-2 w-full">
+                  <h2 className="text-lg font-bold tracking-tight mb-1">מה האירוע שאתם חוגגים?</h2>
+                  <p className="text-sm text-white/45 mb-2">השם שיופיע לאורחים כשיפתחו את המצלמה</p>
                   <div className="w-full">
                     <Input
                     value={eventData.name}
@@ -399,9 +469,9 @@ export default function App() {
 
               {/* Step 2 */}
               {currentStep === 2 &&
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-center space-y-2 w-full">
-                  <h2 className="text-base font-black tracking-tight mb-1">תמונת כריכה</h2>
-                  <p className="text-gray-500 text-[10px] font-light mb-2">הרקע שיופיע לפני שהאורחים פותחים מצלמה</p>
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 text-center space-y-2 w-full">
+                  <h2 className="text-lg font-bold tracking-tight mb-1">איך תיראה ההזמנה?</h2>
+                  <p className="text-sm text-white/45 mb-2">הרקע שיופיע לאורחים לפני שהם פותחים מצלמה</p>
                   <div className="grid grid-cols-2 gap-3 w-fullpt-2">
                     <label htmlFor="add-photo" className="cursor-pointer group h-full">
                       <div className="bg-indigo-600 hover:bg-indigo-500 transition-all rounded-xl py-2 px-2 text-center h-full flex flex-col justify-center items-center shadow-lg shadow-indigo-900/40 active:scale-95 border border-white/10">
@@ -428,27 +498,17 @@ export default function App() {
 
               {/* Step 3 - תאריך ושעת סגירת העלאות */}
               {currentStep === 3 &&
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full flex flex-col gap-3">
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
-                    <h2 className="text-base font-black tracking-tight">תאריך האירוע</h2>
-                    <p className="text-gray-500 text-[10px] font-light">בחר את התאריך בו יתקיים האירוע</p>
+                    <h2 className="text-lg font-bold tracking-tight">מתי חוגגים?</h2>
+                    <p className="text-sm text-white/45">בחרו תאריך — העלאת תמונות תיסגר אוטומטית אחריו</p>
                   </div>
 
-                  {/* בחירת תאריך האירוע */}
-                  <div className="relative group">
-                    <div className={`w-full h-10 bg-[#161616] border ${errors.date ? 'border-red-500' : 'border-gray-800'} rounded-xl flex items-center justify-center gap-3 transition-all group-hover:border-gray-600 shadow-inner`}>
-                       <Calendar className={`w-4 h-4 ${eventData.date ? 'text-indigo-400' : 'text-gray-600'}`} />
-                       <span className={`text-sm font-bold ${eventData.date ? 'text-white' : 'text-gray-600'}`}>
-                         {eventData.date ? new Date(eventData.date + 'T00:00:00').toLocaleDateString('he-IL') : "בחירת תאריך אירוע"}
-                       </span>
-                    </div>
-                    <input
-                    type="date" value={eventData.date}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => {
-                      const newDate = e.target.value;
+                  {/* Custom inline calendar — no native browser chrome */}
+                  <InlineCalendar
+                    value={eventData.date}
+                    onChange={(newDate) => {
                       handleInputChange('date', newDate);
-                      // ברירת מחדל: תאריך האירוע + 24 שעות, 00:00
                       if (newDate) {
                         const d = new Date(newDate + 'T00:00:00');
                         d.setDate(d.getDate() + 1);
@@ -456,9 +516,8 @@ export default function App() {
                         handleInputChange('upload_closure_datetime', iso);
                       }
                     }}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" style={{ colorScheme: 'dark' }} />
-                  </div>
-                  {errors.date && <p className="text-red-500 text-[10px] font-bold text-center">{errors.date}</p>}
+                  />
+                  {errors.date && <p className="text-red-500 text-sm font-bold text-center animate-pulse">{errors.date}</p>}
 
                   {/* בחירת שעת סגירת העלאות - מופיע רק לאחר בחירת תאריך */}
                   {eventData.date && (() => {
@@ -475,7 +534,7 @@ export default function App() {
                        <p className="text-gray-500 text-[10px] font-light text-center mb-1.5">בחר את התאריך בו יסגרו העלאות התמונות</p>
                         <div className="relative group">
                           <div className="w-full h-10 bg-[#161616] border border-gray-800 rounded-xl flex items-center justify-center gap-3 transition-all group-hover:border-gray-600 shadow-inner">
-                            <Calendar className="w-4 h-4 text-indigo-400" />
+                            <ChevronLeft className="w-4 h-4 text-indigo-400 rotate-90" />
                             <span className="text-sm font-bold text-white">{displayVal}</span>
                           </div>
                           <input
@@ -495,10 +554,10 @@ export default function App() {
 
               {/* Step 4 - מגבלת תמונות */}
               {currentStep === 4 &&
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full flex flex-col gap-2">
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
-                    <h2 className="text-base font-black tracking-tight">מגבלת תמונות לאורח</h2>
-                    <p className="text-gray-500 text-[10px] font-light">כמה תמונות כל אורח יכול להעלות</p>
+                    <h2 className="text-lg font-bold tracking-tight">כמה תמונות לכל אורח?</h2>
+                    <p className="text-sm text-white/45">כל אורח יוכל להעלות עד המספר שתבחרו</p>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {photosPerPersonOptions.map((num) =>
@@ -518,8 +577,8 @@ export default function App() {
 
               {/* Step 5 */}
               {currentStep === 5 &&
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-center w-full">
-                  <h2 className="text-base font-black tracking-tight mb-1">גודל האירוע</h2>
+              <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 text-center w-full">
+                  <h2 className="text-lg font-bold tracking-tight mb-1">כמה אורחים מגיעים?</h2>
                   <div className="grid grid-cols-7 gap-1 mb-2" dir="ltr">
                     {pricingTiers.map((tier, index) =>
                   <button
@@ -563,7 +622,7 @@ export default function App() {
 
               <button
                 type="button" onClick={handleBack}
-                className="w-9 h-9 bg-[#161616] text-white rounded-xl flex items-center justify-center transition-all active:scale-90 border border-gray-800 shrink-0">
+                className="w-11 h-11 bg-[#161616] text-white rounded-xl flex items-center justify-center transition-all active:scale-90 border border-gray-800 shrink-0">
                   <ArrowLeft className="w-5 h-5 rotate-180" />
                 </button>
               }
@@ -571,7 +630,8 @@ export default function App() {
               <button
                 type={currentStep === totalSteps ? "submit" : "button"}
                 onClick={currentStep === totalSteps ? handleSubmit : handleNext}
-                disabled={isLoading} className="bg-indigo-600 text-white text-sm font-black rounded-xl flex-1 h-10 hover:bg-indigo-500 shadow-lg transition-all active:scale-95 border border-white/10 flex items-center justify-center relative group">
+                disabled={isLoading}
+                className={`text-base font-black rounded-xl flex-1 h-12 transition-all duration-300 active:scale-95 flex items-center justify-center relative ${isCurrentStepValid() || isLoading ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/40 border border-white/10' : 'bg-white/[0.06] text-white/30 border border-white/[0.08]'}`}>
 
                 
                 {isLoading ?
@@ -591,10 +651,7 @@ export default function App() {
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        input[type="date"]::-webkit-calendar-picker-indicator {
-          width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer;
-        }
-        @keyframes fade-in {
+@keyframes fade-in {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }

@@ -214,6 +214,16 @@ $$;
 CREATE OR REPLACE FUNCTION enforce_print_quota()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
+  -- Acquire an advisory transaction lock keyed to this (event, guest) pair.
+  -- This serializes concurrent INSERT attempts for the same user+event,
+  -- preventing two simultaneous requests from both passing the COUNT check
+  -- before either commits (READ COMMITTED race condition).
+  -- hashtext() returns int4; casting to bigint is safe and collision risk is
+  -- negligible at event-guest scale.
+  PERFORM pg_advisory_xact_lock(
+    hashtext(NEW.event_id::text || ':' || NEW.guest_user_id::text)
+  );
+
   IF (
     SELECT COUNT(*) FROM print_jobs
     WHERE event_id     = NEW.event_id
