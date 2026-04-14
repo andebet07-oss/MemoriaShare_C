@@ -191,17 +191,17 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         {/* Polaroid card container */}
         <div className="bg-white rounded-lg shadow-2xl overflow-hidden" style={{ width: '100%', maxWidth: '320px', aspectRatio: '4 / 5', position: 'relative' }}>
           {/* Photo with padding */}
-          <div className="p-5 bg-gray-100 h-4/5 relative overflow-hidden">
+          <div className="p-5 bg-gray-100 h-4/5 relative overflow-hidden flex items-center justify-center">
             <img
               src={imageDataURL}
               alt="captured"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="w-full h-full object-cover"
               draggable={false}
-              style={{ padding: '20px', boxSizing: 'border-box' }}
             />
+          </div>
 
           {/* Event info below — polaroid style */}
-          <div className="h-1/5 bg-white p-4 flex flex-col items-center justify-center text-center">
+          <div className="h-1/5 bg-white px-4 py-3 flex flex-col items-center justify-center text-center">
             <p className="font-serif font-bold text-gray-800 text-sm leading-tight">
               {event?.name}
             </p>
