@@ -329,6 +329,117 @@ photos          → id, event_id, file_url, path, created_by, device_uuid,
 
 ---
 
+## 8. MemoriaMagnet — חוויית מגנטים (פרמיום)
+
+### 8.1 סיכום מוצר
+
+MemoriaMagnet הוא שירות מנוהל (לא self-service): אדמין Memoria מגיע לאירוע עם מדפסת, יוצר אירוע מראש, והאורחים מצלמים דרך הממשק ושולחים להדפסת מגנט פיזי.
+
+**ערך לאורח:** מזכרת פיזית ממוקדת — מגנט מודפס מהאירוע, ללא לחץ ("לא רוצה לרדוף אחרי הצלם ולאסוף כולם").
+**ערך למזמין האירוע:** "Wow moment" שאורחים לא ישכחו — נקודות זכות אדירות.
+
+### 8.2 ניתוח תחרות — getmemo.co.il
+
+| פרמטר | memo | Memoria |
+|---|---|---|
+| **מחיר** | ₪2,500 רגיל / ₪1,800 הנחת מלחמה | ₪2,200–₪2,500 |
+| **מצלמה** | טלפון של האורח דרך QR על השולחן | טלפון של האורח דרך QR |
+| **פרסום הקישור** | בוקר האירוע | ✅ יכול להיות בזמן אמת (בהחלטת המארח) |
+| **כמות הדפסות** | ללא הגבלה | קווטה מוגדרת מראש (מגמישות לפי חבילה) |
+| **קובץ דיגיטלי** | יום למחרת האירוע | גלריה חיה בזמן אמת (אם המארח מאפשר MemoriaShare) |
+| **מדבקות על תמונה** | ✅ (feature בולט) | ✅ (מיושם) |
+| **עיצוב ממשק** | בסיסי | ✅ יתרון מוצהר — איכות גבוהה יותר |
+
+**הבידול העיקרי של Memoria:**
+- אחת + אחד: מגנטים + גלריה דיגיטלית חיה (MemoriaShare) = שתי חוויות במחיר דומה
+- איכות ממשק המצלמה ואיכות תמונות האורח כיתרון
+- ה-QR יכול להיות הן על השולחן והן בפתח האולם
+
+> **חשוב:** גלריה דיגיטלית בזמן אמת היא feature של MemoriaShare ונשלטת ע"י המארח — היא לא תכונה אוטומטית של MemoriaMagnet.
+
+### 8.3 תמחור מומלץ
+
+| גודל אירוע | משך | מחיר | מה כלול |
+|---|---|---|---|
+| עד 150 אורחים | 3 שעות | ₪2,000–₪2,500 | מפעיל, מדפסת, 1 מגנט לאורח |
+| 150–300 אורחים | 4–5 שעות | ₪2,500–₪3,500 | מפעיל, מדפסת, 1–2 מגנטים לאורח |
+| 300–600 אורחים | 5–7 שעות | ₪3,500–₪5,000 | מפעיל + עוזר, מדפסת, 2 מגנטים לאורח |
+
+### 8.4 זרימת האורח
+
+```
+סריקת QR / לינק
+     ↓
+MagnetGuestPage (landing — הנחיות + כפתור פתיחת מצלמה)
+     ↓
+MagnetCamera (full-screen camera mode)
+  [שלוש אפשרויות: כפתור flash | שאטר w-20 h-20 | היפוך מצלמה]
+  [V vintage mode (אופציונלי)]
+     ↓
+handleCapture → canvas.toDataURL → setMode('review')
+     ↓
+MagnetReview (full-screen review mode)
+  [תמונה מלאה + overlay של שם האירוע + תאריך]
+  [מדבקות גרירה (draggable emoji + text stickers)]
+  [Trash2 | "שלח להדפסה" | Smile sticker picker]
+     ↓
+compositeAndSubmit: canvas composite → compressImage → upload → printJob
+     ↓
+onPrintJobCreated → remainingPrints-- → הודעת אישור
+```
+
+### 8.5 רכיבי Frontend — MemoriaMagnet
+
+| קובץ | תפקיד |
+|---|---|
+| `src/pages/MagnetLead.jsx` | Wizard לידים 4 שלבים (שם אירוע, תאריך, כמות אורחים, פרטי קשר) — שלב 4 מציג summary card |
+| `src/pages/MagnetGuestPage.jsx` | דף הנחיתה לאורח (QR → landing) |
+| `src/components/magnet/MagnetCamera.jsx` | מצלמה full-screen: camera mode + review delegation |
+| `src/components/magnet/MagnetReview.jsx` | מסך review: תמונה + מדבקות + שליחה להדפסה |
+| `src/components/magnet/stickerPacks.js` | חבילות מדבקות לפי סוג אירוע (חתונה/ב"מ/יום הולדת/כללי) |
+| `src/pages/PrintStation.jsx` | ממשק מפעיל — תור הדפסה בזמן אמת |
+| `src/pages/AdminDashboard.jsx` | CRM לידים + ניהול אירועים |
+| `src/pages/CreateMagnetEvent.jsx` | יצירת אירוע מגנט (צד אדמין) |
+
+### 8.6 מערכת המדבקות (Sticker System)
+
+- **stickerPacks.js:** auto-detect סוג אירוע מהשם (חתונה/ב"מ/יום הולדת/כללי)
+- **סוגי מדבקות:** `emoji` (single emoji char) | `text` (bold Hebrew/Latin עם stroke outline)
+- **גרירה:** pointer events — fractional (x,y) מ-0 עד 1 → mapped לפיקסלים של canvas בשליחה
+- **Compositing:** בעת שליחה בלבד — `drawOverlay()` (gradient + event name/date) + `drawSticker()` loop
+- **גודל:** emoji: 13% canvas width, text: 5.5% canvas width
+
+### 8.7 Quota — ניהול בזמן אמת
+
+- קווטה מוגדרת ב-event (`magnet_prints_per_guest`)
+- מוצגת ב-MagnetCamera header: "נותרו X הדפסות"
+- **אין איסוף מידע על האורח** — קווטה נמדדת לפי print jobs מ-session ה-userId האנונימי
+- `remainingPrints` מחושב ב-MagnetGuestPage ועובר כ-prop ל-MagnetCamera
+
+### 8.8 פרטים טכניים
+
+- **Supabase Project:** `esjprtvfijyjjxpufjho`
+- **Test Event:** `unique_code = magnet-test`, URL: `https://memoriashare.com/Event?code=magnet-test`
+- **event object fields:** `event.id`, `event.name`, `event.date` (string YYYY-MM-DD), `event.unique_code`
+- **Canvas composite:** `canvas.toDataURL('image/jpeg', 0.92)` → `compressImage()` → `memoriaService.storage.upload()`
+- **printJobs table:** `event_id`, `photo_id`, `guest_user_id`, `status` (pending/printing/ready/rejected)
+
+### 8.9 פערים טכניים פתוחים (אפריל 2026)
+
+**עדיפות גבוהה:**
+- [ ] **איכות ממשק המצלמה** — המימוש הנוכחי זוהה כ"חובבני". נדרש redesign מקצועי (Figma-driven)
+- [ ] **Admin CRM** — status tracking + notes + כפתור "צור אירוע" מהליד
+- [ ] **Admin notification** — מייל/WhatsApp עם כניסת ליד חדש
+- [ ] **Print Station** — תצוגת תור חי — קיים חלקית
+
+**עדיפות בינונית:**
+- [ ] **QR codes על שולחנות** — תכונה בולטת אצל המתחרה memo, עדיין לא ממומשת
+- [ ] **Morning link** — שליחת קישור לאירוע בבוקר האירוע (feature של memo)
+- [ ] **Bundle option** — הצעת MemoriaShare + MemoriaMagnet יחד
+- [ ] **Price quote template** — יצירת הצעת מחיר מה-AdminDashboard
+
+---
+
 ## נספח — קבצי תצורה קריטיים
 
 | קובץ | תפקיד |

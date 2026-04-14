@@ -85,12 +85,16 @@ export default function HeroSection({ onOpenChooser }) {
 
           {/* Headline */}
           <h1
-            className="font-editorial mb-6 tracking-tight leading-[1.05] text-[#e8e2d5] animate-in fade-in slide-in-from-bottom-4 duration-700"
-            style={{ fontSize: 'clamp(2.6rem, 8vw, 5.5rem)', animationDelay: '100ms' }}
+            className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700"
+            style={{ animationDelay: '100ms' }}
           >
-            הזיכרונות שלכם,
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+              הזיכרונות שלכם,
+            </span>
             <br />
-            <span className="italic" style={{ color: 'var(--amber)' }}>מכל הזוויות.</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white/80 to-white/25">
+              מכל הזוויות
+            </span>
           </h1>
 
           {/* Subtitle — two clean sentences */}

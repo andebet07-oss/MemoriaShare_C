@@ -251,12 +251,22 @@ src/
     getMyPhotos.js                 ← User-scoped photo fetch
     requestPhotoDeletion.js        ← Soft-delete flow
     resolvePhotoDeletion.js        ← Admin approve/deny deletion
+  components/
+    magnet/
+      MagnetCamera.jsx             ← Full-screen camera (camera mode → delegates to MagnetReview)
+      MagnetReview.jsx             ← Review screen: draggable stickers + canvas composite + send to print
+      stickerPacks.js              ← Sticker packs auto-selected by event name (wedding/bar-mitzvah/birthday/general)
   pages/
     Home.jsx                       ← Landing page
     CreateEvent.jsx                ← Event creation wizard
     EventSuccess.jsx               ← Post-creation share screen
     EventGallery.jsx               ← Guest gallery (tabbed)
     Dashboard.jsx                  ← Host management panel
+    MagnetLead.jsx                 ← 4-step lead wizard for MemoriaMagnet (step 4 has summary card)
+    MagnetGuestPage.jsx            ← Guest landing for magnet events (QR → camera)
+    PrintStation.jsx               ← Operator print queue dashboard (real-time)
+    AdminDashboard.jsx             ← Admin CRM for leads + event management
+    CreateMagnetEvent.jsx          ← Admin event creation for MemoriaMagnet
 public/
   manifest.json                   ← PWA config
 vercel.json                        ← SPA rewrite rule

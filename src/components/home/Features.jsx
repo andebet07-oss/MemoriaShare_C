@@ -45,11 +45,9 @@ export default function Features() {
           <div className="md:sticky md:top-32 self-start">
             <p className="text-[#b8945f] text-[10px] font-bold tracking-[0.3em] uppercase mb-6">01 · למה Memoria</p>
             <h2 className="font-editorial text-4xl md:text-5xl leading-[1.1] text-[#e8e2d5] mb-4">
-              עשינו רק
+              הטכנולוגיה שקופה.
               <br />
-              מה שצריך.
-              <br />
-              <span className="italic text-[#a89a85]">הסרנו את כל השאר.</span>
+              <span className="italic text-[#a89a85]">הרגש נשאר.</span>
             </h2>
           </div>
 

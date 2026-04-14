@@ -372,10 +372,34 @@ export default function MagnetLead() {
               {/* Step 4 — פרטי קשר */}
               {currentStep === 4 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
+                  {/* Event summary */}
+                  <div className="bg-[#141414] border border-white/[0.07] rounded-2xl px-4 py-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/30 text-xs">אירוע</span>
+                      <span className="text-white/85 text-xs font-semibold truncate max-w-[65%] text-left">{formData.event_name}</span>
+                    </div>
+                    {formData.event_date && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/30 text-xs">תאריך</span>
+                        <span className="text-white/85 text-xs font-semibold">
+                          {new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'long', year: 'numeric' })
+                            .format(new Date(formData.event_date + 'T00:00:00'))}
+                        </span>
+                      </div>
+                    )}
+                    {formData.guest_count && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/30 text-xs">מוזמנים</span>
+                        <span className="text-white/85 text-xs font-semibold">{formData.guest_count}</span>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="text-center space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight">פרטי יצירת קשר</h2>
+                    <h2 className="text-lg font-bold tracking-tight">כמעט שם</h2>
                     <p className="text-sm text-white/45">נחזור אליכם לאישור וסגירת התאריך</p>
                   </div>
+
                   <div>
                     <Input
                       value={formData.full_name}
