@@ -31,46 +31,56 @@ const BENEFITS = [
     icon: Magnet,
     title: "מגנטים מודפסים חי",
     desc: "צוות מקצועי, עמדת הדפסה, מגנטים איכותיים — חוויה שהאורחים לא ישכחו.",
-    subtle: true,
+    premium: true,
   },
 ];
 
 export default function Features() {
   return (
-    <section id="features" className="py-16 md:py-24" dir="rtl">
+    <section id="features" className="py-24 md:py-32 border-t border-white/5" dir="rtl">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-12">
-          <p className="text-violet-400 text-xs font-bold tracking-widest uppercase mb-3">למה Memoria?</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            הטכנולוגיה שקופה. הרגש נשאר.
-          </h2>
-          <p className="text-white/40 text-base max-w-lg mx-auto">
-            פיתחנו כל פרט כדי שהאורחים ייהנו ואתם תקבלו את כל הזיכרונות.
-          </p>
-        </div>
+        <div className="grid md:grid-cols-[1fr_2fr] gap-12 md:gap-20 max-w-6xl mx-auto">
 
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-          {BENEFITS.map((b, i) => (
-            <div
-              key={i}
-              className={`relative p-6 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5
-                ${b.subtle
-                  ? 'bg-white/[0.03] border-violet-500/15 hover:border-violet-500/25 sm:col-span-2 lg:col-span-1'
-                  : 'bg-white/[0.03] border-white/[0.07] hover:border-white/[0.12]'
-                }`}
-            >
-              <div className="flex items-start gap-3 mb-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${b.subtle ? 'bg-violet-500/10 border border-violet-500/20' : 'bg-white/[0.06] border border-white/[0.08]'}`}>
-                  <b.icon className={`w-5 h-5 ${b.subtle ? 'text-violet-400/70' : 'text-white/60'}`} />
+          {/* Sticky left header */}
+          <div className="md:sticky md:top-32 self-start">
+            <p className="text-[#b8945f] text-[10px] font-bold tracking-[0.3em] uppercase mb-6">01 · למה Memoria</p>
+            <h2 className="font-editorial text-4xl md:text-5xl leading-[1.1] text-[#e8e2d5] mb-4">
+              עשינו רק
+              <br />
+              מה שצריך.
+              <br />
+              <span className="italic text-[#a89a85]">הסרנו את כל השאר.</span>
+            </h2>
+          </div>
+
+          {/* Editorial numbered list */}
+          <div className="divide-y divide-white/[0.08]">
+            {BENEFITS.map((b, i) => (
+              <div key={i} className="py-8 flex gap-6 items-start">
+                <span
+                  className="font-editorial tabular-nums shrink-0 pt-1 leading-none"
+                  style={{ fontSize: 'clamp(1.1rem, 2vw, 1.5rem)', color: 'rgba(255,255,255,0.2)' }}
+                >
+                  0{i + 1}
+                </span>
+                <div className="flex-1">
+                  <h3 className="font-editorial text-[#e8e2d5] text-xl mb-2 flex items-center gap-3 flex-wrap">
+                    {b.title}
+                    {b.premium && (
+                      <span
+                        className="text-[9px] font-bold tracking-[0.25em] uppercase px-2 py-0.5 border"
+                        style={{ color: 'var(--amber)', borderColor: 'rgba(184,148,95,0.35)' }}
+                      >
+                        PREMIUM
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-[#a89a85] text-base leading-relaxed">{b.desc}</p>
                 </div>
-                {b.subtle && (
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-violet-400/80 bg-violet-500/10 px-2 py-0.5 rounded-full mt-2.5">פרמיום</span>
-                )}
               </div>
-              <h3 className="text-white font-bold text-base mb-2">{b.title}</h3>
-              <p className="text-white/40 text-sm leading-relaxed">{b.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
+
         </div>
       </div>
     </section>

@@ -27,7 +27,7 @@ export default function Home() {
           <HowItWorks />
           <Testimonials />
           <FAQ />
-          <FinalCTA onOpenChooser={openChooser} />
+          <FinalCTA onOpenChooser={openChooser} onOpenDemo={() => setShowDemo(true)} />
         </main>
         <footer className="py-8 border-t border-white/5">
           <div className="flex items-center justify-center gap-4 text-sm text-white/25">

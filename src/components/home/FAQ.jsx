@@ -1,11 +1,4 @@
-import React from 'react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Plus } from "lucide-react";
+import React, { useState } from 'react';
 
 const faqItems = [
   {
@@ -39,33 +32,54 @@ const faqItems = [
 ];
 
 export default function FAQ() {
-  return (
-    <section id="faq" className="py-16 md:py-24" dir="rtl">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-12">
-          <p className="text-violet-400 text-xs font-bold tracking-widest uppercase mb-3">שאלות נפוצות</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">כל מה שצריך לדעת</h2>
-          <p className="text-white/40 text-base max-w-2xl mx-auto">כל מה שרציתם לדעת על Memoria במקום אחד.</p>
-        </div>
+  const [openIdx, setOpenIdx] = useState(null);
 
-        <div className="max-w-3xl mx-auto">
-          <Accordion type="single" collapsible className="w-full">
+  return (
+    <section id="faq" className="py-24 md:py-32 border-t border-white/5" dir="rtl">
+      <div className="container mx-auto px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-[1fr_2fr] gap-12 md:gap-20 items-start">
+
+          {/* Left header */}
+          <div className="md:sticky md:top-32 self-start">
+            <p className="text-[#b8945f] text-[10px] font-bold tracking-[0.3em] uppercase mb-6">04 · שאלות</p>
+            <h2 className="font-editorial text-4xl md:text-5xl leading-[1.1] text-[#e8e2d5]">
+              כל מה
+              <br />
+              <span className="italic text-[#a89a85]">שצריך לדעת.</span>
+            </h2>
+          </div>
+
+          {/* Accordion — hairline dividers, no cards */}
+          <div>
             {faqItems.map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="group bg-neutral-900/50 backdrop-blur-sm border border-white/10 rounded-2xl mb-4 transition-all duration-300 hover:border-white/[0.12] data-[state=open]:bg-neutral-800/60 data-[state=open]:border-white/15">
-                <AccordionTrigger className="w-full text-right text-base font-semibold text-white p-6 hover:no-underline">
-                  <div className="flex justify-between items-center w-full">
-                    <span>{item.question}</span>
-                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 group-data-[state=open]:bg-white/20 transition-all duration-300 shrink-0 mr-3">
-                      <Plus className="w-5 h-5 text-white transition-transform duration-300 group-data-[state=open]:rotate-45" />
-                    </div>
+              <div
+                key={index}
+                className="border-b border-white/[0.08] last:border-b-0"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenIdx(openIdx === index ? null : index)}
+                  className="w-full text-right py-6 flex justify-between items-start gap-4 group"
+                >
+                  <span className="font-editorial text-[#e8e2d5] text-lg leading-snug group-hover:text-white transition-colors text-right flex-1">
+                    {item.question}
+                  </span>
+                  <span
+                    className="text-[#a89a85] text-xl leading-none shrink-0 mt-0.5 transition-transform duration-300 select-none"
+                    style={{ transform: openIdx === index ? 'rotate(45deg)' : 'none' }}
+                  >
+                    +
+                  </span>
+                </button>
+                {openIdx === index && (
+                  <div className="pb-6 pr-0">
+                    <p className="text-[#a89a85] text-base leading-relaxed">{item.answer}</p>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-white/60 text-sm leading-relaxed px-6 pb-6">
-                  {item.answer}
-                </AccordionContent>
-              </AccordionItem>
+                )}
+              </div>
             ))}
-          </Accordion>
+          </div>
+
         </div>
       </div>
     </section>

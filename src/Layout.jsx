@@ -11,6 +11,19 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col" dir="rtl">
        <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Heebo:wght@300;400;600;700;900&display=swap');
+
+        :root {
+          --ink: #0a0907;
+          --paper: #e8e2d5;
+          --paper-muted: #a89a85;
+          --amber: #b8945f;
+          --premium-silver: linear-gradient(135deg, #f3f3f3 0%, #e5e5e5 45%, #c4c4c4 55%, #f3f3f3 100%);
+          --dark-chrome: linear-gradient(135deg, #f0f2f3 0%, #bfc8d0 45%, #9da9b2 55%, #f0f2f3 100%);
+          --metallic-highlight: rgba(255, 255, 255, 0.4);
+          --metallic-shadow: rgba(0, 0, 0, 0.3);
+        }
+
         body {
           overscroll-behavior: none;
           -webkit-overflow-scrolling: touch;
@@ -30,15 +43,13 @@ export default function Layout({ children, currentPageName }) {
           }
         }
 
-        :root {
-          --premium-silver: linear-gradient(135deg, #f3f3f3 0%, #e5e5e5 45%, #c4c4c4 55%, #f3f3f3 100%);
-          --dark-chrome: linear-gradient(135deg, #f0f2f3 0%, #bfc8d0 45%, #9da9b2 55%, #f0f2f3 100%);
-          --metallic-highlight: rgba(255, 255, 255, 0.4);
-          --metallic-shadow: rgba(0, 0, 0, 0.3);
-        }
-        
         * {
-          font-family: 'Inter', 'Assistant', 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          font-family: 'Heebo', 'Assistant', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .font-editorial {
+          font-family: 'Frank Ruhl Libre', Georgia, serif !important;
+          font-feature-settings: "ss01" on;
         }
         
         .dark-chrome-text {
