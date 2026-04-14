@@ -5,7 +5,7 @@ import {
   Upload, Copy, Monitor
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -123,14 +123,18 @@ function InlineCalendar({ value, onChange }) {
 
 export default function CreateMagnetEvent() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
-  const [currentStep, setCurrentStep] = useState(1);
+  // Pre-fill from lead if navigated via "צור אירוע" in LeadsPanel
+  const fromLead = location.state?.fromLead ?? null;
+
+  const [currentStep, setCurrentStep] = useState(fromLead?.eventName ? 2 : 1);
   const totalSteps = 4;
 
   const [form, setForm] = useState({
-    name: '',
-    date: '',
+    name: fromLead?.eventName ?? '',
+    date: fromLead?.eventDate ?? '',
     print_quota_per_device: 5,
     overlayFile: null,
   });
@@ -292,6 +296,14 @@ export default function CreateMagnetEvent() {
               )}
 
               {/* Step 2 — Date */}
+              {currentStep === 2 && fromLead && (
+                <div className="animate-in fade-in duration-300 w-full mb-2">
+                  <div className="flex items-center justify-between px-3 py-2 bg-violet-500/10 border border-violet-500/25 rounded-xl">
+                    <span className="text-violet-300 text-xs font-semibold truncate">{fromLead.eventName}</span>
+                    <span className="text-violet-400/60 text-xs shrink-0 mr-2">מליד · {fromLead.contactName}</span>
+                  </div>
+                </div>
+              )}
               {currentStep === 2 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
