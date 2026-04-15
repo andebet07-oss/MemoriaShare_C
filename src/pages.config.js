@@ -47,28 +47,14 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import AdminUsers from './pages/AdminUsers';
-import CreateEvent from './pages/CreateEvent';
-import CreateMagnetEvent from './pages/CreateMagnetEvent';
-import Dashboard from './pages/Dashboard';
-import Event from './pages/Event';
-import EventGallery from './pages/EventGallery';
-import EventSuccess from './pages/EventSuccess';
 import Home from './pages/Home';
-import MyEvents from './pages/MyEvents';
 import __Layout from './Layout.jsx';
 
+// NOTE: pages.config.js is kept only for the mainPage + Layout wiring used by App.jsx.
+// All routing is now defined explicitly in App.jsx — do not add pages here.
 
 export const PAGES = {
-    "AdminUsers": AdminUsers,
-    "CreateEvent": CreateEvent,
-    "CreateMagnetEvent": CreateMagnetEvent,
-    "Dashboard": Dashboard,
-    "Event": Event,
-    "EventGallery": EventGallery,
-    "EventSuccess": EventSuccess,
     "Home": Home,
-    "MyEvents": MyEvents,
 }
 
 export const pagesConfig = {

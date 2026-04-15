@@ -102,7 +102,7 @@ export default function LeadsPanel() {
 
   const handleCreateEvent = (lead) => {
     const { eventName } = parseDetails(lead.details);
-    navigate('/CreateMagnetEvent', {
+    navigate('/admin/events/magnet/create', {
       state: {
         fromLead: {
           leadId:      lead.id,

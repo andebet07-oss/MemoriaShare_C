@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from '@/lib/supabase';
-import { LogIn, LogOut, LayoutDashboard, ShieldCheck, X, User, Users } from "lucide-react";
+import { LogIn, LogOut, LayoutDashboard, ShieldCheck, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -70,16 +70,10 @@ export default function Header({ onOpenChooser }) {
                   האירועים שלי
                 </Link>
                 {user?.role === 'admin' && (
-                  <>
-                    <Link to="/AdminDashboard" className="text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4" />
-                      דאשבורד מנהלים
-                    </Link>
-                    <Link to={createPageUrl("AdminUsers")} className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      משתמשים
-                    </Link>
-                  </>
+                  <Link to="/admin" className="text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4" />
+                    ניהול
+                  </Link>
                 )}
               </>
             )}
@@ -161,13 +155,9 @@ export default function Header({ onOpenChooser }) {
                 </Link>
                 {user?.role === 'admin' && (
                   <>
-                    <Link to="/AdminDashboard" onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-violet-400 hover:text-violet-300 transition-colors py-3.5 px-2 rounded-lg hover:bg-white/5 border-b border-white/5">
+                    <Link to="/admin" onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-violet-400 hover:text-violet-300 transition-colors py-3.5 px-2 rounded-lg hover:bg-white/5 border-b border-white/5">
                       <ShieldCheck className="w-5 h-5 shrink-0" />
-                      דאשבורד מנהלים
-                    </Link>
-                    <Link to={createPageUrl("AdminUsers")} onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-amber-400 hover:text-amber-300 transition-colors py-3.5 px-2 rounded-lg hover:bg-white/5 border-b border-white/5">
-                      <Users className="w-5 h-5 shrink-0" />
-                      משתמשים
+                      ניהול
                     </Link>
                   </>
                 )}

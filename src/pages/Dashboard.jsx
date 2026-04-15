@@ -571,6 +571,22 @@ export default function Dashboard() {
   return (
     <div className="min-h-[100dvh] w-full bg-[#0a0a0a] text-white" dir="rtl">
       <RealtimeNotification notifications={notifications} onDismiss={dismissNotification} />
+
+      {/* Admin inspection banner — shown only when admin views another host's event */}
+      {isAdmin && event.created_by !== currentUser?.id && (
+        <div className="flex items-center justify-between px-4 py-2.5 text-xs font-semibold"
+          style={{ background: 'rgba(124,58,237,0.15)', borderBottom: '1px solid rgba(124,58,237,0.3)' }}>
+          <button
+            onClick={() => navigate('/admin/events/share')}
+            className="flex items-center gap-1.5 text-violet-300 hover:text-violet-100 transition-colors"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            חזרה לניהול
+          </button>
+          <span className="text-violet-400">צופה בתור אדמין</span>
+        </div>
+      )}
+
       <div className="max-w-md mx-auto px-4 pt-6 pb-6">
           {/* Tabs */}
           <Tabs defaultValue="share" className="mb-4">
