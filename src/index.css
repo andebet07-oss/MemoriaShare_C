@@ -2,89 +2,268 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
+/**
+ * Memoria brand fonts — dark luxury editorial
+ *
+ * Playfair Display  → headings, hero text, serif display (matches the "M" monogram)
+ * Montserrat        → labels, uppercase, UI chrome, spacing text
+ * Heebo             → body text, all Hebrew UI, RTL content
+ */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Montserrat:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700&display=swap');
 
 @layer base {
+  /* ═══════════════════════════════════════════════════════════════
+     LIGHT MODE — warm cream paper, not harsh white
+     Used for: Dashboard, Admin, Account pages
+     ═══════════════════════════════════════════════════════════════ */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
+    --background: 40 30% 97%;          /* warm cream #F8F4ED */
+    --foreground: 30 15% 8%;           /* warm near-black */
+
+    --card: 40 25% 94%;
+    --card-foreground: 30 15% 8%;
+
+    --popover: 40 25% 96%;
+    --popover-foreground: 30 15% 8%;
+
+    --primary: 38 53% 46%;             /* gold, darker for light bg contrast */
+    --primary-foreground: 40 30% 97%;
+
+    --secondary: 40 15% 89%;
+    --secondary-foreground: 30 12% 18%;
+
+    --muted: 40 12% 87%;
+    --muted-foreground: 30 8% 42%;
+
+    --accent: 38 45% 87%;
+    --accent-foreground: 38 53% 32%;
+
+    --destructive: 0 72% 44%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --border: 40 15% 83%;
+    --input: 40 15% 83%;
+    --ring: 38 53% 46%;
+
+    --radius: 0.25rem;                 /* editorial: almost sharp corners */
+
+    --chart-1: 38 53% 52%;
+    --chart-2: 200 28% 46%;
+    --chart-3: 15 38% 50%;
+    --chart-4: 158 28% 40%;
+    --chart-5: 280 22% 50%;
+
+    --sidebar-background: 40 28% 94%;
+    --sidebar-foreground: 30 12% 22%;
+    --sidebar-primary: 38 53% 46%;
+    --sidebar-primary-foreground: 40 30% 97%;
+    --sidebar-accent: 38 40% 87%;
+    --sidebar-accent-foreground: 38 53% 32%;
+    --sidebar-border: 40 12% 80%;
+    --sidebar-ring: 38 53% 46%;
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     DARK MODE — Memoria signature: deep warm black + champagne gold
+     Used for: Event galleries, camera, guest views, landing page
+     Inspired by the logo — dark room, film grain, editorial luxury
+     ═══════════════════════════════════════════════════════════════ */
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 30 15% 4%;           /* #0a0908 — warm deep black */
+    --foreground: 40 40% 94%;          /* #f7f0e4 — warm white */
+
+    --card: 30 10% 7%;                 /* #131110 — slightly raised */
+    --card-foreground: 40 40% 94%;
+
+    --popover: 30 10% 8%;
+    --popover-foreground: 40 40% 94%;
+
+    --primary: 38 53% 61%;             /* #c9a96e — champagne gold ← BRAND */
+    --primary-foreground: 30 15% 5%;   /* dark text on gold */
+
+    --secondary: 30 8% 11%;            /* #1d1b19 — raised surface */
+    --secondary-foreground: 40 25% 78%;
+
+    --muted: 30 6% 13%;
+    --muted-foreground: 40 10% 50%;    /* warm mid gray */
+
+    --accent: 38 35% 16%;              /* dark gold tint — hover backgrounds */
+    --accent-foreground: 38 50% 72%;   /* lighter gold */
+
+    --destructive: 0 68% 40%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --border: 30 8% 16%;               /* #2a2724 — very subtle warm dividers */
+    --input: 30 8% 12%;
+    --ring: 38 53% 61%;                /* gold focus ring */
+
+    --chart-1: 38 53% 61%;             /* gold */
+    --chart-2: 200 28% 52%;
+    --chart-3: 15 38% 56%;
+    --chart-4: 158 28% 46%;
+    --chart-5: 280 22% 56%;
+
+    --sidebar-background: 30 15% 3%;
+    --sidebar-foreground: 40 25% 78%;
+    --sidebar-primary: 38 53% 61%;
+    --sidebar-primary-foreground: 30 15% 5%;
+    --sidebar-accent: 38 30% 12%;
+    --sidebar-accent-foreground: 38 50% 72%;
+    --sidebar-border: 30 8% 12%;
+    --sidebar-ring: 38 53% 61%;
   }
 }
 
-
-
+/* ═══════════════════════════════════════════════════════════════════
+   BASE LAYER — global resets and typography defaults
+   ═══════════════════════════════════════════════════════════════════ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
 
+  html {
+    direction: rtl;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-heebo antialiased;
+    font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Serif headings by default */
+  h1, h2, h3 {
+    @apply font-playfair;
+  }
+
+  /* Thin custom scrollbar — gold accent */
+  ::-webkit-scrollbar        { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track  { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb  {
+    background: rgba(201, 169, 110, 0.22);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(201, 169, 110, 0.48);
+  }
+
+  /* Gold text selection */
+  ::selection {
+    background: rgba(201, 169, 110, 0.28);
+    color: inherit;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITIES — reusable Memoria design patterns
+   ═══════════════════════════════════════════════════════════════════ */
+@layer utilities {
+
+  /**
+   * Glass morphism card
+   * Usage: <div className="glass-card rounded p-4">
+   * Best on: floating panels, overlays, bottom bars on camera
+   */
+  .glass-card {
+    @apply backdrop-blur-xl border border-white/[0.07] bg-white/[0.03];
+    box-shadow:
+      0 8px 32px -4px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+
+  /**
+   * Gold CTA button
+   * Usage: <button className="btn-gold">שלח לדפוס</button>
+   */
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2
+           bg-primary text-primary-foreground
+           font-montserrat text-xs font-semibold tracking-editorial uppercase
+           px-6 py-3 rounded
+           hover:brightness-110 active:brightness-90 active:scale-[0.98]
+           transition-all duration-200 ease-out
+           select-none cursor-pointer;
+    box-shadow: 0 4px 20px -4px rgba(201, 169, 110, 0.30);
+  }
+  .btn-gold:hover {
+    box-shadow: 0 0 28px -4px rgba(201, 169, 110, 0.42);
+  }
+
+  /**
+   * Ghost outline button (secondary action)
+   * Usage: <button className="btn-ghost">ביטול</button>
+   */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           border border-white/15 text-foreground/65
+           font-montserrat text-xs font-medium tracking-editorial uppercase
+           px-6 py-3 rounded
+           hover:border-white/30 hover:text-foreground
+           transition-all duration-200 ease-out
+           select-none cursor-pointer;
+  }
+
+  /**
+   * Editorial label — uppercase spaced small text
+   * Usage: <span className="label-editorial">צולם ב</span>
+   */
+  .label-editorial {
+    @apply font-montserrat text-xs font-medium tracking-editorial uppercase
+           text-muted-foreground;
+  }
+
+  /**
+   * Photo vignette overlay — matches logo background
+   * Usage: <div className="absolute inset-0 vignette pointer-events-none" />
+   */
+  .vignette {
+    background: radial-gradient(
+      ellipse at center,
+      transparent 35%,
+      rgba(0, 0, 0, 0.72) 100%
+    );
+  }
+
+  /**
+   * Shimmer loading skeleton
+   * Usage: <div className="skeleton-shimmer h-32 rounded" />
+   */
+  .skeleton-shimmer {
+    @apply relative overflow-hidden bg-warm-900;
+  }
+  .skeleton-shimmer::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.04) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-sweep 1.8s ease-in-out infinite;
+  }
+
+  /**
+   * Gold text gradient
+   * Usage: <h1 className="gold-text">Memoria</h1>
+   */
+  .gold-text {
+    background: linear-gradient(135deg, #e6be62 0%, #c9a96e 50%, #b08942 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /**
+   * Monogram display style — matches the logo "M"
+   * Usage: <span className="font-playfair monogram">M</span>
+   */
+  .monogram {
+    @apply font-playfair font-normal tracking-display;
+    font-variant: normal;
+    letter-spacing: 0.02em;
   }
 }

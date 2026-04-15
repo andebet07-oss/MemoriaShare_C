@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Read(//c/Users/tagab/Documents/camera-memo/**)"
+      "Read(//c/Users/tagab/Documents/camera-memo/**)",
+      "Read(//c/Users/tagab/.claude/projects/c--Users-tagab-MemoriaShare/memory/**)"
     ]
   }
 }

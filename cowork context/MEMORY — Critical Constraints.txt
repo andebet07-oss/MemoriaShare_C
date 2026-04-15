@@ -1,0 +1,73 @@
+MEMORY — Critical Constraints
+
+
+# Memoria — Critical Constraints & Decisions (April 2026)
+
+## 🔴 NEVER DO THESE
+
+1. **No Supabase calls in upload flow**
+   Call supabase.auth.getUser() or getSession() inside the photo upload flow causes a Supabase auth mutex deadlock. NEVER call these inside the upload flow. The auth session must be resolved BEFORE the upload initiates.
+
+2. **checkGuestQuota must stay synchronous**
+   The function at src/functions/checkGuestQuota.js is a pure synchronous function. It must NOT make Supabase calls. It receives pre-fetched data and runs math on it. Adding async logic here breaks the upload gate.
+
+3. **Never use flex-col on camera root**
+   The MagnetCamera and CameraCapture components use fixed inset-0 + absolute positioning for all layers. Wrapping in flex-col causes the viewfinder to collapse to a sliver in landscape mode on iOS.
+
+4. **Never call supabase.auth.getUser() directly in components**
+   Always use useAuth() from @/lib/AuthContext.
+
+5. **Never commit .env.local or SUPABASE_SERVICE_ROLE_KEY**
+
+## 🟡 ARCHITECTURE DECISIONS
+
+- **Guest auth = signInAnonymously() only**. No email collection for guests, ever.
+- **Guest name storage**: localStorage key "ms_guest_name" + supabase user_metadata.display_name
+- **All CRUD = memoriaService**, never supabase.from() directly in components
+- **QR base URL = VITE_SITE_URL env var** (set in Vercel dashboard), currently https://memoriashare.com
+- **Lead → Event bridge**: LeadsPanel passes lead data via React Router state to CreateMagnetEvent. CreateMagnetEvent auto-fills form and skips to step 2 when state.fromLead exists.
+
+## 🟢 DESIGN SYSTEM (MemoriaMagnet)
+
+- **Background**: radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)
+- **Accent (CTA)**: linear-gradient(145deg, #caff4a, #a3e635) — lime-green is the signature
+- **CTA text color**: #1a2a00 (dark green, not white — on lime background)
+- **Glass buttons**: rgba(255,255,255,0.08) bg + border rgba(255,255,255,0.12) + backdrop-blur(8px)
+- **Polaroid card**: white, width min(74vw, 288px), rotate(-0.8deg), box-shadow 0 32px 80px rgba(0,0,0,0.7)
+- **Photo area**: aspectRatio 3/4 inside polaroid
+- **Label strip**: event name in Heebo bold, date in Georgia serif tracking-widest text-[11px]
+- **UI language**: Hebrew only. RTL (dir="rtl") on all containers.
+
+## 🔵 CAMERA RULES (WebRTC)
+
+- Video element MUST have: autoPlay playsInline muted (iOS Safari breaks without all three)
+- getUserMedia: always include OverconstrainedError fallback to minimal constraints
+- Torch: always guard with getCapabilities()?.torch before calling applyConstraints
+- Vintage filter: CSS filter on live <video> for preview, applyVintagePixels() on canvas ONLY at capture time
+- ObjectURL lifecycle: every createObjectURL must have matching revokeObjectURL on removal + unmount
+
+## 📁 KEY FILE MAP
+
+src/
+  lib/supabase.js                    — Single Supabase client
+  lib/AuthContext.jsx                — useAuth() hook (ONLY source for auth state)
+  components/memoriaService.jsx      — ALL Supabase CRUD (never bypass this)
+  components/magnet/
+    MagnetCamera.jsx                 — Full-screen camera, polaroid frame, lime shutter
+    MagnetReview.jsx                 — Review screen: stickers, send to print, modals
+    stickerPacks.js                  — Event-type sticker packs (wedding/barmitzvah/birthday/general)
+  components/admin/
+    LeadsPanel.jsx                   — CRM lead cards with "צור אירוע" → CreateMagnetEvent bridge
+  pages/
+    Home.jsx                         — Landing page
+    CreateEvent.jsx                  — MemoriaShare event creation wizard
+    EventGallery.jsx                 — Guest gallery (tabs: gallery/upload)
+    Dashboard.jsx                    — Host management
+    MagnetLead.jsx                   — 4-step lead capture wizard
+    MagnetGuestPage.jsx              — Guest entry for magnet events
+    PrintStation.jsx                 — Operator real-time print queue
+    AdminDashboard.jsx               — Admin CRM (contains LeadsPanel)
+    CreateMagnetEvent.jsx            — Admin event creation (accepts fromLead pre-fill)
+  functions/
+    checkGuestQuota.js               — PURE SYNC — no Supabase calls allowed
+    processImage.js                  — compressImage() for canvas → blob

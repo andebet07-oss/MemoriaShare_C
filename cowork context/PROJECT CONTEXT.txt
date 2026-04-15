@@ -1,0 +1,45 @@
+# Memoria — Product Overview
+
+## What we're building
+Memoria is a premium event-tech platform with two products:
+
+### Product 1: MemoriaShare (live)
+Real-time event photo sharing PWA. Guests scan a QR code, shoot or upload photos from their phone, and all photos appear instantly in a shared live gallery — no app download, no signup.
+- Self-service: hosts create events themselves
+- URL: https://memoriashare.com (Vercel, auto-deploy from main)
+- Status: Production, paying customers
+
+### Product 2: MemoriaMagnet (in development)
+Premium managed service. Guests scan a QR at the event → take a photo via Memoria's camera → photo is sent to print queue → guest receives a physical magnet souvenir.
+- Admin-managed: only admins create magnet events (no self-service)
+- Revenue: ₪2,000–₪5,000 per event (150–600 guests)
+- Competitor: getmemo.co.il (₪2,500 standard)
+- Key differentiator: real-time digital gallery bundle + superior camera UX
+
+## Business flow (MemoriaMagnet)
+Lead form (MagnetLead) → Admin reviews in AdminDashboard → Admin calls/WhatsApps → Admin creates event in CreateMagnetEvent → unique_code generated → QR code shared → Guests scan on event night → MagnetCamera → MagnetReview + stickers → PrintStation queue → Operator prints magnet → Guest gets physical magnet
+
+## Tech stack
+- Frontend: React 18 + Vite + Tailwind CSS + React Router v6
+- Backend: Supabase (auth, postgres, storage, realtime)
+- Hosting: Vercel (memoriashare.com)
+- Auth: Supabase Auth — hosts use email/magic link, guests use anonymous signIn
+
+## Key user roles
+| Role | Auth | Access |
+|---|---|---|
+| Host | Email / Magic Link | Dashboard, event management, gallery moderation |
+| Guest | Anonymous (supabase.auth.signInAnonymously) | Upload/capture photos, view gallery |
+| Operator | Admin account | PrintStation dashboard (real-time print queue) |
+| Admin | Admin account | AdminDashboard, LeadsPanel, CreateMagnetEvent |
+
+## Database
+Schema source of truth: CLEAN_RESET_SCHEMA.sql
+Key tables: events, photos, print_jobs, leads, users
+Guest identity: photos.created_by = anonymous UUID (never email)
+Guest name: stored in localStorage as ms_guest_name + user_metadata.display_name
+
+## Current development focus
+- MemoriaMagnet camera redesign (MagnetCamera.jsx + MagnetReview.jsx) — premium dark polaroid aesthetic
+- Admin CRM improvements (LeadsPanel → CreateMagnetEvent bridge)
+- PrintStation real-time queue

@@ -1,33 +1,13 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Trash2, Loader2, Smile, X } from 'lucide-react';
 import { getStickerPack } from './stickerPacks';
+import { getFramePack } from './framePacks';
+import FramePicker from './FramePicker';
 import memoriaService from '@/components/memoriaService';
 import { compressImage } from '@/functions/processImage';
 
 const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
 const EMOJI_SIZE = 52;
-
-function drawOverlay(ctx, w, h, name, date) {
-  const oh = h * 0.22;
-  const g = ctx.createLinearGradient(0, h - oh, 0, h);
-  g.addColorStop(0, 'rgba(0,0,0,0)');
-  g.addColorStop(1, 'rgba(0,0,0,0.80)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, h - oh, w, oh);
-  ctx.textAlign = 'center';
-  ctx.font = `bold ${Math.round(w * 0.066)}px Heebo, sans-serif`;
-  ctx.fillStyle = 'rgba(255,255,255,0.92)';
-  ctx.fillText(name || '', w / 2, h - oh * 0.38);
-  if (date) {
-    ctx.font = `${Math.round(w * 0.04)}px Georgia, serif`;
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.fillText(
-      new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        .format(new Date(date + 'T00:00:00')),
-      w / 2, h - oh * 0.16,
-    );
-  }
-}
 
 function drawSticker(ctx, s, w, h) {
   const cx = s.x * w, cy = s.y * h;
@@ -66,15 +46,32 @@ const Champagne = () => (
 );
 
 export default function MagnetReview({ imageDataURL, event, userId, onRetake, onPrintJobCreated }) {
-  const photoRef = useRef(null);
-  const [stickers, setStickers] = useState([]);
+  const photoRef      = useRef(null);
+  const previewCanvas = useRef(null);
+  const [stickers, setStickers]     = useState([]);
   const [showPicker, setShowPicker] = useState(false);
   const [draggingUid, setDraggingUid] = useState(null);
   const dragOffset = useRef({ x: 0, y: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modal, setModal] = useState(null); // null | 'loading' | 'success' | 'error'
 
+  const framePack    = useMemo(() => getFramePack(event?.name || ''), [event?.name]);
+  const [selectedFrame, setSelectedFrame] = useState(() => framePack[0]);
   const pack = useMemo(() => getStickerPack(event?.name || ''), [event?.name]);
+
+  // Live frame preview — renders frame on transparent canvas overlay
+  useEffect(() => {
+    const cvs = previewCanvas.current;
+    if (!cvs || !selectedFrame) return;
+    const rect = cvs.getBoundingClientRect();
+    const dpr  = window.devicePixelRatio || 1;
+    cvs.width  = Math.round(rect.width  * dpr);
+    cvs.height = Math.round(rect.height * dpr);
+    const ctx  = cvs.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    selectedFrame.drawFrame(ctx, rect.width, rect.height, event);
+  }, [selectedFrame, event]);
   const dateLabel = useMemo(() => {
     if (!event?.date) return null;
     return new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -118,7 +115,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      drawOverlay(ctx, canvas.width, canvas.height, event?.name, event?.date);
+      selectedFrame.drawFrame(ctx, canvas.width, canvas.height, event);
       for (const s of stickers) drawSticker(ctx, s, canvas.width, canvas.height);
       const blob = await compressImage(canvas);
       const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
@@ -156,6 +153,8 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
           {/* Photo area */}
           <div ref={photoRef} className="relative overflow-hidden" style={{ aspectRatio: '3/4', touchAction: draggingUid ? 'none' : 'auto' }}>
             <img src={imageDataURL} alt="captured" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+            {/* Live frame preview — transparent canvas, re-renders on frame change */}
+            <canvas ref={previewCanvas} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }} />
 
             {stickers.map(s => (
               <div
@@ -187,9 +186,14 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
 
       {/* ── Bottom bar ── */}
       <div
-        className="absolute inset-x-0 bottom-0 flex items-center px-6 gap-4"
-        style={{ paddingTop: '16px', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)', background: 'linear-gradient(to top, rgba(10,10,14,0.96) 60%, transparent)' }}
+        className="absolute inset-x-0 bottom-0 flex flex-col px-5 gap-3"
+        style={{ paddingTop: '18px', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)', background: 'linear-gradient(to top, rgba(10,10,14,0.97) 65%, transparent)' }}
       >
+        {/* Frame picker strip */}
+        <FramePicker frames={framePack} selectedId={selectedFrame?.id} onSelect={setSelectedFrame} />
+
+        {/* Action buttons row */}
+        <div className="flex items-center gap-3">
         <button onClick={onRetake} disabled={isSubmitting} aria-label="צלם מחדש" className="w-12 h-12 rounded-full flex items-center justify-center disabled:opacity-40 active:scale-90 transition-transform" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
           <Trash2 className="w-5 h-5 text-white/70" />
         </button>
@@ -201,6 +205,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         <button onClick={() => setShowPicker(true)} aria-label="הוסף מדבקה" className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-transform" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
           <Smile className="w-5 h-5 text-white/70" />
         </button>
+        </div> {/* end action buttons row */}
       </div>
 
       {/* ── Loading modal ── */}
