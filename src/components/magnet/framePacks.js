@@ -718,8 +718,6 @@ const BAR_MITZVAH_FRAMES = [
       });
     },
   },
-];
-
   {
     id: 'bar-royal',
     name: 'מלכותי',
