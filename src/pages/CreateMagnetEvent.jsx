@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Loader2, ArrowLeft, Home, Check,
   ChevronLeft, ChevronRight,
-  Upload, Copy, Monitor
+  Upload, Copy, Monitor, X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
+import { FRAME_PACKS, LABEL_H_RATIO } from "@/components/magnet/framePacks";
 
 // Polaroid-style magnet preview
 function MagnetPreview({ eventData = {}, overlayPreview = null, previewH, previewW }) {
@@ -121,6 +122,85 @@ function InlineCalendar({ value, onChange }) {
   );
 }
 
+// Thumbnail dimensions: photo area + label strip (matches final magnet proportions)
+const THUMB_W = 58;
+const THUMB_PHOTO_H = Math.round(THUMB_W * (4 / 3));               // 77px (3:4 photo)
+const THUMB_LABEL_H = Math.round(THUMB_W * LABEL_H_RATIO);         // 13px label
+const THUMB_TOTAL_H = THUMB_PHOTO_H + THUMB_LABEL_H;               // 90px total
+
+// Canvas thumbnail for a single frame option
+function FrameThumbnail({ frame, isSelected, onSelect, eventData }) {
+  const cvs = useRef(null);
+
+  useEffect(() => {
+    const el = cvs.current;
+    if (!el) return;
+    const ctx = el.getContext('2d');
+    // Simulate a photo background (warm gradient)
+    const grad = ctx.createLinearGradient(0, 0, el.width, THUMB_PHOTO_H);
+    grad.addColorStop(0, '#2e2820');
+    grad.addColorStop(1, '#181410');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, el.width, el.height);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, el.width, THUMB_PHOTO_H);
+    frame.drawFrame(
+      ctx, el.width, THUMB_TOTAL_H, THUMB_PHOTO_H,
+      { name: eventData?.name || 'שם האירוע', date: eventData?.date || null }
+    );
+  }, [frame, eventData?.name, eventData?.date]);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(frame.id)}
+      className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform duration-150"
+      style={{ outline: 'none' }}
+    >
+      <div style={{
+        position: 'relative',
+        borderRadius: '3px',
+        border: isSelected ? '2px solid #7c3aed' : '2px solid rgba(255,255,255,0.08)',
+        boxShadow: isSelected ? '0 0 14px -2px rgba(124,58,237,0.6)' : '0 2px 8px rgba(0,0,0,0.5)',
+        transition: 'border-color 0.15s, box-shadow 0.15s',
+        overflow: 'hidden',
+      }}>
+        <canvas ref={cvs} width={THUMB_W} height={THUMB_TOTAL_H} style={{ display: 'block' }} />
+        {isSelected && (
+          <div style={{
+            position: 'absolute', top: 4, right: 4,
+            width: 14, height: 14, borderRadius: '50%',
+            background: '#7c3aed',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+              <path d="M1.5 4L3.2 5.8L6.5 2.2" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        )}
+      </div>
+      <span style={{
+        fontFamily: 'Heebo, sans-serif', fontSize: '9px', whiteSpace: 'nowrap',
+        color: isSelected ? '#a78bfa' : 'rgba(255,255,255,0.35)',
+        fontWeight: isSelected ? 600 : 400,
+        transition: 'color 0.15s',
+        userSelect: 'none',
+      }}>
+        {frame.name}
+      </span>
+    </button>
+  );
+}
+
+const FRAME_CATEGORIES = [
+  { key: 'wedding',     label: 'חתונה' },
+  { key: 'bar_mitzvah', label: 'בר / בת מצווה' },
+  { key: 'brit',        label: 'ברית' },
+  { key: 'birthday',    label: 'יום הולדת' },
+  { key: 'corporate',   label: 'אירוע חברה' },
+  { key: 'general',     label: 'כללי' },
+];
+
 export default function CreateMagnetEvent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -136,7 +216,8 @@ export default function CreateMagnetEvent() {
     name: fromLead?.eventName ?? '',
     date: fromLead?.eventDate ?? '',
     print_quota_per_device: 5,
-    overlayFile: null,
+    selectedFrameId: null,  // frame_id from framePacks, stored in overlay_frame_url
+    overlayFile: null,       // custom PNG upload (overrides selectedFrameId if set)
   });
   const [overlayPreview, setOverlayPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -198,8 +279,12 @@ export default function CreateMagnetEvent() {
         is_active: true,
       });
       if (form.overlayFile) {
+        // Custom PNG upload takes priority
         const { file_url } = await memoriaService.storage.uploadOverlay(form.overlayFile, event.id);
         await memoriaService.events.update(event.id, { overlay_frame_url: file_url });
+      } else if (form.selectedFrameId) {
+        // Store frame id directly — MagnetReview resolves it via ALL_FRAMES lookup
+        await memoriaService.events.update(event.id, { overlay_frame_url: form.selectedFrameId });
       }
       setSuccess({ event_code: event.unique_code, pin_code: event.pin_code, event_id: event.id });
     } catch (err) {
@@ -248,6 +333,8 @@ export default function CreateMagnetEvent() {
 
   // On the calendar step (step 2), hide the preview entirely.
   const isCalendarStep = currentStep === 2;
+  // On step 4, also hide the large top preview — frame picker is the focus
+  const hideTopPreview = isCalendarStep || currentStep === 4;
   const previewH = 'clamp(145px, 50dvh, 420px)';
   const previewW = 'clamp(109px, 37.5dvh, 315px)';
 
@@ -263,8 +350,8 @@ export default function CreateMagnetEvent() {
 
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
 
-        {/* Preview area — hidden on calendar step to give full screen to the calendar */}
-        {!isCalendarStep && (
+        {/* Preview area — hidden on calendar/frame steps to give full screen */}
+        {!hideTopPreview && (
           <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2">
             <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]" />
             <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(139,92,246,0.05) 0%, transparent 70%)' }} />
@@ -276,7 +363,7 @@ export default function CreateMagnetEvent() {
 
         {/* Form area */}
         <div className="flex-1 bg-[#0a0a0a] z-10 flex flex-col relative min-h-0 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
-          <div className={`flex-1 overflow-hidden px-4 flex flex-col items-center ${isCalendarStep ? 'justify-start pt-6' : 'justify-center'}`}>
+          <div className={`flex-1 px-4 flex flex-col items-center ${isCalendarStep || currentStep === 4 ? 'overflow-y-auto justify-start pt-6' : 'overflow-hidden justify-center'}`}>
             <div className="w-full max-w-sm mx-auto flex flex-col justify-center items-center">
 
               {/* Step 1 — Name */}
@@ -344,20 +431,68 @@ export default function CreateMagnetEvent() {
                 </div>
               )}
 
-              {/* Step 4 — Overlay design (optional) */}
+              {/* Step 4 — Frame selection */}
               {currentStep === 4 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight">הוסיפו מסגרת עיצוב</h2>
-                    <p className="text-sm text-white/45">קובץ PNG שיוטבע על כל מגנט — אופציונלי</p>
+                    <h2 className="text-lg font-bold tracking-tight">בחרו מסגרת</h2>
+                    <p className="text-sm text-white/45">המסגרת תוטבע על כל מגנט באירוע — אופציונלי</p>
                   </div>
-                  <label className="flex items-center gap-3 w-full bg-[#161616] border border-dashed border-white/15 hover:border-violet-500/30 rounded-xl px-4 py-4 cursor-pointer transition-colors">
-                    <Upload className="w-5 h-5 text-white/40 shrink-0" />
-                    <span className="text-sm text-white/40 truncate">
-                      {form.overlayFile ? form.overlayFile.name : 'בחרו קובץ PNG להדפסה...'}
-                    </span>
-                    <input type="file" accept="image/png" className="hidden" onChange={handleOverlayFile} />
-                  </label>
+
+                  {/* "None" option */}
+                  <button
+                    type="button"
+                    onClick={() => handleChange('selectedFrameId', null)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-sm"
+                    style={{
+                      background: form.selectedFrameId === null ? 'rgba(124,58,237,0.12)' : 'rgba(255,255,255,0.04)',
+                      border: form.selectedFrameId === null ? '1px solid rgba(124,58,237,0.45)' : '1px solid rgba(255,255,255,0.08)',
+                      color: form.selectedFrameId === null ? '#a78bfa' : 'rgba(255,255,255,0.4)',
+                    }}
+                  >
+                    {form.selectedFrameId === null && <Check className="w-3.5 h-3.5 shrink-0" />}
+                    <span>ללא מסגרת</span>
+                  </button>
+
+                  {/* Frame categories */}
+                  {FRAME_CATEGORIES.map(cat => (
+                    <div key={cat.key}>
+                      <p className="text-[9px] font-semibold mb-2 tracking-widest uppercase" style={{ color: 'rgba(167,139,250,0.5)' }}>
+                        {cat.label}
+                      </p>
+                      <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }} dir="ltr">
+                        {FRAME_PACKS[cat.key].map(frame => (
+                          <FrameThumbnail
+                            key={frame.id}
+                            frame={frame}
+                            isSelected={form.selectedFrameId === frame.id}
+                            onSelect={(id) => { handleChange('selectedFrameId', id); handleChange('overlayFile', null); setOverlayPreview(null); }}
+                            eventData={form}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Custom PNG upload (advanced) */}
+                  <div>
+                    <p className="text-[9px] font-semibold mb-2 tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                      מותאם אישית
+                    </p>
+                    <label className="flex items-center gap-3 w-full bg-[#161616] border border-dashed border-white/10 hover:border-violet-500/25 rounded-xl px-4 py-3 cursor-pointer transition-colors">
+                      <Upload className="w-4 h-4 text-white/30 shrink-0" />
+                      <span className="text-xs text-white/30 truncate">
+                        {form.overlayFile ? form.overlayFile.name : 'העלאת PNG מותאם...'}
+                      </span>
+                      {form.overlayFile && (
+                        <button type="button" className="mr-auto shrink-0" onClick={(e) => { e.preventDefault(); handleChange('overlayFile', null); setOverlayPreview(null); }}>
+                          <X className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
+                        </button>
+                      )}
+                      <input type="file" accept="image/png" className="hidden" onChange={(e) => { handleOverlayFile(e); handleChange('selectedFrameId', null); }} />
+                    </label>
+                  </div>
+
                   {errors.submit && <p className="text-red-400 text-sm text-center">{errors.submit}</p>}
                 </div>
               )}

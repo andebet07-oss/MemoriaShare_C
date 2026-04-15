@@ -1,8 +1,7 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { Trash2, Loader2, Smile, X } from 'lucide-react';
 import { getStickerPack } from './stickerPacks';
-import { getFramePack } from './framePacks';
-import FramePicker from './FramePicker';
+import { getFramePack, ALL_FRAMES, LABEL_H_RATIO } from './framePacks';
 import memoriaService from '@/components/memoriaService';
 import { compressImage } from '@/functions/processImage';
 
@@ -46,32 +45,15 @@ const Champagne = () => (
 );
 
 export default function MagnetReview({ imageDataURL, event, userId, onRetake, onPrintJobCreated }) {
-  const photoRef      = useRef(null);
-  const previewCanvas = useRef(null);
-  const [stickers, setStickers]     = useState([]);
-  const [showPicker, setShowPicker] = useState(false);
+  const photoRef = useRef(null);
+  const [stickers, setStickers]       = useState([]);
+  const [showPicker, setShowPicker]   = useState(false);
   const [draggingUid, setDraggingUid] = useState(null);
   const dragOffset = useRef({ x: 0, y: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modal, setModal] = useState(null); // null | 'loading' | 'success' | 'error'
 
-  const framePack    = useMemo(() => getFramePack(event?.name || ''), [event?.name]);
-  const [selectedFrame, setSelectedFrame] = useState(() => framePack[0]);
   const pack = useMemo(() => getStickerPack(event?.name || ''), [event?.name]);
-
-  // Live frame preview — renders frame on transparent canvas overlay
-  useEffect(() => {
-    const cvs = previewCanvas.current;
-    if (!cvs || !selectedFrame) return;
-    const rect = cvs.getBoundingClientRect();
-    const dpr  = window.devicePixelRatio || 1;
-    cvs.width  = Math.round(rect.width  * dpr);
-    cvs.height = Math.round(rect.height * dpr);
-    const ctx  = cvs.getContext('2d');
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, rect.width, rect.height);
-    selectedFrame.drawFrame(ctx, rect.width, rect.height, event);
-  }, [selectedFrame, event]);
   const dateLabel = useMemo(() => {
     if (!event?.date) return null;
     return new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -111,11 +93,28 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       const img = new Image();
       img.src = imageDataURL;
       await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+
+      const photoW = img.naturalWidth;
+      const photoH = img.naturalHeight;
+      const labelH  = Math.round(photoW * LABEL_H_RATIO);
+      const totalH  = photoH + labelH;
+
       const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      canvas.width  = photoW;
+      canvas.height = totalH;
       const ctx = canvas.getContext('2d');
+
+      // White base (label area will be drawn by frame)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, photoW, totalH);
       ctx.drawImage(img, 0, 0);
-      selectedFrame.drawFrame(ctx, canvas.width, canvas.height, event);
+
+      // Resolve frame: admin stores frame_id in overlay_frame_url; fall back to pack[0]
+      const frameId = event?.overlay_frame_url;
+      const eventFrame = (frameId && !frameId.startsWith('http'))
+        ? (ALL_FRAMES.find(f => f.id === frameId) ?? getFramePack(event?.name || '')[0])
+        : getFramePack(event?.name || '')[0];
+      if (eventFrame) eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
       for (const s of stickers) drawSticker(ctx, s, canvas.width, canvas.height);
       const blob = await compressImage(canvas);
       const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
@@ -153,8 +152,6 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
           {/* Photo area */}
           <div ref={photoRef} className="relative overflow-hidden" style={{ aspectRatio: '3/4', touchAction: draggingUid ? 'none' : 'auto' }}>
             <img src={imageDataURL} alt="captured" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
-            {/* Live frame preview — transparent canvas, re-renders on frame change */}
-            <canvas ref={previewCanvas} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }} />
 
             {stickers.map(s => (
               <div
@@ -186,13 +183,9 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
 
       {/* ── Bottom bar ── */}
       <div
-        className="absolute inset-x-0 bottom-0 flex flex-col px-5 gap-3"
+        className="absolute inset-x-0 bottom-0 px-5"
         style={{ paddingTop: '18px', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)', background: 'linear-gradient(to top, rgba(10,10,14,0.97) 65%, transparent)' }}
       >
-        {/* Frame picker strip */}
-        <FramePicker frames={framePack} selectedId={selectedFrame?.id} onSelect={setSelectedFrame} />
-
-        {/* Action buttons row */}
         <div className="flex items-center gap-3">
         <button onClick={onRetake} disabled={isSubmitting} aria-label="צלם מחדש" className="w-12 h-12 rounded-full flex items-center justify-center disabled:opacity-40 active:scale-90 transition-transform" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
           <Trash2 className="w-5 h-5 text-white/70" />
@@ -205,7 +198,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         <button onClick={() => setShowPicker(true)} aria-label="הוסף מדבקה" className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-transform" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
           <Smile className="w-5 h-5 text-white/70" />
         </button>
-        </div> {/* end action buttons row */}
+        </div>
       </div>
 
       {/* ── Loading modal ── */}
