@@ -122,73 +122,141 @@ function InlineCalendar({ value, onChange }) {
   );
 }
 
-// Thumbnail dimensions: photo area + label strip (matches final magnet proportions)
-const THUMB_W = 58;
-const THUMB_PHOTO_H = Math.round(THUMB_W * (4 / 3));               // 77px (3:4 photo)
-const THUMB_LABEL_H = Math.round(THUMB_W * LABEL_H_RATIO);         // 13px label
-const THUMB_TOTAL_H = THUMB_PHOTO_H + THUMB_LABEL_H;               // 90px total
+// Thumbnail dimensions
+const THUMB_W = 88;
+const THUMB_PHOTO_H = Math.round(THUMB_W * (4 / 3));    // 117px
+const THUMB_LABEL_H = Math.round(THUMB_W * LABEL_H_RATIO); // ~20px
+const THUMB_TOTAL_H = THUMB_PHOTO_H + THUMB_LABEL_H;    // ~137px
 
-// Canvas thumbnail for a single frame option
+// Extract first hex color from previewBg gradient string for the photo area
+function previewBgToPhotoColor(previewBg = '') {
+  const match = previewBg.match(/#[0-9a-fA-F]{6}/);
+  return match ? match[0] : '#1a1410';
+}
+
+// Draws a frame onto a given canvas element
+function drawOnCanvas(el, frame, eventData) {
+  if (!el) return;
+  const ctx = el.getContext('2d');
+  const w = el.width;
+  const pH = el.height - Math.round(w * LABEL_H_RATIO);
+  const tH = el.height;
+  const photoColor = previewBgToPhotoColor(frame.previewBg);
+  // Photo area: gradient from the frame's own palette
+  const grad = ctx.createLinearGradient(0, 0, w, pH);
+  grad.addColorStop(0, photoColor);
+  grad.addColorStop(1, '#0d0d0d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, tH);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, pH);
+  frame.drawFrame(ctx, w, tH, pH,
+    { name: eventData?.name || 'שם האירוע', date: eventData?.date || null });
+}
+
+// Canvas thumbnail — redraws after fonts are ready
 function FrameThumbnail({ frame, isSelected, onSelect, eventData }) {
   const cvs = useRef(null);
 
   useEffect(() => {
-    const el = cvs.current;
-    if (!el) return;
-    const ctx = el.getContext('2d');
-    // Simulate a photo background (warm gradient)
-    const grad = ctx.createLinearGradient(0, 0, el.width, THUMB_PHOTO_H);
-    grad.addColorStop(0, '#2e2820');
-    grad.addColorStop(1, '#181410');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, el.width, el.height);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, el.width, THUMB_PHOTO_H);
-    frame.drawFrame(
-      ctx, el.width, THUMB_TOTAL_H, THUMB_PHOTO_H,
-      { name: eventData?.name || 'שם האירוע', date: eventData?.date || null }
-    );
+    document.fonts.ready.then(() => drawOnCanvas(cvs.current, frame, eventData));
   }, [frame, eventData?.name, eventData?.date]);
 
   return (
     <button
       type="button"
       onClick={() => onSelect(frame.id)}
-      className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform duration-150"
+      className="flex flex-col items-center gap-1.5 shrink-0 transition-transform duration-150 active:scale-95"
       style={{ outline: 'none' }}
     >
       <div style={{
         position: 'relative',
-        borderRadius: '3px',
-        border: isSelected ? '2px solid #7c3aed' : '2px solid rgba(255,255,255,0.08)',
-        boxShadow: isSelected ? '0 0 14px -2px rgba(124,58,237,0.6)' : '0 2px 8px rgba(0,0,0,0.5)',
+        borderRadius: '4px',
+        border: isSelected ? '2.5px solid #7c3aed' : '2px solid rgba(255,255,255,0.08)',
+        boxShadow: isSelected
+          ? '0 0 18px -2px rgba(124,58,237,0.7), 0 4px 16px rgba(0,0,0,0.5)'
+          : '0 3px 12px rgba(0,0,0,0.55)',
         transition: 'border-color 0.15s, box-shadow 0.15s',
         overflow: 'hidden',
       }}>
         <canvas ref={cvs} width={THUMB_W} height={THUMB_TOTAL_H} style={{ display: 'block' }} />
         {isSelected && (
           <div style={{
-            position: 'absolute', top: 4, right: 4,
-            width: 14, height: 14, borderRadius: '50%',
+            position: 'absolute', top: 5, right: 5,
+            width: 16, height: 16, borderRadius: '50%',
             background: '#7c3aed',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-              <path d="M1.5 4L3.2 5.8L6.5 2.2" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+              <path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         )}
       </div>
       <span style={{
-        fontFamily: 'Heebo, sans-serif', fontSize: '9px', whiteSpace: 'nowrap',
-        color: isSelected ? '#a78bfa' : 'rgba(255,255,255,0.35)',
-        fontWeight: isSelected ? 600 : 400,
+        fontFamily: 'Heebo, sans-serif', fontSize: '10px', whiteSpace: 'nowrap',
+        color: isSelected ? '#a78bfa' : 'rgba(255,255,255,0.4)',
+        fontWeight: isSelected ? 700 : 400,
         transition: 'color 0.15s',
         userSelect: 'none',
       }}>
         {frame.name}
       </span>
     </button>
+  );
+}
+
+// Full-size frame preview modal
+const MODAL_W = 220;
+const MODAL_PHOTO_H = Math.round(MODAL_W * (4 / 3)); // 293px
+const MODAL_LABEL_H = Math.round(MODAL_W * LABEL_H_RATIO); // ~50px
+const MODAL_TOTAL_H = MODAL_PHOTO_H + MODAL_LABEL_H;
+
+function FramePreviewModal({ frame, eventData, onClose, onSelect, isSelected }) {
+  const cvs = useRef(null);
+
+  useEffect(() => {
+    document.fonts.ready.then(() => drawOnCanvas(cvs.current, frame, eventData));
+  }, [frame, eventData?.name, eventData?.date]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(6px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="flex flex-col items-center pb-8 pt-6 px-6 gap-5 w-full max-w-xs"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Frame name */}
+        <p className="text-white/60 text-xs tracking-widest uppercase">{frame.name}</p>
+
+        {/* Large canvas preview */}
+        <div style={{ borderRadius: '6px', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
+          <canvas ref={cvs} width={MODAL_W} height={MODAL_TOTAL_H} style={{ display: 'block' }} />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 h-11 rounded-xl text-sm font-semibold text-white/50 border border-white/10 hover:border-white/20 transition-colors"
+          >
+            ביטול
+          </button>
+          <button
+            type="button"
+            onClick={() => { onSelect(frame.id); onClose(); }}
+            className="flex-1 h-11 rounded-xl text-sm font-bold text-white transition-colors"
+            style={{ background: isSelected ? 'rgba(124,58,237,0.4)' : '#7c3aed' }}
+          >
+            {isSelected ? '✓ נבחרה' : 'בחר מסגרת'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -223,6 +291,7 @@ export default function CreateMagnetEvent() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(null);
+  const [previewFrame, setPreviewFrame] = useState(null); // frame object shown in preview modal
 
   const quotaOptions = [1, 3, 5, 10, 20];
   const todayStr = new Date().toISOString().split('T')[0];
@@ -295,39 +364,58 @@ export default function CreateMagnetEvent() {
     }
   };
 
-  if (success) return (
-    <div className="fixed inset-0 bg-[#0a0a0a] flex items-center justify-center" dir="rtl">
-      <div className="text-center px-6">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
-          <Check className="w-8 h-8 text-violet-400" />
-        </div>
-        <h3 className="text-xl font-bold text-white mb-2">אירוע מגנט נוצר!</h3>
-        <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-white/[0.06] border border-white/10 rounded-xl">
-          <span className="text-white/50 text-sm">קוד אירוע:</span>
-          <span className="text-white font-mono font-bold tracking-wider">{success.event_code}</span>
-          <button onClick={() => navigator.clipboard?.writeText(success.event_code)}>
-            <Copy className="w-3.5 h-3.5 text-white/40 hover:text-white/70 transition-colors" />
-          </button>
-        </div>
-        <p className="text-white/40 text-sm mt-2">PIN: {success.pin_code}</p>
-        <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
-          <button
-            onClick={() => navigate(`/PrintStation/${success.event_id}`)}
-            className="flex items-center justify-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold rounded-xl transition-colors"
-          >
-            <Monitor className="w-4 h-4" />
-            פתח Print Station
-          </button>
-          <button
-            onClick={() => navigate('/AdminDashboard')}
-            className="px-5 py-3 bg-white/[0.06] border border-white/10 text-white text-sm rounded-xl hover:bg-white/[0.08] transition-colors"
-          >
-            חזרה לדשבורד
-          </button>
+  if (success) {
+    const eventUrl = `${window.location.origin}/magnet/${success.event_code}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&format=png&color=0a0a0a&bgcolor=ffffff&data=${encodeURIComponent(eventUrl)}`;
+    return (
+      <div className="fixed inset-0 bg-[#0a0a0a] flex items-center justify-center" dir="rtl">
+        <div className="text-center px-6 max-w-sm w-full">
+          {/* Check circle */}
+          <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
+            <Check className="w-7 h-7 text-violet-400" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-1">אירוע מגנט נוצר!</h3>
+          <p className="text-white/40 text-sm mb-6">שתפו את הקישור או ה-QR עם האורחים</p>
+
+          {/* QR code */}
+          <div className="mx-auto w-fit bg-white rounded-2xl p-3 mb-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+            <img src={qrUrl} alt="QR" width={160} height={160} className="block rounded-lg" />
+          </div>
+
+          {/* Event URL copy row */}
+          <div className="flex items-center gap-2 bg-white/[0.06] border border-white/10 rounded-xl px-4 py-3 mb-6">
+            <span className="text-white/70 text-xs font-mono truncate flex-1 text-right" dir="ltr">
+              {eventUrl}
+            </span>
+            <button
+              onClick={() => navigator.clipboard?.writeText(eventUrl)}
+              className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              title="העתק קישור"
+            >
+              <Copy className="w-4 h-4 text-white/50 hover:text-white/80 transition-colors" />
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => navigate(`/PrintStation/${success.event_id}`)}
+              className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold rounded-xl transition-colors"
+            >
+              <Monitor className="w-4 h-4" />
+              פתח Print Station
+            </button>
+            <button
+              onClick={() => navigate('/AdminDashboard')}
+              className="w-full px-5 py-3 bg-white/[0.06] border border-white/10 text-white/70 text-sm rounded-xl hover:bg-white/[0.08] transition-colors"
+            >
+              חזרה לדשבורד
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   const progressPercentage = currentStep / totalSteps * 100;
 
@@ -341,6 +429,21 @@ export default function CreateMagnetEvent() {
   return (
     <div className="flex flex-col w-full h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden" dir="rtl"
       style={{ fontFamily: "'Heebo', 'Assistant', sans-serif" }}>
+
+      {/* Frame preview modal */}
+      {previewFrame && (
+        <FramePreviewModal
+          frame={previewFrame}
+          eventData={form}
+          onClose={() => setPreviewFrame(null)}
+          isSelected={form.selectedFrameId === previewFrame.id}
+          onSelect={(id) => {
+            handleChange('selectedFrameId', id);
+            handleChange('overlayFile', null);
+            setOverlayPreview(null);
+          }}
+        />
+      )}
 
       {/* Progress bar */}
       <div className="h-1 bg-gray-800 shrink-0 w-full z-50">
@@ -460,13 +563,13 @@ export default function CreateMagnetEvent() {
                       <p className="text-[9px] font-semibold mb-2 tracking-widest uppercase" style={{ color: 'rgba(167,139,250,0.5)' }}>
                         {cat.label}
                       </p>
-                      <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }} dir="ltr">
+                      <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }} dir="ltr">
                         {FRAME_PACKS[cat.key].map(frame => (
                           <FrameThumbnail
                             key={frame.id}
                             frame={frame}
                             isSelected={form.selectedFrameId === frame.id}
-                            onSelect={(id) => { handleChange('selectedFrameId', id); handleChange('overlayFile', null); setOverlayPreview(null); }}
+                            onSelect={() => setPreviewFrame(frame)}
                             eventData={form}
                           />
                         ))}
