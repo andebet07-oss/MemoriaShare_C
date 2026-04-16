@@ -35,17 +35,17 @@ export default function FAQ() {
   const [openIdx, setOpenIdx] = useState(null);
 
   return (
-    <section id="faq" className="py-24 md:py-32 border-t border-white/5" dir="rtl">
+    <section id="faq" className="py-24 md:py-32 border-t border-border" dir="rtl">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-[1fr_2fr] gap-12 md:gap-20 items-start">
 
           {/* Left header */}
           <div className="md:sticky md:top-32 self-start">
-            <p className="text-[#b8945f] text-[10px] font-bold tracking-[0.3em] uppercase mb-6">04 · שאלות</p>
-            <h2 className="font-editorial text-4xl md:text-5xl leading-[1.1] text-[#e8e2d5]">
+            <p className="text-gold-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-6"><bdi>04</bdi> · שאלות</p>
+            <h2 className="font-playfair text-4xl md:text-5xl leading-[1.1] text-foreground/90">
               כל מה
               <br />
-              <span className="italic text-[#a89a85]">שצריך לדעת.</span>
+              <span className="italic text-muted-foreground">שצריך לדעת.</span>
             </h2>
           </div>
 
@@ -54,18 +54,18 @@ export default function FAQ() {
             {faqItems.map((item, index) => (
               <div
                 key={index}
-                className="border-b border-white/[0.08] last:border-b-0"
+                className="border-b border-border last:border-b-0"
               >
                 <button
                   type="button"
                   onClick={() => setOpenIdx(openIdx === index ? null : index)}
                   className="w-full text-right py-6 flex justify-between items-start gap-4 group"
                 >
-                  <span className="font-editorial text-[#e8e2d5] text-lg leading-snug group-hover:text-white transition-colors text-right flex-1">
+                  <span className="font-playfair text-foreground/90 text-lg leading-snug group-hover:text-foreground transition-colors text-right flex-1">
                     {item.question}
                   </span>
                   <span
-                    className="text-[#a89a85] text-xl leading-none shrink-0 mt-0.5 transition-transform duration-300 select-none"
+                    className="text-muted-foreground text-xl leading-none shrink-0 mt-0.5 transition-transform duration-300 select-none"
                     style={{ transform: openIdx === index ? 'rotate(45deg)' : 'none' }}
                   >
                     +
@@ -73,7 +73,7 @@ export default function FAQ() {
                 </button>
                 {openIdx === index && (
                   <div className="pb-6 pr-0">
-                    <p className="text-[#a89a85] text-base leading-relaxed">{item.answer}</p>
+                    <p className="text-muted-foreground text-base leading-relaxed">{item.answer}</p>
                   </div>
                 )}
               </div>

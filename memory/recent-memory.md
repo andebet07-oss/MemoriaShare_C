@@ -1,10 +1,40 @@
 ---
 type: recent-memory
-updated: 2026-04-16T20:00Z
+updated: 2026-04-16T22:00Z
 horizon: 48 hours
 ---
 
 # Recent Memory (Last 48 Hours)
+
+## Session 2026-04-15 → 2026-04-16 (Late Night) — Magnet Frame System V1–V4
+
+### New Files
+- `src/components/magnet/framePacks.js` (1135 lines) — canvas frame system v2
+- `src/components/magnet/FramePicker.jsx` (125 lines) — horizontal RTL scroll strip
+- `public/FRAMES/*.jpeg` — 8 reference magnet prints (WhatsApp-sourced)
+- `cowork context/` — shared design system SKILL + project context docs
+
+### Architecture (`framePacks.js`)
+- **Label-below-photo** design: label strip BELOW photo is the design surface; photo stays clean (at most subtle vignette/hairline)
+- `LABEL_H_RATIO = 0.225` — label = 22.5% of canvas width
+- Signature: `drawFrame(ctx, w, totalH, photoH, event)` where `event = { name, date }`
+- 6 packs: `wedding`, `bar_mitzvah`, `brit`, `birthday`, `corporate`, `general` (expanded from 4)
+- `getFramePack(eventName)` — Hebrew/English keyword router (חתונה → wedding, ברית → brit, etc.)
+- `ALL_FRAMES` flat export for admin picker
+
+### FramePicker UI
+- Thumbnails 52×68px, `rounded-[4px]`, RTL horizontal scroll
+- Selected state: gold border `rgba(201,169,110,0.9)` + gold glow
+- Label "מסגרת" in Montserrat uppercase, gold 60% opacity
+- Integrated into `MagnetReview.jsx` — sits above main action buttons
+
+### Integration into MagnetReview
+- Imports `{ getFramePack, ALL_FRAMES, LABEL_H_RATIO }`
+- Default frame: first in auto-selected pack
+- Canvas sized: `photoH + (w * LABEL_H_RATIO)` for label zone
+- Frame ID persisted per review session
+
+---
 
 ## Session 2026-04-16 (Evening) — UI Polish & Stickers
 
@@ -61,8 +91,9 @@ horizon: 48 hours
 ---
 
 ## What's Pending (carry forward)
-- `linked_event_id` migration + bundle toggle (Stage 1 incomplete — HIGH priority)
-- `public/icons/*.webp` — 4 unused files (safe to delete)
+- `linked_event_id` migration + bundle toggle (Stage 1 incomplete — HIGH priority) — **still missing from `CLEAN_RESET_SCHEMA.sql`** as of 2026-04-16T22:00Z
+- `public/icons/kpi-*.webp` — 4 files unreferenced in src (AdminOverview uses Lucide icons instead); safe to delete
 - Search/filter on `AdminEventsList`
 - Magnet card metadata: guest count, quota, prints
 - QR preview on `MagnetEventDashboard` (use `qrcode.react` from EventSuccess)
+- Frame picker: add per-event frame override (admin chooses pack on `CreateMagnetEvent`)

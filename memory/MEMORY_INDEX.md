@@ -1,5 +1,7 @@
 # Memory System Index
 
+Last consolidation: **2026-04-16T22:00Z** (auto — `consolidate-memoria-memory`)
+
 This directory holds structured memory for the Memoria project across sessions.
 
 ## Files
@@ -7,6 +9,12 @@ This directory holds structured memory for the Memoria project across sessions.
 - **recent-memory.md** — Rolling 48-hour context (last session's decisions, active tasks, design choices)
 - **long-term-memory.md** — Distilled facts, patterns, rules, brand language, tech stack constraints
 - **project-memory.md** — Active initiative state, deliverables, testing checklist, known issues
+
+## Critical Facts (at-a-glance)
+
+- **Open HIGH-priority blocker:** `linked_event_id` column still missing from `CLEAN_RESET_SCHEMA.sql` (Stage 1 of wobbly-wobbling-crab plan)
+- **Newest subsystem:** Magnet frame system v2 — `framePacks.js` (6 packs) + `FramePicker.jsx`, label-below-photo architecture, `LABEL_H_RATIO = 0.225`
+- **Accent colors:** violet `#7c3aed` platform-wide; gold `#c9a96e` reserved for magnet premium UI
 
 ## Usage
 

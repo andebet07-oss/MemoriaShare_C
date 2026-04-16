@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import ProgressBar from "@/components/ui/ProgressBar";
+import SegmentedControl from "@/components/ui/SegmentedControl";
+import StepSlider from "@/components/ui/StepSlider";
+import StickyCTA from "@/components/ui/StickyCTA";
 import {
   Pencil,
   Loader2,
@@ -14,7 +18,7 @@ import {
   X,
   Home } from
 "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
@@ -48,9 +52,10 @@ async function compressImage(file) {
  * מידות קשיחות כדי לשמור על הפרופורציה המושלמת של המכשיר
  */
 function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onImageTransformChange, phoneH, phoneW }) {
+  // Hebrew DD.MM.YYYY format matches Intl 'he-IL' output for user-picked dates
   const formattedDate = eventData.date ?
-  new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(eventData.date)).replace(/\./g, '.') :
-  "02.25.2026";
+  new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(eventData.date)) :
+  "25.02.2026";
 
   const [imageError, setImageError] = useState(false);
   const [imgNaturalSize, setImgNaturalSize] = useState({ w: 0, h: 0 });
@@ -141,17 +146,17 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
 
   return (
     // גודל האייפון מבוסס dvh — פרופורציונלי לגובה המסך. יחס 9:19.5 (iPhone)
-    <div className="relative bg-zinc-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-white/10 mx-auto"
+    <div className="relative bg-warm-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-foreground/10 mx-auto"
       style={{ width: phoneW || 'clamp(170px, 25dvh, 240px)', height: phoneH || 'clamp(145px, 54dvh, 480px)', borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)', padding: 'clamp(4px, 0.8dvh, 8px)', transition: 'width 0.5s ease-out, height 0.5s ease-out' }}>
 
       {isDesignMode &&
-      <div className="absolute inset-0 ring-2 ring-indigo-500 z-[70] pointer-events-none animate-pulse" style={{ borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)' }} />
+      <div className="absolute inset-0 ring-2 ring-primary z-[70] pointer-events-none animate-pulse" style={{ borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)' }} />
       }
 
       {/* Dynamic Island */}
       <div className="absolute left-1/2 -translate-x-1/2 bg-black rounded-full z-[60] flex items-center justify-end shadow-inner"
         style={{ top: 'clamp(8px, 1.5dvh, 18px)', width: 'clamp(44px, 8.5dvh, 76px)', height: 'clamp(13px, 2.2dvh, 22px)', paddingRight: 'clamp(6px, 1dvh, 12px)' }}>
-        <div className="rounded-full bg-[#111] border border-white/5 shadow-sm" style={{ width: 'clamp(4px, 0.75dvh, 6px)', height: 'clamp(4px, 0.75dvh, 6px)' }}></div>
+        <div className="rounded-full bg-warm-900 border border-foreground/5 shadow-sm" style={{ width: 'clamp(4px, 0.75dvh, 6px)', height: 'clamp(4px, 0.75dvh, 6px)' }}></div>
       </div>
 
       {/* Inner Screen */}
@@ -177,7 +182,7 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
         
         {/* Background Image */}
         {imageError ?
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 to-black z-0"></div> :
+        <div className="absolute inset-0 bg-gradient-to-br from-warm-900 to-warm-950 z-0"></div> :
 
         <img
           src={displayImage}
@@ -242,7 +247,8 @@ function InlineCalendar({ value, onChange }) {
   const [viewYear, setViewYear] = useState(selected ? selected.getFullYear() : today.getFullYear());
   const [viewMonth, setViewMonth] = useState(selected ? selected.getMonth() : today.getMonth());
 
-  const hebrewDays = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+  // Sun → Sat, Hebrew convention (no gershayim — matches POV editorial spec)
+  const hebrewDays = ['א','ב','ג','ד','ה','ו','ש'];
   const hebrewMonths = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
@@ -266,30 +272,30 @@ function InlineCalendar({ value, onChange }) {
   };
 
   return (
-    <div className="bg-[#161616] border border-white/10 rounded-2xl p-4 w-full" dir="ltr">
+    <div className="bg-secondary border border-border rounded-2xl p-4 w-full" dir="ltr">
       <div className="flex items-center justify-between mb-3">
-        <button type="button" onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+        <button type="button" onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-foreground/40 hover:text-foreground hover:bg-foreground/[0.06] transition-colors">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <span className="text-white text-base font-bold">{hebrewMonths[viewMonth]} {viewYear}</span>
-        <button type="button" onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+        <span className="text-foreground text-base font-bold"><bdi>{hebrewMonths[viewMonth]}</bdi> <bdi>{viewYear}</bdi></span>
+        <button type="button" onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-foreground/40 hover:text-foreground hover:bg-foreground/[0.06] transition-colors">
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
       <div className="grid grid-cols-7 mb-1">
-        {hebrewDays.map(d => <div key={d} className="text-center text-white/30 text-xs font-bold py-1">{d}</div>)}
+        {hebrewDays.map(d => <div key={d} className="text-center text-foreground/30 text-xs font-bold py-1">{d}</div>)}
       </div>
       <div className="grid grid-cols-7">
         {cells.map((day, i) => (
           <button key={i} type="button" onClick={() => handleDay(day)}
             className={`h-9 w-full flex items-center justify-center text-base font-medium rounded-full transition-colors
               ${!day ? 'invisible pointer-events-none' : ''}
-              ${day && isPast(day) ? 'text-white/20 pointer-events-none' : ''}
-              ${day && isSel(day) ? 'bg-indigo-600 text-white shadow-md' : ''}
-              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-indigo-500/40 text-white' : ''}
-              ${day && !isPast(day) && !isSel(day) ? 'text-white/75 hover:bg-white/[0.08]' : ''}
+              ${day && isPast(day) ? 'text-foreground/20 pointer-events-none' : ''}
+              ${day && isSel(day) ? 'bg-primary text-primary-foreground shadow-gold-soft' : ''}
+              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-primary/40 text-foreground' : ''}
+              ${day && !isPast(day) && !isSel(day) ? 'text-foreground/75 hover:bg-foreground/[0.08]' : ''}
             `}>
-            {day || ''}
+            <bdi>{day || ''}</bdi>
           </button>
         ))}
       </div>
@@ -408,7 +414,6 @@ export default function App() {
   };
 
   const displayPreviewImage = localPreviewUrl || coverImagePreview;
-  const progressPercentage = currentStep / totalSteps * 100;
 
   // On the calendar step, hide the phone area entirely — give the calendar the full screen.
   // On all other steps, show large phone matching POV.camera proportions.
@@ -418,20 +423,18 @@ export default function App() {
 
   return (
     // הוספת 100dvh קריטית כדי למנוע את קפיצות ה-Scrollbar בדפדפן הנייד. overflow-hidden נועל את המסך.
-    <div className="flex flex-col w-full h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden" dir="rtl" style={{ fontFamily: "'Heebo', 'Assistant', sans-serif" }}>
-      
-      {/* Progress Bar (דק יותר) */}
-      <div className="h-1 bg-gray-800 shrink-0 w-full z-50">
-        <div className="h-full bg-indigo-600 transition-all duration-500 shadow-[0_0_10px_rgba(79,70,229,0.5)]" style={{ width: `${progressPercentage}%` }} />
-      </div>
+    <div className="flex flex-col w-full h-[100dvh] bg-background text-foreground overflow-hidden font-heebo" dir="rtl">
+
+      {/* Progress Bar — fills from right in RTL via inline-start block flow */}
+      <ProgressBar value={currentStep} max={totalSteps} className="shrink-0 z-50" ariaLabel="התקדמות יצירת אירוע" />
 
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
-        
+
         {/* אזור אייפון — מוסתר בשלב בחירת התאריך כדי לפנות מקום מלא ללוח השנה */}
         {!isCalendarStep && (
-          <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2">
-            <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]"></div>
-            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(255,255,255,0.03) 0%, transparent 70%)' }}></div>
+          <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto bg-card flex items-center justify-center relative z-0 shrink-0 border-b border-border lg:border-none overflow-hidden py-2">
+            <div className="absolute inset-0 bg-gradient-to-b from-secondary to-background"></div>
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(247,240,228,0.03) 0%, transparent 70%)' }}></div>
             <div className="h-full w-full flex items-center justify-center py-3 relative z-10">
               <div className="relative">
                 <PhoneMockup
@@ -456,7 +459,7 @@ export default function App() {
         {/* אנחנו משתמשים ב-overflow-hidden כאן. במקום לתת לכפתורים לדרוס את האייפון,
                                  אנחנו מכריחים את התוכן הפנימי להתכווץ ולתפוס את כל השטח שנותר.
                               */}
-        <div className="flex-1 bg-[#0a0a0a] lg:rounded-none z-10 flex flex-col relative min-h-0 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
+        <div className="flex-1 bg-background lg:rounded-none z-10 flex flex-col relative min-h-0 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
           
           {/* אמצע: הטופס עצמו מתמרכז בצורה מושלמת ב-View-port הנותר.
                                    צמצמנו דרמטית את כל ה-pt/pb וה-space-y כדי שכל המידע ייכנס.
@@ -467,17 +470,17 @@ export default function App() {
               {/* Step 1 */}
               {currentStep === 1 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
-                  <h2 className="text-lg font-bold tracking-tight mb-1">מה האירוע שאתם חוגגים?</h2>
-                  <p className="text-sm text-white/45 mb-2">השם שיופיע לאורחים כשיפתחו את המצלמה</p>
+                  <h2 className="text-lg font-bold tracking-tight mb-1 text-foreground">מה האירוע שאתם חוגגים?</h2>
+                  <p className="text-sm text-muted-foreground mb-2">השם שיופיע לאורחים כשיפתחו את המצלמה</p>
                   <div className="w-full">
                     <Input
                     value={eventData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="למשל: Yael & Daniel"
                     style={{ fontSize: '16px' }}
-                    className="bg-[#161616] border-gray-800 text-white h-10 text-center rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-inner placeholder:text-gray-700 w-full" />
+                    className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full" />
 
-                    {errors.name && <p className="text-red-500 text-[10px] mt-2 font-bold animate-pulse">{errors.name}</p>}
+                    {errors.name && <p className="text-destructive text-[10px] mt-2 font-bold animate-pulse">{errors.name}</p>}
                   </div>
                 </div>
               }
@@ -485,11 +488,11 @@ export default function App() {
               {/* Step 2 */}
               {currentStep === 2 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
-                  <h2 className="text-lg font-bold tracking-tight mb-1">איך תיראה ההזמנה?</h2>
-                  <p className="text-sm text-white/45 mb-2">הרקע שיופיע לאורחים לפני שהם פותחים מצלמה</p>
-                  <div className="grid grid-cols-2 gap-3 w-fullpt-2">
+                  <h2 className="text-lg font-bold tracking-tight mb-1 text-foreground">איך תיראה ההזמנה?</h2>
+                  <p className="text-sm text-muted-foreground mb-2">הרקע שיופיע לאורחים לפני שהם פותחים מצלמה</p>
+                  <div className="grid grid-cols-2 gap-3 w-full pt-2">
                     <label htmlFor="add-photo" className="cursor-pointer group h-full">
-                      <div className="bg-indigo-600 hover:bg-indigo-500 transition-all rounded-xl py-2 px-2 text-center h-full flex flex-col justify-center items-center shadow-lg shadow-indigo-900/40 active:scale-95 border border-white/10">
+                      <div className="bg-primary hover:brightness-110 text-primary-foreground transition-all rounded-xl py-2 px-2 text-center h-full flex flex-col justify-center items-center shadow-gold-soft active:scale-95 border border-foreground/10">
                         {isUploading ? <Loader2 className="w-6 h-6 mb-1.5 animate-spin" /> : <ImageIcon className="w-6 h-6 mb-1.5" />}
                         <p className="text-[10px] font-black uppercase tracking-widest leading-tight">{isUploading ? 'מעלה...' : 'העלאה'}</p>
                       </div>
@@ -499,11 +502,11 @@ export default function App() {
                     type="button"
                     onClick={() => setIsDesignMode((prev) => !prev)}
                     className={`transition-all rounded-xl py-2 px-2 text-center border flex flex-col justify-center items-center active:scale-95 h-full ${
-                    isDesignMode ? 'bg-indigo-600 border-indigo-400 shadow-lg shadow-indigo-900/40' : 'bg-[#161616] hover:bg-[#1a1a1a] border-gray-800'}`
+                    isDesignMode ? 'bg-primary border-primary text-primary-foreground shadow-gold-soft' : 'bg-secondary hover:bg-accent border-border'}`
                     }>
 
-                      {isDesignMode ? <X className="w-6 h-6 mb-1.5 text-white" /> : <Pencil className="w-6 h-6 mb-1.5 text-gray-400" />}
-                      <p className={`text-[10px] font-black uppercase tracking-widest leading-tight ${isDesignMode ? 'text-white' : 'text-gray-500'}`}>
+                      {isDesignMode ? <X className="w-6 h-6 mb-1.5" /> : <Pencil className="w-6 h-6 mb-1.5 text-muted-foreground" />}
+                      <p className={`text-[10px] font-black uppercase tracking-widest leading-tight ${isDesignMode ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
                         {isDesignMode ? 'סיום' : 'עיצוב'}
                       </p>
                     </button>
@@ -515,8 +518,8 @@ export default function App() {
               {currentStep === 3 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight">מתי חוגגים?</h2>
-                    <p className="text-sm text-white/45">בחרו תאריך — העלאת תמונות תיסגר אוטומטית אחריו</p>
+                    <h2 className="text-lg font-bold tracking-tight text-foreground">מתי חוגגים?</h2>
+                    <p className="text-sm text-muted-foreground">העלאת תמונות תיסגר אוטומטית בסיום האירוע</p>
                   </div>
 
                   {/* Custom inline calendar — no native browser chrome */}
@@ -532,7 +535,7 @@ export default function App() {
                       }
                     }}
                   />
-                  {errors.date && <p className="text-red-500 text-sm font-bold text-center animate-pulse">{errors.date}</p>}
+                  {errors.date && <p className="text-destructive text-sm font-bold text-center animate-pulse">{errors.date}</p>}
                 </div>
               }
 
@@ -540,53 +543,53 @@ export default function App() {
               {currentStep === 4 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight">כמה תמונות לכל אורח?</h2>
-                    <p className="text-sm text-white/45">כל אורח יוכל להעלות עד המספר שתבחרו</p>
+                    <h2 className="text-lg font-bold tracking-tight text-foreground">כמה תמונות לכל אורח?</h2>
+                    <p className="text-sm text-muted-foreground">מגבלת העלאות לאורח</p>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {photosPerPersonOptions.map((num) =>
-                  <button
-                    key={num} type="button" onClick={() => handleInputChange('max_uploads_per_user', num)}
-                    className={`h-10 rounded-xl font-black text-base transition-all active:scale-95 ${
-                    eventData.max_uploads_per_user === num ?
-                    'bg-indigo-600 text-white shadow-md border border-white/20' :
-                    'bg-[#161616] text-gray-400 border border-gray-800 hover:border-gray-600'}`
-                    }>
-                        {num}
-                      </button>
-                  )}
-                  </div>
+                  <SegmentedControl
+                    ariaLabel="מספר תמונות לאורח"
+                    value={eventData.max_uploads_per_user}
+                    onChange={(v) => handleInputChange('max_uploads_per_user', v)}
+                    options={photosPerPersonOptions.map((num) => ({
+                      value: num,
+                      label: <bdi className="font-black text-base">{num}</bdi>,
+                    }))}
+                  />
                 </div>
               }
 
-              {/* Step 5 */}
+              {/* Step 5 — Guest-tier step-slider. RTL: small tiers on the right, fill grows leftward. */}
               {currentStep === 5 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center w-full">
-                  <h2 className="text-lg font-bold tracking-tight mb-1">כמה אורחים מגיעים?</h2>
-                  <div className="grid grid-cols-7 gap-1 mb-2" dir="ltr">
-                    {pricingTiers.map((tier, index) =>
-                  <button
-                    key={index} type="button"
-                    onClick={() => {handleInputChange('guest_tier', index);handleInputChange('price', tier.price || 0);}}
-                    className="flex flex-col items-center gap-1 group">
-                        <div className={`w-full rounded-[3px] transition-all duration-300 ${index <= eventData.guest_tier ? 'bg-indigo-600 h-8 shadow-[0_0_5px_rgba(79,70,229,0.3)]' : 'bg-gray-800 h-6 opacity-40'}`} />
-                        <span className={`text-[8px] sm:text-[9px] font-black tracking-tighter ${index === eventData.guest_tier ? 'text-indigo-400' : 'text-gray-600'}`}>{tier.label}</span>
-                      </button>
-                  )}
-                  </div>
-                  
-                  <div className="bg-gradient-to-r from-[#141414] to-[#0a0a0a] rounded-xl p-3 flex items-center justify-between border border-white/10 shadow-xl">
+                  <h2 className="text-lg font-bold tracking-tight text-foreground">כמה אורחים מגיעים?</h2>
+                  <p className="text-sm text-muted-foreground mb-3">הגודל קובע את המחיר</p>
+
+                  <StepSlider
+                    ariaLabel="גודל האירוע"
+                    value={eventData.guest_tier}
+                    onChange={(idx) => {
+                      handleInputChange('guest_tier', idx);
+                      handleInputChange('price', pricingTiers[idx].price || 0);
+                    }}
+                    tiers={pricingTiers.map((tier, index) => ({
+                      value: index,
+                      label: tier.label,
+                    }))}
+                    className="mb-3"
+                  />
+
+                  <div className="bg-gradient-to-r from-card to-background rounded-xl p-3 flex items-center justify-between border border-border shadow-card-dark">
                     <div className="flex items-center gap-3 text-right">
-                      <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0 border border-indigo-500/20">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/25">
                         <Check size={16} strokeWidth={3} />
                       </div>
                       <div>
-                        <p className="text-white font-black text-[13px] leading-tight uppercase tracking-wide">{pricingTiers[eventData.guest_tier].displayLabel}</p>
-                        <p className="text-gray-600 text-[9px] uppercase font-bold tracking-widest mt-0.5">Premium Hosting</p>
+                        <p className="text-foreground font-black text-[13px] leading-tight uppercase tracking-wide">{pricingTiers[eventData.guest_tier].displayLabel}</p>
+                        <p className="text-muted-foreground text-[9px] uppercase font-bold tracking-widest mt-0.5">Premium Hosting</p>
                       </div>
                     </div>
-                    <span className="text-base font-black text-white shrink-0">
-                      {pricingTiers[eventData.guest_tier].price === null ? 'צור קשר' : pricingTiers[eventData.guest_tier].price === 0 ? 'חינם' : `₪${pricingTiers[eventData.guest_tier].price}`}
+                    <span className="text-base font-black text-foreground shrink-0">
+                      {pricingTiers[eventData.guest_tier].price === null ? 'צור קשר' : pricingTiers[eventData.guest_tier].price === 0 ? 'חינם' : <bdi>{`₪${pricingTiers[eventData.guest_tier].price}`}</bdi>}
                     </span>
                   </div>
                 </div>
@@ -594,40 +597,18 @@ export default function App() {
             </div>
           </div>
 
-          {/* Fixed Footer Navigation - קשיח למטה וצמוד לכפתור */}
-          <div className="bg-[#0a0a0a] px-4 flex-none border-t border-white/5 w-full z-50 shrink-0"
-          style={{ paddingTop: '0.25rem', paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
-            
-            <div className="w-full max-w-sm mx-auto flex gap-3 items-center">
-              {currentStep === 1 ?
-              <Link to="/" className="w-11 h-11 bg-[#161616] text-gray-400 rounded-xl flex items-center justify-center transition-all active:scale-90 border border-gray-800 shrink-0 hover:text-white">
-                  <Home className="w-4 h-4" />
-                </Link> :
-
-              <button
-                type="button" onClick={handleBack}
-                className="w-11 h-11 bg-[#161616] text-white rounded-xl flex items-center justify-center transition-all active:scale-90 border border-gray-800 shrink-0">
-                  <ArrowLeft className="w-5 h-5 rotate-180" />
-                </button>
-              }
-
-              <button
-                type={currentStep === totalSteps ? "submit" : "button"}
-                onClick={currentStep === totalSteps ? handleSubmit : handleNext}
-                disabled={isLoading}
-                className={`text-base font-black rounded-xl flex-1 h-12 transition-all duration-300 active:scale-95 flex items-center justify-center relative ${isCurrentStepValid() || isLoading ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/40 border border-white/10' : 'bg-white/[0.06] text-white/30 border border-white/[0.08]'}`}>
-
-                
-                {isLoading ?
-                <Loader2 className="w-5 h-5 animate-spin" /> :
-
-                <span className="flex items-center gap-2">
-                    {currentStep === totalSteps ? 'סיום ויצירה' : 'המשך'}
-                  </span>
-                }
-              </button>
-            </div>
-          </div>
+          {/* Sticky Footer Navigation — primitive consumption (in-flow, not floating) */}
+          <StickyCTA
+            floating={false}
+            onBack={currentStep === 1 ? () => navigate('/') : handleBack}
+            BackIcon={currentStep === 1 ? Home : undefined}
+            backIcon={currentStep > 1 ? <ArrowLeft className="w-5 h-5 rtl:-scale-x-100" /> : undefined}
+            backAriaLabel={currentStep === 1 ? 'בית' : 'חזור'}
+            primaryType={currentStep === totalSteps ? 'submit' : 'button'}
+            primaryLabel={isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (currentStep === totalSteps ? 'צור אירוע' : 'המשך')}
+            onPrimary={currentStep === totalSteps ? handleSubmit : handleNext}
+            primaryDisabled={isLoading || !isCurrentStepValid()}
+          />
 
         </div>
       </div>

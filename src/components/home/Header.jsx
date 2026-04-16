@@ -46,11 +46,11 @@ export default function Header({ onOpenChooser }) {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10" dir="rtl">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border" dir="rtl">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           {/* Mobile menu button */}
           <button
-            className="md:hidden text-white/60 hover:text-white z-[200] relative"
+            className="md:hidden text-foreground/60 hover:text-foreground z-[200] relative"
             onClick={() => setIsMenuOpen(true)}
             aria-label="פתח תפריט">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,17 +60,17 @@ export default function Header({ onOpenChooser }) {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
-            <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="text-white/50 hover:text-white transition-colors cursor-pointer">פיצ'רים</a>
-            <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="text-white/50 hover:text-white transition-colors cursor-pointer">המלצות</a>
-            <a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="text-white/50 hover:text-white transition-colors cursor-pointer">שאלות נפוצות</a>
+            <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">פיצ'רים</a>
+            <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">המלצות</a>
+            <a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">שאלות נפוצות</a>
             {isAuthenticated && (
               <>
-                <Link to={createPageUrl("MyEvents")} className="text-white/50 hover:text-white transition-colors flex items-center gap-2">
+                <Link to={createPageUrl("MyEvents")} className="text-foreground/50 hover:text-foreground transition-colors flex items-center gap-2">
                   <LayoutDashboard className="w-4 h-4" />
                   האירועים שלי
                 </Link>
                 {user?.role === 'admin' && (
-                  <Link to="/admin" className="text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-2">
+                  <Link to="/admin" className="text-gold-300 hover:text-gold-200 transition-colors flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4" />
                     ניהול
                   </Link>
@@ -78,21 +78,21 @@ export default function Header({ onOpenChooser }) {
               </>
             )}
 
-            {/* CTA — opens product chooser */}
+            {/* CTA — opens product chooser. Warm gold on brand primary. */}
             <button
               onClick={onOpenChooser}
-              className="px-4 py-2 bg-white text-black font-semibold text-sm rounded-full hover:bg-white/90 active:scale-[0.98] transition-all"
+              className="px-4 py-2 bg-primary text-primary-foreground font-semibold text-sm rounded-full hover:brightness-110 active:scale-[0.98] transition-all shadow-gold-soft"
             >
               צרו אירוע
             </button>
 
             {isAuthenticated ? (
-              <Button onClick={handleLogout} variant="ghost" className="text-white/40 hover:text-white transition-colors p-2 h-auto">
+              <Button onClick={handleLogout} variant="ghost" className="text-foreground/40 hover:text-foreground transition-colors p-2 h-auto">
                 <LogOut className="w-4 h-4" />
               </Button>
             ) : (
-              <Button onClick={handleLogin} variant="ghost" className="text-white/50 hover:text-white text-sm px-3 py-2 h-auto">
-                <LogIn className="ml-1.5 w-4 h-4" />
+              <Button onClick={handleLogin} variant="ghost" className="text-foreground/50 hover:text-foreground text-sm px-3 py-2 h-auto">
+                <LogIn className="ml-1.5 w-4 h-4 rtl:-scale-x-100" />
                 כניסה
               </Button>
             )}
@@ -107,13 +107,13 @@ export default function Header({ onOpenChooser }) {
 
       {/* Mobile Side Drawer */}
       <div className={`fixed inset-0 z-[999] md:hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeMenu} />
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" onClick={closeMenu} />
 
-        <div className={`absolute top-0 right-0 w-[85%] max-w-sm h-full bg-black/95 backdrop-blur-xl border-l border-white/10 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`} dir="rtl">
+        <div className={`absolute top-0 right-0 w-[85%] max-w-sm h-full bg-background/95 backdrop-blur-xl border-l border-border flex flex-col shadow-card-dark transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`} dir="rtl">
 
-          <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <div className="flex items-center justify-between p-6 border-b border-border">
             <img src="/LOGO.png" alt="MemoriaShare" className="h-8 w-auto object-contain" />
-            <button onClick={closeMenu} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors">
+            <button onClick={closeMenu} className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/40 hover:text-foreground transition-colors">
               <X className="w-6 h-6" />
             </button>
           </div>
@@ -121,15 +121,15 @@ export default function Header({ onOpenChooser }) {
           {isAuthenticated && user && (
             <div className="px-6 py-4">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shrink-0">
-                  <User className="w-5 h-5 text-white/60" />
+                <div className="w-9 h-9 rounded-full bg-foreground/10 flex items-center justify-center border border-foreground/20 shrink-0">
+                  <User className="w-5 h-5 text-foreground/60" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-white font-semibold text-sm truncate">{user.full_name || user.email}</span>
-                  <span className="text-white/35 text-xs truncate">{user.email}</span>
+                  <span className="text-foreground font-semibold text-sm truncate">{user.full_name || user.email}</span>
+                  <span className="text-foreground/35 text-xs truncate">{user.email}</span>
                 </div>
               </div>
-              <Separator className="mt-4 bg-white/10" />
+              <Separator className="mt-4 bg-border" />
             </div>
           )}
 
@@ -137,25 +137,25 @@ export default function Header({ onOpenChooser }) {
             {/* Create Event CTA */}
             <button
               onClick={() => { closeMenu(); onOpenChooser?.(); }}
-              className="w-full text-right text-lg font-bold text-white py-3.5 px-2 rounded-lg bg-white/5 border border-white/10 mb-2 flex items-center gap-3"
+              className="w-full text-right text-lg font-bold text-foreground py-3.5 px-2 rounded-lg bg-foreground/5 border border-border mb-2 flex items-center gap-3"
             >
-              <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               צרו אירוע
             </button>
 
-            <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="text-lg font-medium text-white/60 hover:text-white transition-colors py-3.5 px-2 rounded-lg hover:bg-white/5 flex items-center gap-4 border-b border-white/5">פיצ'רים</a>
-            <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="text-lg font-medium text-white/60 hover:text-white transition-colors py-3.5 px-2 rounded-lg hover:bg-white/5 flex items-center gap-4 border-b border-white/5">המלצות</a>
-            <a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="text-lg font-medium text-white/60 hover:text-white transition-colors py-3.5 px-2 rounded-lg hover:bg-white/5 flex items-center gap-4 border-b border-white/5">שאלות נפוצות</a>
+            <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 flex items-center gap-4 border-b border-border">פיצ'רים</a>
+            <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 flex items-center gap-4 border-b border-border">המלצות</a>
+            <a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 flex items-center gap-4 border-b border-border">שאלות נפוצות</a>
 
             {isAuthenticated && (
               <>
-                <Link to={createPageUrl("MyEvents")} onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-white/60 hover:text-white transition-colors py-3.5 px-2 rounded-lg hover:bg-white/5 border-b border-white/5">
+                <Link to={createPageUrl("MyEvents")} onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 border-b border-border">
                   <LayoutDashboard className="w-5 h-5 shrink-0" />
                   האירועים שלי
                 </Link>
                 {user?.role === 'admin' && (
                   <>
-                    <Link to="/admin" onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-violet-400 hover:text-violet-300 transition-colors py-3.5 px-2 rounded-lg hover:bg-white/5 border-b border-white/5">
+                    <Link to="/admin" onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-gold-300 hover:text-gold-200 transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 border-b border-border">
                       <ShieldCheck className="w-5 h-5 shrink-0" />
                       ניהול
                     </Link>
@@ -165,12 +165,12 @@ export default function Header({ onOpenChooser }) {
             )}
           </nav>
 
-          <div className="p-6 border-t border-white/10">
+          <div className="p-6 border-t border-border">
             {isAuthenticated ? (
               <Button
                 onClick={() => { handleLogout(); closeMenu(); }}
                 variant="ghost"
-                className="w-full justify-start p-4 h-auto text-lg font-medium text-red-400 hover:text-red-300 transition-colors flex items-center gap-4 rounded-lg hover:bg-white/5 border border-white/5">
+                className="w-full justify-start p-4 h-auto text-lg font-medium text-destructive hover:brightness-110 transition-colors flex items-center gap-4 rounded-lg hover:bg-foreground/5 border border-border">
                 <LogOut className="w-5 h-5" />
                 התנתקות
               </Button>
@@ -178,8 +178,8 @@ export default function Header({ onOpenChooser }) {
               <Button
                 onClick={() => { handleLogin(); closeMenu(); }}
                 variant="ghost"
-                className="w-full justify-start p-4 h-auto text-lg font-medium text-white/60 hover:text-white flex items-center gap-4 rounded-lg hover:bg-white/5 border border-white/10">
-                <LogIn className="w-5 h-5" />
+                className="w-full justify-start p-4 h-auto text-lg font-medium text-foreground/60 hover:text-foreground flex items-center gap-4 rounded-lg hover:bg-foreground/5 border border-border">
+                <LogIn className="w-5 h-5 rtl:-scale-x-100" />
                 כניסה
               </Button>
             )}

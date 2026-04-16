@@ -1,6 +1,6 @@
 ---
 type: project-memory
-updated: 2026-04-16T20:00Z
+updated: 2026-04-16T22:00Z
 ---
 
 # Project Memory — Active State
@@ -29,13 +29,14 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | Issue | Priority | Action |
 |-------|----------|--------|
-| `linked_event_id` migration missing | **HIGH** | Add to `CLEAN_RESET_SCHEMA.sql`; add bundle toggle on `MagnetEventDashboard` |
-| `public/icons/*.webp` unused | Low | Delete 4 files (camera, star, chat, calendar webp) |
+| `linked_event_id` migration missing | **HIGH** | Add to `CLEAN_RESET_SCHEMA.sql`; add bundle toggle on `MagnetEventDashboard` (verified still absent 2026-04-16T22:00Z) |
+| `public/icons/kpi-*.webp` unreferenced | Low | Delete 4 files — AdminOverview now uses Lucide (per evening session) |
 | No search/filter on AdminEventsList | Medium | Add search input, filter by type/date |
 | Magnet card metadata missing | Medium | Add guest count, quota used, print count to cards |
 | QR preview missing on MagnetEventDashboard | Low | Reuse `qrcode.react` from EventSuccess |
 | `pages.config.js` vestigial | Low | Delete or strip to Layout export only |
 | `/Event` + `/EventGallery` inconsistent | Low | Redirect to `/event/:code` pattern |
+| Per-event frame pack override | Medium | Expose frame-pack selector in `CreateMagnetEvent` admin form |
 
 ---
 
@@ -52,6 +53,10 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 | `src/pages/Dashboard.jsx` | 2026-04-16 | Admin inspection banner |
 | `src/components/home/Header.jsx` | 2026-04-16 | Dead import removed |
 | `memory/*.md` | 2026-04-16 | Memory system updated |
+| `src/components/magnet/framePacks.js` | 2026-04-16 | NEW — canvas frame system v2 (6 packs, LABEL_H_RATIO=0.225) |
+| `src/components/magnet/FramePicker.jsx` | 2026-04-16 | NEW — RTL horizontal scroll strip for frame selection |
+| `public/FRAMES/*.jpeg` | 2026-04-15 | 8 reference magnet prints for frame design |
+| `cowork context/*` | 2026-04-15 | Shared design-system SKILL + project-context docs |
 
 ---
 

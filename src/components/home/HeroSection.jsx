@@ -9,16 +9,16 @@ export default function HeroSection({ onOpenChooser }) {
 
   const MiniIPhone = ({ image, className = "", title = "Event Name", isCenter = false }) => (
     <div className={`relative transform ${className}`} style={{ flexShrink: 0 }}>
-      <div className={`absolute -inset-10 blur-[60px] rounded-full -z-10 ${isCenter ? 'bg-white/15' : 'bg-white/4'}`} />
+      <div className={`absolute -inset-10 blur-[60px] rounded-full -z-10 ${isCenter ? 'bg-foreground/15' : 'bg-foreground/[0.04]'}`} />
       <div
-        className={`relative bg-[#0c0c0c] rounded-[2.8rem] shadow-2xl border border-white/20 ${
+        className={`relative bg-warm-950 rounded-[2.8rem] shadow-card-dark border border-foreground/20 ${
           isCenter
             ? 'w-44 md:w-64 h-[348px] md:h-[512px]'
             : 'w-36 md:w-52 h-[288px] md:h-[416px]'
         }`}
         style={{ padding: isCenter ? '10px' : '8px' }}
       >
-        <div className="w-full h-full bg-black rounded-[2.3rem] overflow-hidden relative border border-white/10">
+        <div className="w-full h-full bg-black rounded-[2.3rem] overflow-hidden relative border border-foreground/10">
           <img src={image} className="w-full h-full object-cover object-center opacity-90" alt="event" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10" />
 
@@ -37,12 +37,12 @@ export default function HeroSection({ onOpenChooser }) {
             <div className="pb-4 px-3 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="w-5 h-5 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
-                  <div className="text-yellow-400 text-[7px]">⚡</div>
+                  <div className="text-gold-400 text-[7px]">⚡</div>
                 </div>
                 <div className="flex gap-1 bg-black/30 backdrop-blur-md rounded-full px-2 py-0.5 border border-white/20">
-                  <span className="text-white/50 text-[6px] font-medium">.5</span>
-                  <span className="text-white text-[6px] font-semibold">1×</span>
-                  <span className="text-white/50 text-[6px] font-medium">3</span>
+                  <span className="text-white/50 text-[6px] font-medium"><bdi>.5</bdi></span>
+                  <span className="text-white text-[6px] font-semibold"><bdi>1×</bdi></span>
+                  <span className="text-white/50 text-[6px] font-medium"><bdi>3</bdi></span>
                 </div>
                 <div className="w-5 h-5 bg-black/30 backdrop-blur-md rounded-md flex items-center justify-center border border-white/20">
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -54,7 +54,7 @@ export default function HeroSection({ onOpenChooser }) {
 
               <div className="flex justify-between items-center">
                 <div className="text-left">
-                  <p className="text-white text-[6px] md:text-[8px] font-bold leading-none drop-shadow-lg">15 SHOTS</p>
+                  <p className="text-white text-[6px] md:text-[8px] font-bold leading-none drop-shadow-lg"><bdi>15</bdi> SHOTS</p>
                   <p className="text-white/50 text-[5px] md:text-[6px] drop-shadow-lg">REMAINING</p>
                 </div>
                 <div className="w-11 h-11 md:w-14 md:h-14 rounded-full border-[2.5px] border-white/80 p-[3px] bg-transparent">
@@ -78,9 +78,9 @@ export default function HeroSection({ onOpenChooser }) {
 
           {/* Wordmark */}
           <div className="mb-8 flex flex-col items-center gap-3 animate-in fade-in duration-700">
-            <span className="font-editorial text-[#e8e2d5]/90 text-3xl md:text-4xl tracking-widest">Memoria</span>
-            <span className="block h-px w-10 bg-[#e8e2d5]/20" />
-            <span className="text-[#a89a85] text-[10px] font-semibold tracking-[0.35em] uppercase">שיתוף תמונות חי באירועים</span>
+            <span className="font-playfair text-foreground/90 text-3xl md:text-4xl tracking-widest">Memoria</span>
+            <span className="block h-px w-10 bg-border" />
+            <span className="text-muted-foreground text-[10px] font-semibold tracking-[0.35em] uppercase">שיתוף תמונות חי באירועים</span>
           </div>
 
           {/* Headline */}
@@ -88,18 +88,18 @@ export default function HeroSection({ onOpenChooser }) {
             className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700"
             style={{ animationDelay: '100ms' }}
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
               הזיכרונות שלכם,
             </span>
             <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white/80 to-white/25">
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground/80 to-foreground/25">
               מכל הזוויות
             </span>
           </h1>
 
           {/* Subtitle — two clean sentences */}
           <p
-            className="text-base md:text-lg text-[#a89a85] mb-14 max-w-lg mx-auto font-light leading-relaxed animate-in fade-in duration-700"
+            className="text-base md:text-lg text-muted-foreground mb-14 max-w-lg mx-auto font-light leading-relaxed animate-in fade-in duration-700"
             style={{ animationDelay: '200ms' }}
           >
             כל אורח מצלם מהטלפון שלו.
@@ -137,7 +137,7 @@ export default function HeroSection({ onOpenChooser }) {
           >
             <button
               onClick={onOpenChooser}
-              className="px-12 py-4 bg-[#e8e2d5] text-[#0a0907] font-semibold text-base hover:bg-white active:scale-[0.98] transition-all"
+              className="px-12 py-4 bg-warm-50 text-warm-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-gold-soft"
               style={{ letterSpacing: '0.05em' }}
             >
               צרו אירוע
