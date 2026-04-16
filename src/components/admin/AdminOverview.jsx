@@ -1,14 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Image, Magnet, MessageSquare, Hash } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
-
-const KPI_ICONS = {
-  camera:   '/icons/kpi-camera.webp',
-  star:     '/icons/kpi-star.webp',
-  chat:     '/icons/kpi-chat.webp',
-  calendar: '/icons/kpi-calendar.webp',
-};
 
 const STATUS_HE = { new: 'חדש', contacted: 'יצרנו קשר', converted: 'הומר', closed: 'סגור' };
 const STATUS_COLORS = {
@@ -18,19 +11,24 @@ const STATUS_COLORS = {
   closed:    'text-white/30',
 };
 
-function KpiCard({ iconKey, label, value, sub, onClick }) {
+const ICON_STYLES = {
+  blue:   { wrap: 'rgba(59,130,246,0.15)',  icon: '#60a5fa'  },
+  violet: { wrap: 'rgba(124,58,237,0.18)',  icon: '#a78bfa'  },
+  amber:  { wrap: 'rgba(245,158,11,0.15)',  icon: '#fbbf24'  },
+  lime:   { wrap: 'rgba(132,204,22,0.12)',  icon: '#a3e635'  },
+};
+
+function KpiCard({ icon: Icon, label, value, sub, color = 'violet', onClick }) {
+  const { wrap, icon } = ICON_STYLES[color];
   return (
     <button
       onClick={onClick}
       className="text-right flex flex-col p-4 rounded-2xl transition-all active:scale-[0.97]"
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
     >
-      <img
-        src={KPI_ICONS[iconKey]}
-        alt=""
-        className="w-12 h-12 object-contain mb-3"
-        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}
-      />
+      <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3 shrink-0" style={{ background: wrap }}>
+        <Icon style={{ width: 16, height: 16, color: icon }} />
+      </div>
       <span className="text-2xl font-black text-white leading-none mb-1">{value ?? '—'}</span>
       <span className="text-white/50 text-xs">{label}</span>
       {sub && <span className="text-white/25 text-[10px] mt-0.5">{sub}</span>}
@@ -77,10 +75,10 @@ export default function AdminOverview() {
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <KpiCard iconKey="camera"   label="אירועי שיתוף"  value={shareCount}    onClick={() => navigate('/admin/events/share')} />
-        <KpiCard iconKey="star"     label="אירועי מגנט"   value={magnetCount}   onClick={() => navigate('/admin/events/magnet')} />
-        <KpiCard iconKey="chat"     label="לידים חדשים"   value={newLeads}      sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
-        <KpiCard iconKey="calendar" label="סה״כ אירועים"  value={events.length} onClick={() => navigate('/admin/events/share')} />
+        <KpiCard icon={Image}         label="אירועי שיתוף"  value={shareCount}    color="blue"   onClick={() => navigate('/admin/events/share')} />
+        <KpiCard icon={Magnet}        label="אירועי מגנט"   value={magnetCount}   color="violet" onClick={() => navigate('/admin/events/magnet')} />
+        <KpiCard icon={MessageSquare} label="לידים חדשים"   value={newLeads}      color="amber"  sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
+        <KpiCard icon={Hash}          label="סה״כ אירועים"  value={events.length} color="lime"   onClick={() => navigate('/admin/events/share')} />
       </div>
 
       {/* Leads by status */}
