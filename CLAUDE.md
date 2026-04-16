@@ -4,6 +4,21 @@ Read it in full before every task. Rules here override any default behavior.
 
 ---
 
+## Memory System (Load at Every Session Start)
+
+**Step 1 — Load inline (required):** Read `memory/recent-memory.md` in full at the start of every session. This provides the 48hr rolling context: what was decided, what was tried, what failed, what's pending.
+
+**Step 2 — Reference by path:** Keep `memory/long-term-memory.md` and `memory/project-memory.md` available. Read them when:
+- Starting work on any file → `memory/project-memory.md` (current state, known issues, URL map)
+- Making a UI or code style decision → `memory/long-term-memory.md` (preferences + anti-patterns)
+- The user references a past decision or session
+
+**Step 3 — Update at session end:** Run `/consolidate-memory` or append key decisions to `memory/recent-memory.md` before closing.
+
+> Skill: `skills/consolidate-memory/SKILL.md` | Nightly automation: `scripts/consolidate-memory.py`
+
+---
+
 ## 0. Project Context (Quick Reference)
 
 - **Product:** MemoriaShare — real-time event photo sharing PWA
@@ -12,6 +27,47 @@ Read it in full before every task. Rules here override any default behavior.
 - **Live URL:** `https://memoriashare.com`
 - **Deployment:** Vercel (auto-deploy from `main`)
 - **Backend:** Supabase project (URL in `.env.local`)
+
+---
+
+## 0.5. Session Memory System
+
+**Every session:** Load memory files from `memory/` directory BEFORE starting work.
+
+### Memory Files (Read in Order)
+1. **`memory/recent-memory.md`** — Last 48 hours of context (decisions, active tasks, design choices)
+   - Loaded inline at session start
+   - Reviewed after every major task block
+   - Archived to long-term memory if >48 hours old
+
+2. **`memory/long-term-memory.md`** — Distilled facts, patterns, rules
+   - User collaboration style & preferences
+   - Product architecture (dual-product: Share + Magnet)
+   - Tech stack rules (React, Tailwind, Supabase, auth patterns)
+   - Common pitfalls & solutions
+   - Brand language & design system
+
+3. **`memory/project-memory.md`** — Active initiative state
+   - Current task deliverables & timeline
+   - Files to modify & routes to define
+   - Testing checklist
+   - Known issues & blockers
+
+### Consolidation
+Automated nightly at 10 PM (task: `consolidate-memoria-memory`):
+- Extracts new decisions & patterns from session
+- Updates recent-memory with fresh context
+- Promotes key facts to long-term memory
+- Ensures project-memory.md is current
+
+### Manual Consolidation
+After completing a major feature or day's work:
+```
+1. Summarize decisions made (what, why, consequences)
+2. Check if any new rules emerged (add to long-term-memory.md)
+3. Update project-memory.md with progress (✓ completed, in-progress, pending)
+4. Remove stale TODOs; keep decision context
+```
 
 ---
 
