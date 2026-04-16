@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Read(//c/Users/tagab/Documents/camera-memo/**)",
-      "Read(//c/Users/tagab/.claude/projects/c--Users-tagab-MemoriaShare/memory/**)"
+      "Read(//c/Users/tagab/.claude/projects/c--Users-tagab-MemoriaShare/memory/**)",
+      "mcp__claude_ai_Figma__whoami",
+      "mcp__claude_ai_Figma__get_metadata",
+      "WebFetch(domain:3dicons.co)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
-  }
+  },
+  "disabledMcpjsonServers": [
+    "supabase",
+    "puppeteer"
+  ]
 }

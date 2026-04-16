@@ -1,18 +1,17 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { LayoutDashboard, Image, Magnet, Users, MessageSquare, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 const TABS = [
-  { to: '/admin',                  label: 'סקירה',         icon: LayoutDashboard, end: true },
-  { to: '/admin/events/share',     label: 'אירועי שיתוף',  icon: Image },
-  { to: '/admin/events/magnet',    label: 'אירועי מגנט',   icon: Magnet },
-  { to: '/admin/leads',            label: 'לידים',          icon: MessageSquare },
-  { to: '/admin/users',            label: 'משתמשים',        icon: Users },
+  { to: '/admin',                  label: 'סקירה',        end: true },
+  { to: '/admin/events/share',     label: 'אירועי שיתוף' },
+  { to: '/admin/events/magnet',    label: 'אירועי מגנט'  },
+  { to: '/admin/leads',            label: 'לידים'         },
+  { to: '/admin/users',            label: 'משתמשים'       },
 ];
 
 export default function AdminShell() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#0a0a0e] flex flex-col" dir="rtl">
@@ -42,20 +41,19 @@ export default function AdminShell() {
 
       {/* Tab strip */}
       <nav className="flex items-end gap-1 px-4 border-b border-white/[0.07] overflow-x-auto shrink-0 pb-0">
-        {TABS.map(({ to, label, icon: Icon, end }) => (
+        {TABS.map(({ to, label, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
+              `px-3.5 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
                 isActive
                   ? 'border-violet-500 text-white'
                   : 'border-transparent text-white/40 hover:text-white/70'
               }`
             }
           >
-            <Icon className="w-3.5 h-3.5 shrink-0" />
             {label}
           </NavLink>
         ))}

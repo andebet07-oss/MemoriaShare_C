@@ -10,11 +10,45 @@ const EMOJI_SIZE = 52;
 
 function drawSticker(ctx, s, w, h) {
   const cx = s.x * w, cy = s.y * h;
+  ctx.save();
+
   if (s.type === 'emoji') {
     ctx.font = `${Math.round(w * 0.13)}px serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(s.content, cx, cy);
+
+  } else if (s.type === 'badge') {
+    const fontSize = Math.round(w * 0.038);
+    ctx.font = `900 ${fontSize}px Heebo, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const textW = ctx.measureText(s.content).width;
+    const padX = fontSize * 0.75, padY = fontSize * 0.42;
+    const bw = textW + padX * 2, bh = fontSize + padY * 2;
+    const r = bh / 2;
+    ctx.fillStyle = s.dark ? '#111111' : '#caff4a';
+    ctx.beginPath();
+    ctx.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, r);
+    ctx.fill();
+    ctx.fillStyle = s.dark ? '#ffffff' : '#111111';
+    ctx.fillText(s.content, cx, cy);
+
+  } else if (s.type === 'stamp') {
+    const fontSize = Math.round(w * 0.036);
+    ctx.font = `900 ${fontSize}px Heebo, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const textW = ctx.measureText(s.content).width;
+    const padX = fontSize * 0.7, padY = fontSize * 0.4;
+    const bw = textW + padX * 2, bh = fontSize + padY * 2;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(cx - bw / 2, cy - bh / 2, bw, bh);
+    ctx.strokeStyle = '#111111';
+    ctx.lineWidth = Math.max(2, Math.round(fontSize * 0.1));
+    ctx.strokeRect(cx - bw / 2, cy - bh / 2, bw, bh);
+    ctx.fillStyle = '#111111';
+    ctx.fillText(s.content, cx, cy);
+
   } else {
+    // text type
     const sz = Math.round(w * 0.055);
     ctx.font = `bold ${sz}px Heebo, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -22,6 +56,8 @@ function drawSticker(ctx, s, w, h) {
     ctx.strokeStyle = 'rgba(0,0,0,0.88)'; ctx.strokeText(s.content, cx, cy);
     ctx.fillStyle = '#fff'; ctx.fillText(s.content, cx, cy);
   }
+
+  ctx.restore();
 }
 
 const PaperPlane = () => (
@@ -81,7 +117,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
   }, [draggingUid]);
 
   const addSticker = (def) => {
-    setStickers(prev => [...prev, { uid: `${def.id}-${Date.now()}`, type: def.type, content: def.content, x: 0.5, y: 0.38 }]);
+    setStickers(prev => [...prev, { uid: `${def.id}-${Date.now()}`, type: def.type, content: def.content, dark: def.dark, x: 0.5, y: 0.38 }]);
     setShowPicker(false);
   };
 
@@ -160,10 +196,18 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
                 className="absolute"
                 style={{ left: `${s.x * 100}%`, top: `${s.y * 100}%`, transform: 'translate(-50%,-50%)', touchAction: 'none', userSelect: 'none', zIndex: draggingUid === s.uid ? 60 : 50, cursor: draggingUid === s.uid ? 'grabbing' : 'grab', filter: draggingUid === s.uid ? 'drop-shadow(0 6px 18px rgba(0,0,0,0.6))' : 'drop-shadow(0 2px 6px rgba(0,0,0,0.45))', transition: draggingUid === s.uid ? 'none' : 'filter 0.15s' }}
               >
-                {s.type === 'emoji'
-                  ? <span style={{ fontSize: EMOJI_SIZE, lineHeight: 1, display: 'block' }}>{s.content}</span>
-                  : <span className="font-black block whitespace-nowrap" style={{ fontSize: '22px', lineHeight: 1.2, color: '#fff', WebkitTextStroke: '2px rgba(0,0,0,0.88)', textShadow: '0 2px 10px rgba(0,0,0,0.8)', fontFamily: "'Heebo','Assistant',sans-serif" }}>{s.content}</span>
-                }
+                {s.type === 'emoji' && (
+                  <span style={{ fontSize: EMOJI_SIZE, lineHeight: 1, display: 'block' }}>{s.content}</span>
+                )}
+                {s.type === 'text' && (
+                  <span className="font-black block whitespace-nowrap" style={{ fontSize: '22px', lineHeight: 1.2, color: '#fff', WebkitTextStroke: '2px rgba(0,0,0,0.88)', textShadow: '0 2px 10px rgba(0,0,0,0.8)', fontFamily: "'Heebo','Assistant',sans-serif" }}>{s.content}</span>
+                )}
+                {s.type === 'badge' && (
+                  <span style={{ display: 'inline-block', padding: '5px 14px', background: s.dark ? '#111' : '#caff4a', color: s.dark ? '#fff' : '#111', fontWeight: 900, fontSize: '14px', borderRadius: '999px', fontFamily: "'Heebo','Assistant',sans-serif", whiteSpace: 'nowrap', boxShadow: '0 2px 12px rgba(0,0,0,0.45)' }}>{s.content}</span>
+                )}
+                {s.type === 'stamp' && (
+                  <span style={{ display: 'inline-block', padding: '4px 12px', background: '#fff', color: '#111', fontWeight: 900, fontSize: '13px', border: '2.5px solid #111', fontFamily: "'Heebo','Assistant',sans-serif", whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.04em', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>{s.content}</span>
+                )}
                 {draggingUid !== s.uid && (
                   <button onPointerDown={e => { e.stopPropagation(); setStickers(p => p.filter(x => x.uid !== s.uid)); }} className="absolute -top-2.5 -right-2.5 w-5 h-5 rounded-full bg-black/80 border border-white/30 flex items-center justify-center z-10" style={{ touchAction: 'none' }}>
                     <X className="w-2.5 h-2.5 text-white" />
@@ -244,10 +288,18 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
             <div className="grid grid-cols-4 gap-3 px-5 pb-2 max-h-52 overflow-y-auto">
               {pack.map(def => (
                 <button key={def.id} onClick={() => addSticker(def)} className="aspect-square rounded-xl flex items-center justify-center active:scale-90 transition-all p-2" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                  {def.type === 'emoji'
-                    ? <span style={{ fontSize: '36px', lineHeight: 1 }}>{def.content}</span>
-                    : <span className="text-[10px] font-black text-center leading-tight" style={{ color: '#caff4a', fontFamily: "'Heebo','Assistant',sans-serif" }}>{def.content}</span>
-                  }
+                  {def.type === 'emoji' && (
+                    <span style={{ fontSize: '36px', lineHeight: 1 }}>{def.content}</span>
+                  )}
+                  {def.type === 'text' && (
+                    <span className="text-[10px] font-black text-center leading-tight" style={{ color: '#caff4a', fontFamily: "'Heebo','Assistant',sans-serif" }}>{def.content}</span>
+                  )}
+                  {def.type === 'badge' && (
+                    <span style={{ display: 'inline-block', padding: '3px 8px', background: def.dark ? '#111' : '#caff4a', color: def.dark ? '#fff' : '#111', fontWeight: 900, fontSize: '9px', borderRadius: '999px', fontFamily: "'Heebo',sans-serif", whiteSpace: 'nowrap', textAlign: 'center', lineHeight: 1.4 }}>{def.content}</span>
+                  )}
+                  {def.type === 'stamp' && (
+                    <span style={{ display: 'inline-block', padding: '2px 7px', background: '#fff', color: '#111', fontWeight: 900, fontSize: '9px', border: '1.5px solid #111', fontFamily: "'Heebo',sans-serif", whiteSpace: 'nowrap', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.4 }}>{def.content}</span>
+                  )}
                 </button>
               ))}
             </div>

@@ -1,7 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Image, Magnet, MessageSquare, Hash } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
+
+const KPI_ICONS = {
+  camera:   '/icons/kpi-camera.webp',
+  star:     '/icons/kpi-star.webp',
+  chat:     '/icons/kpi-chat.webp',
+  calendar: '/icons/kpi-calendar.webp',
+};
 
 const STATUS_HE = { new: 'חדש', contacted: 'יצרנו קשר', converted: 'הומר', closed: 'סגור' };
 const STATUS_COLORS = {
@@ -11,18 +18,22 @@ const STATUS_COLORS = {
   closed:    'text-white/30',
 };
 
-function KpiCard({ icon: Icon, label, value, sub, color = 'violet', onClick }) {
-  const colors = { violet: 'text-violet-400', lime: 'text-lime-400', blue: 'text-blue-400', amber: 'text-amber-400' };
+function KpiCard({ iconKey, label, value, sub, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="text-right flex flex-col gap-1 p-4 rounded-2xl transition-all active:scale-[0.97]"
+      className="text-right flex flex-col p-4 rounded-2xl transition-all active:scale-[0.97]"
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
     >
-      <Icon className={`w-4 h-4 ${colors[color]} mb-1`} />
-      <span className="text-2xl font-black text-white">{value ?? '—'}</span>
+      <img
+        src={KPI_ICONS[iconKey]}
+        alt=""
+        className="w-12 h-12 object-contain mb-3"
+        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}
+      />
+      <span className="text-2xl font-black text-white leading-none mb-1">{value ?? '—'}</span>
       <span className="text-white/50 text-xs">{label}</span>
-      {sub && <span className="text-white/25 text-[10px]">{sub}</span>}
+      {sub && <span className="text-white/25 text-[10px] mt-0.5">{sub}</span>}
     </button>
   );
 }
@@ -66,10 +77,10 @@ export default function AdminOverview() {
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <KpiCard icon={Image}        label="אירועי שיתוף"  value={shareCount}  color="blue"   onClick={() => navigate('/admin/events/share')} />
-        <KpiCard icon={Magnet}       label="אירועי מגנט"   value={magnetCount} color="violet" onClick={() => navigate('/admin/events/magnet')} />
-        <KpiCard icon={MessageSquare} label="לידים חדשים"  value={newLeads}    color="amber"  sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
-        <KpiCard icon={Hash}         label="סה״כ אירועים"  value={events.length} color="lime" onClick={() => navigate('/admin/events/share')} />
+        <KpiCard iconKey="camera"   label="אירועי שיתוף"  value={shareCount}    onClick={() => navigate('/admin/events/share')} />
+        <KpiCard iconKey="star"     label="אירועי מגנט"   value={magnetCount}   onClick={() => navigate('/admin/events/magnet')} />
+        <KpiCard iconKey="chat"     label="לידים חדשים"   value={newLeads}      sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
+        <KpiCard iconKey="calendar" label="סה״כ אירועים"  value={events.length} onClick={() => navigate('/admin/events/share')} />
       </div>
 
       {/* Leads by status */}
