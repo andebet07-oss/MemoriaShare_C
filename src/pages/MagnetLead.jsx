@@ -486,7 +486,7 @@ export default function MagnetLead() {
                   <Input
                     value={formData.event_name}
                     onChange={e => handleInputChange('event_name', e.target.value)}
-                    placeholder="למשל: חתונת יעל ודניאל"
+                    placeholder="למשל: Yael & Daniel"
                     style={{ fontSize: '16px' }}
                     className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                   />
@@ -606,7 +606,7 @@ export default function MagnetLead() {
                     <Input
                       value={formData.phone}
                       onChange={e => handleInputChange('phone', e.target.value)}
-                      placeholder="מספר טלפון (05XXXXXXXX)"
+                      placeholder="מספר טלפון"
                       type="tel"
                       inputMode="tel"
                       dir="ltr"
