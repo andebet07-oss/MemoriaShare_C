@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { Trash2, Loader2, Smile, X } from 'lucide-react';
 import { getStickerPack } from './stickerPacks';
+import { SVG_STICKERS } from './svgStickers';
 import { getFramePack, ALL_FRAMES, LABEL_H_RATIO } from './framePacks';
 import memoriaService from '@/components/memoriaService';
 import { compressImage } from '@/functions/processImage';
@@ -8,11 +9,50 @@ import { compressImage } from '@/functions/processImage';
 const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
 const EMOJI_SIZE = 52;
 
-function drawSticker(ctx, s, w, h) {
+function drawSticker(ctx, s, w, h, svgImg) {
   const cx = s.x * w, cy = s.y * h;
   ctx.save();
 
-  if (s.type === 'emoji') {
+  if (s.type === 'svg') {
+    if (svgImg) {
+      const size = Math.round(w * 0.18);
+      ctx.drawImage(svgImg, cx - size / 2, cy - size / 2, size, size);
+    }
+
+  } else if (s.type === 'script-text') {
+    const sz = Math.round(w * 0.065);
+    ctx.font = `${sz}px 'Great Vibes', 'Parisienne', cursive`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = sz * 0.16; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.strokeText(s.content, cx, cy);
+    ctx.fillStyle = '#fff'; ctx.fillText(s.content, cx, cy);
+
+  } else if (s.type === 'retro-text') {
+    const sz = Math.round(w * 0.07);
+    ctx.font = `${sz}px 'Bebas Neue', 'Limelight', sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.letterSpacing = '0.12em';
+    ctx.lineWidth = sz * 0.18; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.strokeText(s.content, cx, cy);
+    ctx.fillStyle = '#facc15'; ctx.fillText(s.content, cx, cy);
+
+  } else if (s.type === 'handwritten-text') {
+    const sz = Math.round(w * 0.06);
+    ctx.font = `700 ${sz}px 'Caveat', 'Patrick Hand', cursive`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = sz * 0.18; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.strokeText(s.content, cx, cy);
+    ctx.fillStyle = '#fff'; ctx.fillText(s.content, cx, cy);
+
+  } else if (s.type === 'editorial-text') {
+    const sz = Math.round(w * 0.072);
+    ctx.font = `${sz}px 'Abril Fatface', 'Playfair Display', serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = sz * 0.15; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.strokeText(s.content, cx, cy);
+    ctx.fillStyle = '#fff'; ctx.fillText(s.content, cx, cy);
+
+  } else if (s.type === 'emoji') {
     ctx.font = `${Math.round(w * 0.13)}px serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(s.content, cx, cy);
@@ -89,6 +129,21 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modal, setModal] = useState(null); // null | 'loading' | 'success' | 'error'
 
+  const svgImgCache = useRef(new Map());
+
+  const ensureSvgImage = useCallback((svgKey) => {
+    if (svgImgCache.current.has(svgKey)) return Promise.resolve(svgImgCache.current.get(svgKey));
+    return new Promise((resolve, reject) => {
+      const svgStr = SVG_STICKERS[svgKey];
+      if (!svgStr) return reject(new Error('unknown svgKey: ' + svgKey));
+      const b64 = btoa(unescape(encodeURIComponent(svgStr)));
+      const img = new Image();
+      img.onload = () => { svgImgCache.current.set(svgKey, img); resolve(img); };
+      img.onerror = reject;
+      img.src = `data:image/svg+xml;base64,${b64}`;
+    });
+  }, []);
+
   const pack = useMemo(() => getStickerPack(event?.name || ''), [event?.name]);
   const dateLabel = useMemo(() => {
     if (!event?.date) return null;
@@ -117,7 +172,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
   }, [draggingUid]);
 
   const addSticker = (def) => {
-    setStickers(prev => [...prev, { uid: `${def.id}-${Date.now()}`, type: def.type, content: def.content, dark: def.dark, x: 0.5, y: 0.38 }]);
+    setStickers(prev => [...prev, { uid: `${def.id}-${Date.now()}`, type: def.type, content: def.content, svgKey: def.svgKey, dark: def.dark, x: 0.5, y: 0.38 }]);
     setShowPicker(false);
   };
 
@@ -151,7 +206,10 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         ? (ALL_FRAMES.find(f => f.id === frameId) ?? getFramePack(event?.name || '')[0])
         : getFramePack(event?.name || '')[0];
       if (eventFrame) eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
-      for (const s of stickers) drawSticker(ctx, s, canvas.width, canvas.height);
+      for (const s of stickers) {
+        const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
+        drawSticker(ctx, s, canvas.width, canvas.height, svgImg);
+      }
       const blob = await compressImage(canvas);
       const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
       const { file_url, path } = await memoriaService.storage.upload(file, event.id);
@@ -196,6 +254,21 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
                 className="absolute"
                 style={{ left: `${s.x * 100}%`, top: `${s.y * 100}%`, transform: 'translate(-50%,-50%)', touchAction: 'none', userSelect: 'none', zIndex: draggingUid === s.uid ? 60 : 50, cursor: draggingUid === s.uid ? 'grabbing' : 'grab', filter: draggingUid === s.uid ? 'drop-shadow(0 6px 18px rgba(0,0,0,0.6))' : 'drop-shadow(0 2px 6px rgba(0,0,0,0.45))', transition: draggingUid === s.uid ? 'none' : 'filter 0.15s' }}
               >
+                {s.type === 'svg' && (
+                  <div style={{ width: EMOJI_SIZE, height: EMOJI_SIZE }} dangerouslySetInnerHTML={{ __html: SVG_STICKERS[s.svgKey] || '' }} />
+                )}
+                {s.type === 'script-text' && (
+                  <span className="block whitespace-nowrap" style={{ fontSize: '24px', lineHeight: 1.2, color: '#fff', fontFamily: "'Great Vibes','Parisienne',cursive", WebkitTextStroke: '1.5px rgba(0,0,0,0.7)', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>{s.content}</span>
+                )}
+                {s.type === 'retro-text' && (
+                  <span className="block whitespace-nowrap" style={{ fontSize: '26px', lineHeight: 1, color: '#facc15', fontFamily: "'Bebas Neue','Limelight',sans-serif", letterSpacing: '0.12em', WebkitTextStroke: '1.5px rgba(0,0,0,0.85)', textShadow: '0 2px 12px rgba(0,0,0,0.8)' }}>{s.content}</span>
+                )}
+                {s.type === 'handwritten-text' && (
+                  <span className="block whitespace-nowrap font-bold" style={{ fontSize: '22px', lineHeight: 1.2, color: '#fff', fontFamily: "'Caveat','Patrick Hand',cursive", WebkitTextStroke: '1.5px rgba(0,0,0,0.75)', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>{s.content}</span>
+                )}
+                {s.type === 'editorial-text' && (
+                  <span className="block whitespace-nowrap" style={{ fontSize: '24px', lineHeight: 1, color: '#fff', fontFamily: "'Abril Fatface','Playfair Display',serif", WebkitTextStroke: '1.5px rgba(0,0,0,0.8)', textShadow: '0 2px 12px rgba(0,0,0,0.8)' }}>{s.content}</span>
+                )}
                 {s.type === 'emoji' && (
                   <span style={{ fontSize: EMOJI_SIZE, lineHeight: 1, display: 'block' }}>{s.content}</span>
                 )}
@@ -288,6 +361,21 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
             <div className="grid grid-cols-4 gap-3 px-5 pb-2 max-h-52 overflow-y-auto">
               {pack.map(def => (
                 <button key={def.id} onClick={() => addSticker(def)} className="aspect-square rounded-xl flex items-center justify-center active:scale-90 transition-all p-2" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                  {def.type === 'svg' && (
+                    <div style={{ width: 40, height: 40 }} dangerouslySetInnerHTML={{ __html: SVG_STICKERS[def.svgKey] || '' }} />
+                  )}
+                  {def.type === 'script-text' && (
+                    <span className="text-center leading-tight" style={{ fontSize: '13px', color: '#fff', fontFamily: "'Great Vibes','Parisienne',cursive" }}>{def.content}</span>
+                  )}
+                  {def.type === 'retro-text' && (
+                    <span className="text-center leading-tight" style={{ fontSize: '13px', color: '#facc15', fontFamily: "'Bebas Neue','Limelight',sans-serif", letterSpacing: '0.08em' }}>{def.content}</span>
+                  )}
+                  {def.type === 'handwritten-text' && (
+                    <span className="font-bold text-center leading-tight" style={{ fontSize: '12px', color: '#fff', fontFamily: "'Caveat','Patrick Hand',cursive" }}>{def.content}</span>
+                  )}
+                  {def.type === 'editorial-text' && (
+                    <span className="text-center leading-tight" style={{ fontSize: '12px', color: '#fff', fontFamily: "'Abril Fatface','Playfair Display',serif" }}>{def.content}</span>
+                  )}
                   {def.type === 'emoji' && (
                     <span style={{ fontSize: '36px', lineHeight: 1 }}>{def.content}</span>
                   )}

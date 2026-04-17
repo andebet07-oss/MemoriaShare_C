@@ -617,6 +617,145 @@ const WEDDING_FRAMES = [
       });
     },
   },
+  {
+    id: 'wedding-polaroid-tape',
+    name: 'פולארויד',
+    isNew: true,
+    previewBg: 'linear-gradient(180deg,#d8cfc4 65%,#f0ebe2 65%)',
+    drawFrame(ctx, w, totalH, photoH, event) {
+      // Thick white polaroid inner border on photo area
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+      ctx.lineWidth = w * 0.028;
+      ctx.strokeRect(w * 0.014, w * 0.014, w - w * 0.028, photoH - w * 0.014);
+      ctx.restore();
+      // Tape strips at top corners
+      const drawTape = (cx, cy, angle) => {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = '#e8d9b5';
+        ctx.fillRect(-w * 0.09, -w * 0.018, w * 0.18, w * 0.036);
+        ctx.restore();
+      };
+      drawTape(w * 0.22, w * 0.022, -0.18);
+      drawTape(w * 0.78, w * 0.022, 0.18);
+      ctx.globalAlpha = 1;
+      fillLabel(ctx, w, photoH, totalH, '#f0ebe2');
+      labelRuleTop(ctx, w, photoH, 'rgba(160,140,110,0.2)', 1);
+      drawName(ctx, w, photoH, totalH, event, {
+        font: (sz) => `700 ${Math.round(sz * 1.15)}px 'Caveat','Heebo',cursive`,
+        color: '#3d2f1e',
+        yRatio: 0.44,
+      });
+      drawDate(ctx, w, photoH, totalH, event, {
+        font: (sz) => `400 ${Math.round(sz)}px 'Caveat','Heebo',cursive`,
+        color: 'rgba(100,80,50,0.6)',
+        yRatio: 0.82,
+      });
+    },
+  },
+  {
+    id: 'wedding-deco-gold',
+    name: 'ארט דקו',
+    isNew: true,
+    previewBg: 'linear-gradient(180deg,#0e0c08 65%,#0e0c08 65%)',
+    drawFrame(ctx, w, totalH, photoH, event) {
+      photoVignette(ctx, w, photoH, 0.25);
+      const gold = '#c9a84c';
+      // Gold double border around entire canvas
+      ctx.save();
+      ctx.strokeStyle = gold;
+      ctx.lineWidth = w * 0.012;
+      ctx.strokeRect(w * 0.006, w * 0.006, w - w * 0.012, totalH - w * 0.012);
+      ctx.lineWidth = w * 0.004;
+      ctx.globalAlpha = 0.55;
+      ctx.strokeRect(w * 0.026, w * 0.026, w - w * 0.052, totalH - w * 0.052);
+      ctx.restore();
+      // Sunburst fan from top-left corner on photo
+      ctx.save();
+      ctx.globalAlpha = 0.1;
+      ctx.strokeStyle = gold;
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < 10; i++) {
+        const angle = (i / 10) * (Math.PI / 2);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(angle) * w * 0.7, Math.sin(angle) * w * 0.7);
+        ctx.stroke();
+      }
+      ctx.restore();
+      fillLabel(ctx, w, photoH, totalH, '#0e0c08');
+      ctx.save();
+      ctx.strokeStyle = gold;
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.65;
+      ctx.beginPath(); ctx.moveTo(w * 0.12, photoH); ctx.lineTo(w * 0.88, photoH); ctx.stroke();
+      ctx.restore();
+      drawTagline(ctx, w, photoH, totalH, 'WEDDING', {
+        font: (sz) => `400 ${Math.round(sz)}px 'Limelight','Montserrat',sans-serif`,
+        color: `rgba(201,168,76,0.55)`,
+        yRatio: 0.18,
+        letterSpacing: w * 0.018,
+      });
+      drawName(ctx, w, photoH, totalH, event, {
+        font: (sz) => `400 ${Math.round(sz)}px 'Secular One','Heebo',sans-serif`,
+        color: gold,
+        yRatio: 0.52,
+      });
+      drawDate(ctx, w, photoH, totalH, event, {
+        color: `rgba(201,168,76,0.4)`,
+        yRatio: 0.85,
+        letterSpacing: w * 0.012,
+      });
+    },
+  },
+  {
+    id: 'wedding-hairline-crest',
+    name: 'מינימל קרסט',
+    isNew: true,
+    previewBg: 'linear-gradient(180deg,#e4e0da 65%,#fcfaf7 65%)',
+    drawFrame(ctx, w, totalH, photoH, event) {
+      photoVignette(ctx, w, photoH, 0.18);
+      fillLabel(ctx, w, photoH, totalH, '#fcfaf7');
+      // Hairline border around full canvas
+      ctx.save();
+      ctx.strokeStyle = 'rgba(80,70,55,0.18)';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(0.4, 0.4, w - 0.8, totalH - 0.8);
+      ctx.restore();
+      // Small monogram circle at top of label
+      const lzC = { y: photoH, h: totalH - photoH };
+      const circleY = lzC.y + lzC.h * 0.24;
+      const r = w * 0.044;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(80,65,45,0.3)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.arc(w / 2, circleY, r, 0, Math.PI * 2); ctx.stroke();
+      if (event?.name) {
+        const initial = [...event.name].find(c => /[\u05d0-\u05ea]/.test(c) || /[a-zA-Z]/.test(c)) || '✦';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.direction = 'ltr';
+        ctx.font = `400 ${Math.round(r * 1.05)}px 'Cinzel','Playfair Display',Georgia,serif`;
+        ctx.fillStyle = 'rgba(60,50,35,0.5)';
+        ctx.fillText(initial, w / 2, circleY);
+      }
+      ctx.restore();
+      drawName(ctx, w, photoH, totalH, event, {
+        baseFontSize: w * 0.054,
+        font: (sz) => `400 ${Math.round(sz)}px 'Assistant','Heebo',sans-serif`,
+        color: '#2a2318',
+        yRatio: 0.58,
+      });
+      drawDate(ctx, w, photoH, totalH, event, {
+        font: (sz) => `400 ${Math.round(sz)}px 'Cinzel','Montserrat',sans-serif`,
+        color: 'rgba(0,0,0,0.2)',
+        letterSpacing: w * 0.015,
+        yRatio: 0.87,
+      });
+    },
+  },
 ];
 
 const BAR_MITZVAH_FRAMES = [
@@ -794,6 +933,48 @@ const BAR_MITZVAH_FRAMES = [
       drawDate(ctx, w, photoH, totalH, event, {
         color: 'rgba(190,100,140,0.7)',
         letterSpacing: w * 0.008,
+        yRatio: 0.86,
+      });
+    },
+  },
+  {
+    id: 'bar-tallit',
+    name: 'טלית',
+    isNew: true,
+    previewBg: 'linear-gradient(180deg,#08154a 65%,#eef3ff 65%)',
+    drawFrame(ctx, w, totalH, photoH, event) {
+      photoVignette(ctx, w, photoH, 0.3);
+      // Navy-blue gradient top bar on photo
+      const bgrade = ctx.createLinearGradient(0, 0, 0, photoH * 0.28);
+      bgrade.addColorStop(0, 'rgba(8,21,74,0.45)');
+      bgrade.addColorStop(1, 'transparent');
+      ctx.fillStyle = bgrade;
+      ctx.fillRect(0, 0, w, photoH);
+      fillLabel(ctx, w, photoH, totalH, '#eef3ff');
+      // Tallit stripes: two navy bands top & bottom of label
+      const stripeColor = 'rgba(20,50,160,0.5)';
+      const stripeH = w * 0.013;
+      const lzT = { y: photoH, h: totalH - photoH };
+      for (const sy of [
+        lzT.y + lzT.h * 0.04,
+        lzT.y + lzT.h * 0.11,
+        lzT.y + lzT.h * 0.89 - stripeH,
+        lzT.y + lzT.h * 0.96 - stripeH,
+      ]) {
+        ctx.fillStyle = stripeColor;
+        ctx.fillRect(w * 0.04, sy, w * 0.92, stripeH);
+      }
+      // Star of David centered upper-label
+      starOfDavid(ctx, w / 2, lzT.y + lzT.h * 0.32, w * 0.034, 'rgba(20,50,160,0.55)');
+      drawName(ctx, w, photoH, totalH, event, {
+        font: (sz) => `500 ${Math.round(sz)}px 'David Libre','Frank Ruhl Libre','Heebo',serif`,
+        color: '#081440',
+        yRatio: 0.60,
+      });
+      drawDate(ctx, w, photoH, totalH, event, {
+        font: (sz) => `400 ${Math.round(sz)}px 'Cinzel','Montserrat',sans-serif`,
+        color: 'rgba(8,20,64,0.38)',
+        letterSpacing: w * 0.01,
         yRatio: 0.86,
       });
     },
@@ -978,6 +1159,50 @@ const BIRTHDAY_FRAMES = [
       });
     },
   },
+  {
+    id: 'birthday-scrapbook',
+    name: 'סקראפבוק',
+    isNew: true,
+    previewBg: 'linear-gradient(180deg,#fce8cc 65%,#fff7ed 65%)',
+    drawFrame(ctx, w, totalH, photoH, event) {
+      confetti(ctx, w, photoH);
+      // Coloured tape strips at photo corners
+      const drawTape = (cx, cy, angle, color) => {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.globalAlpha = 0.72;
+        ctx.fillStyle = color;
+        ctx.fillRect(-w * 0.08, -w * 0.015, w * 0.16, w * 0.03);
+        ctx.restore();
+      };
+      drawTape(w * 0.22, photoH * 0.04, -0.22, '#ffd166');
+      drawTape(w * 0.78, photoH * 0.04, 0.22, '#ff6b9d');
+      drawTape(w * 0.18, photoH * 0.96, -0.12, '#6bcb77');
+      drawTape(w * 0.82, photoH * 0.96, 0.12, '#4d96ff');
+      ctx.globalAlpha = 1;
+      // Dashed inner photo border
+      ctx.save();
+      ctx.setLineDash([w * 0.024, w * 0.012]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+      ctx.lineWidth = w * 0.011;
+      ctx.strokeRect(w * 0.025, w * 0.025, w - w * 0.05, photoH - w * 0.025);
+      ctx.setLineDash([]);
+      ctx.restore();
+      fillLabel(ctx, w, photoH, totalH, '#fff7ed');
+      labelRuleTop(ctx, w, photoH, 'rgba(255,107,157,0.35)', 1.5);
+      drawName(ctx, w, photoH, totalH, event, {
+        font: (sz) => `900 ${Math.round(sz)}px 'Rubik','Heebo',sans-serif`,
+        color: '#c8294f',
+        yRatio: 0.44,
+      });
+      drawDate(ctx, w, photoH, totalH, event, {
+        font: (sz) => `400 ${Math.round(sz)}px 'Patrick Hand','Caveat','Heebo',cursive`,
+        color: 'rgba(155,80,35,0.65)',
+        yRatio: 0.83,
+      });
+    },
+  },
 ];
 
 const CORPORATE_FRAMES = [
@@ -1097,6 +1322,66 @@ const GENERAL_FRAMES = [
         color: 'rgba(0,0,0,0.28)',
         letterSpacing: w * 0.007,
         yRatio: 0.80,
+      });
+    },
+  },
+  {
+    id: 'general-filmstrip',
+    name: 'רצועת סרט',
+    isNew: true,
+    previewBg: 'linear-gradient(180deg,#0a0a0a 65%,#0a0a0a 65%)',
+    drawFrame(ctx, w, totalH, photoH, event) {
+      photoVignette(ctx, w, photoH, 0.3);
+      // Film perforations along top and bottom edges
+      const holeW = w * 0.05;
+      const holeH = holeW * 1.35;
+      const marginY = w * 0.014;
+      const count = Math.floor(w / (holeW * 2.5));
+      const gapX = w / count;
+      // Dark film-edge strips
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.82)';
+      ctx.fillRect(0, 0, w, marginY + holeH + marginY);
+      ctx.fillRect(0, totalH - marginY - holeH - marginY, w, marginY + holeH + marginY);
+      // White rounded-rect holes
+      ctx.fillStyle = '#e8e8e8';
+      const roundHole = (x, y) => {
+        const rad = holeW * 0.28;
+        ctx.beginPath();
+        ctx.moveTo(x + rad, y);
+        ctx.lineTo(x + holeW - rad, y);
+        ctx.arcTo(x + holeW, y, x + holeW, y + rad, rad);
+        ctx.lineTo(x + holeW, y + holeH - rad);
+        ctx.arcTo(x + holeW, y + holeH, x + holeW - rad, y + holeH, rad);
+        ctx.lineTo(x + rad, y + holeH);
+        ctx.arcTo(x, y + holeH, x, y + holeH - rad, rad);
+        ctx.lineTo(x, y + rad);
+        ctx.arcTo(x, y, x + rad, y, rad);
+        ctx.closePath();
+        ctx.fill();
+      };
+      for (let i = 0; i < count; i++) {
+        const hx = gapX * i + (gapX - holeW) / 2;
+        roundHole(hx, marginY);
+        roundHole(hx, totalH - marginY - holeH);
+      }
+      ctx.restore();
+      fillLabel(ctx, w, photoH, totalH, '#0a0a0a');
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, photoH); ctx.lineTo(w, photoH); ctx.stroke();
+      ctx.restore();
+      drawName(ctx, w, photoH, totalH, event, {
+        font: (sz) => `600 ${Math.round(sz)}px 'Heebo',sans-serif`,
+        color: 'rgba(255,255,255,0.9)',
+        yRatio: 0.44,
+      });
+      drawDate(ctx, w, photoH, totalH, event, {
+        font: (sz) => `400 ${Math.round(sz)}px 'Space Mono',monospace`,
+        color: 'rgba(255,255,255,0.28)',
+        letterSpacing: w * 0.006,
+        yRatio: 0.82,
       });
     },
   },

@@ -1,74 +1,96 @@
 // Sticker packs for MagnetReview — auto-selected by event name.
 //
 // Types:
-//   emoji  — single emoji character (rendered large)
-//   text   — white bold text with black stroke (floating label)
-//   badge  — pill-shaped sticker; dark=false → lime bg / dark text, dark=true → black bg / white text
-//   stamp  — rectangular label, white bg, black border, bold uppercase text
+//   emoji           — single emoji character
+//   text            — white bold text with black stroke
+//   badge           — pill-shaped sticker
+//   stamp           — rectangular label
+//   svg             — inline SVG from svgStickers.js (svgKey references SVG_STICKERS)
+//   script-text     — cursive script font (Great Vibes / Parisienne)
+//   retro-text      — bold retro caps (Bebas Neue / Limelight)
+//   handwritten-text — casual handwritten (Caveat / Patrick Hand)
+//   editorial-text  — editorial/magazine (Abril Fatface / Playfair Display)
 
 const WEDDING = [
-  { id: 'w1',  type: 'badge',  content: 'JUST MARRIED ✨', dark: false },
-  { id: 'w2',  type: 'badge',  content: 'FOREVER ♾',       dark: true  },
-  { id: 'w3',  type: 'stamp',  content: 'LOVE STORY' },
-  { id: 'w4',  type: 'stamp',  content: 'YES!' },
-  { id: 'w5',  type: 'emoji',  content: '💋' },
-  { id: 'w6',  type: 'emoji',  content: '👑' },
-  { id: 'w7',  type: 'emoji',  content: '🥂' },
-  { id: 'w8',  type: 'emoji',  content: '💎' },
-  { id: 'w9',  type: 'text',   content: 'מזל טוב! 🎊' },
-  { id: 'w10', type: 'text',   content: 'יאללה! ❤️' },
-  { id: 'w11', type: 'text',   content: 'WOW!' },
+  { id: 'w-heart',     type: 'svg',           svgKey: 'heart' },
+  { id: 'w-heartred',  type: 'svg',           svgKey: 'heartRed' },
+  { id: 'w-rose',      type: 'svg',           svgKey: 'rose' },
+  { id: 'w-bow',       type: 'svg',           svgKey: 'bow' },
+  { id: 'w-sparkle',   type: 'svg',           svgKey: 'sparkle' },
+  { id: 'w-crown',     type: 'svg',           svgKey: 'crown' },
+  { id: 'w-lips',      type: 'svg',           svgKey: 'lips' },
+  { id: 'w-butterfly', type: 'svg',           svgKey: 'butterfly' },
+  { id: 'w-flower',    type: 'svg',           svgKey: 'flower' },
+  { id: 'w-s1',        type: 'script-text',   content: 'Forever & Always' },
+  { id: 'w-s2',        type: 'script-text',   content: 'Just Married' },
+  { id: 'w-s3',        type: 'script-text',   content: 'Mr & Mrs' },
+  { id: 'w-s4',        type: 'script-text',   content: 'מזל טוב' },
+  { id: 'w-e1',        type: 'editorial-text',content: 'LOVE STORY' },
+  { id: 'w-e2',        type: 'editorial-text',content: 'FOREVER' },
 ];
 
 const BAR_MITZVAH = [
-  { id: 'b1',  type: 'badge',  content: 'BAR MITZVAH 🌟', dark: false },
-  { id: 'b2',  type: 'badge',  content: 'LEGEND',          dark: true  },
-  { id: 'b3',  type: 'stamp',  content: 'LEVEL UP' },
-  { id: 'b4',  type: 'stamp',  content: 'HERO' },
-  { id: 'b5',  type: 'emoji',  content: '⭐' },
-  { id: 'b6',  type: 'emoji',  content: '👑' },
-  { id: 'b7',  type: 'emoji',  content: '🔥' },
-  { id: 'b8',  type: 'text',   content: 'מזל טוב! 🎊' },
-  { id: 'b9',  type: 'text',   content: 'שחקן! 🌟' },
-  { id: 'b10', type: 'text',   content: 'כוכב! ✨' },
+  { id: 'b-star',      type: 'svg',        svgKey: 'star' },
+  { id: 'b-stargold',  type: 'svg',        svgKey: 'starGold' },
+  { id: 'b-davidstar', type: 'svg',        svgKey: 'starOfDavid' },
+  { id: 'b-chai',      type: 'svg',        svgKey: 'hebrewChai' },
+  { id: 'b-crown',     type: 'svg',        svgKey: 'crown' },
+  { id: 'b-sparkle',   type: 'svg',        svgKey: 'sparkle' },
+  { id: 'b-sun',       type: 'svg',        svgKey: 'sun' },
+  { id: 'b-r1',        type: 'retro-text', content: 'MAZAL TOV' },
+  { id: 'b-r2',        type: 'retro-text', content: 'LEGEND' },
+  { id: 'b-r3',        type: 'retro-text', content: 'LEVEL UP' },
+  { id: 'b-r4',        type: 'retro-text', content: 'בר מצווה' },
+  { id: 'b-r5',        type: 'retro-text', content: 'HERO' },
 ];
 
 const BIRTHDAY = [
-  { id: 'bd1', type: 'badge',  content: 'BIRTHDAY STAR 🌟', dark: false },
-  { id: 'bd2', type: 'badge',  content: 'MAIN CHARACTER',    dark: true  },
-  { id: 'bd3', type: 'stamp',  content: 'ICONIC' },
-  { id: 'bd4', type: 'stamp',  content: 'LIT' },
-  { id: 'bd5', type: 'emoji',  content: '👑' },
-  { id: 'bd6', type: 'emoji',  content: '💎' },
-  { id: 'bd7', type: 'emoji',  content: '🔥' },
-  { id: 'bd8', type: 'text',   content: 'יום הולדת שמח! 🎉' },
-  { id: 'bd9', type: 'text',   content: 'מלך / מלכה! 💅' },
-  { id: 'bd10',type: 'text',   content: 'WOW! ✨' },
+  { id: 'bd-disco',    type: 'svg',              svgKey: 'disco' },
+  { id: 'bd-discopk',  type: 'svg',              svgKey: 'discoPink' },
+  { id: 'bd-cassette', type: 'svg',              svgKey: 'cassette' },
+  { id: 'bd-cherry',   type: 'svg',              svgKey: 'cherry' },
+  { id: 'bd-heart',    type: 'svg',              svgKey: 'heart' },
+  { id: 'bd-star',     type: 'svg',              svgKey: 'starGold' },
+  { id: 'bd-sparkle',  type: 'svg',              svgKey: 'sparkle' },
+  { id: 'bd-sun',      type: 'svg',              svgKey: 'sun' },
+  { id: 'bd-flower',   type: 'svg',              svgKey: 'flower' },
+  { id: 'bd-butter',   type: 'svg',              svgKey: 'butterfly' },
+  { id: 'bd-h1',       type: 'handwritten-text', content: 'birthday vibes' },
+  { id: 'bd-h2',       type: 'handwritten-text', content: 'good times' },
+  { id: 'bd-h3',       type: 'handwritten-text', content: 'יום הולדת שמח' },
+  { id: 'bd-r1',       type: 'retro-text',       content: 'PARTY' },
+  { id: 'bd-r2',       type: 'retro-text',       content: 'ICONIC' },
 ];
 
 const GENERAL = [
-  { id: 'g1',  type: 'badge',  content: 'WOW! 📸',  dark: false },
-  { id: 'g2',  type: 'badge',  content: 'BESTIES',   dark: true  },
-  { id: 'g3',  type: 'stamp',  content: 'VIBE' },
-  { id: 'g4',  type: 'stamp',  content: 'LEGEND' },
-  { id: 'g5',  type: 'emoji',  content: '💋' },
-  { id: 'g6',  type: 'emoji',  content: '✨' },
-  { id: 'g7',  type: 'emoji',  content: '📸' },
-  { id: 'g8',  type: 'text',   content: 'שחקן! 🔥' },
-  { id: 'g9',  type: 'text',   content: 'מגנט! 📸' },
+  { id: 'g-camera',  type: 'svg',            svgKey: 'camera' },
+  { id: 'g-eye',     type: 'svg',            svgKey: 'evilEye' },
+  { id: 'g-eiffel',  type: 'svg',            svgKey: 'eiffel' },
+  { id: 'g-moon',    type: 'svg',            svgKey: 'moon' },
+  { id: 'g-coffee',  type: 'svg',            svgKey: 'coffee' },
+  { id: 'g-straw',   type: 'svg',            svgKey: 'strawberry' },
+  { id: 'g-sparkle', type: 'svg',            svgKey: 'sparkle' },
+  { id: 'g-star',    type: 'svg',            svgKey: 'star' },
+  { id: 'g-heart',   type: 'svg',            svgKey: 'heart' },
+  { id: 'g-flower',  type: 'svg',            svgKey: 'flower' },
+  { id: 'g-e1',      type: 'editorial-text', content: 'MEMORIES' },
+  { id: 'g-e2',      type: 'editorial-text', content: 'VOGUE' },
+  { id: 'g-e3',      type: 'editorial-text', content: 'ICONIC' },
+  { id: 'g-h1',      type: 'handwritten-text', content: 'good vibes' },
+  { id: 'g-h2',      type: 'handwritten-text', content: 'מגנט!' },
 ];
 
 export function getStickerPack(eventName = '') {
-  if (eventName.includes('חתונה') || eventName.includes('wedding') || eventName.includes('Wedding'))
+  if (eventName.includes('חתונה') || eventName.toLowerCase().includes('wedding'))
     return WEDDING;
   if (
     eventName.includes('בר מצווה') ||
     eventName.includes('בת מצווה') ||
     eventName.includes('ברית') ||
-    eventName.includes('Bar Mitzvah')
+    eventName.toLowerCase().includes('bar mitzvah')
   )
     return BAR_MITZVAH;
-  if (eventName.includes('יום הולדת') || eventName.includes('birthday') || eventName.includes('Birthday'))
+  if (eventName.includes('יום הולדת') || eventName.toLowerCase().includes('birthday'))
     return BIRTHDAY;
   return GENERAL;
 }

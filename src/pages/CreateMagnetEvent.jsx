@@ -123,10 +123,10 @@ function InlineCalendar({ value, onChange }) {
 }
 
 // Thumbnail dimensions
-const THUMB_W = 88;
-const THUMB_PHOTO_H = Math.round(THUMB_W * (4 / 3));    // 117px
-const THUMB_LABEL_H = Math.round(THUMB_W * LABEL_H_RATIO); // ~20px
-const THUMB_TOTAL_H = THUMB_PHOTO_H + THUMB_LABEL_H;    // ~137px
+const THUMB_W = 108;
+const THUMB_PHOTO_H = Math.round(THUMB_W * (4 / 3));    // 144px
+const THUMB_LABEL_H = Math.round(THUMB_W * LABEL_H_RATIO); // ~24px
+const THUMB_TOTAL_H = THUMB_PHOTO_H + THUMB_LABEL_H;    // ~168px
 
 // Extract first hex color from previewBg gradient string for the photo area
 function previewBgToPhotoColor(previewBg = '') {
@@ -166,36 +166,50 @@ function FrameThumbnail({ frame, isSelected, onSelect, eventData }) {
     <button
       type="button"
       onClick={() => onSelect(frame.id)}
-      className="flex flex-col items-center gap-1.5 shrink-0 transition-transform duration-150 active:scale-95"
-      style={{ outline: 'none' }}
+      className="flex flex-col items-center gap-1.5 shrink-0 active:scale-95"
+      style={{ outline: 'none', transition: 'transform 0.15s' }}
     >
       <div style={{
         position: 'relative',
-        borderRadius: '4px',
-        border: isSelected ? '2.5px solid #7c3aed' : '2px solid rgba(255,255,255,0.08)',
+        borderRadius: '5px',
+        border: isSelected ? '2px solid #7c3aed' : '1.5px solid rgba(255,255,255,0.09)',
         boxShadow: isSelected
-          ? '0 0 18px -2px rgba(124,58,237,0.7), 0 4px 16px rgba(0,0,0,0.5)'
-          : '0 3px 12px rgba(0,0,0,0.55)',
-        transition: 'border-color 0.15s, box-shadow 0.15s',
+          ? '0 0 16px -2px rgba(124,58,237,0.65), 0 4px 14px rgba(0,0,0,0.5)'
+          : '0 3px 10px rgba(0,0,0,0.5)',
+        transform: isSelected ? 'scale(1.04)' : 'scale(1)',
+        transition: 'border-color 0.15s, box-shadow 0.15s, transform 0.15s',
         overflow: 'hidden',
       }}>
         <canvas ref={cvs} width={THUMB_W} height={THUMB_TOTAL_H} style={{ display: 'block' }} />
         {isSelected && (
           <div style={{
-            position: 'absolute', top: 5, right: 5,
-            width: 16, height: 16, borderRadius: '50%',
+            position: 'absolute', top: 4, right: 4,
+            width: 15, height: 15, borderRadius: '50%',
             background: '#7c3aed',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-              <path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+              <path d="M1.5 4L3 5.5L6.5 2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
+          </div>
+        )}
+        {frame.isNew && !isSelected && (
+          <div style={{
+            position: 'absolute', top: 4, right: 4,
+            padding: '1px 5px', borderRadius: '3px',
+            background: 'rgba(124,58,237,0.85)',
+            fontFamily: 'Heebo, sans-serif',
+            fontSize: '8px', fontWeight: 700,
+            color: '#fff', letterSpacing: '0.05em',
+            lineHeight: '14px',
+          }}>
+            חדש
           </div>
         )}
       </div>
       <span style={{
         fontFamily: 'Heebo, sans-serif', fontSize: '10px', whiteSpace: 'nowrap',
-        color: isSelected ? '#a78bfa' : 'rgba(255,255,255,0.4)',
+        color: isSelected ? '#a78bfa' : 'rgba(255,255,255,0.45)',
         fontWeight: isSelected ? 700 : 400,
         transition: 'color 0.15s',
         userSelect: 'none',
@@ -292,6 +306,7 @@ export default function CreateMagnetEvent() {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(null);
   const [previewFrame, setPreviewFrame] = useState(null); // frame object shown in preview modal
+  const [activeFrameTab, setActiveFrameTab] = useState('wedding'); // selected category tab in step 4
 
   const quotaOptions = [1, 3, 5, 10, 20];
   const todayStr = new Date().toISOString().split('T')[0];
@@ -561,25 +576,49 @@ export default function CreateMagnetEvent() {
                     <span>ללא מסגרת</span>
                   </button>
 
-                  {/* Frame categories */}
-                  {FRAME_CATEGORIES.map(cat => (
-                    <div key={cat.key}>
-                      <p className="text-[9px] font-semibold mb-2 tracking-widest uppercase" style={{ color: 'rgba(167,139,250,0.5)' }}>
-                        {cat.label}
-                      </p>
-                      <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }} dir="ltr">
-                        {FRAME_PACKS[cat.key].map(frame => (
-                          <FrameThumbnail
-                            key={frame.id}
-                            frame={frame}
-                            isSelected={form.selectedFrameId === frame.id}
-                            onSelect={() => setPreviewFrame(frame)}
-                            eventData={form}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                  {/* Category tabs */}
+                  <div className="flex gap-1 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                    {FRAME_CATEGORIES.map(cat => {
+                      const hasNew = (FRAME_PACKS[cat.key] || []).some(f => f.isNew);
+                      const isActive = activeFrameTab === cat.key;
+                      return (
+                        <button
+                          key={cat.key}
+                          type="button"
+                          onClick={() => setActiveFrameTab(cat.key)}
+                          className="relative shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                          style={{
+                            background: isActive ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.04)',
+                            border: isActive ? '1px solid rgba(124,58,237,0.45)' : '1px solid rgba(255,255,255,0.07)',
+                            color: isActive ? '#c4b5fd' : 'rgba(255,255,255,0.4)',
+                          }}
+                        >
+                          {cat.label}
+                          {hasNew && (
+                            <span style={{
+                              position: 'absolute', top: -4, right: -4,
+                              width: 7, height: 7, borderRadius: '50%',
+                              background: '#7c3aed',
+                              border: '1.5px solid #0a0a0a',
+                            }} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Frames for active tab */}
+                  <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }} dir="ltr">
+                    {FRAME_PACKS[activeFrameTab].map(frame => (
+                      <FrameThumbnail
+                        key={frame.id}
+                        frame={frame}
+                        isSelected={form.selectedFrameId === frame.id}
+                        onSelect={() => setPreviewFrame(frame)}
+                        eventData={form}
+                      />
+                    ))}
+                  </div>
 
                   {/* Custom PNG upload (advanced) */}
                   <div>
