@@ -7,7 +7,7 @@ const STATUS_ORDER = ['new', 'contacted', 'converted', 'closed'];
 const STATUS_HE    = { new: 'חדש', contacted: 'יצרנו קשר', converted: 'הומר', closed: 'סגור' };
 const STATUS_STYLE = {
   new:       { dot: '#60a5fa', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.25)', text: '#93c5fd' },
-  contacted: { dot: '#fbbf24', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)', text: '#fcd34d' },
+  contacted: { dot: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.25)', text: '#c4b5fd' },
   converted: { dot: '#34d399', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.25)', text: '#6ee7b7' },
   closed:    { dot: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.15)', text: '#9ca3af' },
 };

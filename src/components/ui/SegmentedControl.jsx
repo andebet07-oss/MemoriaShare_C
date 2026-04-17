@@ -39,7 +39,7 @@ export default function SegmentedControl({ value, onChange, options, ariaLabel, 
               "flex-1 py-2 text-center text-sm font-medium rounded-md border transition-all duration-300 ease-out",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
               selected
-                ? "bg-transparent text-primary border-primary shadow-gold-soft"
+                ? "bg-transparent text-primary border-primary shadow-indigo-soft"
                 : "bg-transparent text-muted-foreground border-transparent hover:text-foreground/80"
             )}
           >

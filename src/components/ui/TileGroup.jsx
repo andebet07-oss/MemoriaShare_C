@@ -42,7 +42,7 @@ export default function TileGroup({ value, onChange, options, cols = 2, ariaLabe
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
               "active:scale-[0.98]",
               selected
-                ? "bg-primary/15 border-primary text-primary shadow-gold-soft"
+                ? "bg-primary/15 border-primary text-primary shadow-indigo-soft"
                 : "bg-foreground/[0.04] border-border text-foreground/80 hover:bg-foreground/[0.08] hover:border-foreground/20"
             )}
           >

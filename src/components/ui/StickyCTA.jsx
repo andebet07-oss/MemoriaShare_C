@@ -58,7 +58,7 @@ export default function StickyCTA({
           "active:scale-[0.98]",
           primaryDisabled
             ? "bg-foreground/[0.06] text-foreground/30 border border-foreground/[0.08] cursor-not-allowed active:scale-100"
-            : "bg-primary text-primary-foreground border border-primary/40 shadow-gold-soft hover:brightness-110"
+            : "bg-primary text-primary-foreground border border-primary/40 shadow-indigo-soft hover:brightness-110"
         )}
       >
         {primaryLabel}

@@ -70,7 +70,7 @@ export default function Header({ onOpenChooser }) {
                   האירועים שלי
                 </Link>
                 {user?.role === 'admin' && (
-                  <Link to="/admin" className="text-gold-300 hover:text-gold-200 transition-colors flex items-center gap-2">
+                  <Link to="/admin" className="text-indigo-300 hover:text-indigo-200 transition-colors flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4" />
                     ניהול
                   </Link>
@@ -78,10 +78,10 @@ export default function Header({ onOpenChooser }) {
               </>
             )}
 
-            {/* CTA — opens product chooser. Warm gold on brand primary. */}
+            {/* CTA — opens product chooser. POV indigo on brand primary. */}
             <button
               onClick={onOpenChooser}
-              className="px-4 py-2 bg-primary text-primary-foreground font-semibold text-sm rounded-full hover:brightness-110 active:scale-[0.98] transition-all shadow-gold-soft"
+              className="px-4 py-2 bg-primary text-primary-foreground font-semibold text-sm rounded-full hover:brightness-110 active:scale-[0.98] transition-all shadow-indigo-soft"
             >
               צרו אירוע
             </button>
@@ -155,7 +155,7 @@ export default function Header({ onOpenChooser }) {
                 </Link>
                 {user?.role === 'admin' && (
                   <>
-                    <Link to="/admin" onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-gold-300 hover:text-gold-200 transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 border-b border-border">
+                    <Link to="/admin" onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-indigo-300 hover:text-indigo-200 transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 border-b border-border">
                       <ShieldCheck className="w-5 h-5 shrink-0" />
                       ניהול
                     </Link>

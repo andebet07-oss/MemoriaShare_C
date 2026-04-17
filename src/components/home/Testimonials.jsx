@@ -28,7 +28,7 @@ export default function Testimonials() {
         <div className="max-w-6xl mx-auto">
 
           <div className="mb-16">
-            <p className="text-gold-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-5"><bdi>03</bdi> · לקוחות</p>
+            <p className="text-indigo-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-5"><bdi>03</bdi> · לקוחות</p>
             <h2 className="font-playfair text-4xl md:text-5xl leading-[1.1] text-foreground/90">
               הם כבר
               <br />
@@ -41,7 +41,7 @@ export default function Testimonials() {
             {/* Featured — large pull quote */}
             <blockquote className="relative">
               <span
-                className="font-playfair absolute leading-none select-none pointer-events-none text-gold-500/25"
+                className="font-playfair absolute leading-none select-none pointer-events-none text-indigo-500/25"
                 style={{ fontSize: '8rem', top: '-2.5rem', right: '-1rem' }}
                 aria-hidden="true"
               >
@@ -54,7 +54,7 @@ export default function Testimonials() {
                 {featured.text}
               </p>
               <footer>
-                <div className="h-px w-8 bg-gold-500/50 mb-4" />
+                <div className="h-px w-8 bg-indigo-500/50 mb-4" />
                 <span className="text-sm font-semibold text-foreground/70">— {featured.name}</span>
                 <span className="text-muted-foreground text-sm mx-2">·</span>
                 <span className="text-muted-foreground text-sm">{featured.event}</span>

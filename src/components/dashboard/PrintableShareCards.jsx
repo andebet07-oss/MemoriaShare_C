@@ -8,7 +8,7 @@ import CardBlurred from "./cards/CardBlurred";
 
 const THEMES = [
   { id: "minimalist", label: "מינימליסטי", desc: "נקי ומודרני עם אקסנט צבע" },
-  { id: "elegant",    label: "אלגנטי",     desc: "רקע כהה, מסגרות זהב, סריף" },
+  { id: "elegant",    label: "אלגנטי",     desc: "רקע כהה, מסגרות אינדיגו, סריף" },
   { id: "blurred",    label: "מותאם אירוע",desc: "תמונת הכריכה כרקע מטושטש" },
 ];
 

@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 /**
- * Memoria brand fonts — dark luxury editorial
+ * POV brand fonts — cool dark editorial
  *
- * Playfair Display  → headings, hero text, serif display (matches the "M" monogram)
+ * Playfair Display  → headings, hero text, serif display
  * Montserrat        → labels, uppercase, UI chrome, spacing text
  * Heebo             → body text, all Hebrew UI, RTL content
  */
@@ -13,104 +13,103 @@
 
 @layer base {
   /* ═══════════════════════════════════════════════════════════════
-     LIGHT MODE — warm cream paper, not harsh white
+     LIGHT MODE — cool neutral paper
      Used for: Dashboard, Admin, Account pages
      ═══════════════════════════════════════════════════════════════ */
   :root {
-    --background: 40 30% 97%;          /* warm cream #F8F4ED */
-    --foreground: 30 15% 8%;           /* warm near-black */
+    --background: 0 0% 98%;            /* #fafafa — cool white */
+    --foreground: 0 0% 10%;            /* #1a1a1a — near-black text */
 
-    --card: 40 25% 94%;
-    --card-foreground: 30 15% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
 
-    --popover: 40 25% 96%;
-    --popover-foreground: 30 15% 8%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 38 53% 46%;             /* gold, darker for light bg contrast */
-    --primary-foreground: 40 30% 97%;
+    --primary: 235 55% 55%;            /* indigo — darker for light bg contrast */
+    --primary-foreground: 240 50% 99%; /* #fcfcfe */
 
-    --secondary: 40 15% 89%;
-    --secondary-foreground: 30 12% 18%;
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 20%;
 
-    --muted: 40 12% 87%;
-    --muted-foreground: 30 8% 42%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 220 5% 42%;
 
-    --accent: 38 45% 87%;
-    --accent-foreground: 38 53% 32%;
+    --accent: 235 60% 93%;             /* indigo tint hover */
+    --accent-foreground: 235 55% 35%;
 
-    --destructive: 0 72% 44%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 40 15% 83%;
-    --input: 40 15% 83%;
-    --ring: 38 53% 46%;
+    --border: 0 0% 88%;
+    --input: 0 0% 92%;
+    --ring: 235 55% 55%;
 
-    --radius: 0.25rem;                 /* editorial: almost sharp corners */
+    --radius: 0.25rem;
 
-    --chart-1: 38 53% 52%;
-    --chart-2: 200 28% 46%;
-    --chart-3: 15 38% 50%;
-    --chart-4: 158 28% 40%;
-    --chart-5: 280 22% 50%;
+    --chart-1: 235 55% 55%;
+    --chart-2: 200 40% 50%;
+    --chart-3: 15 40% 50%;
+    --chart-4: 158 35% 45%;
+    --chart-5: 280 35% 55%;
 
-    --sidebar-background: 40 28% 94%;
-    --sidebar-foreground: 30 12% 22%;
-    --sidebar-primary: 38 53% 46%;
-    --sidebar-primary-foreground: 40 30% 97%;
-    --sidebar-accent: 38 40% 87%;
-    --sidebar-accent-foreground: 38 53% 32%;
-    --sidebar-border: 40 12% 80%;
-    --sidebar-ring: 38 53% 46%;
+    --sidebar-background: 0 0% 96%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 235 55% 55%;
+    --sidebar-primary-foreground: 240 50% 99%;
+    --sidebar-accent: 235 55% 94%;
+    --sidebar-accent-foreground: 235 55% 35%;
+    --sidebar-border: 0 0% 88%;
+    --sidebar-ring: 235 55% 55%;
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     DARK MODE — Memoria signature: deep warm black + champagne gold
+     DARK MODE — POV signature: cool dark + periwinkle indigo
      Used for: Event galleries, camera, guest views, landing page
-     Inspired by the logo — dark room, film grain, editorial luxury
      ═══════════════════════════════════════════════════════════════ */
   .dark {
-    --background: 30 15% 4%;           /* #0a0908 — warm deep black */
-    --foreground: 40 40% 94%;          /* #f7f0e4 — warm white */
+    --background: 0 0% 12%;            /* #1e1e1e — POV root */
+    --foreground: 240 50% 99%;         /* #fcfcfe — cool white */
 
-    --card: 30 10% 7%;                 /* #131110 — slightly raised */
-    --card-foreground: 40 40% 94%;
+    --card: 0 0% 15%;                  /* #262626 — slightly raised */
+    --card-foreground: 240 50% 99%;
 
-    --popover: 30 10% 8%;
-    --popover-foreground: 40 40% 94%;
+    --popover: 0 0% 14%;
+    --popover-foreground: 240 50% 99%;
 
-    --primary: 38 53% 61%;             /* #c9a96e — champagne gold ← BRAND */
-    --primary-foreground: 30 15% 5%;   /* dark text on gold */
+    --primary: 235 64% 68%;            /* #7c86e1 — POV ACCENT */
+    --primary-foreground: 240 50% 99%; /* white text on indigo */
 
-    --secondary: 30 8% 11%;            /* #1d1b19 — raised surface */
-    --secondary-foreground: 40 25% 78%;
+    --secondary: 0 0% 17%;             /* #2b2b2b — raised surface */
+    --secondary-foreground: 0 0% 80%;
 
-    --muted: 30 6% 13%;
-    --muted-foreground: 40 10% 50%;    /* warm mid gray */
+    --muted: 0 0% 20%;
+    --muted-foreground: 220 3% 56%;    /* cool mid gray */
 
-    --accent: 38 35% 16%;              /* dark gold tint — hover backgrounds */
-    --accent-foreground: 38 50% 72%;   /* lighter gold */
+    --accent: 235 40% 22%;             /* indigo-tinted hover bg */
+    --accent-foreground: 235 62% 78%;
 
-    --destructive: 0 68% 40%;
+    --destructive: 0 68% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 30 8% 16%;               /* #2a2724 — very subtle warm dividers */
-    --input: 30 8% 12%;
-    --ring: 38 53% 61%;                /* gold focus ring */
+    --border: 0 0% 22%;                /* cool subtle divider — equals white-alpha 10% on #1e1e1e */
+    --input: 0 0% 15%;
+    --ring: 235 64% 68%;               /* indigo focus ring */
 
-    --chart-1: 38 53% 61%;             /* gold */
-    --chart-2: 200 28% 52%;
-    --chart-3: 15 38% 56%;
-    --chart-4: 158 28% 46%;
-    --chart-5: 280 22% 56%;
+    --chart-1: 235 64% 68%;            /* indigo */
+    --chart-2: 200 40% 60%;
+    --chart-3: 15 40% 60%;
+    --chart-4: 158 35% 50%;
+    --chart-5: 280 35% 60%;
 
-    --sidebar-background: 30 15% 3%;
-    --sidebar-foreground: 40 25% 78%;
-    --sidebar-primary: 38 53% 61%;
-    --sidebar-primary-foreground: 30 15% 5%;
-    --sidebar-accent: 38 30% 12%;
-    --sidebar-accent-foreground: 38 50% 72%;
-    --sidebar-border: 30 8% 12%;
-    --sidebar-ring: 38 53% 61%;
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 80%;
+    --sidebar-primary: 235 64% 68%;
+    --sidebar-primary-foreground: 240 50% 99%;
+    --sidebar-accent: 235 40% 18%;
+    --sidebar-accent-foreground: 235 62% 78%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 235 64% 68%;
   }
 }
 
@@ -138,46 +137,45 @@
     @apply font-playfair;
   }
 
-  /* Thin custom scrollbar — gold accent */
+  /* Thin custom scrollbar — indigo accent */
   ::-webkit-scrollbar        { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track  { @apply bg-transparent; }
   ::-webkit-scrollbar-thumb  {
-    background: rgba(201, 169, 110, 0.22);
+    background: rgba(124, 134, 225, 0.22);
     border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(201, 169, 110, 0.48);
+    background: rgba(124, 134, 225, 0.48);
   }
 
-  /* Gold text selection */
+  /* Indigo text selection */
   ::selection {
-    background: rgba(201, 169, 110, 0.28);
+    background: rgba(124, 134, 225, 0.28);
     color: inherit;
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   UTILITIES — reusable Memoria design patterns
+   UTILITIES — reusable design patterns
    ═══════════════════════════════════════════════════════════════════ */
 @layer utilities {
 
   /**
-   * Glass morphism card
+   * Glass morphism card — white-alpha per POV aesthetic
    * Usage: <div className="glass-card rounded p-4">
-   * Best on: floating panels, overlays, bottom bars on camera
    */
   .glass-card {
-    @apply backdrop-blur-xl border border-white/[0.07] bg-white/[0.03];
+    @apply backdrop-blur-xl border border-white/[0.10] bg-white/[0.03];
     box-shadow:
       0 8px 32px -4px rgba(0, 0, 0, 0.65),
-      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      inset 0 1px 0 rgba(252, 252, 254, 0.10);
   }
 
   /**
-   * Gold CTA button
-   * Usage: <button className="btn-gold">שלח לדפוס</button>
+   * Primary CTA button — indigo accent
+   * Usage: <button className="btn-primary">שלח</button>
    */
-  .btn-gold {
+  .btn-primary {
     @apply inline-flex items-center justify-center gap-2
            bg-primary text-primary-foreground
            font-montserrat text-xs font-semibold tracking-editorial uppercase
@@ -185,14 +183,14 @@
            hover:brightness-110 active:brightness-90 active:scale-[0.98]
            transition-all duration-200 ease-out
            select-none cursor-pointer;
-    box-shadow: 0 4px 20px -4px rgba(201, 169, 110, 0.30);
+    box-shadow: 0 4px 20px -4px rgba(124, 134, 225, 0.30);
   }
-  .btn-gold:hover {
-    box-shadow: 0 0 28px -4px rgba(201, 169, 110, 0.42);
+  .btn-primary:hover {
+    box-shadow: 0 0 28px -4px rgba(124, 134, 225, 0.42);
   }
 
   /**
-   * Ghost outline button (secondary action)
+   * Ghost outline button (secondary action) — white-alpha border
    * Usage: <button className="btn-ghost">ביטול</button>
    */
   .btn-ghost {
@@ -215,7 +213,7 @@
   }
 
   /**
-   * Photo vignette overlay — matches logo background
+   * Photo vignette overlay
    * Usage: <div className="absolute inset-0 vignette pointer-events-none" />
    */
   .vignette {
@@ -227,11 +225,11 @@
   }
 
   /**
-   * Shimmer loading skeleton
+   * Shimmer loading skeleton — white-alpha sweep on cool base
    * Usage: <div className="skeleton-shimmer h-32 rounded" />
    */
   .skeleton-shimmer {
-    @apply relative overflow-hidden bg-warm-900;
+    @apply relative overflow-hidden bg-cool-900;
   }
   .skeleton-shimmer::after {
     content: '';
@@ -239,7 +237,7 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.04) 50%,
+      rgba(252, 252, 254, 0.04) 50%,
       transparent 100%
     );
     background-size: 200% 100%;
@@ -247,18 +245,18 @@
   }
 
   /**
-   * Gold text gradient
-   * Usage: <h1 className="gold-text">Memoria</h1>
+   * Accent text gradient — indigo sweep
+   * Usage: <h1 className="accent-text">Memoria</h1>
    */
-  .gold-text {
-    background: linear-gradient(135deg, #e6be62 0%, #c9a96e 50%, #b08942 100%);
+  .accent-text {
+    background: linear-gradient(135deg, #a9b1ec 0%, #7c86e1 50%, #4d5bd3 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   /**
-   * Monogram display style — matches the logo "M"
+   * Monogram display style
    * Usage: <span className="font-playfair monogram">M</span>
    */
   .monogram {

@@ -6,7 +6,7 @@ module.exports = {
     extend: {
       // ─── Typography ───────────────────────────────────────────────
       fontFamily: {
-        // Display / headings — matches the logo serif monogram
+        // Display / headings
         playfair: ['"Playfair Display"', 'Georgia', 'serif'],
         // Labels, caps, UI chrome — spaced tracking
         montserrat: ['Montserrat', 'sans-serif'],
@@ -15,13 +15,13 @@ module.exports = {
       },
 
       letterSpacing: {
-        // Editorial small-caps style (used on labels, section titles)
+        // Uppercase small-caps style (labels, section titles)
         editorial: '0.15em',
         // Looser display heading tracking
         display: '0.06em',
       },
 
-      // ─── Border radius — editorial: almost sharp ──────────────────
+      // ─── Border radius ────────────────────────────────────────────
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
@@ -65,35 +65,38 @@ module.exports = {
         input:  'hsl(var(--input))',
         ring:   'hsl(var(--ring))',
 
-        // ── Memoria brand gold — champagne, warm, luxury ──
-        // Use these directly: bg-gold-500, text-gold-300, border-gold-700 etc.
-        gold: {
-          50:  '#fdf8ef',
-          100: '#f8edcf',
-          200: '#f0d89b',
-          300: '#e6be62',
-          400: '#dca83c',
-          500: '#c9a96e',  // ← brand primary
-          600: '#b08942',
-          700: '#8a6932',
-          800: '#6a502a',
-          900: '#4a3820',
+        // ── POV brand indigo — periwinkle, cool, editorial-tech ──
+        // Anchor: indigo-500 = #7c86e1 (POV accent)
+        // Use directly: bg-indigo-500, text-indigo-300, border-indigo-700
+        indigo: {
+          50:  '#eff0fc',
+          100: '#dde0f7',
+          200: '#c5cbf2',
+          300: '#a9b1ec',
+          400: '#8c97e6',
+          500: '#7c86e1',  // ← brand primary
+          600: '#4d5bd3',
+          700: '#3540ae',
+          800: '#282f87',
+          900: '#1b2060',
+          950: '#0f1239',
         },
 
-        // ── Warm neutrals — replace cold Tailwind grays ──
-        // Use: bg-warm-950, text-warm-300, border-warm-800 etc.
-        warm: {
-          50:  '#f8f4ed',
-          100: '#ede8df',
-          200: '#d8d1c5',
-          300: '#bfb5a5',
-          400: '#a09180',
-          500: '#7d7066',
-          600: '#5e5450',
-          700: '#3d3835',
-          800: '#201e1c',
-          900: '#141210',
-          950: '#0a0908',
+        // ── Cool neutrals — replace warm grays ──
+        // Anchor: cool-900 = #1e1e1e (POV background)
+        // Use: bg-cool-950, text-cool-300, border-cool-800
+        cool: {
+          50:  '#fafafa',
+          100: '#f0f0f0',
+          200: '#d8d8d8',
+          300: '#b4b4b4',
+          400: '#8a8a8a',
+          500: '#6b6b6b',
+          600: '#4a4a4a',
+          700: '#333333',
+          800: '#252525',
+          900: '#1e1e1e',  // ← POV background
+          950: '#0e0e0e',
         },
 
         // Chart colors
@@ -120,24 +123,24 @@ module.exports = {
 
       // ─── Shadows ──────────────────────────────────────────────────
       boxShadow: {
-        // Gold CTA glow
-        'gold-glow': '0 0 28px -4px rgba(201,169,110,0.40)',
-        'gold-soft': '0 4px 20px -4px rgba(201,169,110,0.25)',
-        // Dark glass card
-        'glass':     '0 8px 32px -4px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.06)',
+        // Indigo CTA glow
+        'indigo-glow': '0 0 28px -4px rgba(124,134,225,0.40)',
+        'indigo-soft': '0 4px 20px -4px rgba(124,134,225,0.25)',
+        // Dark glass card (white-alpha inset per POV)
+        'glass':     '0 8px 32px -4px rgba(0,0,0,0.65), inset 0 1px 0 rgba(252,252,254,0.10)',
         // Subtle dark card
         'card-dark': '0 2px 16px rgba(0,0,0,0.55)',
         // Top inset highlight (glass edge)
-        'inner-top': 'inset 0 1px 0 rgba(255,255,255,0.07)',
+        'inner-top': 'inset 0 1px 0 rgba(252,252,254,0.07)',
       },
 
       // ─── Backgrounds ──────────────────────────────────────────────
       backgroundImage: {
         'gradient-radial':   'radial-gradient(var(--tw-gradient-stops))',
-        // Vignette: matches the logo background treatment
+        // Vignette
         'vignette':          'radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.72) 100%)',
-        // Loading shimmer
-        'shimmer':           'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%)',
+        // Loading shimmer — white-alpha sweep
+        'shimmer':           'linear-gradient(90deg, transparent 0%, rgba(252,252,254,0.04) 50%, transparent 100%)',
       },
 
       // ─── Animations ───────────────────────────────────────────────

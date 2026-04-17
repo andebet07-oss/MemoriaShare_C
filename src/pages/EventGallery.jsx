@@ -324,7 +324,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
             {g.userUploadedCount}/{g.eventMaxPhotos} תמונות • {localStorage.getItem('ms_guest_name') || g.currentUser?.user_metadata?.display_name || g.currentUser?.full_name || "אורח"}
           </p>
           {g.isQuotaExhausted && (
-            <p className="mt-1.5 text-amber-500 font-medium text-base flex items-center justify-center gap-1.5">
+            <p className="mt-1.5 text-indigo-300 font-medium text-base flex items-center justify-center gap-1.5">
               <Sparkles className="w-4 h-4 shrink-0" />
               איזה רגעים יפים! הגעת למכסה המקסימלית
             </p>

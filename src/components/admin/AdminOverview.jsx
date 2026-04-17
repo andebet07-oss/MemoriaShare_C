@@ -14,7 +14,7 @@ const STATUS_COLORS = {
 const ICON_STYLES = {
   blue:   { wrap: 'rgba(59,130,246,0.15)',  icon: '#60a5fa'  },
   violet: { wrap: 'rgba(124,58,237,0.18)',  icon: '#a78bfa'  },
-  amber:  { wrap: 'rgba(245,158,11,0.15)',  icon: '#fbbf24'  },
+  indigo: { wrap: 'rgba(124,134,225,0.15)', icon: '#a9b1ec'  },
   lime:   { wrap: 'rgba(132,204,22,0.12)',  icon: '#a3e635'  },
 };
 
@@ -77,7 +77,7 @@ export default function AdminOverview() {
       <div className="grid grid-cols-2 gap-3 mb-6">
         <KpiCard icon={Image}         label="אירועי שיתוף"  value={shareCount}    color="blue"   onClick={() => navigate('/admin/events/share')} />
         <KpiCard icon={Magnet}        label="אירועי מגנט"   value={magnetCount}   color="violet" onClick={() => navigate('/admin/events/magnet')} />
-        <KpiCard icon={MessageSquare} label="לידים חדשים"   value={newLeads}      color="amber"  sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
+        <KpiCard icon={MessageSquare} label="לידים חדשים"   value={newLeads}      color="indigo" sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
         <KpiCard icon={Hash}          label="סה״כ אירועים"  value={events.length} color="lime"   onClick={() => navigate('/admin/events/share')} />
       </div>
 

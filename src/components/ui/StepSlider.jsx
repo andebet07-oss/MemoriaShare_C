@@ -44,7 +44,7 @@ export default function StepSlider({ tiers, value, onChange, priceTicker, ariaLa
               className={cn(
                 "flex-1 h-8 rounded transition-all duration-300 ease-out",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
-                filled ? "bg-primary shadow-gold-soft" : "bg-border hover:bg-foreground/20"
+                filled ? "bg-primary shadow-indigo-soft" : "bg-border hover:bg-foreground/20"
               )}
             />
           );

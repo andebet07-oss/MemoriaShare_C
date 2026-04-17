@@ -52,7 +52,7 @@ const EventCard = React.memo(function EventCard({ event, onDelete, isAdmin = fal
 
       {/* Info + Actions */}
       <div className="p-4">
-        <p className="text-amber-400 text-[10px] tracking-widest uppercase mb-1 font-semibold">
+        <p className="text-indigo-300 text-[10px] tracking-widest uppercase mb-1 font-semibold">
           {new Date(event.date).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
         <h3 className="text-white text-lg font-bold leading-tight mb-4 truncate">{event.name}</h3>
@@ -215,8 +215,8 @@ export default function MyEvents() {
             <div className="flex items-center gap-3">
               {user?.email === 'effitag@gmail.com' && (
                 <Link to={createPageUrl("AdminUsers")}>
-                  <button className="p-2.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors">
-                    <Users className="w-5 h-5 text-amber-400" />
+                  <button className="p-2.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 transition-colors">
+                    <Users className="w-5 h-5 text-indigo-400" />
                   </button>
                 </Link>
               )}

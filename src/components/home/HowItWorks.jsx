@@ -25,7 +25,7 @@ export default function HowItWorks() {
 
         <div className="max-w-6xl mx-auto">
           <div className="mb-16">
-            <p className="text-gold-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-5"><bdi>02</bdi> · איך זה עובד</p>
+            <p className="text-indigo-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-5"><bdi>02</bdi> · איך זה עובד</p>
             <h2 className="font-playfair text-4xl md:text-5xl leading-[1.1] text-foreground/90">
               שלושה שלבים.
               <br />
@@ -37,7 +37,7 @@ export default function HowItWorks() {
             {STEPS.map((step, i) => (
               <div key={i} className="py-10 md:py-0 border-b md:border-b-0 border-border last:border-0">
                 <span
-                  className="font-playfair leading-none block mb-5 text-gold-500/60"
+                  className="font-playfair leading-none block mb-5 text-indigo-500/60"
                   style={{ fontSize: 'clamp(3.5rem, 8vw, 5rem)' }}
                 >
                   <bdi>{step.number}</bdi>

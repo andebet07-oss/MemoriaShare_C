@@ -329,7 +329,7 @@ export default function CameraCapture({
 
       {isQuotaExhausted && !cameraError && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center animate-in fade-in">
-          <AlertCircle className="w-16 h-16 text-amber-500 mb-4" />
+          <AlertCircle className="w-16 h-16 text-indigo-300 mb-4" />
           <h3 className="text-xl font-black text-white mb-2">מימשת את כל המכסה שלך</h3>
           <p className="text-white/60 text-sm mb-8">לא ניתן לצלם תמונות נוספות באירוע זה. תודה על ה-POV המדהים שלך!</p>
           <button onClick={onClose} className="bg-white text-black px-8 py-3 rounded-2xl font-bold">סגור מצלמה</button>
@@ -358,7 +358,7 @@ export default function CameraCapture({
           <div className="flex items-center justify-between mb-3" dir="ltr">
             {/* Flash — far left */}
             <button onClick={cycleFlash}
-              className={`w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center transition-all active:scale-90 ${flashMode === 'on' ? 'bg-amber-400/90 text-black' : 'bg-black/30 text-white'}`}
+              className={`w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center transition-all active:scale-90 ${flashMode === 'on' ? 'bg-indigo-400/90 text-white' : 'bg-black/30 text-white'}`}
               style={{ border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 2px 12px rgba(0,0,0,0.35)' }}>
               {flashMode === 'off'
                 ? <ZapOff strokeWidth={1.5} className="w-5 h-5" />

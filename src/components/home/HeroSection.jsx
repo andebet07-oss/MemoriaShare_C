@@ -11,7 +11,7 @@ export default function HeroSection({ onOpenChooser }) {
     <div className={`relative transform ${className}`} style={{ flexShrink: 0 }}>
       <div className={`absolute -inset-10 blur-[60px] rounded-full -z-10 ${isCenter ? 'bg-foreground/15' : 'bg-foreground/[0.04]'}`} />
       <div
-        className={`relative bg-warm-950 rounded-[2.8rem] shadow-card-dark border border-foreground/20 ${
+        className={`relative bg-cool-950 rounded-[2.8rem] shadow-card-dark border border-foreground/20 ${
           isCenter
             ? 'w-44 md:w-64 h-[348px] md:h-[512px]'
             : 'w-36 md:w-52 h-[288px] md:h-[416px]'
@@ -37,7 +37,7 @@ export default function HeroSection({ onOpenChooser }) {
             <div className="pb-4 px-3 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="w-5 h-5 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
-                  <div className="text-gold-400 text-[7px]">⚡</div>
+                  <div className="text-indigo-400 text-[7px]">⚡</div>
                 </div>
                 <div className="flex gap-1 bg-black/30 backdrop-blur-md rounded-full px-2 py-0.5 border border-white/20">
                   <span className="text-white/50 text-[6px] font-medium"><bdi>.5</bdi></span>
@@ -137,7 +137,7 @@ export default function HeroSection({ onOpenChooser }) {
           >
             <button
               onClick={onOpenChooser}
-              className="px-12 py-4 bg-warm-50 text-warm-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-gold-soft"
+              className="px-12 py-4 bg-cool-50 text-cool-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-indigo-soft"
               style={{ letterSpacing: '0.05em' }}
             >
               צרו אירוע

@@ -21,7 +21,7 @@ export default function FramePicker({ frames, selectedId, onSelect }) {
           fontFamily: 'Montserrat, sans-serif',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
-          color: 'rgba(201,169,110,0.6)',
+          color: 'rgba(124,134,225,0.6)',
         }}
       >
         מסגרת
@@ -51,10 +51,10 @@ export default function FramePicker({ frames, selectedId, onSelect }) {
                   borderRadius: '4px',
                   background: frame.previewBg,
                   border: isSelected
-                    ? '2px solid rgba(201,169,110,0.9)'
+                    ? '2px solid rgba(124,134,225,0.9)'
                     : '2px solid rgba(255,255,255,0.1)',
                   boxShadow: isSelected
-                    ? '0 0 12px -2px rgba(201,169,110,0.5)'
+                    ? '0 0 12px -2px rgba(124,134,225,0.5)'
                     : '0 2px 8px rgba(0,0,0,0.5)',
                   transition: 'border-color 0.18s, box-shadow 0.18s',
                   position: 'relative',
@@ -70,7 +70,7 @@ export default function FramePicker({ frames, selectedId, onSelect }) {
                   style={{
                     fontFamily: "'Playfair Display', Georgia, serif",
                     fontSize: '13px',
-                    color: isSelected ? 'rgba(201,169,110,0.9)' : 'rgba(255,255,255,0.28)',
+                    color: isSelected ? 'rgba(124,134,225,0.9)' : 'rgba(255,255,255,0.28)',
                     lineHeight: 1,
                     transition: 'color 0.18s',
                     userSelect: 'none',
@@ -89,14 +89,14 @@ export default function FramePicker({ frames, selectedId, onSelect }) {
                       width: '14px',
                       height: '14px',
                       borderRadius: '50%',
-                      background: 'rgba(201,169,110,0.9)',
+                      background: 'rgba(124,134,225,0.9)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
                     <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                      <path d="M1.5 4L3.2 5.8L6.5 2.2" stroke="#0a0908" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M1.5 4L3.2 5.8L6.5 2.2" stroke="#1e1e1e" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                 )}
@@ -108,7 +108,7 @@ export default function FramePicker({ frames, selectedId, onSelect }) {
                   fontFamily: 'Heebo, sans-serif',
                   fontSize: '10px',
                   fontWeight: isSelected ? 600 : 400,
-                  color: isSelected ? 'rgba(201,169,110,0.9)' : 'rgba(255,255,255,0.38)',
+                  color: isSelected ? 'rgba(124,134,225,0.9)' : 'rgba(255,255,255,0.38)',
                   transition: 'color 0.18s, font-weight 0.18s',
                   whiteSpace: 'nowrap',
                   userSelect: 'none',

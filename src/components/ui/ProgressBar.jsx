@@ -25,7 +25,7 @@ export default function ProgressBar({ value, max, className, ariaLabel = "התק
       className={cn("h-1 bg-border w-full overflow-hidden", className)}
     >
       <div
-        className="h-full bg-primary shadow-gold-glow transition-all duration-500 ease-out"
+        className="h-full bg-primary shadow-indigo-glow transition-all duration-500 ease-out"
         style={{ width: `${pct}%` }}
       />
     </div>

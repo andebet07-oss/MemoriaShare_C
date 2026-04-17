@@ -54,7 +54,7 @@ function fillLabel(ctx, w, photoH, totalH, color = '#ffffff') {
 }
 
 /** Thin horizontal rule at the very top of the label */
-function labelRuleTop(ctx, w, photoH, color = 'rgba(201,169,110,0.4)', lw = 1) {
+function labelRuleTop(ctx, w, photoH, color = 'rgba(124,134,225,0.4)', lw = 1) {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = lw;
@@ -142,7 +142,7 @@ function drawDate(ctx, w, photoH, totalH, event, opts = {}) {
 }
 
 /** Small ornament glyph centered horizontally */
-function ornament(ctx, x, y, char = '✦', size = null, color = 'rgba(201,169,110,0.75)') {
+function ornament(ctx, x, y, char = '✦', size = null, color = 'rgba(124,134,225,0.75)') {
   ctx.save();
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -153,7 +153,7 @@ function ornament(ctx, x, y, char = '✦', size = null, color = 'rgba(201,169,11
 }
 
 /** Star of David shape */
-function starOfDavid(ctx, cx, cy, r, color = 'rgba(201,169,110,0.55)') {
+function starOfDavid(ctx, cx, cy, r, color = 'rgba(124,134,225,0.55)') {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = r * 0.16;
@@ -261,7 +261,7 @@ function drawTagline(ctx, w, photoH, totalH, text, opts = {}) {
   const {
     fontSize = w * 0.021,
     font = (sz) => `400 ${Math.round(sz)}px 'Montserrat','Heebo',sans-serif`,
-    color = 'rgba(201,169,110,0.85)',
+    color = 'rgba(124,134,225,0.85)',
     yRatio = 0.20,
     letterSpacing = w * 0.011,
     direction = 'ltr',
@@ -279,7 +279,7 @@ function drawTagline(ctx, w, photoH, totalH, text, opts = {}) {
 }
 
 /** Minimal crown outline — elegant, not cartoonish */
-function drawCrownIcon(ctx, cx, cy, size, color = 'rgba(201,169,110,0.7)') {
+function drawCrownIcon(ctx, cx, cy, size, color = 'rgba(124,134,225,0.7)') {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
@@ -311,7 +311,7 @@ function drawCrownIcon(ctx, cx, cy, size, color = 'rgba(201,169,110,0.7)') {
 }
 
 /** Two interlocking wedding rings */
-function drawRingsIcon(ctx, cx, cy, r, color = 'rgba(201,169,110,0.75)') {
+function drawRingsIcon(ctx, cx, cy, r, color = 'rgba(124,134,225,0.75)') {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = r * 0.18;
@@ -337,7 +337,7 @@ function drawBabyIcon(ctx, cx, cy, size, color = 'rgba(140,170,210,0.75)') {
 }
 
 /** Stylized Torah scroll icon */
-function drawTorahIcon(ctx, cx, cy, size, color = 'rgba(201,169,110,0.7)') {
+function drawTorahIcon(ctx, cx, cy, size, color = 'rgba(124,134,225,0.7)') {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
@@ -395,8 +395,8 @@ function drawFloralWreath(ctx, cx, cy, r, color = 'rgba(120,150,90,0.55)') {
   ctx.restore();
 }
 
-/** Circular monogram: large initial letter inside a gold ring */
-function drawMonogramCircle(ctx, cx, cy, r, letter, color = 'rgba(201,169,110,0.85)') {
+/** Circular monogram: large initial letter inside an indigo ring */
+function drawMonogramCircle(ctx, cx, cy, r, letter, color = 'rgba(124,134,225,0.85)') {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = r * 0.04;
@@ -420,9 +420,9 @@ const WEDDING_FRAMES = [
     drawFrame(ctx, w, totalH, photoH, event) {
       photoVignette(ctx, w, photoH, 0.28);
       fillLabel(ctx, w, photoH, totalH, '#ffffff');
-      labelRuleTop(ctx, w, photoH, 'rgba(201,169,110,0.45)', 1);
-      // Gold ornament dot centered at rule
-      ornament(ctx, w / 2, photoH + (totalH - photoH) * 0.14, '✦', Math.round(w * 0.02), 'rgba(201,169,110,0.6)');
+      labelRuleTop(ctx, w, photoH, 'rgba(124,134,225,0.45)', 1);
+      // Indigo ornament dot centered at rule
+      ornament(ctx, w / 2, photoH + (totalH - photoH) * 0.14, '✦', Math.round(w * 0.02), 'rgba(124,134,225,0.6)');
       drawName(ctx, w, photoH, totalH, event, { yRatio: 0.46 });
       drawDate(ctx, w, photoH, totalH, event, { yRatio: 0.80 });
     },
@@ -451,34 +451,34 @@ const WEDDING_FRAMES = [
   },
   {
     id: 'wedding-arch',
-    name: 'קשת זהב',
+    name: 'קשת אינדיגו',
     previewBg: 'linear-gradient(180deg,#100e08 65%,#ffffff 65%)',
     drawFrame(ctx, w, totalH, photoH, event) {
-      // Subtle gold arch in top area of photo
+      // Subtle indigo arch in top area of photo
       photoVignette(ctx, w, photoH, 0.3);
       ctx.save();
-      ctx.strokeStyle = 'rgba(201,169,110,0.35)';
+      ctx.strokeStyle = 'rgba(124,134,225,0.35)';
       ctx.lineWidth = w * 0.006;
       ctx.beginPath();
       ctx.arc(w / 2, photoH * 0.05, w * 0.38, 0, Math.PI);
       ctx.stroke();
       // Diamond corner marks
       const dm = w * 0.032;
-      ctx.fillStyle = 'rgba(201,169,110,0.4)';
+      ctx.fillStyle = 'rgba(124,134,225,0.4)';
       [[w * 0.04, photoH * 0.04], [w * 0.96, photoH * 0.04]].forEach(([cx, cy]) => {
         ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.PI / 4);
         ctx.fillRect(-dm / 2, -dm / 2, dm, dm); ctx.restore();
       });
       ctx.restore();
       fillLabel(ctx, w, photoH, totalH, '#ffffff');
-      labelRuleTop(ctx, w, photoH, 'rgba(201,169,110,0.5)', 1);
+      labelRuleTop(ctx, w, photoH, 'rgba(124,134,225,0.5)', 1);
       drawName(ctx, w, photoH, totalH, event, {
         font: (sz) => `600 ${Math.round(sz)}px 'Playfair Display','Heebo',Georgia,serif`,
         color: '#111111',
         yRatio: 0.46,
       });
       drawDate(ctx, w, photoH, totalH, event, {
-        color: 'rgba(201,169,110,0.75)',
+        color: 'rgba(124,134,225,0.75)',
         fontSize: w * 0.024,
         letterSpacing: w * 0.008,
         yRatio: 0.82,
@@ -493,7 +493,7 @@ const WEDDING_FRAMES = [
       photoVignette(ctx, w, photoH, 0.24);
       // Emerald label
       fillLabel(ctx, w, photoH, totalH, '#0f3a28');
-      // Gold hairline at top of label
+      // Indigo hairline at top of label
       labelRuleTop(ctx, w, photoH, 'rgba(223,195,140,0.75)', 1);
       drawTagline(ctx, w, photoH, totalH, 'MR & MRS', {
         color: 'rgba(223,195,140,0.85)',
@@ -519,7 +519,7 @@ const WEDDING_FRAMES = [
     drawFrame(ctx, w, totalH, photoH, event) {
       photoVignette(ctx, w, photoH, 0.28);
       fillLabel(ctx, w, photoH, totalH, '#4a1822');
-      // Rose gold rule
+      // Rose accent rule
       labelRuleTop(ctx, w, photoH, 'rgba(232,184,160,0.7)', 1);
       ornament(ctx, w / 2, photoH + (totalH - photoH) * 0.17, '❧', Math.round(w * 0.024), 'rgba(232,184,160,0.8)');
       drawName(ctx, w, photoH, totalH, event, {
@@ -627,17 +627,17 @@ const BAR_MITZVAH_FRAMES = [
     drawFrame(ctx, w, totalH, photoH, event) {
       photoVignette(ctx, w, photoH, 0.3);
       // Subtle Star of David in top-center photo area
-      starOfDavid(ctx, w / 2, photoH * 0.11, w * 0.055, 'rgba(201,169,110,0.32)');
+      starOfDavid(ctx, w / 2, photoH * 0.11, w * 0.055, 'rgba(124,134,225,0.32)');
       fillLabel(ctx, w, photoH, totalH, '#fdf8ee');
-      labelRuleTop(ctx, w, photoH, 'rgba(201,169,110,0.55)', 1);
-      ornament(ctx, w / 2, photoH + (totalH - photoH) * 0.16, '✡', Math.round(w * 0.019), 'rgba(201,169,110,0.65)');
+      labelRuleTop(ctx, w, photoH, 'rgba(124,134,225,0.55)', 1);
+      ornament(ctx, w / 2, photoH + (totalH - photoH) * 0.16, '✡', Math.round(w * 0.019), 'rgba(124,134,225,0.65)');
       drawName(ctx, w, photoH, totalH, event, {
         font: (sz) => `600 ${Math.round(sz)}px 'Playfair Display','Heebo',Georgia,serif`,
         color: '#2a1f08',
         yRatio: 0.48,
       });
       drawDate(ctx, w, photoH, totalH, event, {
-        color: 'rgba(201,169,110,0.8)',
+        color: 'rgba(124,134,225,0.8)',
         letterSpacing: w * 0.006,
         yRatio: 0.82,
       });
@@ -997,7 +997,7 @@ const CORPORATE_FRAMES = [
         letterSpacing: w * 0.004,
       });
       drawDate(ctx, w, photoH, totalH, event, {
-        color: 'rgba(201,169,110,0.8)',
+        color: 'rgba(124,134,225,0.8)',
         letterSpacing: w * 0.008,
         yRatio: 0.82,
       });
@@ -1015,7 +1015,7 @@ const CORPORATE_FRAMES = [
       const lw = w * 0.007;
       const grad = ctx.createLinearGradient(m, m, w - m, photoH - m);
       grad.addColorStop(0, 'rgba(80,120,255,0.5)');
-      grad.addColorStop(0.5, 'rgba(201,169,110,0.5)');
+      grad.addColorStop(0.5, 'rgba(124,134,225,0.5)');
       grad.addColorStop(1, 'rgba(80,200,255,0.5)');
       ctx.strokeStyle = grad;
       ctx.lineWidth = lw;
@@ -1029,7 +1029,7 @@ const CORPORATE_FRAMES = [
       ctx.save();
       const rg = ctx.createLinearGradient(0, 0, w, 0);
       rg.addColorStop(0, 'rgba(80,120,255,0.4)');
-      rg.addColorStop(0.5, 'rgba(201,169,110,0.4)');
+      rg.addColorStop(0.5, 'rgba(124,134,225,0.4)');
       rg.addColorStop(1, 'rgba(80,200,255,0.4)');
       ctx.strokeStyle = rg;
       ctx.lineWidth = 1.5;

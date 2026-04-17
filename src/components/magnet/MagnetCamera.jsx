@@ -199,8 +199,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
 
         <button onClick={() => setVintage(v => !v)}
           className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all"
-          style={{ background: vintage ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.07)', border: `1px solid ${vintage ? 'rgba(251,191,36,0.45)' : 'rgba(255,255,255,0.12)'}`, backdropFilter: 'blur(12px)' }}>
-          <Wand2 className={`w-4 h-4 ${vintage ? 'text-amber-300' : 'text-white/35'}`} />
+          style={{ background: vintage ? 'rgba(124,134,225,0.15)' : 'rgba(255,255,255,0.07)', border: `1px solid ${vintage ? 'rgba(124,134,225,0.45)' : 'rgba(255,255,255,0.12)'}`, backdropFilter: 'blur(12px)' }}>
+          <Wand2 className={`w-4 h-4 ${vintage ? 'text-indigo-300' : 'text-white/35'}`} />
         </button>
       </div>
 
@@ -249,8 +249,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
           {/* Flash */}
           <button onClick={toggleFlash}
             className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-all"
-            style={{ background: flash === 'on' ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.07)', border: `1.5px solid ${flash === 'on' ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.13)'}`, backdropFilter: 'blur(16px)', boxShadow: flash === 'on' ? '0 0 18px rgba(251,191,36,0.25)' : '0 4px 14px rgba(0,0,0,0.4)' }}>
-            {flash === 'on' ? <Zap className="w-5 h-5 text-amber-300" /> : <ZapOff className="w-5 h-5 text-white/45" />}
+            style={{ background: flash === 'on' ? 'rgba(124,134,225,0.15)' : 'rgba(255,255,255,0.07)', border: `1.5px solid ${flash === 'on' ? 'rgba(124,134,225,0.5)' : 'rgba(255,255,255,0.13)'}`, backdropFilter: 'blur(16px)', boxShadow: flash === 'on' ? '0 0 18px rgba(124,134,225,0.25)' : '0 4px 14px rgba(0,0,0,0.4)' }}>
+            {flash === 'on' ? <Zap className="w-5 h-5 text-indigo-300" /> : <ZapOff className="w-5 h-5 text-white/45" />}
           </button>
 
           {/* Lime shutter */}

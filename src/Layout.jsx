@@ -14,10 +14,10 @@ export default function Layout({ children, currentPageName }) {
         @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Heebo:wght@300;400;600;700;900&display=swap');
 
         :root {
-          --ink: #0a0907;
-          --paper: #e8e2d5;
-          --paper-muted: #a89a85;
-          --amber: #b8945f;
+          --ink: #1e1e1e;
+          --paper: #fcfcfe;
+          --paper-muted: #b4b4b4;
+          --accent: #7c86e1;
           --premium-silver: linear-gradient(135deg, #f3f3f3 0%, #e5e5e5 45%, #c4c4c4 55%, #f3f3f3 100%);
           --dark-chrome: linear-gradient(135deg, #f0f2f3 0%, #bfc8d0 45%, #9da9b2 55%, #f0f2f3 100%);
           --metallic-highlight: rgba(255, 255, 255, 0.4);

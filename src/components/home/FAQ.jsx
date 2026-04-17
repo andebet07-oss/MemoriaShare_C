@@ -41,7 +41,7 @@ export default function FAQ() {
 
           {/* Left header */}
           <div className="md:sticky md:top-32 self-start">
-            <p className="text-gold-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-6"><bdi>04</bdi> · שאלות</p>
+            <p className="text-indigo-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-6"><bdi>04</bdi> · שאלות</p>
             <h2 className="font-playfair text-4xl md:text-5xl leading-[1.1] text-foreground/90">
               כל מה
               <br />

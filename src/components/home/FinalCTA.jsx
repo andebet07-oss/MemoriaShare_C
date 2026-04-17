@@ -6,7 +6,7 @@ export default function FinalCTA({ onOpenChooser, onOpenDemo }) {
       <div className="container mx-auto px-6">
         <div className="max-w-xl mx-auto text-center">
 
-          <p className="text-gold-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-6">Begin</p>
+          <p className="text-indigo-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-6">Begin</p>
 
           <h2
             className="font-playfair leading-[1.1] text-foreground/90 mb-3"
@@ -21,7 +21,7 @@ export default function FinalCTA({ onOpenChooser, onOpenDemo }) {
 
           <button
             onClick={onOpenChooser}
-            className="px-14 py-4 bg-warm-50 text-warm-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-gold-soft"
+            className="px-14 py-4 bg-cool-50 text-cool-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-indigo-soft"
             style={{ letterSpacing: '0.05em' }}
           >
             צרו אירוע

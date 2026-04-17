@@ -54,14 +54,14 @@ function ChooserContent({ onClose }) {
           <p className="text-muted-foreground text-xs leading-snug">גלריה חיה לכל האורחים</p>
         </button>
 
-        {/* Magnet Experience — gold (premium tier) */}
+        {/* Magnet Experience — indigo (premium tier) */}
         <button
           onClick={handleMagnet}
-          className="flex flex-col items-center text-center p-5 bg-foreground/[0.04] border border-gold-500/20 rounded-2xl hover:bg-gold-950/20 hover:border-gold-500/40 transition-all active:scale-[0.97] group relative overflow-hidden shadow-gold-soft"
+          className="flex flex-col items-center text-center p-5 bg-foreground/[0.04] border border-indigo-500/20 rounded-2xl hover:bg-indigo-950/20 hover:border-indigo-500/40 transition-all active:scale-[0.97] group relative overflow-hidden shadow-indigo-soft"
         >
-          <span className="absolute top-2.5 left-2.5 text-[9px] font-black tracking-wider uppercase text-gold-400 bg-gold-500/10 px-1.5 py-0.5 rounded-full">פרמיום</span>
-          <div className="w-14 h-14 rounded-2xl bg-gold-500/10 border border-gold-500/25 flex items-center justify-center mb-3 group-hover:bg-gold-500/20 transition-colors">
-            <Magnet className="w-7 h-7 text-gold-400" />
+          <span className="absolute top-2.5 left-2.5 text-[9px] font-black tracking-wider uppercase text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded-full">פרמיום</span>
+          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center mb-3 group-hover:bg-indigo-500/20 transition-colors">
+            <Magnet className="w-7 h-7 text-indigo-400" />
           </div>
           <span className="text-foreground font-bold text-sm leading-tight mb-1">חוויית מגנטים</span>
           <p className="text-muted-foreground text-xs leading-snug">הדפסה חיה ממש באירוע</p>

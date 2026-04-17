@@ -146,7 +146,7 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
 
   return (
     // גודל האייפון מבוסס dvh — פרופורציונלי לגובה המסך. יחס 9:19.5 (iPhone)
-    <div className="relative bg-warm-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-foreground/10 mx-auto"
+    <div className="relative bg-cool-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] shrink-0 ring-1 ring-foreground/10 mx-auto"
       style={{ width: phoneW || 'clamp(170px, 25dvh, 240px)', height: phoneH || 'clamp(145px, 54dvh, 480px)', borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)', padding: 'clamp(4px, 0.8dvh, 8px)', transition: 'width 0.5s ease-out, height 0.5s ease-out' }}>
 
       {isDesignMode &&
@@ -156,7 +156,7 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
       {/* Dynamic Island */}
       <div className="absolute left-1/2 -translate-x-1/2 bg-black rounded-full z-[60] flex items-center justify-end shadow-inner"
         style={{ top: 'clamp(8px, 1.5dvh, 18px)', width: 'clamp(44px, 8.5dvh, 76px)', height: 'clamp(13px, 2.2dvh, 22px)', paddingRight: 'clamp(6px, 1dvh, 12px)' }}>
-        <div className="rounded-full bg-warm-900 border border-foreground/5 shadow-sm" style={{ width: 'clamp(4px, 0.75dvh, 6px)', height: 'clamp(4px, 0.75dvh, 6px)' }}></div>
+        <div className="rounded-full bg-cool-900 border border-foreground/5 shadow-sm" style={{ width: 'clamp(4px, 0.75dvh, 6px)', height: 'clamp(4px, 0.75dvh, 6px)' }}></div>
       </div>
 
       {/* Inner Screen */}
@@ -182,7 +182,7 @@ function PhoneMockup({ eventData = {}, imageTransform, isDesignMode = false, onI
         
         {/* Background Image */}
         {imageError ?
-        <div className="absolute inset-0 bg-gradient-to-br from-warm-900 to-warm-950 z-0"></div> :
+        <div className="absolute inset-0 bg-gradient-to-br from-cool-900 to-cool-950 z-0"></div> :
 
         <img
           src={displayImage}
@@ -291,7 +291,7 @@ function InlineCalendar({ value, onChange }) {
             className={`h-9 w-full flex items-center justify-center text-base font-medium rounded-full transition-colors
               ${!day ? 'invisible pointer-events-none' : ''}
               ${day && isPast(day) ? 'text-foreground/20 pointer-events-none' : ''}
-              ${day && isSel(day) ? 'bg-primary text-primary-foreground shadow-gold-soft' : ''}
+              ${day && isSel(day) ? 'bg-primary text-primary-foreground shadow-indigo-soft' : ''}
               ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-primary/40 text-foreground' : ''}
               ${day && !isPast(day) && !isSel(day) ? 'text-foreground/75 hover:bg-foreground/[0.08]' : ''}
             `}>
@@ -492,7 +492,7 @@ export default function App() {
                   <p className="text-sm text-muted-foreground mb-2">הרקע שיופיע לאורחים לפני שהם פותחים מצלמה</p>
                   <div className="grid grid-cols-2 gap-3 w-full pt-2">
                     <label htmlFor="add-photo" className="cursor-pointer group h-full">
-                      <div className="bg-primary hover:brightness-110 text-primary-foreground transition-all rounded-xl py-2 px-2 text-center h-full flex flex-col justify-center items-center shadow-gold-soft active:scale-95 border border-foreground/10">
+                      <div className="bg-primary hover:brightness-110 text-primary-foreground transition-all rounded-xl py-2 px-2 text-center h-full flex flex-col justify-center items-center shadow-indigo-soft active:scale-95 border border-foreground/10">
                         {isUploading ? <Loader2 className="w-6 h-6 mb-1.5 animate-spin" /> : <ImageIcon className="w-6 h-6 mb-1.5" />}
                         <p className="text-[10px] font-black uppercase tracking-widest leading-tight">{isUploading ? 'מעלה...' : 'העלאה'}</p>
                       </div>
@@ -502,7 +502,7 @@ export default function App() {
                     type="button"
                     onClick={() => setIsDesignMode((prev) => !prev)}
                     className={`transition-all rounded-xl py-2 px-2 text-center border flex flex-col justify-center items-center active:scale-95 h-full ${
-                    isDesignMode ? 'bg-primary border-primary text-primary-foreground shadow-gold-soft' : 'bg-secondary hover:bg-accent border-border'}`
+                    isDesignMode ? 'bg-primary border-primary text-primary-foreground shadow-indigo-soft' : 'bg-secondary hover:bg-accent border-border'}`
                     }>
 
                       {isDesignMode ? <X className="w-6 h-6 mb-1.5" /> : <Pencil className="w-6 h-6 mb-1.5 text-muted-foreground" />}

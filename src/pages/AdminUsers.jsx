@@ -214,7 +214,7 @@ export default function AdminUsers() {
                   <p className="text-white font-semibold text-sm truncate">
                     {u.full_name || 'ללא שם'}
                     {u.email === SUPER_ADMIN_EMAIL && (
-                      <span className="mr-1.5 text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full px-1.5 py-0.5">SUPER</span>
+                      <span className="mr-1.5 text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full px-1.5 py-0.5">SUPER</span>
                     )}
                   </p>
                   <p className="text-gray-500 text-xs truncate">{u.email}</p>
