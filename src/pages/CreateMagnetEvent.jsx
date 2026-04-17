@@ -525,14 +525,14 @@ export default function CreateMagnetEvent() {
                             ? 'bg-violet-600 text-white shadow-md border border-white/20'
                             : 'bg-card text-muted-foreground border border-border hover:border-foreground/20'
                         }`}
-                      >{n}</button>
+                      ><bdi>{n}</bdi></button>
                     ))}
                   </div>
                   <div className="bg-gradient-to-r from-cool-900 to-cool-950 rounded-xl p-3 flex items-center gap-3 border border-border">
                     <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 shrink-0 border border-violet-500/20">
                       <Check size={16} strokeWidth={3} />
                     </div>
-                    <p className="text-foreground font-semibold text-[13px]">{form.print_quota_per_device} הדפסות לכל אורח</p>
+                    <p className="text-foreground font-semibold text-[13px]"><bdi>{form.print_quota_per_device}</bdi> הדפסות לכל אורח</p>
                   </div>
                 </div>
               )}

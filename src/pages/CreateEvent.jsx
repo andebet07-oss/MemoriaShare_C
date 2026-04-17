@@ -584,7 +584,11 @@ export default function App() {
                         <Check size={16} strokeWidth={3} />
                       </div>
                       <div>
-                        <p className="text-foreground font-black text-[13px] leading-tight uppercase tracking-wide">{pricingTiers[eventData.guest_tier].displayLabel}</p>
+                        <p className="text-foreground font-black text-[13px] leading-tight uppercase tracking-wide">
+                          {pricingTiers[eventData.guest_tier].displayLabel.split(/(\d+\+?)/).map((part, i) =>
+                            /\d/.test(part) ? <bdi key={i}>{part}</bdi> : part
+                          )}
+                        </p>
                         <p className="text-muted-foreground text-[9px] uppercase font-bold tracking-widest mt-0.5">Premium Hosting</p>
                       </div>
                     </div>
