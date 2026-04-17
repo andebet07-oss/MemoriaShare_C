@@ -1,6 +1,6 @@
 ---
 type: project-memory
-updated: 2026-04-16T22:00Z
+updated: 2026-04-17T00:00Z
 ---
 
 # Project Memory — Active State
@@ -9,6 +9,13 @@ updated: 2026-04-16T22:00Z
 - Branch: `main`
 - Last build: ✅ EXIT 0 (2026-04-16 20:00)
 - Deployed: https://memoriashare.com (Vercel auto-deploy on push)
+
+## Brand Status (Locked 2026-04-17)
+- POV.camera cool-dark / indigo aesthetic — canonical across MemoriaShare shell
+- Background `#1e1e1e` (cool-900), primary `#7c86e1` (indigo-500), text `#fcfcfe`
+- Violet `#7c3aed` preserved as MemoriaMagnet sub-brand accent
+- Full brand spec: see `memory/long-term-memory.md` §Design Language
+- 4 pages explicitly aligned per user request: CreateEvent, CreateMagnetEvent, MyEvents (/host), AdminShell+AdminOverview
 
 ---
 
@@ -44,6 +51,18 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | File | Date | Summary |
 |------|------|---------|
+| `src/pages/Home.jsx` + `HeroSection.jsx` + `Features.jsx` + `HowItWorks.jsx` | 2026-04-17 | POV brand: `.dark` wrapper, contrast fix, indigo palette |
+| `src/pages/CreateEvent.jsx` | 2026-04-17 | POV brand: `.dark` + cool-dark gradient + Playfair wizard headers |
+| `src/pages/MyEvents.jsx` | 2026-04-17 | POV brand: semantic tokens throughout, editorial `01 · ניהול` label, Playfair card titles, dialog restyled |
+| `src/pages/CreateMagnetEvent.jsx` | 2026-04-17 | POV shell + violet sub-brand preserved; 4 editorial step labels; Playfair titles |
+| `src/components/admin/AdminShell.jsx` | 2026-04-17 | POV brand: `.dark` wrap, border-border, violet sub-brand retained for admin |
+| `src/components/admin/AdminOverview.jsx` | 2026-04-17 | POV brand: semantic tokens, Playfair numerals, editorial section label, STATUS_COLORS updated |
+| `src/Layout.jsx` | 2026-04-17 | `.luxury-button` + `.premium-submit-button` cool-neutral rewrite with indigo-tinted shadows |
+| `src/components/dashboard/cards/CardElegant.jsx` | 2026-04-17 | "Gold" → "Indigo" rename, hex swaps to POV palette |
+| `src/components/magnet/framePacks.js` | 2026-04-17 | UI chrome gold→indigo; frame artwork metallic tones retained |
+| `src/components/dashboard/PrintableShareCards.jsx` | 2026-04-17 | `קשת זהב` → `קשת אינדיגו` |
+| `src/components/admin/LeadsPanel.jsx` | 2026-04-17 | Contacted status amber → violet `#a78bfa` |
+| `memory/*.md` + `CLAUDE.md` | 2026-04-17 | Canonicalized POV brand across memory + project docs |
 | `src/components/admin/AdminShell.jsx` | 2026-04-16 | Text-only tabs, removed icon imports + useNavigate |
 | `src/components/admin/AdminOverview.jsx` | 2026-04-16 | Lucide icon containers, staleTime 30s, error states, Hash icon |
 | `src/components/admin/AdminEventsList.jsx` | 2026-04-16 | Error state added |

@@ -478,7 +478,7 @@ export default function CreateMagnetEvent() {
                   <Input
                     value={form.name}
                     onChange={(e) => handleChange('name', e.target.value)}
-                    placeholder="למשל: חתונת כהן"
+                    placeholder="למשל: Yael & Daniel"
                     style={{ fontSize: '16px' }}
                     className="bg-card border-border text-foreground h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-muted-foreground/60 w-full"
                   />

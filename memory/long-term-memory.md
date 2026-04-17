@@ -1,6 +1,6 @@
 ---
 type: long-term-memory
-updated: 2026-04-16T22:00Z
+updated: 2026-04-17T00:00Z
 ---
 
 # Long-Term Memory — Patterns & Distilled Facts
@@ -19,24 +19,63 @@ updated: 2026-04-16T22:00Z
 - **RLS is security:** Client-side checks are UX only
 - **Admin:** Efi (effitag@gmail.com) — super-admin role
 
-## Design Language (Memoria Brand)
-- **Background:** `#0a0a0e`
-- **Primary violet:** `#7c3aed` / `#6d28d9`
-- **Lime accent:** `#caff4a` / `#a3e635`
-- **Card bg:** `rgba(255,255,255,0.03)`, border: `rgba(255,255,255,0.07)`
-- **Muted text:** `rgba(255,255,255,0.4)`
-- **Typography (Hebrew):** Heebo, Assistant
-- **Typography (UI):** -apple-system, BlinkMacSystemFont, Segoe UI
-- **Canvas frames:** Playfair Display (headers), Bodoni Moda, Cinzel, etc.
-- **Aesthetic:** Dark luxury, glass morphism, native iOS feel
-- **Tabs:** Text-only (no icons) — underline style, violet 2px border-bottom ← **chosen explicitly**
-- **Icon containers:** 32px `rounded-xl`, translucent color bg, 16px Lucide icon inside ← **preferred over large decorative icons**
+## Design Language (Memoria Brand — POV Pivot, Canonical 2026-04-17)
+
+**This is the canonical brand. Decided and locked by Efi on 2026-04-17.**
+The prior violet-heavy palette was retired. Aesthetic inspiration: POV.camera — cool-dark, editorial, indigo-accented.
+
+### Core Palette (platform-wide)
+| Token | Value | Tailwind anchor | Use |
+|-------|-------|-----------------|-----|
+| Background (primary) | `#1e1e1e` | `cool-900` | Main dark shell |
+| Background (deepest) | `cool-950` (≈`#0f0f10`) | `cool-950` | Gradient base + page roots |
+| Foreground | `#fcfcfe` | `cool-50` / `foreground` | Body text, high-contrast surfaces |
+| Primary accent | `#7c86e1` | `indigo-500` | CTAs, focus rings, active states, editorial labels |
+| Muted foreground | `#b4b4b4` | `muted-foreground` | Secondary copy, icons, placeholders |
+
+### Surface Recipes
+- **Page root:** `dark bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground`
+- **Card:** `bg-card border border-border` (NOT hardcoded `bg-[#111]` or `bg-[#0a0a0a]`)
+- **Input:** `bg-card border-border focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20`
+- **Radial glow:** `radial-gradient(ellipse ..., rgba(124,134,225,0.06) 0%, transparent 70%)` — subtle indigo wash, NEVER warm cream (old `rgba(247,240,228,0.03)` is retired)
+
+### Typography System
+- **Display / serif:** `font-playfair` (Playfair Display) — page headers, dialog titles, Empty-state headlines, wizard step titles (2xl–4xl scale)
+- **Hebrew body / UI:** `font-heebo` (Heebo) — all paragraphs, form labels, buttons
+- **Editorial micro-labels:** Montserrat via `tracking-[0.3em] uppercase text-[10px] font-bold` — section numbering (`01 · ניהול`, `01 · שם האירוע`), tab chrome
+- **Numerals in RTL:** Wrap in `<bdi>` for LTR numeral direction inside Hebrew flow
+
+### Dark-Mode Activation Rule
+- Semantic tokens (`bg-background`, `text-foreground`, `border-border`) resolve to LIGHT values by default
+- Every page root that expects dark appearance **MUST** include the `dark` class: `<div className="dark ...">`
+- Without `.dark` ancestor, `bg-background` renders as `#fafafa` (silvery), not dark — this was the root cause of the 2026-04-16 home-page contrast bug
+
+### Sub-brand — MemoriaMagnet (Admin / Print Service)
+- **Violet `#7c3aed` / `#a78bfa` is preserved** as the MemoriaMagnet sub-brand accent
+- Use ONLY inside Magnet-specific UI: `AdminShell` tabs, `CreateMagnetEvent` wizard, `MagnetReview`, `PrintStation`, Magnet KPI cards
+- Everywhere else — indigo is the primary accent
+- This preserves the dual-product visual separation required by the `event_type === 'share' | 'magnet'` architecture
+
+### Component Vocabulary (consistent across pages)
+- **Wizard step header pattern:** indigo/violet micro-label (`0N · 段名`) → Playfair 2xl title → muted-foreground subtitle
+- **Editorial label:** `text-indigo-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-3`
+- **Primary CTA:** `bg-indigo-500 text-cool-950 hover:bg-indigo-400 font-semibold` (or `bg-cool-50 text-cool-950` for secondary-strong)
+- **Tab underline (active):** 2px border-bottom, color = indigo-500 (share) / violet-500 (admin)
+- **Icon containers:** 32px `rounded-xl`, translucent color bg, 16px Lucide icon inside
+
+### Legacy CSS Classes (Layout.jsx)
+- `.luxury-button` and `.premium-submit-button` — retained as metallic CTAs, now using cool-neutral gradients (`#fcfcfe → #e8e8ec`) with indigo-tinted shadows `rgba(124, 134, 225, 0.18–0.28)` (NOT silver-metallic gray)
 
 ## UI Anti-patterns (Explicitly Rejected)
 - 3D WebP icons with white backgrounds on dark UI — looks terrible ✗
 - Generic emoji-only sticker packs (💍🥂💐) — too amateurish ✗
 - Tab nav with icons — user chose text-only variant ✗
 - Large decorative icons instead of small contained ones ✗
+- Warm cream radial glow `rgba(247,240,228,0.03)` — retired with POV pivot ✗
+- Hardcoded hex backgrounds on shell surfaces (`bg-[#0a0a0a]`, `bg-[#111]`, `bg-[#1a1a1a]`) — use semantic tokens (`bg-card`, `bg-secondary`, `bg-background`) ✗
+- Page root without `.dark` class when dark appearance is intended ✗
+- `bg-background via-cool-900 to-background` gradient — resolves to silvery sheen because `background` defaults to light; use explicit `from-cool-950 via-cool-900 to-cool-950` ✗
+- Silver-metallic button gradients with gray shadows — retired; use cool-neutral + indigo-tinted shadows instead ✗
 
 ## Preferred Sticker Aesthetic
 - Physical sticker shop feel: badges (pill), stamps (rectangular label), attitude text
@@ -87,8 +126,9 @@ updated: 2026-04-16T22:00Z
   - יום הולדת / birthday → BIRTHDAY_FRAMES
   - חברה / corporate / עסקי → CORPORATE_FRAMES
   - (else) → GENERAL_FRAMES
-- **FramePicker UX:** 52×68 thumbs, RTL horizontal scroll, gold border on selected
-- **Accent color for frame UI:** gold `rgba(201,169,110, *)` (= `#c9a96e`) — reserved for premium magnet context; violet remains primary platform accent
+- **FramePicker UX:** 52×68 thumbs, RTL horizontal scroll, violet border on selected (was gold pre-POV pivot; gold was replaced with violet on 2026-04-17)
+- **Accent color for frame picker UI:** violet `#7c3aed` (MemoriaMagnet sub-brand) — matches Magnet product color; indigo remains primary shell accent
+- **Gold inside canvas frames:** individual frames (e.g. "קשת אינדיגו") may still use metallic rose/gold TONES in the drawn artwork; these are illustrative frame decorations, not UI chrome. Platform UI uses indigo; Magnet sub-brand uses violet.
 - **Label typography:** Montserrat uppercase with `letter-spacing: 0.12em` for chrome/labels
 
 ## Deploy & Git

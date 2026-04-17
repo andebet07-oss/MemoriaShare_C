@@ -1,10 +1,48 @@
 ---
 type: recent-memory
-updated: 2026-04-16T22:00Z
+updated: 2026-04-17T00:00Z
 horizon: 48 hours
 ---
 
 # Recent Memory (Last 48 Hours)
+
+## Session 2026-04-17 — POV Brand Pivot LOCKED IN (Canonical)
+
+### Decision
+Efi explicitly locked the POV.camera cool-dark / indigo brand as the canonical MemoriaShare palette. The prior violet-heavy brand is retired from the platform shell (violet remains only as MemoriaMagnet sub-brand accent). This was after seeing the refactored home + pages, then directing: *"העיצוב שהטמענו הוא העיצוב שהחלטתי שיהיה בפרוייקט מבחינת הצבעים. זה הקו שאנחנו הולכים איתו."*
+
+### Brand (canonical)
+- Background: `#1e1e1e` (cool-900) + gradient to cool-950
+- Primary accent: `#7c86e1` (indigo-500)
+- Text: `#fcfcfe` (cool-50)
+- Muted: `#b4b4b4`
+- Display serif: Playfair Display
+- Body: Heebo (Hebrew)
+- Micro-labels: Montserrat `tracking-[0.3em] uppercase text-[10px]`
+- Sub-brand: Violet `#7c3aed` — MemoriaMagnet UI only
+
+### Pages Aligned (Sessions 2 + 3)
+- `src/pages/Home.jsx` + `HeroSection.jsx` + `Features.jsx` + `HowItWorks.jsx` — added `.dark`, fixed contrast bug, indigo label scheme
+- `src/pages/CreateEvent.jsx` — wizard root: `.dark` + cool-dark gradient; radial glow `rgba(124,134,225,0.06)`; step headers → Playfair
+- `src/pages/MyEvents.jsx` (/host) — full refactor: editorial label `01 · ניהול`, Playfair 3xl-4xl, semantic tokens throughout (no more hardcoded `bg-[#0a0a0a]` etc.), dialog → `bg-cool-950/95`
+- `src/pages/CreateMagnetEvent.jsx` — admin wizard: all 4 steps get editorial labels (`01 · שם`, `02 · תאריך`, `03 · מכסה`, `04 · מסגרת`); shell cool-dark + violet sub-brand accent preserved
+- `src/components/admin/AdminShell.jsx` — `.dark` wrap, `border-border`, text-muted-foreground, violet-500 active tab underline
+- `src/components/admin/AdminOverview.jsx` — KPI cards semantic tokens, Playfair numerals, editorial section label `01 · סקירה`, STATUS_COLORS updated
+- `src/Layout.jsx` — `.luxury-button` + `.premium-submit-button` CSS rewritten: cool-neutral (`#fcfcfe → #e8e8ec`) with indigo shadows `rgba(124,134,225,0.18-0.28)`
+- `src/components/dashboard/cards/CardElegant.jsx` — "gold" → "indigo/accent" rename, hex swaps
+- `src/components/magnet/framePacks.js` — "gold" references in UI chrome swapped to "indigo" (frame artwork may retain metallic tones)
+- `src/components/dashboard/PrintableShareCards.jsx` — Hebrew label `קשת זהב` → `קשת אינדיגו`
+- `src/components/admin/LeadsPanel.jsx` — contacted status amber → violet `#a78bfa`
+
+### Root Cause Fix
+Silvery home-page bug root-caused: no `.dark` ancestor existed in the app, so semantic tokens (`bg-background`, `text-foreground`, `border-border`) resolved to light palette values. Gradient `from-background via-cool-900 to-background` rendered as `#fafafa → #1e1e1e → #fafafa`. Fix: add `dark` class to every page root that expects dark appearance; use explicit cool-tone gradient (`from-cool-950 via-cool-900 to-cool-950`), not semantic `background` alias.
+
+### Out of Scope (pending if requested)
+- `src/pages/Dashboard.jsx` (host event dashboard) — still has `bg-[#1a1a1a]` hexes
+- `src/pages/MagnetLead.jsx` — guest lead wizard, ~14 hardcoded hexes
+- `src/pages/PrintStation.jsx` — operator print queue, 6 hardcoded hexes
+
+---
 
 ## Session 2026-04-15 → 2026-04-16 (Late Night) — Magnet Frame System V1–V4
 

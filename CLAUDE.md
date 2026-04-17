@@ -71,6 +71,64 @@ After completing a major feature or day's work:
 
 ---
 
+## 0.6. Brand Palette (Canonical — Locked 2026-04-17)
+
+**Authority:** This is the locked visual system for MemoriaShare. Any PR that introduces a conflicting hex value must be rejected or refactored. Full detail lives in `memory/long-term-memory.md §Design Language` — this block is the at-a-glance quick reference.
+
+### Core Palette
+
+| Token | Hex | Tailwind anchor | Usage |
+|-------|-----|-----------------|-------|
+| Background | `#1e1e1e` | `cool-900` | Page shell body |
+| Background deepest | `#121214` | `cool-950` | Gradient bottom, modals |
+| Foreground / text | `#fcfcfe` | `cool-50` | Primary text, high-contrast CTAs |
+| Primary accent | `#7c86e1` | `indigo-500` | CTAs, focus rings, editorial labels (`text-indigo-400`) |
+| Muted | `#b4b4b4` | `muted-foreground` | Secondary text, date labels |
+| Border | `rgba(255,255,255,0.07)` | `border` | Hairlines on cards, inputs, tabs |
+| Card surface | `rgba(255,255,255,0.03)` | `card` | Panels, dashboards, list rows |
+
+**Sub-brand (reserved):** Violet `#7c3aed` / `violet-500` is exclusive to MemoriaMagnet admin & print UI (`AdminShell`, `CreateMagnetEvent`, `MagnetEventDashboard`, `PrintStation`, `MagnetReview`). The consumer Share product never uses violet as a primary accent.
+
+### Dark-Mode Activation (MANDATORY)
+Every dark page root MUST include the `dark` class. Without it, Tailwind semantic tokens (`bg-background`, `text-foreground`, `border-border`) resolve to **light-palette** values and produce the silvery-gradient bug documented 2026-04-16.
+
+```jsx
+// ✅ Correct page root
+<div className="dark min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground font-heebo">
+
+// ❌ Wrong — `dark` missing; semantic tokens resolve light
+<div className="min-h-screen bg-background text-foreground">
+```
+
+Gradients must use explicit cool anchors (`from-cool-950 via-cool-900 to-cool-950`), NOT `from-background via-cool-900 to-background`.
+
+### Typography System
+- **Display serif:** Playfair Display — wizard headers, card titles, KPI numerals (`font-playfair`, 2xl–4xl)
+- **Body:** Heebo — all Hebrew UI copy (`font-heebo`)
+- **Editorial micro-label:** Montserrat — `tracking-[0.3em] uppercase text-[10px] font-bold`, `text-indigo-400` (Share) or `text-violet-400` (Magnet)
+
+Editorial label pattern (use at the top of every page/section header):
+```jsx
+<p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-3">
+  <bdi>01</bdi> · ניהול
+</p>
+<h1 className="font-playfair text-3xl md:text-4xl text-foreground">שם הכותרת</h1>
+```
+
+### Radial Glow Recipe
+Page hero glow uses indigo — **not** warm cream:
+```css
+background: radial-gradient(circle at 30% 20%, rgba(124,134,225,0.06), transparent 60%);
+```
+
+### Anti-Patterns (automatic reject)
+- Hardcoded `bg-[#0a0a0a]` / `bg-[#111]` / `bg-[#1a1a1a]` — use semantic tokens (`bg-background`, `bg-card`, `bg-secondary`)
+- Warm cream radial `rgba(247,240,228,0.03)` — retired
+- Silver-metallic buttons (old gold/cream `luxury-button`) — replaced with cool-neutral `#fcfcfe → #e8e8ec` + indigo shadow
+- Violet as primary accent on Share-side surfaces — reserved for Magnet sub-brand only
+
+---
+
 ## 1. AI Persona — Role Switching
 
 Activate a role by prefixing your prompt. Each role has a different lens and output style.
