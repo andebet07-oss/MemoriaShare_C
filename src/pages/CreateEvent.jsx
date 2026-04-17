@@ -423,7 +423,7 @@ export default function App() {
 
   return (
     // הוספת 100dvh קריטית כדי למנוע את קפיצות ה-Scrollbar בדפדפן הנייד. overflow-hidden נועל את המסך.
-    <div className="flex flex-col w-full h-[100dvh] bg-background text-foreground overflow-hidden font-heebo" dir="rtl">
+    <div className="dark flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo" dir="rtl">
 
       {/* Progress Bar — fills from right in RTL via inline-start block flow */}
       <ProgressBar value={currentStep} max={totalSteps} className="shrink-0 z-50" ariaLabel="התקדמות יצירת אירוע" />
@@ -434,7 +434,7 @@ export default function App() {
         {!isCalendarStep && (
           <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto bg-card flex items-center justify-center relative z-0 shrink-0 border-b border-border lg:border-none overflow-hidden py-2">
             <div className="absolute inset-0 bg-gradient-to-b from-secondary to-background"></div>
-            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(247,240,228,0.03) 0%, transparent 70%)' }}></div>
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,134,225,0.06) 0%, transparent 70%)' }}></div>
             <div className="h-full w-full flex items-center justify-center py-3 relative z-10">
               <div className="relative">
                 <PhoneMockup
@@ -470,7 +470,7 @@ export default function App() {
               {/* Step 1 */}
               {currentStep === 1 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
-                  <h2 className="text-lg font-bold tracking-tight mb-1 text-foreground">מה האירוע שאתם חוגגים?</h2>
+                  <h2 className="font-playfair text-xl font-semibold tracking-tight mb-1 text-foreground">מה האירוע שאתם חוגגים?</h2>
                   <p className="text-sm text-muted-foreground mb-2">השם שיופיע לאורחים כשיפתחו את המצלמה</p>
                   <div className="w-full">
                     <Input
@@ -488,7 +488,7 @@ export default function App() {
               {/* Step 2 */}
               {currentStep === 2 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
-                  <h2 className="text-lg font-bold tracking-tight mb-1 text-foreground">איך תיראה ההזמנה?</h2>
+                  <h2 className="font-playfair text-xl font-semibold tracking-tight mb-1 text-foreground">איך תיראה ההזמנה?</h2>
                   <p className="text-sm text-muted-foreground mb-2">הרקע שיופיע לאורחים לפני שהם פותחים מצלמה</p>
                   <div className="grid grid-cols-2 gap-3 w-full pt-2">
                     <label htmlFor="add-photo" className="cursor-pointer group h-full">
@@ -518,7 +518,7 @@ export default function App() {
               {currentStep === 3 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight text-foreground">מתי חוגגים?</h2>
+                    <h2 className="font-playfair text-xl font-semibold tracking-tight text-foreground">מתי חוגגים?</h2>
                     <p className="text-sm text-muted-foreground">העלאת תמונות תיסגר אוטומטית בסיום האירוע</p>
                   </div>
 
@@ -543,7 +543,7 @@ export default function App() {
               {currentStep === 4 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight text-foreground">כמה תמונות לכל אורח?</h2>
+                    <h2 className="font-playfair text-xl font-semibold tracking-tight text-foreground">כמה תמונות לכל אורח?</h2>
                     <p className="text-sm text-muted-foreground">מגבלת העלאות לאורח</p>
                   </div>
                   <SegmentedControl
@@ -561,7 +561,7 @@ export default function App() {
               {/* Step 5 — Guest-tier step-slider. RTL: small tiers on the right, fill grows leftward. */}
               {currentStep === 5 &&
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center w-full">
-                  <h2 className="text-lg font-bold tracking-tight text-foreground">כמה אורחים מגיעים?</h2>
+                  <h2 className="font-playfair text-xl font-semibold tracking-tight text-foreground">כמה אורחים מגיעים?</h2>
                   <p className="text-sm text-muted-foreground mb-3">הגודל קובע את המחיר</p>
 
                   <StepSlider

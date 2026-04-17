@@ -91,28 +91,28 @@ function InlineCalendar({ value, onChange }) {
   };
 
   return (
-    <div className="bg-[#161616] border border-white/10 rounded-2xl p-4 w-full" dir="ltr">
+    <div className="bg-card border border-border rounded-2xl p-4 w-full" dir="ltr">
       <div className="flex items-center justify-between mb-3">
-        <button type="button" onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+        <button type="button" onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <span className="text-white text-base font-bold">{hebrewMonths[viewMonth]} {viewYear}</span>
-        <button type="button" onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors">
+        <span className="font-playfair text-foreground text-lg">{hebrewMonths[viewMonth]} {viewYear}</span>
+        <button type="button" onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
       <div className="grid grid-cols-7 mb-1">
-        {hebrewDays.map(d => <div key={d} className="text-center text-white/30 text-xs font-bold py-1">{d}</div>)}
+        {hebrewDays.map(d => <div key={d} className="text-center text-muted-foreground/60 text-xs font-bold py-1">{d}</div>)}
       </div>
       <div className="grid grid-cols-7">
         {cells.map((day, i) => (
           <button key={i} type="button" onClick={() => handleDay(day)}
             className={`h-9 w-full flex items-center justify-center text-base font-medium rounded-full transition-colors
               ${!day ? 'invisible pointer-events-none' : ''}
-              ${day && isPast(day) ? 'text-white/20 pointer-events-none' : ''}
+              ${day && isPast(day) ? 'text-muted-foreground/40 pointer-events-none' : ''}
               ${day && isSel(day) ? 'bg-violet-600 text-white shadow-md' : ''}
-              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-violet-500/40 text-white' : ''}
-              ${day && !isPast(day) && !isSel(day) ? 'text-white/75 hover:bg-white/[0.08]' : ''}
+              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-violet-500/40 text-foreground' : ''}
+              ${day && !isPast(day) && !isSel(day) ? 'text-foreground/80 hover:bg-accent' : ''}
             `}>
             {day || ''}
           </button>
@@ -368,14 +368,15 @@ export default function CreateMagnetEvent() {
     const eventUrl = `${window.location.origin}/magnet/${success.event_code}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&format=png&color=0a0a0a&bgcolor=ffffff&data=${encodeURIComponent(eventUrl)}`;
     return (
-      <div className="fixed inset-0 bg-[#0a0a0a] flex items-center justify-center" dir="rtl">
+      <div className="dark fixed inset-0 bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 flex items-center justify-center" dir="rtl">
         <div className="text-center px-6 max-w-sm w-full">
           {/* Check circle */}
           <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
             <Check className="w-7 h-7 text-violet-400" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-1">אירוע מגנט נוצר!</h3>
-          <p className="text-white/40 text-sm mb-6">שתפו את הקישור או ה-QR עם האורחים</p>
+          <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-3">Magnet · מוכן</p>
+          <h3 className="font-playfair text-3xl text-foreground/90 mb-2">אירוע מגנט נוצר</h3>
+          <p className="text-muted-foreground text-sm mb-6">שתפו את הקישור או ה-QR עם האורחים</p>
 
           {/* QR code */}
           <div className="mx-auto w-fit bg-white rounded-2xl p-3 mb-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
@@ -383,16 +384,16 @@ export default function CreateMagnetEvent() {
           </div>
 
           {/* Event URL copy row */}
-          <div className="flex items-center gap-2 bg-white/[0.06] border border-white/10 rounded-xl px-4 py-3 mb-6">
-            <span className="text-white/70 text-xs font-mono truncate flex-1 text-right" dir="ltr">
+          <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-3 mb-6">
+            <span className="text-foreground/75 text-xs font-mono truncate flex-1 text-right" dir="ltr">
               {eventUrl}
             </span>
             <button
               onClick={() => navigator.clipboard?.writeText(eventUrl)}
-              className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              className="shrink-0 p-1.5 rounded-lg hover:bg-accent transition-colors"
               title="העתק קישור"
             >
-              <Copy className="w-4 h-4 text-white/50 hover:text-white/80 transition-colors" />
+              <Copy className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
             </button>
           </div>
 
@@ -400,14 +401,14 @@ export default function CreateMagnetEvent() {
           <div className="flex flex-col gap-2">
             <button
               onClick={() => navigate(`/PrintStation/${success.event_id}`)}
-              className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold rounded-xl transition-colors"
+              className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold rounded-xl transition-colors"
             >
               <Monitor className="w-4 h-4" />
               פתח Print Station
             </button>
             <button
               onClick={() => navigate('/AdminDashboard')}
-              className="w-full px-5 py-3 bg-white/[0.06] border border-white/10 text-white/70 text-sm rounded-xl hover:bg-white/[0.08] transition-colors"
+              className="w-full px-5 py-3 bg-card border border-border text-muted-foreground text-sm rounded-xl hover:bg-accent transition-colors"
             >
               חזרה לדשבורד
             </button>
@@ -427,8 +428,7 @@ export default function CreateMagnetEvent() {
   const previewW = 'clamp(109px, 37.5dvh, 315px)';
 
   return (
-    <div className="flex flex-col w-full h-[100dvh] bg-[#0a0a0a] text-white overflow-hidden" dir="rtl"
-      style={{ fontFamily: "'Heebo', 'Assistant', sans-serif" }}>
+    <div className="dark flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo" dir="rtl">
 
       {/* Frame preview modal */}
       {previewFrame && (
@@ -446,8 +446,8 @@ export default function CreateMagnetEvent() {
       )}
 
       {/* Progress bar */}
-      <div className="h-1 bg-gray-800 shrink-0 w-full z-50">
-        <div className="h-full bg-violet-600 transition-all duration-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+      <div className="h-1 bg-border shrink-0 w-full z-50">
+        <div className="h-full bg-violet-500 transition-all duration-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
           style={{ width: `${progressPercentage}%` }} />
       </div>
 
@@ -455,9 +455,9 @@ export default function CreateMagnetEvent() {
 
         {/* Preview area — hidden on calendar/frame steps to give full screen */}
         {!hideTopPreview && (
-          <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto bg-[#111] flex items-center justify-center relative z-0 shrink-0 border-b border-white/5 lg:border-none overflow-hidden py-2">
-            <div className="absolute inset-0 bg-gradient-to-b from-[#161616] to-[#0a0a0a]" />
-            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(139,92,246,0.05) 0%, transparent 70%)' }} />
+          <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto flex items-center justify-center relative z-0 shrink-0 border-b border-border lg:border-none overflow-hidden py-2">
+            <div className="absolute inset-0 bg-gradient-to-b from-cool-900 to-cool-950" />
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(139,92,246,0.06) 0%, transparent 70%)' }} />
             <div className="relative z-10 w-full flex items-center justify-center h-full">
               <MagnetPreview eventData={form} overlayPreview={overlayPreview} previewH={previewH} previewW={previewW} />
             </div>
@@ -465,23 +465,24 @@ export default function CreateMagnetEvent() {
         )}
 
         {/* Form area */}
-        <div className="flex-1 bg-[#0a0a0a] z-10 flex flex-col relative min-h-0 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
+        <div className="flex-1 z-10 flex flex-col relative min-h-0 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
           <div className={`flex-1 px-4 flex flex-col items-center ${isCalendarStep || currentStep === 4 ? 'overflow-y-auto justify-start pt-6' : 'overflow-hidden justify-center'}`}>
             <div className="w-full max-w-sm mx-auto flex flex-col justify-center items-center">
 
               {/* Step 1 — Name */}
               {currentStep === 1 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
-                  <h2 className="text-lg font-bold tracking-tight mb-1">מה שם האירוע?</h2>
-                  <p className="text-sm text-white/45 mb-2">השם שיופיע על המגנט ובממשק האורחים</p>
+                  <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-2"><bdi>01</bdi> · שם האירוע</p>
+                  <h2 className="font-playfair text-2xl font-semibold tracking-tight mb-1 text-foreground">מה שם האירוע?</h2>
+                  <p className="text-sm text-muted-foreground mb-2">השם שיופיע על המגנט ובממשק האורחים</p>
                   <Input
                     value={form.name}
                     onChange={(e) => handleChange('name', e.target.value)}
                     placeholder="למשל: חתונת כהן"
                     style={{ fontSize: '16px' }}
-                    className="bg-[#161616] border-gray-800 text-white h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-gray-700 w-full"
+                    className="bg-card border-border text-foreground h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-muted-foreground/60 w-full"
                   />
-                  {errors.name && <p className="text-red-500 text-[10px] mt-2 font-bold animate-pulse">{errors.name}</p>}
+                  {errors.name && <p className="text-red-400 text-[10px] mt-2 font-bold animate-pulse">{errors.name}</p>}
                 </div>
               )}
 
@@ -497,11 +498,12 @@ export default function CreateMagnetEvent() {
               {currentStep === 2 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight">מתי האירוע?</h2>
-                    <p className="text-sm text-white/45">תאריך האירוע שיופיע על המגנטים</p>
+                    <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>02</bdi> · תאריך</p>
+                    <h2 className="font-playfair text-2xl font-semibold tracking-tight text-foreground">מתי האירוע?</h2>
+                    <p className="text-sm text-muted-foreground">תאריך האירוע שיופיע על המגנטים</p>
                   </div>
                   <InlineCalendar value={form.date} onChange={(d) => handleChange('date', d)} />
-                  {errors.date && <p className="text-red-500 text-sm font-bold text-center animate-pulse">{errors.date}</p>}
+                  {errors.date && <p className="text-red-400 text-sm font-bold text-center animate-pulse">{errors.date}</p>}
                 </div>
               )}
 
@@ -509,27 +511,28 @@ export default function CreateMagnetEvent() {
               {currentStep === 3 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight">כמה הדפסות לאורח?</h2>
-                    <p className="text-sm text-white/45">כל אורח יוכל להדפיס עד המספר שתבחרו</p>
+                    <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>03</bdi> · מכסה</p>
+                    <h2 className="font-playfair text-2xl font-semibold tracking-tight text-foreground">כמה הדפסות לאורח?</h2>
+                    <p className="text-sm text-muted-foreground">כל אורח יוכל להדפיס עד המספר שתבחרו</p>
                   </div>
                   <div className="grid grid-cols-5 gap-2">
                     {quotaOptions.map((n) => (
                       <button
                         key={n} type="button"
                         onClick={() => handleChange('print_quota_per_device', n)}
-                        className={`h-12 rounded-xl font-black text-base transition-all active:scale-95 ${
+                        className={`h-12 rounded-xl font-bold text-base transition-all active:scale-95 ${
                           form.print_quota_per_device === n
                             ? 'bg-violet-600 text-white shadow-md border border-white/20'
-                            : 'bg-[#161616] text-gray-400 border border-gray-800 hover:border-gray-600'
+                            : 'bg-card text-muted-foreground border border-border hover:border-foreground/20'
                         }`}
                       >{n}</button>
                     ))}
                   </div>
-                  <div className="bg-gradient-to-r from-[#141414] to-[#0a0a0a] rounded-xl p-3 flex items-center gap-3 border border-white/10">
+                  <div className="bg-gradient-to-r from-cool-900 to-cool-950 rounded-xl p-3 flex items-center gap-3 border border-border">
                     <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 shrink-0 border border-violet-500/20">
                       <Check size={16} strokeWidth={3} />
                     </div>
-                    <p className="text-white font-black text-[13px]">{form.print_quota_per_device} הדפסות לכל אורח</p>
+                    <p className="text-foreground font-semibold text-[13px]">{form.print_quota_per_device} הדפסות לכל אורח</p>
                   </div>
                 </div>
               )}
@@ -538,8 +541,9 @@ export default function CreateMagnetEvent() {
               {currentStep === 4 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight">בחרו מסגרת</h2>
-                    <p className="text-sm text-white/45">המסגרת תוטבע על כל מגנט באירוע — אופציונלי</p>
+                    <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>04</bdi> · מסגרת</p>
+                    <h2 className="font-playfair text-2xl font-semibold tracking-tight text-foreground">בחרו מסגרת</h2>
+                    <p className="text-sm text-muted-foreground">המסגרת תוטבע על כל מגנט באירוע — אופציונלי</p>
                   </div>
 
                   {/* "None" option */}
@@ -579,17 +583,17 @@ export default function CreateMagnetEvent() {
 
                   {/* Custom PNG upload (advanced) */}
                   <div>
-                    <p className="text-[9px] font-semibold mb-2 tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                    <p className="text-[9px] font-semibold mb-2 tracking-widest uppercase text-muted-foreground/60">
                       מותאם אישית
                     </p>
-                    <label className="flex items-center gap-3 w-full bg-[#161616] border border-dashed border-white/10 hover:border-violet-500/25 rounded-xl px-4 py-3 cursor-pointer transition-colors">
-                      <Upload className="w-4 h-4 text-white/30 shrink-0" />
-                      <span className="text-xs text-white/30 truncate">
+                    <label className="flex items-center gap-3 w-full bg-card border border-dashed border-border hover:border-violet-500/40 rounded-xl px-4 py-3 cursor-pointer transition-colors">
+                      <Upload className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span className="text-xs text-muted-foreground truncate">
                         {form.overlayFile ? form.overlayFile.name : 'העלאת PNG מותאם...'}
                       </span>
                       {form.overlayFile && (
                         <button type="button" className="mr-auto shrink-0" onClick={(e) => { e.preventDefault(); handleChange('overlayFile', null); setOverlayPreview(null); }}>
-                          <X className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
+                          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
                         </button>
                       )}
                       <input type="file" accept="image/png" className="hidden" onChange={(e) => { handleOverlayFile(e); handleChange('selectedFrameId', null); }} />
@@ -604,17 +608,17 @@ export default function CreateMagnetEvent() {
           </div>
 
           {/* Footer nav */}
-          <div className="bg-[#0a0a0a] px-4 flex-none border-t border-white/5 w-full z-50 shrink-0"
+          <div className="px-4 flex-none border-t border-border w-full z-50 shrink-0 bg-cool-950/80 backdrop-blur-md"
             style={{ paddingTop: '0.25rem', paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
             <div className="w-full max-w-sm mx-auto flex gap-3 items-center">
               {currentStep === 1 ? (
                 <Link to="/AdminDashboard"
-                  className="w-11 h-11 bg-[#161616] text-gray-400 rounded-xl flex items-center justify-center transition-all active:scale-90 border border-gray-800 shrink-0 hover:text-white">
+                  className="w-11 h-11 bg-card text-muted-foreground rounded-xl flex items-center justify-center transition-all active:scale-90 border border-border shrink-0 hover:text-foreground">
                   <Home className="w-4 h-4" />
                 </Link>
               ) : (
                 <button type="button" onClick={handleBack}
-                  className="w-11 h-11 bg-[#161616] text-white rounded-xl flex items-center justify-center transition-all active:scale-90 border border-gray-800 shrink-0">
+                  className="w-11 h-11 bg-card text-foreground rounded-xl flex items-center justify-center transition-all active:scale-90 border border-border shrink-0">
                   <ArrowLeft className="w-5 h-5 rotate-180" />
                 </button>
               )}
@@ -623,10 +627,10 @@ export default function CreateMagnetEvent() {
                 type="button"
                 onClick={currentStep === totalSteps ? handleSubmit : handleNext}
                 disabled={isLoading}
-                className={`text-base font-black rounded-xl flex-1 h-12 transition-all duration-300 active:scale-95 flex items-center justify-center relative ${
+                className={`text-base font-semibold rounded-xl flex-1 h-12 transition-all duration-300 active:scale-95 flex items-center justify-center relative ${
                   isCurrentStepValid() || isLoading
                     ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/40 border border-white/10'
-                    : 'bg-white/[0.06] text-white/30 border border-white/[0.08]'
+                    : 'bg-card text-muted-foreground border border-border'
                 }`}
               >
                 {isLoading

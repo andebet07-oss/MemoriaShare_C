@@ -106,38 +106,38 @@ export default function Layout({ children, currentPageName }) {
         }
         
         .luxury-button {
-          background: linear-gradient(180deg, #f9fafb, #e5e7eb);
-          color: #1f2937;
+          background: linear-gradient(180deg, #fcfcfe, #e8e8ec);
+          color: #1e1e1e;
           font-weight: 600;
-          border: 1px solid #d1d5db;
+          border: 1px solid #d4d4d8;
           box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.4);
           transition: all 0.2s ease-in-out;
         }
 
         .luxury-button:hover {
           transform: translateY(-1px);
-          background: linear-gradient(180deg, #ffffff, #f3f4f6);
-          box-shadow: 0 4px 10px rgba(229, 231, 235, 0.25),
-                      0 1px 2px rgba(0,0,0,0.05), 
+          background: linear-gradient(180deg, #ffffff, #f0f0f3);
+          box-shadow: 0 4px 10px rgba(124, 134, 225, 0.20),
+                      0 1px 2px rgba(0,0,0,0.05),
                       inset 0 1px 0 rgba(255,255,255,0.5);
         }
 
         .premium-submit-button {
-          background: linear-gradient(135deg, #f3f3f3 0%, #e5e5e5 45%, #c4c4c4 55%, #f3f3f3 100%);
-          color: #1a1a1a;
+          background: linear-gradient(135deg, #fcfcfe 0%, #e8e8ec 50%, #fcfcfe 100%);
+          color: #1e1e1e;
           font-weight: 600;
           font-size: 18px;
           padding: 0.75rem 1.5rem;
           border-radius: 9999px;
           transition: all 0.3s ease;
           border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 
-            0 4px 15px rgba(229, 229, 229, 0.15),
+          box-shadow:
+            0 4px 15px rgba(124, 134, 225, 0.18),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
           position: relative;
           overflow: hidden;
         }
-        
+
         .premium-submit-button::before {
           content: '';
           position: absolute;
@@ -148,12 +148,12 @@ export default function Layout({ children, currentPageName }) {
           background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
           transition: left 0.5s ease;
         }
-        
+
         .premium-submit-button:hover:not(:disabled) {
           transform: scale(1.05);
-          background: linear-gradient(135deg, #ffffff 0%, #f3f3f3 45%, #e5e5e5 55%, #ffffff 100%);
-          box-shadow: 
-            0 8px 25px rgba(229, 229, 229, 0.25),
+          background: linear-gradient(135deg, #ffffff 0%, #f0f0f3 50%, #ffffff 100%);
+          box-shadow:
+            0 8px 25px rgba(124, 134, 225, 0.28),
             0 0 0 1px rgba(255, 255, 255, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.5);
         }
