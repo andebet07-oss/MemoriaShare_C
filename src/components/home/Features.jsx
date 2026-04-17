@@ -56,7 +56,7 @@ export default function Features() {
             {BENEFITS.map((b, i) => (
               <div key={i} className="py-8 flex gap-6 items-start">
                 <span
-                  className="font-playfair tabular-nums shrink-0 pt-1 leading-none text-foreground/20"
+                  className="font-playfair tabular-nums shrink-0 pt-1 leading-none text-indigo-400/70"
                   style={{ fontSize: 'clamp(1.1rem, 2vw, 1.5rem)' }}
                 >
                   <bdi>0{i + 1}</bdi>

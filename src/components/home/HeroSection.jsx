@@ -92,7 +92,7 @@ export default function HeroSection({ onOpenChooser }) {
               הזיכרונות שלכם,
             </span>
             <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground/80 to-foreground/25">
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground/85 to-foreground/55">
               מכל הזוויות
             </span>
           </h1>

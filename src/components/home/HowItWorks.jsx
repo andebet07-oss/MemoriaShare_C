@@ -37,7 +37,7 @@ export default function HowItWorks() {
             {STEPS.map((step, i) => (
               <div key={i} className="py-10 md:py-0 border-b md:border-b-0 border-border last:border-0">
                 <span
-                  className="font-playfair leading-none block mb-5 text-indigo-500/60"
+                  className="font-playfair leading-none block mb-5 text-indigo-400/80"
                   style={{ fontSize: 'clamp(3.5rem, 8vw, 5rem)' }}
                 >
                   <bdi>{step.number}</bdi>

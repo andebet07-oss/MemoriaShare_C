@@ -18,7 +18,7 @@ export default function Home() {
   const openChooser = () => setShowChooser(true);
 
   return (
-    <div className="bg-gradient-to-br from-background via-cool-900 to-background text-foreground min-h-screen">
+    <div className="dark bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground min-h-screen">
       <div className="relative z-10">
         <Header onOpenChooser={openChooser} />
         <main>
