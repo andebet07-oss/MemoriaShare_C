@@ -481,6 +481,30 @@ const memoriaService = {
       return { file_url: publicUrl, path };
     },
 
+    uploadCoverImage: async (file, eventId) => {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const ext = file.type === 'image/png' ? 'png' : 'jpg';
+      const path = `covers/${eventId}/cover.${ext}`;
+      const jwt = _getJwt();
+      const response = await fetch(`${supabaseUrl}/storage/v1/object/photos/${path}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'apikey': supabaseAnonKey,
+          'Content-Type': file.type || 'image/jpeg',
+          'x-upsert': 'true',
+        },
+        body: file,
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Cover upload failed (${response.status}): ${errText}`);
+      }
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/photos/${path}`;
+      return { file_url: publicUrl, path };
+    },
+
     /**
      * Get a time-limited signed URL for a private storage path.
      * expiresIn is in seconds (default 1 hour).

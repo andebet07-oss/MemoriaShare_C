@@ -300,8 +300,10 @@ export default function CreateMagnetEvent() {
     print_quota_per_device: 5,
     selectedFrameId: null,  // frame_id from framePacks, stored in overlay_frame_url
     overlayFile: null,       // custom PNG upload (overrides selectedFrameId if set)
+    coverImageFile: null,    // optional background photo for guest landing page
   });
   const [overlayPreview, setOverlayPreview] = useState(null);
+  const [coverImagePreview, setCoverImagePreview] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(null);
@@ -363,12 +365,14 @@ export default function CreateMagnetEvent() {
         is_active: true,
       });
       if (form.overlayFile) {
-        // Custom PNG upload takes priority
         const { file_url } = await memoriaService.storage.uploadOverlay(form.overlayFile, event.id);
         await memoriaService.events.update(event.id, { overlay_frame_url: file_url });
       } else if (form.selectedFrameId) {
-        // Store frame id directly — MagnetReview resolves it via ALL_FRAMES lookup
         await memoriaService.events.update(event.id, { overlay_frame_url: form.selectedFrameId });
+      }
+      if (form.coverImageFile) {
+        const { file_url } = await memoriaService.storage.uploadCoverImage(form.coverImageFile, event.id);
+        await memoriaService.events.update(event.id, { cover_image: file_url });
       }
       setSuccess({ event_code: event.unique_code, pin_code: event.pin_code, event_id: event.id });
     } catch (err) {
@@ -498,6 +502,34 @@ export default function CreateMagnetEvent() {
                     className="bg-card border-border text-foreground h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-muted-foreground/60 w-full"
                   />
                   {errors.name && <p className="text-red-400 text-[10px] mt-2 font-bold animate-pulse">{errors.name}</p>}
+
+                  {/* Optional cover photo */}
+                  <div className="mt-4 w-full">
+                    <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.2em] uppercase mb-2">תמונת רקע לדף הנחיתה (אופציונלי)</p>
+                    <label className="cursor-pointer block">
+                      <input
+                        type="file" accept="image/*" className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          handleChange('coverImageFile', file);
+                          setCoverImagePreview(URL.createObjectURL(file));
+                        }}
+                      />
+                      {coverImagePreview ? (
+                        <div className="relative w-full h-28 rounded-xl overflow-hidden border border-violet-500/40">
+                          <img src={coverImagePreview} className="w-full h-full object-cover" alt="cover" />
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <span className="text-white text-xs font-semibold">לחץ להחלפה</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-20 rounded-xl border border-dashed border-violet-500/30 bg-violet-500/5 flex items-center justify-center gap-2 hover:bg-violet-500/10 transition-colors">
+                          <span className="text-violet-400/70 text-xs">+ העלה תמונת רקע</span>
+                        </div>
+                      )}
+                    </label>
+                  </div>
                 </div>
               )}
 

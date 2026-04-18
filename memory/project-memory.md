@@ -1,13 +1,13 @@
 ---
 type: project-memory
-updated: 2026-04-17T00:00Z
+updated: 2026-04-17T13:30Z
 ---
 
 # Project Memory — Active State
 
 ## Build Status
 - Branch: `main`
-- Last build: ✅ EXIT 0 (2026-04-16 20:00)
+- Last build: ⏳ unverified post-stickers-v2 (commit `5583664` at 13:09) — run build before next session
 - Deployed: https://memoriashare.com (Vercel auto-deploy on push)
 
 ## Brand Status (Locked 2026-04-17)
@@ -37,6 +37,8 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 | Issue | Priority | Action |
 |-------|----------|--------|
 | `linked_event_id` migration missing | **HIGH** | Add to `CLEAN_RESET_SCHEMA.sql`; add bundle toggle on `MagnetEventDashboard` (verified still absent 2026-04-16T22:00Z) |
+| Duplicate `compressImage` in MagnetLead | Medium | Replace inline `compressImage` in `src/pages/MagnetLead.jsx` with import from `@/functions/processImage` (MagnetReview already imports from there) |
+| Canvas fonts may not be loaded at first draw | Medium | Gate first `MagnetReview` canvas draw on `document.fonts.ready` to avoid fallback-font flash for Great Vibes / Parisienne / Bebas Neue / Abril Fatface |
 | `public/icons/kpi-*.webp` unreferenced | Low | Delete 4 files — AdminOverview now uses Lucide (per evening session) |
 | No search/filter on AdminEventsList | Medium | Add search input, filter by type/date |
 | Magnet card metadata missing | Medium | Add guest count, quota used, print count to cards |
@@ -44,6 +46,7 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 | `pages.config.js` vestigial | Low | Delete or strip to Layout export only |
 | `/Event` + `/EventGallery` inconsistent | Low | Redirect to `/event/:code` pattern |
 | Per-event frame pack override | Medium | Expose frame-pack selector in `CreateMagnetEvent` admin form |
+| Post-sticker-v2 build verification | Medium | Run `npm run build` after commit `5583664` — confirm new font families load, no dead imports from deleted `FramePicker.jsx` |
 
 ---
 
@@ -51,6 +54,14 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | File | Date | Summary |
 |------|------|---------|
+| `src/components/magnet/svgStickers.js` | 2026-04-17 PM | **NEW** — 24 Y2K/Pinterest SVG stickers, white die-cut stroke (paint-order="stroke"), 64×64 viewBox |
+| `src/components/magnet/stickerPacks.js` | 2026-04-17 PM | Sticker System v2 — replaced badge/stamp with svg + 4 text style types (script/retro/handwritten/editorial) |
+| `src/components/magnet/MagnetReview.jsx` | 2026-04-17 PM | `drawSticker()` extended: 5 type renderers + base64 SVG→Image cache via `ensureSvgImage()` |
+| `src/components/magnet/framePacks.js` | 2026-04-17 PM | +3 new wedding frames (polaroid-tape, deco-gold, hairline-crest) with `isNew: true` flag (+285 lines) |
+| `src/components/magnet/FramePicker.jsx` | 2026-04-17 PM | **DELETED** — logic inlined into `CreateMagnetEvent.jsx` FrameThumbnail |
+| `src/pages/CreateMagnetEvent.jsx` | 2026-04-17 PM | Inlined FrameThumbnail, THUMB_W 88→108px, "חדש" badge for isNew frames |
+| `src/pages/MagnetLead.jsx` | 2026-04-17 PM | Cover image design mode (pinch/drag), local `compressImage` helper (duplicate — flagged as tech debt) |
+| `index.html` | 2026-04-17 PM | Added font family links (Great Vibes, Parisienne, Bebas Neue, Limelight, Caveat, Patrick Hand, Abril Fatface) |
 | `src/pages/Home.jsx` + `HeroSection.jsx` + `Features.jsx` + `HowItWorks.jsx` | 2026-04-17 | POV brand: `.dark` wrapper, contrast fix, indigo palette |
 | `src/pages/CreateEvent.jsx` | 2026-04-17 | POV brand: `.dark` + cool-dark gradient + Playfair wizard headers |
 | `src/pages/MyEvents.jsx` | 2026-04-17 | POV brand: semantic tokens throughout, editorial `01 · ניהול` label, Playfair card titles, dialog restyled |
@@ -73,69 +84,4 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 | `src/components/home/Header.jsx` | 2026-04-16 | Dead import removed |
 | `memory/*.md` | 2026-04-16 | Memory system updated |
 | `src/components/magnet/framePacks.js` | 2026-04-16 | NEW — canvas frame system v2 (6 packs, LABEL_H_RATIO=0.225) |
-| `src/components/magnet/FramePicker.jsx` | 2026-04-16 | NEW — RTL horizontal scroll strip for frame selection |
-| `public/FRAMES/*.jpeg` | 2026-04-15 | 8 reference magnet prints for frame design |
-| `cowork context/*` | 2026-04-15 | Shared design-system SKILL + project-context docs |
-
----
-
-## URL Map (Current)
-
-```
-Public:
-  /                              → Home
-  /magnet/lead                   → MagnetLead wizard
-
-Guest (anonymous):
-  /event/:code                   → Event (share entry)
-  /event/:code/gallery           → EventGallery
-  /magnet/:code                  → MagnetGuestPage
-
-Host (authenticated):
-  /host                          → MyEvents (share events only)
-  /host/events/create            → CreateEvent
-  /host/events/:id               → Dashboard
-
-Admin (role === 'admin'):
-  /admin                         → AdminShell + AdminOverview
-  /admin/events/share            → AdminEventsList type=share
-  /admin/events/magnet           → AdminEventsList type=magnet
-  /admin/events/magnet/create    → CreateMagnetEvent
-  /admin/events/magnet/:id       → MagnetEventDashboard
-  /admin/events/magnet/:id/print → PrintStation
-  /admin/leads                   → LeadsPanel
-  /admin/users                   → AdminUsers
-
-Legacy redirects (keep until next release):
-  /AdminDashboard  → /admin
-  /CreateMagnetEvent → /admin/events/magnet/create
-  /MyEvents        → /host
-  /PrintStation/:id → /admin/events/magnet/:id/print
-```
-
----
-
-## Environment
-- `VITE_SITE_URL` — must be set in Vercel dashboard (controls QR + share link base URLs)
-- `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` — in `.env.local` (never commit)
-- Supabase project ref: `esjprtvfijyjjxpufjho`
-
----
-
-## Memory & Research Infrastructure (Activated 2026-04-16)
-
-### Memory System
-- 3-layer memory: recent (48hr), long-term (rules/patterns), project (active state)
-- `memory/recent-memory.md` — loaded at session start
-- `memory/long-term-memory.md` — rules, patterns, gotchas, design language
-- `memory/project-memory.md` — this file (active tasks, known issues, file changes)
-- **Automated consolidation:** nightly at 10 PM (`consolidate-memoria-memory` task)
-
-### Research Scout
-- **Purpose:** Hunt for new information that challenges/updates documented knowledge
-- **Scope:** React 18, Tailwind, Supabase, Canvas, WebRTC
-- **Nightly hunt:** 10:03 PM daily (all 5 domains in one run)
-- **Weekly review:** Sunday 6:03 AM (promote findings, clear staging)
-- **Findings storage:** `memory/long-term-memory.md` → `new_learnings` section
-- **Skill location:** `skills/research-scout/`
-- **Status:** 🟢 Active (first hunt: 2026-04-16 10:03 PM)
+| `src/components/magnet/FramePicker.jsx` | 2026-04-16 | NEW — RTL horizontal scroll strip for frame selection 

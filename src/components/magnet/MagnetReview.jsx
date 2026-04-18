@@ -128,6 +128,8 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
   const dragOffset = useRef({ x: 0, y: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modal, setModal] = useState(null); // null | 'loading' | 'success' | 'error'
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [photoFrac, setPhotoFrac] = useState(0.856); // photoH / totalH; updated after frame render
 
   const svgImgCache = useRef(new Map());
 
@@ -143,6 +145,37 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       img.src = `data:image/svg+xml;base64,${b64}`;
     });
   }, []);
+
+  // Render photo + frame to a preview canvas so the user sees the actual frame layout.
+  useEffect(() => {
+    let cancelled = false;
+    const frameId = event?.overlay_frame_url;
+    const eventFrame = (frameId && !frameId.startsWith('http'))
+      ? (ALL_FRAMES.find(f => f.id === frameId) ?? getFramePack(event?.name || '')[0])
+      : getFramePack(event?.name || '')[0];
+    if (!eventFrame) return;
+
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled) return;
+      const photoW = img.naturalWidth;
+      const photoH = img.naturalHeight;
+      const labelH = Math.round(photoW * LABEL_H_RATIO);
+      const totalH = photoH + labelH;
+      const canvas = document.createElement('canvas');
+      canvas.width = photoW; canvas.height = totalH;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, photoW, totalH);
+      ctx.drawImage(img, 0, 0);
+      eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
+      setPhotoFrac(photoH / totalH);
+      setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.onerror = () => {};
+    img.src = imageDataURL;
+    return () => { cancelled = true; };
+  }, [imageDataURL, event?.overlay_frame_url]); // eslint-disable-line
 
   const pack = useMemo(() => getStickerPack(event?.name || ''), [event?.name]);
   const dateLabel = useMemo(() => {
@@ -208,7 +241,8 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       if (eventFrame) eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
       for (const s of stickers) {
         const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
-        drawSticker(ctx, s, canvas.width, canvas.height, svgImg);
+        // s.x / s.y are relative to the photo area — pass photoW/photoH, not totalH
+        drawSticker(ctx, s, photoW, photoH, svgImg);
       }
       const blob = await compressImage(canvas);
       const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
@@ -240,13 +274,31 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         onPointerLeave={() => setDraggingUid(null)}
       >
         <div
-          className="flex flex-col bg-white"
-          style={{ width: 'min(74vw, 288px)', borderRadius: '6px', transform: 'rotate(-1deg)', boxShadow: '0 36px 80px rgba(0,0,0,0.72), 0 8px 20px rgba(0,0,0,0.5)' }}
+          style={{ width: 'min(74vw, 288px)', borderRadius: '6px', transform: 'rotate(-1deg)', boxShadow: '0 36px 80px rgba(0,0,0,0.72), 0 8px 20px rgba(0,0,0,0.5)', position: 'relative' }}
         >
-          {/* Photo area */}
-          <div ref={photoRef} className="relative overflow-hidden" style={{ aspectRatio: '3/4', touchAction: draggingUid ? 'none' : 'auto' }}>
-            <img src={imageDataURL} alt="captured" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+          {/* Composite image: photo + frame + label (rendered to canvas in useEffect) */}
+          <img
+            src={previewUrl || imageDataURL}
+            alt="captured"
+            className="w-full block"
+            draggable={false}
+            style={{ borderRadius: '6px', display: 'block' }}
+          />
 
+          {/* Fallback label strip (visible only while previewUrl is computing) */}
+          {!previewUrl && (
+            <div className="py-3 px-4 flex flex-col items-center justify-center text-center bg-white" style={{ minHeight: '56px', borderBottomLeftRadius: '6px', borderBottomRightRadius: '6px' }}>
+              <p className="font-bold text-gray-900 text-sm leading-tight tracking-wide" style={{ fontFamily: "'Heebo','Assistant',sans-serif" }}>{event?.name || ''}</p>
+              {dateLabel && <p className="text-gray-400 text-[11px] mt-0.5 tracking-widest" style={{ fontFamily: 'Georgia,serif' }}>{dateLabel}</p>}
+            </div>
+          )}
+
+          {/* Sticker drag area — covers photo portion only */}
+          <div
+            ref={photoRef}
+            className="absolute top-0 inset-x-0 overflow-hidden"
+            style={{ height: `${photoFrac * 100}%`, touchAction: draggingUid ? 'none' : 'auto' }}
+          >
             {stickers.map(s => (
               <div
                 key={s.uid}
@@ -288,12 +340,6 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
                 )}
               </div>
             ))}
-          </div>
-
-          {/* Label strip */}
-          <div className="py-3 px-4 flex flex-col items-center justify-center text-center bg-white" style={{ minHeight: '56px' }}>
-            <p className="font-bold text-gray-900 text-sm leading-tight tracking-wide" style={{ fontFamily: "'Heebo','Assistant',sans-serif" }}>{event?.name || ''}</p>
-            {dateLabel && <p className="text-gray-400 text-[11px] mt-0.5 tracking-widest" style={{ fontFamily: 'Georgia,serif' }}>{dateLabel}</p>}
           </div>
         </div>
       </div>

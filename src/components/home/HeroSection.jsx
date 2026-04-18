@@ -72,7 +72,7 @@ export default function HeroSection({ onOpenChooser }) {
   );
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden pt-10 pb-20">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-20">
       <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
         <div className="text-center" dir="rtl">
 
