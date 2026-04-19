@@ -1,13 +1,14 @@
 ---
 type: project-memory
-updated: 2026-04-17T13:30Z
+updated: 2026-04-19T06:00Z
 ---
 
 # Project Memory — Active State
 
 ## Build Status
 - Branch: `main`
-- Last build: ⏳ unverified post-stickers-v2 (commit `5583664` at 13:09) — run build before next session
+- Last commit: `601e1c7` (2026-04-18 15:37 +0300) — MagnetReview preview composite + cover image upload
+- Build: ✓ implicit green via Vercel auto-deploy on main push
 - Deployed: https://memoriashare.com (Vercel auto-deploy on push)
 
 ## Brand Status (Locked 2026-04-17)
@@ -46,7 +47,16 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 | `pages.config.js` vestigial | Low | Delete or strip to Layout export only |
 | `/Event` + `/EventGallery` inconsistent | Low | Redirect to `/event/:code` pattern |
 | Per-event frame pack override | Medium | Expose frame-pack selector in `CreateMagnetEvent` admin form |
-| Post-sticker-v2 build verification | Medium | Run `npm run build` after commit `5583664` — confirm new font families load, no dead imports from deleted `FramePicker.jsx` |
+| Cover image display on guest landing | Medium | `events.cover_image` is now written on CreateMagnetEvent; surface it on MagnetLead / guest landing backgrounds |
+| MagnetReview preview caching | Low | `previewUrl` useEffect re-runs on every `event` prop shift — not expensive, but a `useMemo` over `{ imageDataURL, overlay_frame_url }` would be cleaner |
+| RLS delete silent-failure hardening | **HIGH** | Audit `CLEAN_RESET_SCHEMA.sql`: every table with a DELETE policy needs a matching SELECT/ALL policy. Add defensive `count > 0` check to `memoriaService.deletePhoto()` with Hebrew error `המחיקה נכשלה — אין לך הרשאה`. See long-term-memory §Common Pitfalls. |
+| Canvas `willReadFrequently` audit | Medium | Audit any `canvas.getContext('2d')` call path feeding `getImageData`/`putImageData` (CameraCapture, MagnetReview compositor). Add `{ willReadFrequently: true }` on the FIRST `getContext` call. See long-term-memory §Common Pitfalls. |
+| Sticker canvas perf — 3 compounding fixes | Medium | (1) `Math.floor()` on all `drawImage` coords in sticker renderer; (2) trim 9-font sticker set to minimum used by the 4 stock packs, lazy-load the rest; (3) cache `text-*` stickers as offscreen bitmaps keyed by `(text, type, size)`. See long-term-memory §Performance Patterns. |
+| iOS Safari `NotAllowedError` Hebrew re-consent UI | Medium | CameraCapture error handler: detect `NotAllowedError` on iOS and show retry UI with Hebrew copy `Safari ביקש לאשר שוב גישה למצלמה — גע בסמל ההרשאות בשורת הכתובת`. Do NOT gate on `navigator.permissions.query()`. |
+| `getSupportedConstraints` guard for advanced camera controls | Low | Before rendering zoom/torch/focus controls, check BOTH `navigator.mediaDevices.getSupportedConstraints?.()` AND `videoTrack.getCapabilities?.()`. Only when building those controls — not urgent today. |
+| React 18 concurrent hooks — realtime + filter | Low | (1) Wrap Supabase realtime channel getter in a `useSyncExternalStore`-backed hook (tear-safe); (2) wrap host dashboard gallery filter input in `useDeferredValue`. Measure FPS on >300-photo events before/after. |
+| Supabase private realtime channels (hardening) | Low | Evaluate moving per-event photo channels from public to private `realtime.channel()` with RLS on `realtime.messages`. Unlocked at v2.44.0; we're on v2.101.1. Not urgent — track as hardening follow-up. |
+| Tailwind v4 `scheme-dark` (future migration) | Flagged | When Tailwind v4 migration is scoped, add `scheme-dark` to Layout `<body>` — one-line fix for the silvery-scrollbar paper-cut on iOS Safari / Android Chrome. Currently on v3.4.17 — no action. |
 
 ---
 
@@ -54,6 +64,10 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | File | Date | Summary |
 |------|------|---------|
+| `src/components/magnet/MagnetReview.jsx` | 2026-04-18 | Preview composite useEffect bakes photo+frame+label to `previewUrl`; `photoFrac` state limits sticker drag zone; submit `drawSticker` now passes `photoH` (not `canvas.height`) so stickers don't drift onto label strip |
+| `src/components/memoriaService.jsx` | 2026-04-18 | NEW `storage.uploadCoverImage(file, eventId)` — direct fetch to `covers/{eventId}/cover.{ext}` with `x-upsert: true` |
+| `src/pages/CreateMagnetEvent.jsx` | 2026-04-18 | Optional `coverImageFile` upload in step 1 (name); dashed violet box → thumbnail preview; writes URL to `events.cover_image` on submit |
+| `src/components/home/HeroSection.jsx` | 2026-04-18 | `pt-10` → `pt-20` padding bump |
 | `src/components/magnet/svgStickers.js` | 2026-04-17 PM | **NEW** — 24 Y2K/Pinterest SVG stickers, white die-cut stroke (paint-order="stroke"), 64×64 viewBox |
 | `src/components/magnet/stickerPacks.js` | 2026-04-17 PM | Sticker System v2 — replaced badge/stamp with svg + 4 text style types (script/retro/handwritten/editorial) |
 | `src/components/magnet/MagnetReview.jsx` | 2026-04-17 PM | `drawSticker()` extended: 5 type renderers + base64 SVG→Image cache via `ensureSvgImage()` |

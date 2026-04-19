@@ -39,7 +39,7 @@ function MagnetPreview({ eventData = {}, overlayPreview = null, previewH, previe
           {overlayPreview ? (
             <img src={overlayPreview} alt="Overlay" className="absolute inset-0 w-full h-full object-cover" />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-900/60 to-zinc-900 flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-cool-900/60 to-cool-950 flex items-center justify-center">
               <span className="text-white/20 text-[7px] font-bold tracking-widest uppercase">overlay</span>
             </div>
           )}
@@ -54,13 +54,13 @@ function MagnetPreview({ eventData = {}, overlayPreview = null, previewH, previe
       </div>
       {/* MAGNET label */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-        <span className="text-violet-400/50 text-[8px] font-black tracking-[0.2em] uppercase">Magnet</span>
+        <span className="text-indigo-400/50 text-[8px] font-black tracking-[0.2em] uppercase">Magnet</span>
       </div>
     </div>
   );
 }
 
-// Compact inline calendar — violet accent for Magnet branding
+// Compact inline calendar — indigo accent
 function InlineCalendar({ value, onChange }) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const selected = value ? new Date(value + 'T00:00:00') : null;
@@ -110,8 +110,8 @@ function InlineCalendar({ value, onChange }) {
             className={`h-9 w-full flex items-center justify-center text-base font-medium rounded-full transition-colors
               ${!day ? 'invisible pointer-events-none' : ''}
               ${day && isPast(day) ? 'text-muted-foreground/40 pointer-events-none' : ''}
-              ${day && isSel(day) ? 'bg-violet-600 text-white shadow-md' : ''}
-              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-violet-500/40 text-foreground' : ''}
+              ${day && isSel(day) ? 'bg-primary text-primary-foreground shadow-indigo-soft' : ''}
+              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-primary/40 text-foreground' : ''}
               ${day && !isPast(day) && !isSel(day) ? 'text-foreground/80 hover:bg-accent' : ''}
             `}>
             {day || ''}
@@ -172,9 +172,9 @@ function FrameThumbnail({ frame, isSelected, onSelect, eventData }) {
       <div style={{
         position: 'relative',
         borderRadius: '5px',
-        border: isSelected ? '2px solid #7c3aed' : '1.5px solid rgba(255,255,255,0.09)',
+        border: isSelected ? '2px solid #7c86e1' : '1.5px solid rgba(255,255,255,0.09)',
         boxShadow: isSelected
-          ? '0 0 16px -2px rgba(124,58,237,0.65), 0 4px 14px rgba(0,0,0,0.5)'
+          ? '0 0 16px -2px rgba(124,134,225,0.65), 0 4px 14px rgba(0,0,0,0.5)'
           : '0 3px 10px rgba(0,0,0,0.5)',
         transform: isSelected ? 'scale(1.04)' : 'scale(1)',
         transition: 'border-color 0.15s, box-shadow 0.15s, transform 0.15s',
@@ -185,7 +185,7 @@ function FrameThumbnail({ frame, isSelected, onSelect, eventData }) {
           <div style={{
             position: 'absolute', top: 4, right: 4,
             width: 15, height: 15, borderRadius: '50%',
-            background: '#7c3aed',
+            background: '#7c86e1',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
@@ -197,7 +197,7 @@ function FrameThumbnail({ frame, isSelected, onSelect, eventData }) {
           <div style={{
             position: 'absolute', top: 4, right: 4,
             padding: '1px 5px', borderRadius: '3px',
-            background: 'rgba(124,58,237,0.85)',
+            background: 'rgba(124,134,225,0.85)',
             fontFamily: 'Heebo, sans-serif',
             fontSize: '8px', fontWeight: 700,
             color: '#fff', letterSpacing: '0.05em',
@@ -209,7 +209,7 @@ function FrameThumbnail({ frame, isSelected, onSelect, eventData }) {
       </div>
       <span style={{
         fontFamily: 'Heebo, sans-serif', fontSize: '10px', whiteSpace: 'nowrap',
-        color: isSelected ? '#a78bfa' : 'rgba(255,255,255,0.45)',
+        color: isSelected ? '#818cf8' : 'rgba(255,255,255,0.45)',
         fontWeight: isSelected ? 700 : 400,
         transition: 'color 0.15s',
         userSelect: 'none',
@@ -264,7 +264,7 @@ function FramePreviewModal({ frame, eventData, onClose, onSelect, isSelected }) 
             type="button"
             onClick={() => { onSelect(frame.id); onClose(); }}
             className="flex-1 h-11 rounded-xl text-sm font-bold text-white transition-colors"
-            style={{ background: isSelected ? 'rgba(124,58,237,0.4)' : '#7c3aed' }}
+            style={{ background: isSelected ? 'rgba(124,134,225,0.4)' : '#7c86e1' }}
           >
             {isSelected ? '✓ נבחרה' : 'בחר מסגרת'}
           </button>
@@ -390,10 +390,10 @@ export default function CreateMagnetEvent() {
       <div className="dark fixed inset-0 bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 flex items-center justify-center" dir="rtl">
         <div className="text-center px-6 max-w-sm w-full">
           {/* Check circle */}
-          <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
-            <Check className="w-7 h-7 text-violet-400" />
+          <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
+            <Check className="w-7 h-7 text-indigo-400" />
           </div>
-          <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-3">Magnet · מוכן</p>
+          <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-3">Magnet · מוכן</p>
           <h3 className="font-playfair text-3xl text-foreground/90 mb-2">אירוע מגנט נוצר</h3>
           <p className="text-muted-foreground text-sm mb-6">שתפו את הקישור או ה-QR עם האורחים</p>
 
@@ -420,7 +420,7 @@ export default function CreateMagnetEvent() {
           <div className="flex flex-col gap-2">
             <button
               onClick={() => navigate(`/PrintStation/${success.event_id}`)}
-              className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold rounded-xl transition-colors"
+              className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-xl transition-colors"
             >
               <Monitor className="w-4 h-4" />
               פתח Print Station
@@ -466,7 +466,7 @@ export default function CreateMagnetEvent() {
 
       {/* Progress bar */}
       <div className="h-1 bg-border shrink-0 w-full z-50">
-        <div className="h-full bg-violet-500 transition-all duration-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+        <div className="h-full bg-primary transition-all duration-500 shadow-[0_0_10px_rgba(124,134,225,0.45)]"
           style={{ width: `${progressPercentage}%` }} />
       </div>
 
@@ -476,7 +476,7 @@ export default function CreateMagnetEvent() {
         {!hideTopPreview && (
           <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto flex items-center justify-center relative z-0 shrink-0 border-b border-border lg:border-none overflow-hidden py-2">
             <div className="absolute inset-0 bg-gradient-to-b from-cool-900 to-cool-950" />
-            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(139,92,246,0.06) 0%, transparent 70%)' }} />
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,134,225,0.06) 0%, transparent 70%)' }} />
             <div className="relative z-10 w-full flex items-center justify-center h-full">
               <MagnetPreview eventData={form} overlayPreview={overlayPreview} previewH={previewH} previewW={previewW} />
             </div>
@@ -491,7 +491,7 @@ export default function CreateMagnetEvent() {
               {/* Step 1 — Name */}
               {currentStep === 1 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
-                  <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-2"><bdi>01</bdi> · שם האירוע</p>
+                  <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-2"><bdi>01</bdi> · שם האירוע</p>
                   <h2 className="font-playfair text-2xl font-semibold tracking-tight mb-1 text-foreground">מה שם האירוע?</h2>
                   <p className="text-sm text-muted-foreground mb-2">השם שיופיע על המגנט ובממשק האורחים</p>
                   <Input
@@ -499,7 +499,7 @@ export default function CreateMagnetEvent() {
                     onChange={(e) => handleChange('name', e.target.value)}
                     placeholder="למשל: Yael & Daniel"
                     style={{ fontSize: '16px' }}
-                    className="bg-card border-border text-foreground h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-muted-foreground/60 w-full"
+                    className="bg-card border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-muted-foreground/60 w-full"
                   />
                   {errors.name && <p className="text-red-400 text-[10px] mt-2 font-bold animate-pulse">{errors.name}</p>}
 
@@ -517,15 +517,15 @@ export default function CreateMagnetEvent() {
                         }}
                       />
                       {coverImagePreview ? (
-                        <div className="relative w-full h-28 rounded-xl overflow-hidden border border-violet-500/40">
+                        <div className="relative w-full h-28 rounded-xl overflow-hidden border border-primary/40">
                           <img src={coverImagePreview} className="w-full h-full object-cover" alt="cover" />
                           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                             <span className="text-white text-xs font-semibold">לחץ להחלפה</span>
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full h-20 rounded-xl border border-dashed border-violet-500/30 bg-violet-500/5 flex items-center justify-center gap-2 hover:bg-violet-500/10 transition-colors">
-                          <span className="text-violet-400/70 text-xs">+ העלה תמונת רקע</span>
+                        <div className="w-full h-20 rounded-xl border border-dashed border-primary/30 bg-primary/5 flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
+                          <span className="text-indigo-400/70 text-xs">+ העלה תמונת רקע</span>
                         </div>
                       )}
                     </label>
@@ -536,16 +536,16 @@ export default function CreateMagnetEvent() {
               {/* Step 2 — Date */}
               {currentStep === 2 && fromLead && (
                 <div className="animate-in fade-in duration-300 w-full mb-2">
-                  <div className="flex items-center justify-between px-3 py-2 bg-violet-500/10 border border-violet-500/25 rounded-xl">
-                    <span className="text-violet-300 text-xs font-semibold truncate">{fromLead.eventName}</span>
-                    <span className="text-violet-400/60 text-xs shrink-0 mr-2">מליד · {fromLead.contactName}</span>
+                  <div className="flex items-center justify-between px-3 py-2 bg-primary/10 border border-primary/25 rounded-xl">
+                    <span className="text-indigo-300 text-xs font-semibold truncate">{fromLead.eventName}</span>
+                    <span className="text-indigo-400/60 text-xs shrink-0 mr-2">מליד · {fromLead.contactName}</span>
                   </div>
                 </div>
               )}
               {currentStep === 2 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
-                    <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>02</bdi> · תאריך</p>
+                    <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>02</bdi> · תאריך</p>
                     <h2 className="font-playfair text-2xl font-semibold tracking-tight text-foreground">מתי האירוע?</h2>
                     <p className="text-sm text-muted-foreground">תאריך האירוע שיופיע על המגנטים</p>
                   </div>
@@ -558,7 +558,7 @@ export default function CreateMagnetEvent() {
               {currentStep === 3 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
-                    <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>03</bdi> · מכסה</p>
+                    <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>03</bdi> · מכסה</p>
                     <h2 className="font-playfair text-2xl font-semibold tracking-tight text-foreground">כמה הדפסות לאורח?</h2>
                     <p className="text-sm text-muted-foreground">כל אורח יוכל להדפיס עד המספר שתבחרו</p>
                   </div>
@@ -569,14 +569,14 @@ export default function CreateMagnetEvent() {
                         onClick={() => handleChange('print_quota_per_device', n)}
                         className={`h-12 rounded-xl font-bold text-base transition-all active:scale-95 ${
                           form.print_quota_per_device === n
-                            ? 'bg-violet-600 text-white shadow-md border border-white/20'
+                            ? 'bg-primary text-primary-foreground shadow-indigo-soft border border-white/20'
                             : 'bg-card text-muted-foreground border border-border hover:border-foreground/20'
                         }`}
                       ><bdi>{n}</bdi></button>
                     ))}
                   </div>
                   <div className="bg-gradient-to-r from-cool-900 to-cool-950 rounded-xl p-3 flex items-center gap-3 border border-border">
-                    <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 shrink-0 border border-violet-500/20">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-indigo-400 shrink-0 border border-primary/20">
                       <Check size={16} strokeWidth={3} />
                     </div>
                     <p className="text-foreground font-semibold text-[13px]"><bdi>{form.print_quota_per_device}</bdi> הדפסות לכל אורח</p>
@@ -588,7 +588,7 @@ export default function CreateMagnetEvent() {
               {currentStep === 4 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
-                    <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>04</bdi> · מסגרת</p>
+                    <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>04</bdi> · מסגרת</p>
                     <h2 className="font-playfair text-2xl font-semibold tracking-tight text-foreground">בחרו מסגרת</h2>
                     <p className="text-sm text-muted-foreground">המסגרת תוטבע על כל מגנט באירוע — אופציונלי</p>
                   </div>
@@ -599,9 +599,9 @@ export default function CreateMagnetEvent() {
                     onClick={() => handleChange('selectedFrameId', null)}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-sm"
                     style={{
-                      background: form.selectedFrameId === null ? 'rgba(124,58,237,0.12)' : 'rgba(255,255,255,0.04)',
-                      border: form.selectedFrameId === null ? '1px solid rgba(124,58,237,0.45)' : '1px solid rgba(255,255,255,0.08)',
-                      color: form.selectedFrameId === null ? '#a78bfa' : 'rgba(255,255,255,0.4)',
+                      background: form.selectedFrameId === null ? 'rgba(124,134,225,0.12)' : 'rgba(255,255,255,0.04)',
+                      border: form.selectedFrameId === null ? '1px solid rgba(124,134,225,0.45)' : '1px solid rgba(255,255,255,0.08)',
+                      color: form.selectedFrameId === null ? '#818cf8' : 'rgba(255,255,255,0.4)',
                     }}
                   >
                     {form.selectedFrameId === null && <Check className="w-3.5 h-3.5 shrink-0" />}
@@ -620,9 +620,9 @@ export default function CreateMagnetEvent() {
                           onClick={() => setActiveFrameTab(cat.key)}
                           className="relative shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                           style={{
-                            background: isActive ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.04)',
-                            border: isActive ? '1px solid rgba(124,58,237,0.45)' : '1px solid rgba(255,255,255,0.07)',
-                            color: isActive ? '#c4b5fd' : 'rgba(255,255,255,0.4)',
+                            background: isActive ? 'rgba(124,134,225,0.18)' : 'rgba(255,255,255,0.04)',
+                            border: isActive ? '1px solid rgba(124,134,225,0.45)' : '1px solid rgba(255,255,255,0.07)',
+                            color: isActive ? '#a5b4fc' : 'rgba(255,255,255,0.4)',
                           }}
                         >
                           {cat.label}
@@ -630,7 +630,7 @@ export default function CreateMagnetEvent() {
                             <span style={{
                               position: 'absolute', top: -4, right: -4,
                               width: 7, height: 7, borderRadius: '50%',
-                              background: '#7c3aed',
+                              background: '#7c86e1',
                               border: '1.5px solid #0a0a0a',
                             }} />
                           )}
@@ -657,7 +657,7 @@ export default function CreateMagnetEvent() {
                     <p className="text-[9px] font-semibold mb-2 tracking-widest uppercase text-muted-foreground/60">
                       מותאם אישית
                     </p>
-                    <label className="flex items-center gap-3 w-full bg-card border border-dashed border-border hover:border-violet-500/40 rounded-xl px-4 py-3 cursor-pointer transition-colors">
+                    <label className="flex items-center gap-3 w-full bg-card border border-dashed border-border hover:border-primary/40 rounded-xl px-4 py-3 cursor-pointer transition-colors">
                       <Upload className="w-4 h-4 text-muted-foreground shrink-0" />
                       <span className="text-xs text-muted-foreground truncate">
                         {form.overlayFile ? form.overlayFile.name : 'העלאת PNG מותאם...'}
@@ -700,7 +700,7 @@ export default function CreateMagnetEvent() {
                 disabled={isLoading}
                 className={`text-base font-semibold rounded-xl flex-1 h-12 transition-all duration-300 active:scale-95 flex items-center justify-center relative ${
                   isCurrentStepValid() || isLoading
-                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/40 border border-white/10'
+                    ? 'bg-primary text-primary-foreground shadow-indigo-soft border border-white/10'
                     : 'bg-card text-muted-foreground border border-border'
                 }`}
               >

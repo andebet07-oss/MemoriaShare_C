@@ -132,7 +132,7 @@ function MagnetPhoneMockup({ coverImage, eventName, date, imageTransform, isDesi
       }}
     >
       {isDesignMode && (
-        <div className="absolute inset-0 ring-2 ring-violet-500 z-[70] pointer-events-none animate-pulse" style={{ borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)' }} />
+        <div className="absolute inset-0 ring-2 ring-primary z-[70] pointer-events-none animate-pulse" style={{ borderRadius: 'clamp(1.8rem, 3.5dvh, 3rem)' }} />
       )}
 
       {/* Dynamic Island */}
@@ -229,7 +229,7 @@ function MagnetPhoneMockup({ coverImage, eventName, date, imageTransform, isDesi
   );
 }
 
-// ─── Inline Calendar — violet accent ─────────────────────────────────────────
+// ─── Inline Calendar — indigo accent ─────────────────────────────────────────
 function InlineCalendar({ value, onChange }) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const selected = value ? new Date(value + 'T00:00:00') : null;
@@ -279,8 +279,8 @@ function InlineCalendar({ value, onChange }) {
             className={`h-8 w-full flex items-center justify-center text-sm font-medium rounded-full transition-colors
               ${!day ? 'invisible pointer-events-none' : ''}
               ${day && isPast(day) ? 'text-foreground/20 pointer-events-none' : ''}
-              ${day && isSel(day) ? 'bg-violet-600 text-white shadow-md' : ''}
-              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-violet-500/40 text-foreground' : ''}
+              ${day && isSel(day) ? 'bg-primary text-primary-foreground shadow-indigo-soft' : ''}
+              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-primary/40 text-foreground' : ''}
               ${day && !isPast(day) && !isSel(day) ? 'text-foreground/75 hover:bg-foreground/[0.08]' : ''}
             `}>
             <bdi>{day || ''}</bdi>
@@ -410,8 +410,8 @@ export default function MagnetLead() {
     return (
       <div className="dark min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground flex items-center justify-center px-6 font-heebo" dir="rtl">
         <div className="max-w-sm w-full text-center">
-          <div className="w-14 h-14 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center mx-auto mb-5">
-            <Check className="w-7 h-7 text-violet-400" />
+          <div className="w-14 h-14 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-5">
+            <Check className="w-7 h-7 text-indigo-400" />
           </div>
           <h1 className="font-playfair text-3xl text-foreground/90 mb-3">הבקשה התקבלה!</h1>
           <p className="text-muted-foreground text-sm leading-relaxed mb-8">
@@ -437,7 +437,7 @@ export default function MagnetLead() {
       {/* Progress Bar */}
       <div className="h-1 bg-border shrink-0 w-full z-50">
         <div
-          className="h-full bg-violet-500 transition-all duration-300 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+          className="h-full bg-primary transition-all duration-300 shadow-[0_0_10px_rgba(124,134,225,0.45)]"
           style={{ width: `${progressPercentage}%` }}
         />
       </div>
@@ -488,7 +488,7 @@ export default function MagnetLead() {
                     onChange={e => handleInputChange('event_name', e.target.value)}
                     placeholder="למשל: Yael & Daniel"
                     style={{ fontSize: '16px' }}
-                    className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
+                    className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                   />
                   {errors.event_name && <p className="text-destructive text-[10px] mt-2 font-bold animate-pulse">{errors.event_name}</p>}
                 </div>
@@ -501,7 +501,7 @@ export default function MagnetLead() {
                   <p className="text-sm text-muted-foreground mb-2">הרקע שיופיע לאורחים לפני שהם פותחים מצלמה</p>
                   <div className="grid grid-cols-2 gap-3 w-full pt-2">
                     <label htmlFor="add-photo" className="cursor-pointer group h-full">
-                      <div className="bg-violet-600 hover:brightness-110 text-white transition-all rounded-xl py-2 px-2 text-center h-full flex flex-col justify-center items-center shadow-lg shadow-violet-900/40 active:scale-95 border border-foreground/10">
+                      <div className="bg-primary hover:brightness-110 text-primary-foreground transition-all rounded-xl py-2 px-2 text-center h-full flex flex-col justify-center items-center shadow-indigo-soft active:scale-95 border border-foreground/10">
                         {isUploading ? <Loader2 className="w-6 h-6 mb-1.5 animate-spin" /> : <ImageIcon className="w-6 h-6 mb-1.5" />}
                         <p className="text-[10px] font-black uppercase tracking-widest leading-tight">{isUploading ? 'מעלה...' : 'העלאה'}</p>
                       </div>
@@ -513,7 +513,7 @@ export default function MagnetLead() {
                       disabled={!formData.cover_image}
                       className={`transition-all rounded-xl py-2 px-2 text-center border flex flex-col justify-center items-center active:scale-95 h-full ${
                         isDesignMode
-                          ? 'bg-violet-600 border-violet-400 text-white shadow-lg shadow-violet-900/40'
+                          ? 'bg-primary border-primary text-primary-foreground shadow-indigo-soft'
                           : !formData.cover_image
                             ? 'bg-card border-border text-muted-foreground/40 cursor-not-allowed'
                             : 'bg-secondary hover:bg-accent border-border'
@@ -548,7 +548,7 @@ export default function MagnetLead() {
                       onChange={e => handleInputChange('location', e.target.value)}
                       placeholder="שם האולם / מיקום האירוע"
                       style={{ fontSize: '16px' }}
-                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
+                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                     />
                     {errors.location && <p className="text-destructive text-xs font-bold text-center">{errors.location}</p>}
                   </div>
@@ -562,23 +562,26 @@ export default function MagnetLead() {
                     <h2 className="font-playfair text-xl font-semibold tracking-tight text-foreground">כמות מוזמנים</h2>
                     <p className="text-sm text-muted-foreground">כמה אורחים צפויים באירוע?</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {GUEST_OPTIONS.map(opt => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => handleInputChange('guest_count', opt)}
-                        className={`h-11 rounded-xl font-bold text-sm transition-all active:scale-95 border ${
-                          formData.guest_count === opt
-                            ? 'bg-violet-600 text-white border-violet-400 shadow-md'
-                            : 'bg-card text-muted-foreground border-border hover:border-foreground/20'
-                        }`}
-                      >
-                        {opt.split(/(\d+)/).map((part, i) =>
-                          /^\d+$/.test(part) ? <bdi key={i}>{part}</bdi> : part
-                        )}
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary border border-border">
+                    {GUEST_OPTIONS.map(opt => {
+                      const selected = formData.guest_count === opt;
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => handleInputChange('guest_count', opt)}
+                          className={`h-11 rounded-xl font-bold text-sm transition-all active:scale-95 border ${
+                            selected
+                              ? 'bg-transparent text-primary border-primary shadow-indigo-soft'
+                              : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground/80'
+                          }`}
+                        >
+                          {opt.split(/(\d+)/).map((part, i) =>
+                            /^\d+$/.test(part) ? <bdi key={i}>{part}</bdi> : part
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                   {errors.guest_count && <p className="text-destructive text-xs font-bold text-center">{errors.guest_count}</p>}
                 </div>
@@ -598,7 +601,7 @@ export default function MagnetLead() {
                       onChange={e => handleInputChange('full_name', e.target.value)}
                       placeholder="שם מלא"
                       style={{ fontSize: '16px' }}
-                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
+                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                     />
                     {errors.full_name && <p className="text-destructive text-[10px] mt-1 font-bold animate-pulse">{errors.full_name}</p>}
                   </div>
@@ -611,7 +614,7 @@ export default function MagnetLead() {
                       inputMode="tel"
                       dir="ltr"
                       style={{ fontSize: '16px' }}
-                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
+                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                     />
                     {errors.phone && <p className="text-destructive text-[10px] mt-1 font-bold animate-pulse">{errors.phone}</p>}
                   </div>
@@ -651,7 +654,7 @@ export default function MagnetLead() {
                 disabled={isLoading}
                 className={`text-base font-black rounded-xl flex-1 h-12 transition-all duration-300 active:scale-95 flex items-center justify-center ${
                   isCurrentStepValid() || isLoading
-                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/40 border border-white/10'
+                    ? 'bg-primary text-primary-foreground shadow-indigo-soft border border-white/10'
                     : 'bg-card text-muted-foreground border border-border'
                 }`}
               >

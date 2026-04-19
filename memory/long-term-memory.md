@@ -1,6 +1,6 @@
 ---
 type: long-term-memory
-updated: 2026-04-17T13:30Z
+updated: 2026-04-19T06:00Z
 ---
 
 # Long-Term Memory — Patterns & Distilled Facts
@@ -119,37 +119,133 @@ Both pages support pinch/drag/touch transform on a phone-mockup cover image. Sha
 - `didSetInitialTransform` ref prevents re-computing initial on re-render
 - Touch events tracked via a single `touchState` ref (`{ isDragging, lastX, lastY, lastPinchDist }`) — don't use state for gesture tracking (re-renders kill framerate)
 
+## Canvas Preview Composite Pattern (MagnetReview, 2026-04-18)
+
+When a review/design surface needs to show **exactly** what the final export will look like — including frame artwork, labels, and chrome — bake the composite to a data URL and render it as an `<img>`. Do NOT mount a live HTML layer that only roughly approximates the final canvas output; users will place stickers in positions that don't survive the export.
+
+Pattern used in `MagnetReview.jsx`:
+- `useEffect([imageDataURL, event.overlay_frame_url])` loads the source photo into an `Image`
+- Creates an off-screen `<canvas>` sized `photoW × (photoH + labelH)` where `labelH = round(photoW * LABEL_H_RATIO)`
+- Fills white, draws photo, calls `eventFrame.drawFrame(ctx, photoW, totalH, photoH, event)` to paint frame + label
+- Exports `canvas.toDataURL('image/jpeg', 0.9)` to `previewUrl` state
+- Stores `photoFrac = photoH / totalH` in state so the sticker drag zone can be constrained to `height: ${photoFrac * 100}%` of the composite image (stickers must never land on the label strip)
+
+**Rule:** sticker coordinates (`s.x`, `s.y`) are stored **relative to the photo area**, not the total canvas. When calling `drawSticker(ctx, s, w, h, ...)` at submit time, pass `photoW` and `photoH` — NOT `canvas.width` / `canvas.height` (which would include the label strip and shift stickers downward).
+
+## Storage Upload Pattern — Direct `fetch` with `x-upsert`
+
+`memoriaService.storage.uploadCoverImage()` (2026-04-18) uploads to `covers/{eventId}/cover.{ext}` via direct `fetch` to `${VITE_SUPABASE_URL}/storage/v1/object/photos/{path}` with headers:
+```
+Authorization: Bearer {jwt from _getJwt()}
+apikey: {VITE_SUPABASE_ANON_KEY}
+Content-Type: {file.type}
+x-upsert: true
+```
+Use this recipe when the path is **canonical per-resource** (e.g. one cover per event) so re-uploads replace in place instead of piling up orphaned files. Contrast with the per-photo upload path which uses `{event_id}/{timestamp}_{filename}` for append-only semantics.
+
 ## Tech Stack Rules (Non-Negotiable)
 - React 18 hooks only (no class components, no HOCs except 3rd-party wraps)
 - Tailwind utility-only (no custom .css, no in
 ---
 
+## Common Pitfalls
+*updated: 2026-04-19T06:00Z*
+
+### Canvas `willReadFrequently` must be on FIRST `getContext('2d')` call
+`getContext('2d', { willReadFrequently: true })` only takes effect on the **first** invocation on a canvas element — later calls silently ignore the option because the rendering backend is already fixed. Any code path that ultimately calls `getImageData` / `putImageData` (EXIF stripping, watermark compositing, pixel-level filters) must set the flag on the first `getContext` call, or perf silently degrades.
+- **Where it hits Memoria:** CameraCapture.jsx frame-capture canvas; any future sticker/caption pixel pass.
+- **Source:** https://html.spec.whatwg.org/multipage/canvas.html + MDN Optimizing canvas.
+
+### Supabase RLS DELETE silently fails without a matching SELECT policy
+With RLS enabled, `supabase.from('t').delete().match(...)` only deletes rows also visible via a SELECT/ALL policy. A DELETE policy alone is insufficient — no error object is returned, the operation just affects zero rows and the UI looks like it silently succeeded.
+- **Defensive pattern:** after `.delete()`, verify returned `count > 0`; throw a Hebrew error (`המחיקה נכשלה — אין לך הרשאה`) otherwise. Never trust a missing error object as "success."
+- **Schema audit rule:** every table with a DELETE policy in `CLEAN_RESET_SCHEMA.sql` MUST have a matching SELECT/ALL policy covering the same rows.
+- **Source:** https://supabase.com/docs/guides/database/postgres/row-level-security + https://supabase.com/docs/guides/troubleshooting/rls-performance-and-best-practices-Z5Jjwv.
+
+---
+
+## Performance Patterns
+*updated: 2026-04-19T06:00Z*
+
+### React 18 — Use `useSyncExternalStore` for external subscriptions; `useDeferredValue` for heavy filter inputs
+- `useSyncExternalStore` is the canonical hook for subscribing to external stores (`matchMedia`, scroll position, third-party event emitters, Supabase realtime). Plain `useState + useEffect` can tear during concurrent renders; `useSyncExternalStore` is tear-safe.
+- `useDeferredValue` / `useTransition` mark state updates as low-priority so typing/filter UIs remain responsive while heavy lists re-render in the background.
+- **Where it applies to Memoria:** wrap `useRealtimeNotifications` / `useEventGallery` Supabase channel getters in a `useSyncExternalStore`-backed hook; wrap host-dashboard gallery filter query in `useDeferredValue` (measurable FPS win at >300 photos).
+- **Source:** https://react.dev/reference/react/hooks.
+
+### Canvas 2D — Three compounding gotchas that crash tabs on Android
+1. **Non-integer `drawImage(x, y)`** coords trigger sub-pixel resampling — wrap placement coords with `Math.floor()` before `drawImage`.
+2. **Each loaded font family costs ~15MB of glyph-raster cache**, held for page lifetime. Memoria currently loads 9 display fonts for stickers (~135MB) on top of base canvas (~8MB per 1920×1080). Trim to minimum; lazy-load rest per sticker pack.
+3. **`ctx.fillText(sameString, ...)` re-shapes every frame.** For static sticker text, render once to an offscreen canvas keyed by `(text, type, size)`, then `drawImage` the bitmap on subsequent frames.
+- **Where it applies to Memoria:** `MagnetReview.drawSticker()` + the canvas sticker renderer — directly affects Sticker System v2 drag/rotate FPS.
+- **Source:** https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas + https://www.mirkosertic.de/blog/2015/03/tuning-html5-canvas-filltext/.
+
+---
+
+## WebRTC Camera Rules (extends CLAUDE.md §3.6)
+*updated: 2026-04-19T06:00Z*
+
+### iOS Safari re-prompts for camera permission — treat as normal, not an error
+iOS Safari intermittently re-prompts for `getUserMedia` permission on the same origin even after prior grant, with no domain/app version change. The `Permissions` API is NOT supported in Safari, so pre-checking permission state is unreliable.
+- **Error handler:** detect `NotAllowedError` on iOS and render a Hebrew re-consent message ("Safari ביקש לאשר שוב גישה למצלמה — גע בסמל ההרשאות בשורת הכתובת") with a retry button. Do NOT terminal-state the UI.
+- **Rule:** never gate camera UX on `navigator.permissions.query()` — treat re-prompts as recoverable.
+- **Source:** https://discussions.apple.com/thread/256081579.
+
+### `getSupportedConstraints` guard before rendering advanced camera controls
+`navigator.mediaDevices.getSupportedConstraints()` reports which constraint *properties* the browser understands at the top level (`torch`, `zoom`, `focusMode`, `exposureMode`, `whiteBalanceMode` vary per browser/OS). This is distinct from `videoTrack.getCapabilities()` which reports per-track hardware support.
+- **Rule (dual guard):** before rendering any advanced camera control (zoom slider, torch toggle, focus tap target), check BOTH `navigator.mediaDevices.getSupportedConstraints?.()?.<propName>` AND `videoTrack.getCapabilities?.()?.<propName>`. Render the control only when both are truthy.
+- **Do NOT** polyfill via `webrtc-adapter` — added bundle weight not justified by our constraint surface.
+- **Source:** https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia.
+
+---
+
+## Future Migrations / Hardening Follow-ups
+*updated: 2026-04-19T06:00Z*
+
+These are validated opportunities that are not actionable today but should be remembered when the relevant migration or hardening pass is scoped.
+
+### Tailwind v4 — `scheme-dark` utility (when we migrate from v3.4)
+Tailwind v4 ships `scheme-dark` / `scheme-light` utilities mapping to CSS `color-scheme`. Adding `scheme-dark` to `<body>` forces native chrome (scrollbars, form inputs, system dialogs, date pickers) into dark mode — eliminates the known "silvery light scrollbar on a dark page" paper-cut. Currently on `tailwindcss ^3.4.17`. When v4 migration is scoped, add `scheme-dark` to Layout `<body>` as a one-line fix.
+
+### Supabase realtime — private channels with RLS on `realtime.messages`
+Realtime Broadcast/Presence Authorization on private channels requires `@supabase/supabase-js ≥ v2.44.0`. Memoria is on v2.101.1 — capability is unlocked. Current `useRealtimeNotifications` / `useEventGallery` use public channels filtered by `event_id`. For share events requiring authenticated-host-only realtime visibility, private channels + RLS policy on `realtime.messages` would be a stronger security posture. Tracked as a hardening follow-up — not urgent.
+
+---
+
 ## New Learnings (research-scout nightly — pending review)
+*Last refreshed: 2026-04-19T18:00Z | Next review: 2026-04-26*
 
-### Finding: 2026-04-17 — Canvas
-- **Source:** https://html.spec.whatwg.org/multipage/canvas.html + MDN Optimizing canvas
-- **Finding:** `willReadFrequently: true` must be passed on the **first** `getContext('2d', {...})` call on a canvas element; setting it on later calls is silently ignored because the rendering backend is already fixed.
-- **Relevance:** CameraCapture.jsx captures frames to a canvas and may read pixels for captioning/EXIF stripping. If we ever add per-capture pixel processing (badges, stamps, watermark compositing), the first `getContext` call must opt in — otherwise perf degrades without warning.
-- **Action:** Code review — audit any `canvas.getContext('2d')` call path in CameraCapture and caption/sticker compositor; add `{ willReadFrequently: true }` on the first call whenever `getImageData`/`putImageData` is used downstream.
+### Finding: 2026-04-19 — React `useEffectEvent` (stable in 19, experimental in 18.3) for latest-value access inside effects
+- **Source:** https://react.dev/learn/separating-events-from-effects + https://allthingssmitty.com/2025/12/01/react-has-changed-your-hooks-should-too/
+- **Finding:** `useEffectEvent` wraps a function so it always sees the latest props/state when the wrapped Effect runs, WITHOUT being added to the effect's dependency array. This replaces the old "stale closure workaround" of stuffing every referenced value into deps (which re-runs the effect) or using `useRef` to shadow state (which bypasses reactivity). In React 18.3 it is still under `experimental_useEffectEvent`; promoted to stable in React 19.
+- **Relevance:** Memoria's `useRealtimeNotifications`, `useEventGallery`, and the `CameraCapture` WebRTC cleanup all have dependency-array gymnastics where a handler needs the latest `event`/`photos` but must not re-subscribe when they change. Current pattern uses `useRef` shadows (see e.g. the `pendingPhotosRef` pattern in the CameraCapture rules). `useEffectEvent` would make intent explicit and remove the shadow-ref boilerplate.
+- **Action:** NOT actionable today — Memoria is on React 18 and the hook is experimental there. Promote to active rule when the React 19 upgrade is scoped. In the meantime, continue the `useRef`-shadow pattern and document it as the React-18-era equivalent.
 - **Status:** pending-review
 
-### Finding: 2026-04-17 — Supabase
-- **Source:** https://supabase.com/docs/guides/realtime/authorization
-- **Finding:** Realtime **Broadcast/Presence Authorization** on private channels requires `@supabase/supabase-js ≥ v2.44.0`. Private channels grant fine-grained control over which clients can join and what actions they can broadcast/presence within the channel, enforced by RLS policies on `realtime.messages`.
-- **Relevance:** Memoria is on v2.101.1 — the capability is unlocked. Today Memoria's `useRealtimeNotifications` / `useEventGallery` subscriptions are public channels filtered by `event_id`. For share events where we want only authenticated host + approved guests to see realtime photo events, private channels + RLS messages policy would be a stronger security posture than the current "public channel, client filter" model.
-- **Action:** Architecture — evaluate moving per-event photo channels from public to private `realtime.channel()` with RLS messages policy; document as a hardening follow-up in project-memory.
+### Finding: 2026-04-19 — Tailwind arbitrary breakpoint variants `min-[Npx]:` / `max-[Npx]:` (works in v3.4, no config change)
+- **Source:** https://tailwindcss.com/docs/responsive-design (Arbitrary values section) + https://v3.tailwindcss.com/docs/responsive-design
+- **Finding:** Tailwind v3.2+ supports arbitrary min/max variants inline: `<div class="min-[375px]:text-sm max-[600px]:bg-card">`. No `tailwind.config.js` `screens` extension needed. Also supports `max-sm:` / `max-md:` (desktop-first overrides) which were NOT in v3.0. Crucially, mixing px/rem across breakpoints can cause generated utilities to sort in an unexpected order — always use one unit.
+- **Relevance:** Memoria's mobile-first rule (CLAUDE.md §3.1) is strict — but there are ~5 places where a feature needs a *between-375-and-414px* iPhone-SE-specific tweak that doesn't fit `sm:`/`md:`. Current workaround is bespoke wrapper divs or inline `style`. The `min-[Npx]:` variant lets us handle one-off breakpoints without polluting the Tailwind config or violating the "utility-only" rule.
+- **Action:** (1) Green-light `min-[Npx]:` / `max-[Npx]:` for one-off breakpoints where adding a named screen would be overkill. (2) Constrain: do NOT use them as a *replacement* for the standard `md:`/`lg:` ladder — only for true outliers (iPhone-SE 375px, PrintStation 1600px+ kiosk, etc.). (3) Always use `px` (matches our existing `@screen` values), never mix `rem` + `px`. Add a one-line clarification to CLAUDE.md §3.1 once reviewed.
 - **Status:** pending-review
 
-### Finding: 2026-04-17 — WebRTC (iOS Safari)
-- **Source:** https://discussions.apple.com/thread/256081579 + https://blog.addpipe.com/getusermedia-getting-started/
-- **Finding:** Safari on iOS intermittently **re-prompts for camera/mic permission on the same origin** even when the user has previously granted access and neither the domain nor app version changed. The `Permissions` API is not supported in Safari, so there is no reliable way to pre-check permission state.
-- **Relevance:** CameraCapture.jsx is mobile-first and iOS Safari is the primary target. Today, a re-prompt mid-event will surface as a generic getUserMedia failure and may be mis-classified as a hardware error in our error state. We should assume re-prompts are normal, not exceptional.
-- **Action:** UX — in CameraCapture's error handler, detect `NotAllowedError` on iOS and render a Hebrew re-consent message ("Safari ביקש לאשר שוב גישה למצלמה — גע בסמל ההרשאות בשורת הכתובת") with a retry button, instead of a terminal error state. Do NOT use the Permissions API as a guard.
+### Finding: 2026-04-19 — Supabase PKCE auth-code validity is 5 minutes, single-use; failed exchange invalidates the code
+- **Source:** https://supabase.com/docs/guides/auth/sessions/pkce-flow + https://supabase.com/docs/guides/auth/debugging/error-codes
+- **Finding:** When using the PKCE flow (the default for magic-link, OAuth, and password-reset callbacks in Supabase JS v2), the `code` query param delivered to the redirect URL is valid for **5 minutes** and can be exchanged **exactly once** via `supabase.auth.exchangeCodeForSession(code)`. A second exchange attempt — e.g. React 18 Strict Mode double-mount, or a user who refreshes the callback page — returns `invalid_grant` / `flow_state_not_found` and kills the session setup. Symptom: "magic link worked on desktop but fails on my phone" (user opened the link, got to the app, then refreshed).
+- **Relevance:** Memoria host login flow uses Supabase email (magic-link-capable) auth. The host callback route MUST guard against a double `exchangeCodeForSession` call in React 18 Strict Mode dev, AND must render a recoverable "הקישור פג תוקף — בקש/י קישור חדש" Hebrew error state on refresh rather than a blank/auth-error white screen. Also relevant for any future MagnetLead "invite by email" flow.
+- **Action:** (1) Audit the Auth callback route in `@/lib/AuthContext` or the callback page that calls `exchangeCodeForSession` — wrap in a `useRef`-guarded `didExchange.current` flag to survive Strict Mode double-mount. (2) Catch the `invalid_grant` error and render a Hebrew re-request UI (link to re-send magic link), NOT a terminal error. (3) Document as a rule under `Common Pitfalls`.
 - **Status:** pending-review
 
-### Finding: 2026-04-17 — Tailwind (v4 migration note)
-- **Source:** https://tailwindcss.com/blog/tailwindcss-v4 + tailwindcss v4.2 release notes
-- **Finding:** Tailwind v4 ships `scheme-dark` / `scheme-light` / `color-scheme` utilities that map to CSS `color-scheme`. Adding `scheme-dark` to `<body>` forces native UI chrome (scrollbars, form inputs, system dialogs, date pickers) into dark mode, eliminating the "silvery light scrollbar on a dark page" bug.
-- **Relevance:** Memoria is on `tailwindcss ^3.4.17` — **not** directly actionable today. But Memoria's brand is hard-locked on dark (indigo/cool-neutral, `dark` class rule). The light-scrollbar bug on iOS Safari and Android Chrome is a known visual paper-cut of our current stack. When we eventually migrate to v4, adding `scheme-dark` to Layout's `<body>` is a one-line fix that removes the need for any custom CSS scrollbar shim.
-- **Action:** Flag for weekly review — add to "Tailwind v4 migration checklist" when that migration is scoped. Until then, no change.
-- **Status:** flagged-for-weekly-review
+### Finding: 2026-04-19 — Tailwind CSS v4 native `@container` queries (component-level responsiveness)
+- **Source:** https://tailwindcss.com/docs/responsive-design + https://www.sitepoint.com/tailwind-css-v4-container-queries-modern-layouts/
+- **Finding:** Tailwind v4 ships container queries natively (`@container` parent + `@sm:`/`@lg:` child variants); the `tailwindcss-container-queries` plugin is no longer required. Variants are mobile-first and support `@max-*` ranges.
+- **Relevance:** Memoria has reusable cards/components (e.g. `EventCard`, `MagnetEventCard`, KPI tiles) that render in BOTH wide gallery grids and narrow side panels — viewport breakpoints (`md:`, `lg:`) misfire because they react to viewport, not container width. Container queries fix the "card looks great in grid, breaks in sidebar" failure mode without per-context wrapper overrides.
+- **Action:** Append a sub-bullet to the existing `Future Migrations / Hardening Follow-ups → Tailwind v4` block: when v4 migration is scoped, audit `EventCard` / KPI tiles / `MagnetEventCard` for viewport-keyed Tailwind classes that should become `@container`-keyed. NOT actionable today (still on `tailwindcss ^3.4.17`); promote to active rule only after v4 cutover.
+- **Status:** pending-review
+
+### Finding: 2026-04-19 — Supabase `getClaims()` is the new preferred verification method (asymmetric JWT signing keys)
+- **Source:** https://supabase.com/docs/reference/javascript/auth-getclaims + https://supabase.com/docs/guides/auth/signing-keys + https://github.com/supabase/supabase/issues/40985
+- **Finding:** `supabase.auth.getClaims()` (added alongside Supabase's asymmetric JWT signing keys, 2025) verifies the access-token JWT **locally** against the cached `/.well-known/jwks.json` JWKS endpoint — no Auth-server round-trip per call. `getUser()` always hits the Auth server (DB query); `getSession()` reads localStorage with NO server-side validation and is unsafe to trust as identity. The Supabase team is actively recommending `getClaims()` in place of `getUser()` whenever real-time ban/deletion detection is not required.
+- **Relevance:** Memoria's `useAuth()` (in `@/lib/AuthContext`) almost certainly currently relies on `getSession()` / `getUser()` for the host-dashboard auth gate. Switching the per-render identity check to `getClaims()` would eliminate one Auth-server round-trip per protected page navigation — meaningful at scale and on slow mobile connections. Also relevant if/when Memoria adds Edge Functions that need to verify the caller JWT (use `getClaims()` not `getUser()`).
+- **Action:** (1) Audit `@/lib/AuthContext` to confirm which method it currently calls; if `getUser()` is invoked on every protected mount, plan a swap to `getClaims()` (keep `getUser()` only for the post-login refresh path). (2) When Edge Functions are introduced, default to `getClaims()` for caller verification. (3) Pre-req: confirm Memoria's Supabase project has migrated to **asymmetric** JWT signing keys (Project Settings → JWT Keys) — `getClaims()` requires this.
+- **Status:** pending-review
