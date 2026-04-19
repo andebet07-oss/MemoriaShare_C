@@ -1,6 +1,6 @@
 ---
 type: long-term-memory
-updated: 2026-04-19T06:00Z
+updated: 2026-04-19T22:00Z
 ---
 
 # Long-Term Memory — Patterns & Distilled Facts
@@ -50,11 +50,25 @@ The prior violet-heavy palette was retired. Aesthetic inspiration: POV.camera �
 - Every page root that expects dark appearance **MUST** include the `dark` class: `<div className="dark ...">`
 - Without `.dark` ancestor, `bg-background` renders as `#fafafa` (silvery), not dark — this was the root cause of the 2026-04-16 home-page contrast bug
 
-### Sub-brand — MemoriaMagnet (Admin / Print Service)
-- **Violet `#7c3aed` / `#a78bfa` is preserved** as the MemoriaMagnet sub-brand accent
-- Use ONLY inside Magnet-specific UI: `AdminShell` tabs, `CreateMagnetEvent` wizard, `MagnetReview`, `PrintStation`, Magnet KPI cards
-- Everywhere else — indigo is the primary accent
-- This preserves the dual-product visual separation required by the `event_type === 'share' | 'magnet'` architecture
+### Sub-brand — MemoriaMagnet (Admin Back-office / Operational Surfaces)
+- **Violet `#7c3aed` / `#a78bfa`** is retained as the MemoriaMagnet sub-brand accent — scope narrowed 2026-04-19.
+- **In-scope (still violet):** `AdminShell` tabs, `AdminOverview`, `AdminEventsList`, `LeadsPanel` (admin status chips), `PrintStation`, `MagnetEventDashboard`, `MagnetCamera` (in-event camera chrome), `MagnetGuestPage`, `MagnetReview` (canvas label strip / chrome).
+- **Out-of-scope (indigo/primary now):** `MagnetLead` (public lead form) and `CreateMagnetEvent` (admin wizard rendered on consumer-style shell) — as of commit `18c5966`, these two consumer-facing Magnet intake pages use the same indigo/primary tokens as the Share shell (`bg-primary`, `text-indigo-400`, `focus:ring-primary/20`, `shadow-indigo-soft`).
+- Rationale: violet signals "operator/print service" context. Consumer intake flows should feel continuous with the Share brand, not visually fork on step 1.
+- Dual-product separation is still maintained by `event_type === 'share' | 'magnet'` at the logic layer — the visual split now kicks in only after the guest / admin crosses into the operational side.
+
+### Segmented-Control Pattern (MagnetLead GUEST_OPTIONS, 2026-04-19)
+For 2-column option groups (guest count, quota tiers, etc.) prefer a parent-container + transparent-children pattern over per-button bg switches:
+```jsx
+<div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary border border-border">
+  {OPTIONS.map(opt => (
+    <button className={selected
+      ? 'bg-transparent text-primary border-primary shadow-indigo-soft'
+      : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground/80'}>
+  ))}
+</div>
+```
+The container provides the chrome; selected children are marked only by their border + soft shadow (no bg swap). Native-iOS segmented feel, lower visual weight than solid-fill selected pills.
 
 ### Component Vocabulary (consistent across pages)
 - **Wizard step header pattern:** indigo/violet micro-label (`0N · 段名`) → Playfair 2xl title → muted-foreground subtitle
@@ -213,7 +227,7 @@ Realtime Broadcast/Presence Authorization on private channels requires `@supabas
 ---
 
 ## New Learnings (research-scout nightly — pending review)
-*Last refreshed: 2026-04-19T18:00Z | Next review: 2026-04-26*
+*Last refreshed: 2026-04-19T22:00Z | Next review: 2026-04-26*
 
 ### Finding: 2026-04-19 — React `useEffectEvent` (stable in 19, experimental in 18.3) for latest-value access inside effects
 - **Source:** https://react.dev/learn/separating-events-from-effects + https://allthingssmitty.com/2025/12/01/react-has-changed-your-hooks-should-too/
@@ -248,4 +262,25 @@ Realtime Broadcast/Presence Authorization on private channels requires `@supabas
 - **Finding:** `supabase.auth.getClaims()` (added alongside Supabase's asymmetric JWT signing keys, 2025) verifies the access-token JWT **locally** against the cached `/.well-known/jwks.json` JWKS endpoint — no Auth-server round-trip per call. `getUser()` always hits the Auth server (DB query); `getSession()` reads localStorage with NO server-side validation and is unsafe to trust as identity. The Supabase team is actively recommending `getClaims()` in place of `getUser()` whenever real-time ban/deletion detection is not required.
 - **Relevance:** Memoria's `useAuth()` (in `@/lib/AuthContext`) almost certainly currently relies on `getSession()` / `getUser()` for the host-dashboard auth gate. Switching the per-render identity check to `getClaims()` would eliminate one Auth-server round-trip per protected page navigation — meaningful at scale and on slow mobile connections. Also relevant if/when Memoria adds Edge Functions that need to verify the caller JWT (use `getClaims()` not `getUser()`).
 - **Action:** (1) Audit `@/lib/AuthContext` to confirm which method it currently calls; if `getUser()` is invoked on every protected mount, plan a swap to `getClaims()` (keep `getUser()` only for the post-login refresh path). (2) When Edge Functions are introduced, default to `getClaims()` for caller verification. (3) Pre-req: confirm Memoria's Supabase project has migrated to **asymmetric** JWT signing keys (Project Settings → JWT Keys) — `getClaims()` requires this.
+- **Status:** pending-review
+
+### Finding: 2026-04-19 — iOS Safari standalone PWA mode breaks `getUserMedia` (camera silently unavailable)
+- **Source:** https://developer.apple.com/forums/thread/89981 + https://simicart.com/blog/pwa-camera-access/
+- **Finding:** When a user adds Memoria to their iOS home screen and launches it in **standalone PWA mode** (`display: standalone` in `manifest.json`), WebKit does NOT prompt for camera permission and `navigator.mediaDevices.getUserMedia()` silently fails — the OS behaves as if no camera exists. The in-Safari-tab version works fine; only the home-screen-launched PWA mode is broken. Apple has not fixed this as of 2025/2026. Android Chrome PWAs are unaffected.
+- **Relevance:** This is a **P0 bug for MemoriaMagnet** — guests scan the event QR, tap "Add to Home Screen" on iPhone (per luxury UX guidance), then launch the home-screen icon → camera silently fails → empty print queue. Also affects any MemoriaShare guest that adds the site to their iOS home screen before uploading. Memoria's `public/manifest.json` uses `display: standalone`.
+- **Action:** (1) Detect standalone PWA mode via `window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true` AND `navigator.userAgent` includes `iPhone|iPad`. (2) On Magnet guest page / Share upload page, if standalone iOS detected, render a Hebrew banner: "פתח/י את הדף ב-Safari (לא מהקיצור במסך הבית) כדי לאפשר גישה למצלמה" with a "העתק קישור" button. (3) Consider switching `manifest.json` `display` to `browser` OR `minimal-ui` for Magnet guest routes specifically — trades off PWA chrome for a working camera. Needs PM call. (4) Add to `Common Pitfalls` once reviewed.
+- **Status:** pending-review
+
+### Finding: 2026-04-19 — iOS Safari randomizes `deviceId` per page load — never persist camera selection
+- **Source:** https://webrtchacks.com/guide-to-safari-webrtc/ + https://www.webrtc-developers.com/managing-devices-in-webrtc/
+- **Finding:** As a WebKit fingerprinting-resistance measure, `MediaDeviceInfo.deviceId` values are **regenerated on every page load** in iOS Safari. Storing a user's selected `deviceId` in localStorage / Supabase profile for "remember my camera choice" is a no-op on iOS — the stored ID is invalid on the next session and `getUserMedia({ video: { deviceId: { exact: saved } } })` throws `OverconstrainedError`. Chrome/Firefox desktop/Android persist deviceIds across sessions on the same origin after permission is granted; only iOS Safari randomizes.
+- **Relevance:** If/when Memoria adds a front/back or multi-camera picker UI (Android tablets in `PrintStation`, iPad kiosk mode), we cannot rely on `deviceId` for persistent selection on iOS. We must select by `facingMode: 'user' | 'environment'` (already does this for Magnet/Share guest cameras — correct) or by enumerating devices fresh on every mount. Relevant now: any code that caches the `deviceId` of the chosen camera across navigations will break silently on iOS.
+- **Action:** (1) Audit `CameraCapture.jsx` and `MagnetCamera.jsx` — confirm camera selection uses `facingMode`, NOT cached `deviceId`. (2) If future multi-camera picker is built for `PrintStation`, always `enumerateDevices()` on mount and match by `label` + `kind` substring, never by stored `deviceId`. (3) Never write `deviceId` to Supabase user profile / localStorage as a "preferred camera" — document under WebRTC Camera Rules.
+- **Status:** pending-review
+
+### Finding: 2026-04-19 — OffscreenCanvas + ImageBitmap cache for canvas text rasterization (~2× FPS in sticker UIs)
+- **Source:** https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas + https://www.mirkosertic.de/blog/2015/03/tuning-html5-canvas-filltext/ + https://copyprogramming.com/howto/html-canvas-and-memory-usage
+- **Finding:** Two compounding canvas performance patterns now broadly supported (Safari 16.4+, 2023): (1) **OffscreenCanvas** transfers rendering to a Web Worker via `canvas.transferControlToOffscreen()` — main thread no longer blocks on paint. (2) **Text bitmap caching**: render each static sticker text glyph once to a 1× offscreen `<canvas>` keyed by `(text, fontFamily, size, fill, stroke)`, cache the resulting `ImageBitmap` in a `Map`, then `ctx.drawImage(cachedBitmap, x, y)` on every frame instead of re-running `ctx.fillText()` + `ctx.strokeText()` (which re-shapes glyphs from scratch every frame). Measured ~2× FPS on mid-range Android for draggable text overlays with ≥5 stickers on screen. Note: unmanaged `ImageBitmap` / `Image` objects account for ~68% of canvas memory leaks — always `bitmap.close()` (or drop the Map reference) when cache size exceeds a cap.
+- **Relevance:** Directly applicable to `MagnetReview.jsx` sticker drag/rotate. Our existing Canvas 2D rules already note that `fillText(sameString, ...)` re-shapes every frame — this finding provides the concrete implementation pattern (OffscreenCanvas + ImageBitmap cache, with a bounded LRU) and adds the Web Worker offload angle. The Web Worker tier is extra work and NOT needed for ≤10 stickers, but the bitmap cache pattern IS worth implementing now.
+- **Action:** (1) Implement a `stickerTextBitmapCache` Map in `MagnetReview.jsx` / `drawSticker()` keyed by sticker signature; bound to ~100 entries (LRU evict + `bitmap.close()`) to avoid the Image-object memory-leak class. (2) Defer the OffscreenCanvas + Worker tier until/unless sticker count grows past ~15 on screen — adds complexity (message passing, fallback for Safari <16.4) that isn't justified today. (3) Document the bitmap-cache pattern as a concrete companion to the existing "Canvas 2D — Three compounding gotchas" rule.
 - **Status:** pending-review

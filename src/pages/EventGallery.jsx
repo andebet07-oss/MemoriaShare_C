@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { supabase } from "@/lib/supabase";
 
 const GUEST_NAME_KEY = 'ms_guest_name';
+const THEME_KEY = 'ms_gallery_theme';
 
 // ── Module-level gate ────────────────────────────────────────────────────────
 // This variable lives OUTSIDE the React component tree and survives any
@@ -55,6 +56,15 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     if (isAdminView || _guestBookDismissed) return false;
     return !localStorage.getItem(GUEST_NAME_KEY);
   });
+  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark');
+  const isLight = theme === 'light';
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem(THEME_KEY, next);
+      return next;
+    });
+  }, []);
   const [guestName, setGuestName] = useState('');
   const [guestGreeting, setGuestGreeting] = useState('');
   const [isSavingGuest, setIsSavingGuest] = useState(false);
@@ -262,7 +272,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f0f] via-[#1a1a1a] to-[#0f0f0f] text-white" dir="rtl">
+    <div className={`min-h-screen transition-colors ${isLight ? 'bg-gradient-to-br from-white via-zinc-50 to-white text-zinc-900' : 'bg-gradient-to-br from-[#0f0f0f] via-[#1a1a1a] to-[#0f0f0f] text-white'}`} dir="rtl">
 
       {!isAdminView && g.liveNotification && (
         <RealtimeNotification
@@ -316,15 +326,17 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
         participantsCount={new Set(g.photos.map(p => p.created_by).filter(Boolean)).size}
         isOwner={g.isOwner}
         navigate={g.navigate}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <div className="py-5 text-center">
-          <p className="text-zinc-400 text-sm">
+          <p className={`text-sm ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
             {g.userUploadedCount}/{g.eventMaxPhotos} תמונות • {localStorage.getItem('ms_guest_name') || g.currentUser?.user_metadata?.display_name || g.currentUser?.full_name || "אורח"}
           </p>
           {g.isQuotaExhausted && (
-            <p className="mt-1.5 text-indigo-300 font-medium text-base flex items-center justify-center gap-1.5">
+            <p className="mt-1.5 text-indigo-400 font-medium text-base flex items-center justify-center gap-1.5">
               <Sparkles className="w-4 h-4 shrink-0" />
               איזה רגעים יפים! הגעת למכסה המקסימלית
             </p>
@@ -335,11 +347,11 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
           <div className="py-2 -mx-4 sm:-mx-6">
             <div className="flex gap-3 sm:gap-4 justify-center px-4">
               <Button onClick={() => g.handleUploadClick('camera')} disabled={g.isUploadingBatch}
-                className="bg-gradient-to-r from-white/15 to-white/10 hover:from-white/25 hover:to-white/20 text-white border border-white/20 rounded-2xl flex items-center gap-2 px-6 sm:px-8 py-4 font-semibold text-base sm:text-lg transition-all active:scale-95 shadow-lg">
+                className={`rounded-2xl flex items-center gap-2 px-6 sm:px-8 py-4 font-semibold text-base sm:text-lg transition-all active:scale-95 shadow-lg border ${isLight ? 'bg-zinc-900 hover:bg-zinc-800 text-white border-zinc-700' : 'bg-gradient-to-r from-white/15 to-white/10 hover:from-white/25 hover:to-white/20 text-white border-white/20'}`}>
                 <Camera className="w-5 h-5" /> צלמו עכשיו
               </Button>
               <Button onClick={() => g.handleUploadClick('gallery')} disabled={g.isUploadingBatch}
-                className="bg-gradient-to-r from-white/15 to-white/10 hover:from-white/25 hover:to-white/20 text-white border border-white/20 rounded-2xl flex items-center gap-2 px-6 sm:px-8 py-4 font-semibold text-base sm:text-lg transition-all active:scale-95 shadow-lg">
+                className={`rounded-2xl flex items-center gap-2 px-6 sm:px-8 py-4 font-semibold text-base sm:text-lg transition-all active:scale-95 shadow-lg border ${isLight ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300' : 'bg-gradient-to-r from-white/15 to-white/10 hover:from-white/25 hover:to-white/20 text-white border-white/20'}`}>
                 <Upload className="w-5 h-5" /> העלו מהגלריה
               </Button>
             </div>
@@ -374,38 +386,28 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
             ) : (
               /* ── Guest view ──────────────────────────────────────────────── */
               <>
-                {/* Instagram-style tab bar — only when public gallery is ON */}
-                {g.event.auto_publish_guest_photos && (
-                  <div className="flex border-b border-white/10 mb-0" dir="rtl">
-                    <button
-                      onClick={() => g.setActiveTab('my-photos')}
-                      className={`flex-1 py-3 text-sm font-semibold transition-colors relative ${g.activeTab === 'my-photos' ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
-                    >
-                      התמונות שלי
-                      {g.myPhotos.length > 0 && <span className="mr-1.5 text-xs text-white/50">({g.myPhotos.length})</span>}
-                      {g.activeTab === 'my-photos' && <span className="absolute bottom-0 right-0 left-0 h-[2px] bg-white rounded-full" />}
-                    </button>
-                    <button
-                      onClick={() => g.setActiveTab('shared')}
-                      className={`flex-1 py-3 text-sm font-semibold transition-colors relative ${g.activeTab === 'shared' ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
-                    >
-                      אלבום האירוע
-                      {g.sharedPhotos.length > 0 && <span className="mr-1.5 text-xs text-white/50">({g.sharedPhotos.length})</span>}
-                      {g.activeTab === 'shared' && <span className="absolute bottom-0 right-0 left-0 h-[2px] bg-white rounded-full" />}
-                    </button>
-                  </div>
-                )}
+                {/* Instagram-style tab bar — always visible */}
+                <div className={`flex border-b mb-0 ${isLight ? 'border-zinc-200' : 'border-white/10'}`} dir="rtl">
+                  <button
+                    onClick={() => g.setActiveTab('my-photos')}
+                    className={`flex-1 py-3 text-sm font-semibold transition-colors relative ${g.activeTab === 'my-photos' ? (isLight ? 'text-zinc-900' : 'text-white') : (isLight ? 'text-zinc-400 hover:text-zinc-700' : 'text-white/40 hover:text-white/70')}`}
+                  >
+                    התמונות שלי
+                    {g.myPhotos.length > 0 && <span className={`mr-1.5 text-xs ${isLight ? 'text-zinc-400' : 'text-white/50'}`}>({g.myPhotos.length})</span>}
+                    {g.activeTab === 'my-photos' && <span className={`absolute bottom-0 right-0 left-0 h-[2px] rounded-full ${isLight ? 'bg-zinc-900' : 'bg-white'}`} />}
+                  </button>
+                  <button
+                    onClick={() => g.setActiveTab('shared')}
+                    className={`flex-1 py-3 text-sm font-semibold transition-colors relative ${g.activeTab === 'shared' ? (isLight ? 'text-zinc-900' : 'text-white') : (isLight ? 'text-zinc-400 hover:text-zinc-700' : 'text-white/40 hover:text-white/70')}`}
+                  >
+                    גלריה ציבורית
+                    {g.event.auto_publish_guest_photos && g.sharedPhotos.length > 0 && <span className={`mr-1.5 text-xs ${isLight ? 'text-zinc-400' : 'text-white/50'}`}>({g.sharedPhotos.length})</span>}
+                    {g.activeTab === 'shared' && <span className={`absolute bottom-0 right-0 left-0 h-[2px] rounded-full ${isLight ? 'bg-zinc-900' : 'bg-white'}`} />}
+                  </button>
+                </div>
 
-                {/* Private gallery banner */}
-                {!g.event.auto_publish_guest_photos && (
-                  <div className="flex items-center gap-2 mx-4 mb-4 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/50 text-sm">
-                    <EyeOff className="w-4 h-4 shrink-0" />
-                    <span>הגלריה הציבורית מושבתת. תוכל לראות רק את התמונות שלך.</span>
-                  </div>
-                )}
-
-                {/* My Photos */}
-                {(g.activeTab === 'my-photos' || !g.event.auto_publish_guest_photos) && (
+                {/* My Photos tab */}
+                {g.activeTab === 'my-photos' && (
                   g.myPhotos.length > 0 ? (
                     <PhotoGrid displayedPhotos={g.myPhotos} setSelectedIndex={g.setSelectedIndex}
                       isAdminView={false} confirmDeleteId={g.confirmDeleteId} setConfirmDeleteId={g.setConfirmDeleteId}
@@ -419,9 +421,14 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                   )
                 )}
 
-                {/* Event Album */}
-                {g.activeTab === 'shared' && g.event.auto_publish_guest_photos && (
-                  g.sharedPhotos.length > 0 ? (
+                {/* Public Gallery tab */}
+                {g.activeTab === 'shared' && (
+                  !g.event.auto_publish_guest_photos ? (
+                    <div className="flex items-center gap-2 mx-4 mt-4 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/50 text-sm">
+                      <EyeOff className="w-4 h-4 shrink-0" />
+                      <span>הגלריה הציבורית מושבתת. תוכל לראות רק את התמונות שלך.</span>
+                    </div>
+                  ) : g.sharedPhotos.length > 0 ? (
                     <PhotoGrid displayedPhotos={g.sharedPhotos} setSelectedIndex={g.setSelectedIndex}
                       isAdminView={false} confirmDeleteId={g.confirmDeleteId} setConfirmDeleteId={g.setConfirmDeleteId}
                       deletingId={g.deletingId} handleAdminDelete={g.handleAdminDelete}
@@ -461,13 +468,13 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
       {!isAdminView && !g.isQuotaExhausted && !g.showCamera && g.pendingPhotos.length === 0 && g.selectedIndex === null && (
         <div className={`fixed left-1/2 -translate-x-1/2 z-40 transition-all duration-500 ${g.showFAB ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'}`}
           style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}>
-          <div className="bg-black/70 backdrop-blur-xl border border-white/20 p-1.5 rounded-[24px] flex items-center gap-1.5 shadow-[0_20px_40px_rgba(0,0,0,0.8)]">
+          <div className={`backdrop-blur-xl p-1.5 rounded-[24px] flex items-center gap-1.5 shadow-[0_20px_40px_rgba(0,0,0,0.35)] border ${isLight ? 'bg-white/90 border-zinc-200' : 'bg-black/70 border-white/20'}`}>
             <Button onClick={() => g.handleUploadClick('camera')} disabled={g.isUploadingBatch}
-              className="bg-white text-black hover:bg-gray-200 rounded-[20px] px-6 py-3 h-auto text-sm font-bold flex items-center gap-2 active:scale-95 transition-all shadow-lg">
+              className={`rounded-[20px] px-6 py-3 h-auto text-sm font-bold flex items-center gap-2 active:scale-95 transition-all shadow-lg ${isLight ? 'bg-zinc-900 text-white hover:bg-zinc-800' : 'bg-white text-black hover:bg-gray-200'}`}>
               <Camera className="w-5 h-5" /> צילום
             </Button>
             <Button onClick={() => g.handleUploadClick('gallery')} disabled={g.isUploadingBatch} variant="ghost"
-              className="text-white hover:bg-white/10 rounded-[20px] px-5 py-3 h-auto text-sm font-bold flex items-center gap-2 active:scale-95 transition-all">
+              className={`rounded-[20px] px-5 py-3 h-auto text-sm font-bold flex items-center gap-2 active:scale-95 transition-all ${isLight ? 'text-zinc-700 hover:bg-zinc-100' : 'text-white hover:bg-white/10'}`}>
               <Upload className="w-5 h-5" /> גלריה
             </Button>
           </div>

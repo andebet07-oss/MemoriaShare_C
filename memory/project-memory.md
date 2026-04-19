@@ -1,22 +1,22 @@
 ---
 type: project-memory
-updated: 2026-04-19T06:00Z
+updated: 2026-04-19T22:00Z
 ---
 
 # Project Memory — Active State
 
 ## Build Status
 - Branch: `main`
-- Last commit: `601e1c7` (2026-04-18 15:37 +0300) — MagnetReview preview composite + cover image upload
+- Last commit: `18c5966` (2026-04-19 21:53 +0300) — CreateMagnetEvent + MagnetLead fully de-violet-ed (sub-brand narrowed)
 - Build: ✓ implicit green via Vercel auto-deploy on main push
 - Deployed: https://memoriashare.com (Vercel auto-deploy on push)
 
-## Brand Status (Locked 2026-04-17)
-- POV.camera cool-dark / indigo aesthetic — canonical across MemoriaShare shell
+## Brand Status (Locked 2026-04-17, refined 2026-04-19)
+- POV.camera cool-dark / indigo aesthetic — canonical across MemoriaShare shell AND consumer-facing Magnet entry pages
 - Background `#1e1e1e` (cool-900), primary `#7c86e1` (indigo-500), text `#fcfcfe`
-- Violet `#7c3aed` preserved as MemoriaMagnet sub-brand accent
+- **Violet `#7c3aed` sub-brand NARROWED (2026-04-19):** retained ONLY on admin back-office + in-event operational surfaces (AdminShell, AdminOverview, AdminEventsList, LeadsPanel, PrintStation, MagnetEventDashboard, MagnetCamera, MagnetGuestPage, MagnetReview). Consumer intake pages MagnetLead + CreateMagnetEvent are now indigo/primary. Verified: `grep -c violet-` returns 0 for both.
 - Full brand spec: see `memory/long-term-memory.md` §Design Language
-- 4 pages explicitly aligned per user request: CreateEvent, CreateMagnetEvent, MyEvents (/host), AdminShell+AdminOverview
+- Shadow utility: `shadow-indigo-soft` = `0 4px 20px -4px rgba(124,134,225,0.25)` (tailwind.config.js:128)
 
 ---
 
@@ -64,6 +64,8 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | File | Date | Summary |
 |------|------|---------|
+| `src/pages/CreateMagnetEvent.jsx` | 2026-04-19 | Full violet→indigo/primary token sweep (0 violet-* left). Calendar, FrameThumbnail ring + "חדש" badge, FramePreviewModal button, success card, progress bar glow, hero radial glow, all step labels (01–04), focus rings, quota pills, frame-tab active state, "ללא מסגרת" chip |
+| `src/pages/MagnetLead.jsx` | 2026-04-19 | Full violet→indigo/primary token sweep (0 violet-* left). Design-mode ring, inline calendar, progress bar, upload CTA, design-mode toggle, submit button, success check-circle. GUEST_OPTIONS now uses segmented-control pattern (parent `rounded-2xl bg-secondary border border-border`; selected children `bg-transparent text-primary border-primary shadow-indigo-soft`) |
 | `src/components/magnet/MagnetReview.jsx` | 2026-04-18 | Preview composite useEffect bakes photo+frame+label to `previewUrl`; `photoFrac` state limits sticker drag zone; submit `drawSticker` now passes `photoH` (not `canvas.height`) so stickers don't drift onto label strip |
 | `src/components/memoriaService.jsx` | 2026-04-18 | NEW `storage.uploadCoverImage(file, eventId)` — direct fetch to `covers/{eventId}/cover.{ext}` with `x-upsert: true` |
 | `src/pages/CreateMagnetEvent.jsx` | 2026-04-18 | Optional `coverImageFile` upload in step 1 (name); dashed violet box → thumbnail preview; writes URL to `events.cover_image` on submit |

@@ -1,10 +1,50 @@
 ---
 type: recent-memory
-updated: 2026-04-18T13:00Z
+updated: 2026-04-19T22:00Z
 horizon: 48 hours
 ---
 
 # Recent Memory (Last 48 Hours)
+
+## Session 2026-04-19 — Magnet Sub-brand Narrowing (violet → indigo on consumer entry pages)
+
+### Commit
+- `18c5966` update: pov upgradeStikers2 (+276/-139 across 6 files, 2 of them src)
+
+### Decision A — `CreateMagnetEvent.jsx` fully de-violet-ed
+Every `bg-violet-*`, `text-violet-*`, `border-violet-*`, `ring-violet-*`, `shadow-[...violet...]`, and raw `rgba(124,58,237,...)` / `rgba(139,92,246,...)` replaced with semantic primary / indigo-400 / `shadow-indigo-soft` / `rgba(124,134,225,...)`. Comment header updated: *"violet accent for Magnet branding"* → *"indigo accent"*. Includes: `InlineCalendar` selected day, `FrameThumbnail` ring + "חדש" badge, `FramePreviewModal` confirm button, success screen check-circle + "Magnet · מוכן" label, progress bar + glow, radial hero glow, step labels (01–04), all focus rings, quota pill buttons, frame-tab active state, "ללא מסגרת" chip.
+
+### Decision B — `MagnetLead.jsx` fully de-violet-ed
+Same sweep: design-mode ring, inline calendar, progress bar, upload CTA, design-mode toggle, all input focus rings, submit button, success screen check circle. The "העלאה" upload button now uses `bg-primary` with `shadow-indigo-soft`.
+
+### Decision C — GUEST_OPTIONS switched to segmented-control pattern
+Replaced the 4-button grid (each with its own selected/unselected bg) with a parent container + transparent-children pattern:
+```jsx
+<div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary border border-border">
+  {GUEST_OPTIONS.map(opt => (
+    <button className={selected
+      ? 'bg-transparent text-primary border-primary shadow-indigo-soft'
+      : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground/80'}>
+  ))}
+</div>
+```
+Selected child sits transparent against the container bg and is marked only by its primary border + soft indigo shadow — cleaner native-iOS feel.
+
+### Decision D — Brand rule REFINED (violet sub-brand narrowed)
+Previously: *"Violet `#7c3aed` preserved as MemoriaMagnet sub-brand accent — used inside `AdminShell`, `CreateMagnetEvent`, `MagnetReview`, `PrintStation`, Magnet KPI cards."* As of this commit, **violet is retained only on admin back-office + in-event operational surfaces** (AdminShell tabs, AdminOverview, AdminEventsList, LeadsPanel, PrintStation, MagnetEventDashboard, MagnetCamera, MagnetGuestPage, MagnetReview). **Consumer-facing Magnet intake** (MagnetLead = public lead form, CreateMagnetEvent = admin wizard shown on consumer shell) now uses indigo/primary like the rest of the Share flow. Verified by `grep -c violet-` returning 0 for both.
+
+### Files changed
+- `src/pages/CreateMagnetEvent.jsx` — 0 violet tokens remaining (+39/-39)
+- `src/pages/MagnetLead.jsx` — 0 violet tokens remaining + segmented-control for GUEST_OPTIONS (+34/-31)
+- memory/*.md — refreshed timestamps (prior session)
+
+### Tech debt unchanged
+- `linked_event_id` migration still missing (HIGH)
+- Duplicate `compressImage` in MagnetLead still present
+- Canvas fonts still not gated on `document.fonts.ready`
+- `events.cover_image` written on create but not yet surfaced on guest landing backgrounds
+
+---
 
 ## Session 2026-04-18 — Magnet Cover Image + MagnetReview Preview Composite
 
@@ -20,7 +60,7 @@ Fix: added a `useEffect` that bakes **photo + `drawFrame()` result + label area*
 Discovered while wiring the composite: at submit time, `drawSticker(ctx, s, canvas.width, canvas.height, svgImg)` was passing `totalH` (photo + label), but sticker `s.x / s.y` are stored relative to the photo area only. Result: stickers drifted downward on the final export. Fix: `drawSticker(ctx, s, photoW, photoH, svgImg)` — height arg is the photo height, never the total canvas height.
 
 ### Decision C — Optional cover image upload on CreateMagnetEvent step 1
-Added a file picker to the admin wizard's "name" step: "תמונת רקע לדף הנחיתה (אופציונלי)". Dashed violet border box → replaces with thumbnail + dark scrim + "לחץ להחלפה" overlay after selection. Form state: `coverImageFile` + `coverImagePreview` (object URL).
+Added a file picker to the admin wizard's "name" step: "תמונת רקע לדף הנחיתה (אופציונלי)". Dashed border box (now primary/indigo after 2026-04-19 sweep) → replaces with thumbnail + dark scrim + "לחץ להחלפה" overlay after selection. Form state: `coverImageFile` + `coverImagePreview` (object URL).
 
 ### Decision D — new `memoriaService.storage.uploadCoverImage(file, eventId)`
 Uploads to `covers/{eventId}/cover.{ext}` in the `photos` bucket via direct `fetch` with `Authorization: Bearer {jwt}` + `apikey` + `x-upsert: true` (replace-in-place so re-upload doesn't orphan old file). Returns `{ file_url, path }`. On submit, writes `file_url` to `events.cover_image` column (column already in `CLEAN_RESET_SCHEMA.sql`, verified).
@@ -33,14 +73,6 @@ Uploads to `covers/{eventId}/cover.{ext}` in the `photos` bucket via direct `fet
 - `src/components/magnet/MagnetReview.jsx` — preview composite useEffect + photoFrac state + drawSticker arg fix (+54/-18)
 - `src/components/memoriaService.jsx` — `uploadCoverImage()` added (+24)
 - `src/pages/CreateMagnetEvent.jsx` — coverImageFile form field + upload UI + submit path (+32/-4)
-
-### Tech debt closed
-- "Post-sticker-v2 build verification" resolved — commit shipped clean to main / Vercel auto-deploy
-
-### Tech debt unchanged
-- `linked_event_id` migration still missing (HIGH)
-- Duplicate `compressImage` in MagnetLead still present
-- Canvas fonts still not gated on `document.fonts.ready`
 
 ---
 
@@ -56,19 +88,17 @@ Uploads to `covers/{eventId}/cover.{ext}` in the `photos` bucket via direct `fet
 Added `coverImage`, `imageTransform`, `isDesignMode`, `onImageTransformChange` props to `MagnetPhoneMockup`. Same pinch/drag flow that CreateEvent uses (initial scale from natural dims vs screen dims; min-scale clamp). Local `compressImage()` helper mirrors CreateEvent — **tech debt**: should import from `@/functions/processImage` which MagnetReview already uses.
 
 ### Decision B — Sticker System v2 (Y2K / Pinterest)
-Replaced `badge/stamp/emoji/text` with 5 types:
+Replaced `badge/stamp/emoji/text` with 5 types (see long-term-memory §Sticker System v2 for full detail):
 - `svg` — inline SVG from new `svgStickers.js` (base64 data URL → `Image` cache → `ctx.drawImage`)
 - `script-text` — Great Vibes / Parisienne cursive
 - `retro-text` — Bebas Neue / Limelight bold caps in `#facc15`
 - `handwritten-text` — Caveat / Patrick Hand 700
 - `editorial-text` — Abril Fatface / Playfair Display
 
-`svgStickers.js` (NEW): 24 stickers — heart, star, disco, evilEye, lips, camera, eiffel, butterfly, cherry, flower, crown, bow, sparkle, sun, moon, coffee, strawberry, cassette, rose, hebrewChai, starOfDavid. 64×64 viewBox, white 3px outer stroke with `paint-order="stroke"` for die-cut look, rendered at `w * 0.18`.
-
-`drawSticker()` in MagnetReview extended with per-type renderers; accepts a pre-loaded SVG Image cache via `svgImgCache` ref + `ensureSvgImage()` helper (Promise-based, cached by `svgKey`).
+`svgStickers.js` (NEW): 24 stickers with 64×64 viewBox, white 3px outer stroke + `paint-order="stroke"` for die-cut look, rendered at `w * 0.18`. `drawSticker()` in MagnetReview extended with per-type renderers; accepts a pre-loaded SVG Image cache via `svgImgCache` ref + `ensureSvgImage()` helper (Promise-based, cached by `svgKey`).
 
 ### Decision C — FramePicker removed, inlined
-`src/components/magnet/FramePicker.jsx` **deleted**. Frame selection lives inside `CreateMagnetEvent.jsx` as `FrameThumbnail`. `THUMB_W` 88→108px (better touch targets). `isNew: true` frames get "חדש" violet badge.
+`src/components/magnet/FramePicker.jsx` **deleted**. Frame selection lives inside `CreateMagnetEvent.jsx` as `FrameThumbnail`. `THUMB_W` 88→108px. `isNew: true` frames get "חדש" badge (now primary/indigo after 2026-04-19 sweep).
 
 ### Decision D — 3 new wedding frames (`framePacks.js` +285 lines)
 - `wedding-polaroid-tape` — white polaroid + tan tape strips (rotated ±0.18 rad), Caveat cursive name
@@ -77,23 +107,4 @@ Replaced `badge/stamp/emoji/text` with 5 types:
 
 ---
 
-## Session 2026-04-17 AM — POV Brand Pivot LOCKED IN
-
-### Decision
-Efi explicitly locked the POV.camera cool-dark / indigo brand as canonical. Prior violet-heavy brand retired from platform shell; violet survives only as MemoriaMagnet sub-brand accent.
-
-### Brand (canonical)
-- Background: `#1e1e1e` (cool-900) + gradient to cool-950
-- Primary accent: `#7c86e1` (indigo-500)
-- Text: `#fcfcfe` (cool-50)
-- Muted: `#b4b4b4`
-- Display serif: Playfair Display
-- Body: Heebo (Hebrew)
-- Micro-labels: Montserrat `tracking-[0.3em] uppercase text-[10px]`
-- Sub-brand: Violet `#7c3aed` — MemoriaMagnet UI only
-
-### Root cause fix — silvery home page
-No `.dark` ancestor existed in the app, so semantic tokens (`bg-background`, `text-foreground`, `border-border`) resolved to the **light** palette. Gradient `from-background via-cool-900 to-background` rendered as `#fafafa → #1e1e1e → #fafafa`. Fix: add `dark` class to every page root that expects dark appearance; use explicit cool-tone gradient `from-cool-950 via-cool-900 to-cool-950`.
-
-### Pages aligned
-Home + HeroSection + Features + HowItWorks, CreateEvent, MyEvents (/host), CreateMagnetEvent, AdminShell, AdminOverview, Layout (`.luxury-button` + `.premium-submit-button` cool-neutral rewrite), CardElegant, framePacks UI chrome, PrintableShareCards (`קשת זהב` → `קשת אינדיגו`), LeadsPanel (contacted amber → violet).
+*Earlier sessions (2026-04-17 AM "POV Brand Pivot LOCKED IN", 2026-04-16 "silvery home bug") archived to long-term-memory §Design Language and §Common Pitfalls.*
