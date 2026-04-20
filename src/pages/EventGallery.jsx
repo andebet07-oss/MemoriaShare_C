@@ -381,6 +381,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                 {/* Instagram-style tab bar — always visible */}
                 <div role="tablist" className={`flex border-b mb-0 ${isLight ? 'border-zinc-200' : 'border-white/10'}`} dir="rtl">
                   <button
+                    id="tab-btn-my-photos"
                     role="tab"
                     aria-selected={g.activeTab === 'my-photos'}
                     aria-controls="tab-my-photos"
@@ -392,6 +393,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                     {g.activeTab === 'my-photos' && <span className={`absolute bottom-0 right-0 left-0 h-[2px] rounded-full ${isLight ? 'bg-zinc-900' : 'bg-white'}`} />}
                   </button>
                   <button
+                    id="tab-btn-shared"
                     role="tab"
                     aria-selected={g.activeTab === 'shared'}
                     aria-controls="tab-shared"
@@ -406,40 +408,44 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
 
                 {/* My Photos tab */}
                 {g.activeTab === 'my-photos' && (
-                  g.myPhotos.length > 0 ? (
-                    <PhotoGrid displayedPhotos={g.myPhotos} setSelectedIndex={g.setSelectedIndex}
-                      isAdminView={false} confirmDeleteId={g.confirmDeleteId} setConfirmDeleteId={g.setConfirmDeleteId}
-                      deletingId={g.deletingId} handleAdminDelete={g.handleAdminDelete}
-                      handleGuestDeletePhoto={g.handleGuestDeletePhoto} handleRequestDeletion={g.handleRequestDeletion}
-                      currentUser={g.currentUser} getDisplayUploaderName={g.getDisplayUploaderName}
-                      hasMore={false} isFetchingMore={false} fetchNextPage={undefined} />
-                  ) : (
-                    <EmptyState isAdminView={false} onUpload={g.handleUploadClick} disabled={g.isUploadingBatch}
-                      title="עדיין לא העלית תמונות" subtitle="צלמו או העלו תמונות מהאירוע — הן יופיעו כאן" />
-                  )
+                  <div id="tab-my-photos" role="tabpanel" aria-labelledby="tab-btn-my-photos">
+                    {g.myPhotos.length > 0 ? (
+                      <PhotoGrid displayedPhotos={g.myPhotos} setSelectedIndex={g.setSelectedIndex}
+                        isAdminView={false} confirmDeleteId={g.confirmDeleteId} setConfirmDeleteId={g.setConfirmDeleteId}
+                        deletingId={g.deletingId} handleAdminDelete={g.handleAdminDelete}
+                        handleGuestDeletePhoto={g.handleGuestDeletePhoto} handleRequestDeletion={g.handleRequestDeletion}
+                        currentUser={g.currentUser} getDisplayUploaderName={g.getDisplayUploaderName}
+                        hasMore={false} isFetchingMore={false} fetchNextPage={undefined} />
+                    ) : (
+                      <EmptyState isAdminView={false} onUpload={g.handleUploadClick} disabled={g.isUploadingBatch}
+                        title="עדיין לא העלית תמונות" subtitle="צלמו או העלו תמונות מהאירוע — הן יופיעו כאן" />
+                    )}
+                  </div>
                 )}
 
                 {/* Public Gallery tab */}
                 {g.activeTab === 'shared' && (
-                  !g.event.auto_publish_guest_photos ? (
-                    <div className="flex items-center gap-2 mx-4 mt-4 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/50 text-sm">
-                      <EyeOff className="w-4 h-4 shrink-0" />
-                      <span>הגלריה הציבורית מושבתת. תוכל לראות רק את התמונות שלך.</span>
-                    </div>
-                  ) : g.sharedPhotos.length > 0 ? (
-                    <PhotoGrid displayedPhotos={g.sharedPhotos} setSelectedIndex={g.setSelectedIndex}
-                      isAdminView={false} confirmDeleteId={g.confirmDeleteId} setConfirmDeleteId={g.setConfirmDeleteId}
-                      deletingId={g.deletingId} handleAdminDelete={g.handleAdminDelete}
-                      handleGuestDeletePhoto={g.handleGuestDeletePhoto} handleRequestDeletion={g.handleRequestDeletion}
-                      currentUser={g.currentUser} getDisplayUploaderName={g.getDisplayUploaderName}
-                      hasMore={g.sharedHasMore} isFetchingMore={g.isFetchingMore} fetchNextPage={g.fetchNextPage} />
-                  ) : (
-                    <div className="text-center py-24 px-4">
-                      <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                      <h3 className="text-xl font-bold text-white mb-2">עדיין אין תמונות בגלריה</h3>
-                      <p className="text-muted-foreground text-sm">תמונות שיאושרו על ידי מנהל האירוע יופיעו כאן</p>
-                    </div>
-                  )
+                  <div id="tab-shared" role="tabpanel" aria-labelledby="tab-btn-shared">
+                    {!g.event.auto_publish_guest_photos ? (
+                      <div className="flex items-center gap-2 mx-4 mt-4 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/50 text-sm">
+                        <EyeOff className="w-4 h-4 shrink-0" />
+                        <span>הגלריה הציבורית מושבתת. תוכל לראות רק את התמונות שלך.</span>
+                      </div>
+                    ) : g.sharedPhotos.length > 0 ? (
+                      <PhotoGrid displayedPhotos={g.sharedPhotos} setSelectedIndex={g.setSelectedIndex}
+                        isAdminView={false} confirmDeleteId={g.confirmDeleteId} setConfirmDeleteId={g.setConfirmDeleteId}
+                        deletingId={g.deletingId} handleAdminDelete={g.handleAdminDelete}
+                        handleGuestDeletePhoto={g.handleGuestDeletePhoto} handleRequestDeletion={g.handleRequestDeletion}
+                        currentUser={g.currentUser} getDisplayUploaderName={g.getDisplayUploaderName}
+                        hasMore={g.sharedHasMore} isFetchingMore={g.isFetchingMore} fetchNextPage={g.fetchNextPage} />
+                    ) : (
+                      <div className="text-center py-24 px-4">
+                        <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                        <h3 className="text-xl font-bold text-white mb-2">עדיין אין תמונות בגלריה</h3>
+                        <p className="text-muted-foreground text-sm">תמונות שיאושרו על ידי מנהל האירוע יופיעו כאן</p>
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             )}
