@@ -56,7 +56,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
     if (mode !== 'camera' || camFailed) return;
     startCamera();
     return stopCamera;
-  }, [isFront, mode]); // eslint-disable-line
+  }, [isFront, mode]);
 
   // F14: Escape to close
   useEffect(() => {
@@ -74,7 +74,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
       window.removeEventListener('orientationchange', fn);
       screen.orientation?.removeEventListener?.('change', fn);
     };
-  }, []); // eslint-disable-line
+  }, []);
 
   // ── Camera operations ──────────────────────────────────────────────────────────
   async function startCamera() {
