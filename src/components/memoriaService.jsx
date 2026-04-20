@@ -523,6 +523,71 @@ const memoriaService = {
     },
   },
 
+  frameMeta: {
+    /** Fetch all rows — used by admin FramesLibrary. */
+    list: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('frames_meta')
+          .select('*');
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [frameMeta.list]: Failed to fetch frames_meta', error);
+        throw error;
+      }
+    },
+
+    /** Update a single frame row; sets updated_at + updated_by automatically via DB trigger. */
+    update: async (frameId, updates) => {
+      try {
+        const { data, error } = await supabase
+          .from('frames_meta')
+          .update({ ...updates, updated_at: new Date().toISOString() })
+          .eq('frame_id', frameId)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [frameMeta.update]: Failed to update frame', frameId, error);
+        throw error;
+      }
+    },
+
+    /** Fetch a single row by frame_id — used for guest-path approved check. */
+    getById: async (frameId) => {
+      try {
+        const { data, error } = await supabase
+          .from('frames_meta')
+          .select('frame_id, status')
+          .eq('frame_id', frameId)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [frameMeta.getById]: Failed for', frameId, error);
+        throw error;
+      }
+    },
+
+    /** Upsert — used by moderation queue to promote draft frames. */
+    upsert: async (row) => {
+      try {
+        const { data, error } = await supabase
+          .from('frames_meta')
+          .upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: 'frame_id' })
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [frameMeta.upsert]: Failed to upsert frame', row?.frame_id, error);
+        throw error;
+      }
+    },
+  },
+
 };
 
 export default memoriaService;

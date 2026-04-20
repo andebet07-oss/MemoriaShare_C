@@ -6,6 +6,8 @@ const TABS = [
   { to: '/admin',                  label: 'סקירה',        end: true },
   { to: '/admin/events/share',     label: 'אירועי שיתוף' },
   { to: '/admin/events/magnet',    label: 'אירועי מגנט'  },
+  { to: '/admin/frames',           label: 'מסגרות'        },
+  { to: '/admin/frames/moderation', label: 'מודרציה'      },
   { to: '/admin/leads',            label: 'לידים'         },
   { to: '/admin/users',            label: 'משתמשים'       },
 ];

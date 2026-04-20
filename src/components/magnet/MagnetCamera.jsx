@@ -168,17 +168,25 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
       later(() => setShutterFx(false), 150);
       if (needFrontFlash) later(() => setFrontFlash(false), 200);
 
-      // Capture to canvas
+      // Capture to canvas — center-crop to 3:4 to match viewfinder (WYSIWYG)
+      const VW = v.videoWidth, VH = v.videoHeight;
+      const TARGET_AR = 3 / 4;
+      let sx = 0, sy = 0, sw = VW, sh = VH;
+      if (VW / VH > TARGET_AR) {
+        sw = Math.round(VH * TARGET_AR);
+        sx = Math.round((VW - sw) / 2);
+      } else if (VW / VH < TARGET_AR) {
+        sh = Math.round(VW / TARGET_AR);
+        sy = Math.round((VH - sh) / 2);
+      }
       const c = canvasRef.current;
-      c.width = v.videoWidth; c.height = v.videoHeight;
+      c.width = sw; c.height = sh;
       const ctx = c.getContext('2d');
       ctx.save();
       if (isFront) { ctx.translate(c.width, 0); ctx.scale(-1, 1); }
       // F05: prefer ctx.filter (GPU, near-zero cost) over pixel-loop
-      if (vintage && typeof ctx.filter !== 'undefined') {
-        ctx.filter = VINTAGE_FILTER;
-      }
-      ctx.drawImage(v, 0, 0);
+      if (vintage && typeof ctx.filter !== 'undefined') ctx.filter = VINTAGE_FILTER;
+      ctx.drawImage(v, sx, sy, sw, sh, 0, 0, sw, sh);
       ctx.restore();
       // F05: pixel-loop only as fallback for browsers without ctx.filter
       if (vintage && typeof ctx.filter === 'undefined') {
@@ -224,8 +232,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
         הדפדפן הפנימי של אינסטגרם / פייסבוק לא תומך בגישה ישירה למצלמה.
       </p>
       <button onClick={() => fileInputRef.current?.click()}
-        className="flex items-center gap-2 px-7 py-4 text-[#0a0a0e] font-black text-lg rounded-2xl active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
-        style={{ background: 'linear-gradient(145deg,#c2f449,#a3e635)', boxShadow: '0 0 28px rgba(163,230,53,0.4)' }}>
+        className="flex items-center gap-2 px-7 py-4 text-white font-black text-lg rounded-2xl active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+        style={{ background: 'linear-gradient(145deg,#8c97e6,#7c86e1)', boxShadow: '0 0 28px rgba(124,134,225,0.4)' }}>
         <Upload className="w-5 h-5" /> צלמו תמונה
       </button>
     </div>
@@ -355,7 +363,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
             className={`relative w-20 h-20 flex items-center justify-center active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-4 focus-visible:ring-offset-black ${isDisabled ? 'opacity-25' : ''}`}>
             <div className="absolute inset-0 rounded-full" style={{ border: '3.5px solid rgba(255,255,255,0.7)', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }} />
             <div className="w-[61px] h-[61px] rounded-full"
-              style={{ background: loading ? '#374151' : 'linear-gradient(145deg, #caff4a, #a3e635)', boxShadow: loading ? 'none' : '0 0 30px rgba(163,230,53,0.5), 0 3px 10px rgba(0,0,0,0.6), inset 0 1.5px 0 rgba(255,255,255,0.4)' }} />
+              style={{ background: loading ? '#374151' : 'linear-gradient(145deg, #8c97e6, #7c86e1)', boxShadow: loading ? 'none' : '0 0 30px rgba(124,134,225,0.5), 0 3px 10px rgba(0,0,0,0.6), inset 0 1.5px 0 rgba(255,255,255,0.4)' }} />
             {loading && <Loader2 className="absolute w-5 h-5 text-white/60 animate-spin" />}
           </button>
 

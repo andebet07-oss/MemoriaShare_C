@@ -32,6 +32,8 @@ import AdminDashboard       from '@/pages/AdminDashboard';
 import CreateMagnetEvent    from '@/pages/CreateMagnetEvent';
 import MagnetEventDashboard from '@/pages/MagnetEventDashboard';
 import AdminUsers           from '@/pages/AdminUsers';
+import FramesLibrary           from '@/pages/admin/FramesLibrary';
+import FramesModerationQueue  from '@/pages/admin/FramesModerationQueue';
 
 // Admin tab content
 import AdminOverview    from '@/components/admin/AdminOverview';
@@ -110,6 +112,8 @@ const AuthenticatedApp = () => {
           <Route path="events/magnet"         element={<AdminEventsList type="magnet" />} />
           <Route path="events/magnet/create"  element={<CreateMagnetEvent />} />
           <Route path="events/magnet/:eventId" element={<MagnetEventDashboard />} />
+          <Route path="frames"                element={<FramesLibrary />} />
+          <Route path="frames/moderation"    element={<FramesModerationQueue />} />
           <Route path="leads"                 element={<LeadsPanel />} />
           <Route path="users"                 element={<AdminUsers />} />
         </Route>

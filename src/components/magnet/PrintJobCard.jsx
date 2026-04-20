@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Printer, CheckCircle2, X, Clock, Loader2 } from 'lucide-react';
+import { Printer, CheckCircle2, X, Loader2 } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import { applyOverlayFrame } from '@/functions/applyOverlayFrame';
 

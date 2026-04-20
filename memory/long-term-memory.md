@@ -1,6 +1,6 @@
 ---
 type: long-term-memory
-updated: 2026-04-20T18:00Z
+updated: 2026-04-20T22:00Z
 ---
 
 # Long-Term Memory — Patterns & Distilled Facts
@@ -51,8 +51,9 @@ The prior violet-heavy palette was retired. Aesthetic inspiration: POV.camera �
 - Without `.dark` ancestor, `bg-background` renders as `#fafafa` (silvery), not dark — this was the root cause of the 2026-04-16 home-page contrast bug
 
 ### Sub-brand — MemoriaMagnet (Admin Back-office / Operational Surfaces)
-- **Violet `#7c3aed` / `#a78bfa`** is retained as the MemoriaMagnet sub-brand accent — scope narrowed 2026-04-19.
-- **In-scope (still violet):** `AdminShell` tabs, `AdminOverview`, `AdminEventsList`, `LeadsPanel` (admin status chips), `PrintStation`, `MagnetEventDashboard`, `MagnetCamera` (in-event camera chrome), `MagnetGuestPage`, `MagnetReview` (canvas label strip / chrome).
+- **Violet `#7c3aed` / `#a78bfa`** is retained as the MemoriaMagnet sub-brand accent — scope narrowed 2026-04-19, softened further 2026-04-20.
+- **In-scope (still violet):** `AdminShell` tabs, `AdminOverview`, `AdminEventsList`, `LeadsPanel` (admin status chips), `PrintStation`, `MagnetEventDashboard`, `MagnetCamera` (in-event camera chrome), `MagnetReview` (canvas label strip / chrome).
+- **Mixed / under review:** `MagnetGuestPage` — the header "Magnet Premium" violet badge (`bg-violet-500/20 border-violet-500/30 text-violet-300`) was removed in commit `96dbbbe` (2026-04-20) in favor of neutral glass-morphism (`white/10`, `white/7`). Root div now uses `font-heebo` for consistent Hebrew typography. Full re-audit of remaining violet tokens in the page pending.
 - **Out-of-scope (indigo/primary now):** `MagnetLead` (public lead form) and `CreateMagnetEvent` (admin wizard rendered on consumer-style shell) — as of commit `18c5966`, these two consumer-facing Magnet intake pages use the same indigo/primary tokens as the Share shell (`bg-primary`, `text-indigo-400`, `focus:ring-primary/20`, `shadow-indigo-soft`).
 - Rationale: violet signals "operator/print service" context. Consumer intake flows should feel continuous with the Share brand, not visually fork on step 1.
 - Dual-product separation is still maintained by `event_type === 'share' | 'magnet'` at the logic layer — the visual split now kicks in only after the guest / admin crosses into the operational side.
@@ -77,8 +78,18 @@ The container provides the chrome; selected children are marked only by their bo
 - **Tab underline (active):** 2px border-bottom, color = indigo-500 (share) / violet-500 (admin)
 - **Icon containers:** 32px `rounded-xl`, translucent color bg, 16px Lucide icon inside
 
-### Legacy CSS Classes (Layout.jsx)
-- `.luxury-button` and `.premium-submit-button` — retained as metallic CTAs, now using cool-neutral gradients (`#fcfcfe → #e8e8ec`) with indigo-tinted shadows `rgba(124, 134, 225, 0.18–0.28)` (NOT silver-metallic gray)
+### Button Component (Layout.jsx DELETED 2026-04-20)
+- `src/Layout.jsx` was deleted in commit `4933138`; the `.luxury-button` and `.premium-submit-button` inline-CSS classes it owned are **gone**. Any surviving reference to those selectors is dead code.
+- New canonical CTA: import `Button` from `@/components/ui/button` and style via Tailwind props. No more cool-neutral gradients with indigo-tinted shadows — plain semantic-token backgrounds (`bg-primary`, `bg-cool-50`, etc.).
+- `tailwind.config.js` (added in the same commit) is now the canonical source for custom animations (e.g. `animate-paper-fly`, formerly an inline `<style>` block in `MagnetReview.jsx`), extended colors, and the `shadow-indigo-soft` utility.
+
+### Shared State Components (2026-04-20, `src/components/ui/`)
+Canonical primitives — never hand-roll these in a page:
+- `LoadingState.jsx` — spinner with optional `fullScreen` prop
+- `ErrorState.jsx` — `AlertCircle` icon + Hebrew message + retry button; optional `fullScreen`
+- `EmptyState.jsx` — optional Icon + title + description + `children` slot
+
+Callers migrated in commit `4933138`: `App.jsx`, `Dashboard.jsx`, `Event.jsx`, `EventGallery.jsx`, `MyEvents.jsx`. Going forward, any page that needs a loading/error/empty chrome MUST import these — no inline spinner `<div>` or bespoke error JSX.
 
 ## UI Anti-patterns (Explicitly Rejected)
 - 3D WebP icons with white backgrounds on dark UI — looks terrible ✗
@@ -145,6 +156,97 @@ Pattern used in `MagnetReview.jsx`:
 - Stores `photoFrac = photoH / totalH` in state so the sticker drag zone can be constrained to `height: ${photoFrac * 100}%` of the composite image (stickers must never land on the label strip)
 
 **Rule:** sticker coordinates (`s.x`, `s.y`) are stored **relative to the photo area**, not the total canvas. When calling `drawSticker(ctx, s, w, h, ...)` at submit time, pass `photoW` and `photoH` — NOT `canvas.width` / `canvas.height` (which would include the label strip and shift stickers downward).
+
+## MagnetCamera Hardening Patterns (Canonical, 2026-04-20)
+
+Cluster of defensive patterns introduced in commit `c0d6cfd`. These should be applied to any new camera or long-lived media component (not just MagnetCamera). Inline source markers `F01` … `F17` tag each fix in the file for traceability.
+
+### Cancellation token for overlapping async operations
+```js
+const startIdRef = useRef(0);
+async function startCamera() {
+  const id = ++startIdRef.current;
+  const stream = await navigator.mediaDevices.getUserMedia(...);
+  if (id !== startIdRef.current) {
+    stream.getTracks().forEach(t => t.stop()); // stale — clean up
+    return;
+  }
+  // ... apply stream
+}
+```
+Prevents resource leak when user re-triggers the operation (e.g. flips camera mid-stream-setup) before the previous one resolves. Pattern generalizes to any `async` effect where a later invocation should invalidate an earlier one.
+
+### Centralized `setTimeout` tracking (prevents leaked timers on unmount)
+```js
+const timeoutsRef = useRef([]);
+function later(fn, ms) {
+  const id = setTimeout(fn, ms);
+  timeoutsRef.current.push(id);
+  return id;
+}
+useEffect(() => () => timeoutsRef.current.forEach(clearTimeout), []);
+```
+EVERY `setTimeout` in the component goes through `later()`. Single unmount cleanup clears them all — no more "missed one timer" leaks.
+
+### In-app browser detection with file-upload fallback
+```js
+const IN_APP_UA_RE = /Instagram|FBAN|FBAV|Line|Twitter/i;
+const [camFailed, setCamFailed] = useState(
+  () => IN_APP_UA_RE.test(navigator.userAgent)
+);
+```
+Instagram, Facebook, Line, and Twitter WebViews sandbox `getUserMedia` — it silently fails or returns a blank stream. Detect at mount, flip to a file-upload fallback UI before the user taps shutter. Pairs with the existing "iOS Safari standalone PWA breaks getUserMedia" pitfall.
+
+### Defensive guards around capture
+- **Video-ready guard:** `if (!v.videoWidth || !v.videoHeight) return;` — user can tap shutter before `loadedmetadata` fires.
+- **Release `capturingRef` in `finally`:** prevents UI lockup if `drawImage` throws (e.g. canvas tainted by cross-origin video).
+- **Front-flash at shutter, not toggle:** `if (flash === 'on' && !cap.torch) { setFrontFlash(true); await new Promise(r => later(r, 50)); }` — animation syncs with the capture moment, not when the user flipped the setting.
+- **Safe date parsing:** accept `YYYY-MM-DD` string OR ISO, validate `isNaN(d.getTime())`.
+
+### GPU-first image filters with pixel-loop fallback
+```js
+if (vintage && typeof ctx.filter !== 'undefined') {
+  ctx.filter = VINTAGE_FILTER;  // GPU path
+}
+ctx.drawImage(videoEl, 0, 0, w, h);
+if (vintage && typeof ctx.filter === 'undefined') {
+  applyVintagePixels(ctx, w, h);  // CPU fallback (Safari <16.4)
+}
+```
+Prefer `ctx.filter` (GPU-accelerated) — pixel-loop fallback only for browsers lacking support. Directly addresses §Performance Patterns Canvas 2D gotcha #3 (fillText re-shaping) on a different axis. Capture-time only — NEVER on live video stream per CLAUDE.md §3.6.
+
+### Recoverable error UX (no terminal states)
+- **Retry button in error state:** `<button onClick={startCamera}>נסה שוב</button>` alongside close button — user doesn't have to exit to the dashboard to retry.
+- **Haptic on quota exhaustion:** `if (remainingPrints <= 0) { navigator.vibrate([10, 50, 10]); return; }` — tactile feedback that tap was received but blocked.
+- **Escape key closes camera:** global keydown listener added for desktop/kiosk use.
+
+---
+
+## Accessibility Conventions (Canonical, 2026-04-20)
+
+Applied consistently to every interactive surface touched in the `pov upgradeALL` series (`EventGallery`, `MagnetCamera`, `Header`, form controls).
+
+### ARIA tab semantics
+- Tab button: `role="tab"`, `aria-controls="{panel-id}"`, `aria-selected`, `id="{btn-id}"`
+- Tab panel: `<div id="{panel-id}" role="tabpanel" aria-labelledby="{btn-id}">`
+- Example (EventGallery): `id="tab-btn-my-photos"` button → `id="tab-my-photos"` panel.
+
+### Icon buttons MUST have Hebrew `aria-label`
+Every icon-only button: `aria-label="סגור מצלמה"`, `aria-label="סגור תפריט"`, `aria-label="החלף מצלמה"`, etc.
+
+### Focus rings on interactive elements
+`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40` — or `ring-white/80` on dark camera chrome where indigo contrast is weak.
+
+### State announcements
+- `role="alert"` on error containers — screen reader announces immediately, no refocus required.
+- `aria-pressed={boolean}` on toggle buttons (vintage filter, flash toggle).
+- Modal surfaces: `role="dialog" aria-modal="true" aria-label="<Hebrew purpose>"` on the root (e.g. camera overlay).
+
+### WCAG AA contrast
+- Body text on dark bg: `text-white/60` minimum (was `text-white/40` in older camera chrome — bumped in commit `c0d6cfd`).
+- Don't rely on color alone for state — pair with icon or text change.
+
+---
 
 ## Storage Upload Pattern — Direct `fetch` with `x-upsert`
 
@@ -227,7 +329,21 @@ Realtime Broadcast/Presence Authorization on private channels requires `@supabas
 ---
 
 ## New Learnings (research-scout nightly — pending review)
-*Last refreshed: 2026-04-20T18:00Z | Next review: 2026-04-27*
+*Last refreshed: 2026-04-20T22:00Z | Next review: 2026-04-27*
+
+### Finding: 2026-04-20 — iOS Safari: a 2nd `getUserMedia()` call silently mutes the prior track — must `track.stop()` before switching cameras
+- **Source:** https://webrtchacks.com/guide-to-safari-webrtc/ + https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia + https://github.com/jeeliz/jeelizFaceFilter/issues/15
+- **Finding:** On iOS Safari (all versions through 2026), if `getUserMedia()` is invoked a second time for a media type already in use by a previously-acquired track, WebKit sets the previous track's `muted` property to `true` with no way to programmatically unmute. Symptom: calling `getUserMedia({ video: { facingMode: 'environment' } })` to switch from front to back camera produces a new stream AND mutes the existing stream — if any other component still references the old track, its video feed freezes black. Documented in multiple libraries (jeeliz, twilio-video) as the root cause of "camera works once, breaks on second tap." Correct pattern: `currentStream.getTracks().forEach(t => t.stop())` BEFORE the second `getUserMedia()` call, OR use `MediaStream.clone() / addTrack() / removeTrack()` to branch from a single acquired stream without re-calling `getUserMedia()`. Chrome/Firefox desktop + Android do NOT exhibit this behavior — iOS-specific.
+- **Relevance:** CameraCapture.jsx (Share) and MagnetCamera.jsx (Magnet) both use `facingMode` constraints. If/when we add a front/back toggle button (currently Magnet is environment-only, Share may add selfie support), the naive implementation — "call `getUserMedia` again with flipped facingMode" — will silently mute the previous preview on every iOS tap, producing a frozen viewfinder that looks like a crashed camera. This is a companion gotcha to the existing "iOS standalone PWA breaks getUserMedia" and "iOS randomizes deviceId" entries — same root cause (WebKit fingerprinting/privacy posture) but a distinct failure mode.
+- **Action:** (1) Before ANY camera-switch feature is shipped (front/back toggle, device picker), implement the stop-then-reacquire pattern: `streamRef.current?.getTracks().forEach(t => t.stop()); streamRef.current = await navigator.mediaDevices.getUserMedia(newConstraints);`. (2) Add to CLAUDE.md §3.6 WebRTC Camera Rules as a new rule: "Before re-calling `getUserMedia` with changed constraints (e.g. facingMode flip), stop all tracks on the existing stream. Failing to do so silently mutes the old track on iOS Safari." (3) If a future feature needs both tracks simultaneously (e.g. PiP selfie + main scene), use `MediaStream.clone()` on a single acquired stream — do NOT call `getUserMedia` twice. (4) Test any camera-switch flow on a real iPhone BEFORE merging — the failure mode does NOT reproduce on desktop Chrome DevTools device emulation.
+- **Status:** pending-review
+
+### Finding: 2026-04-20 — Tailwind CSS v4.1 ships `user-valid:` / `user-invalid:` variants, `text-shadow-*`, `mask-*`, `wrap-break-word`, safe alignment
+- **Source:** https://tailwindcss.com/blog/tailwindcss-v4-1 + https://tailwindcss.com/docs (v4 docs) + https://github.com/tailwindlabs/tailwindcss/blob/main/CHANGELOG.md
+- **Finding:** Tailwind v4.1 (released 2025) adds several utilities relevant to Memoria's surfaces: (a) **`user-valid:` / `user-invalid:` variants** — apply styles only AFTER the user has interacted with a form field, fixing the "everything red on page load" anti-pattern that plain `:invalid` produces for required fields. (b) **`text-shadow-2xs` … `text-shadow-lg`** — five preset text shadows in the default theme (previously required custom CSS or plugins). (c) **`mask-*` utilities** — compose gradient/image masks with ergonomic APIs (useful for photo fade-outs and sticker-edge feathering). (d) **`wrap-break-word` / `overflow-wrap` utilities** — cleanly break long Hebrew words or URLs inside cards. (e) **Safe alignment** utilities (`justify-start-safe`, `items-center-safe`, etc.) prevent flex/grid children from overflowing the container when content exceeds the track. (f) New variants: `noscript:`, `user-valid:`, `inverted-colors:` (maps to macOS/iOS display accommodation), `details-content:`. Currently on `tailwindcss ^3.4.17` — none of these are available yet.
+- **Relevance:** Two immediate Memoria wins waiting on v4 migration: (1) MagnetLead 4-step wizard + CreateEvent form — swapping `:invalid` styling for `user-invalid:` eliminates the "red borders on empty form" jarring first-render state (current workaround is JS-side `touched` state per field, adds complexity). (2) Sticker text rendering in MagnetReview could use `text-shadow-*` utilities in any future HTML-preview mode (the canvas composite path has its own stroke logic, unrelated). The `mask-*` utilities are also a candidate for cover-image fade-to-black treatments in `MagnetGuestPage`. This is an enrichment of the existing "Tailwind v4 — `scheme-dark`" and "Tailwind v4 native `@container` queries" follow-ups, not a new migration driver.
+- **Action:** Append a sub-bullet to `Future Migrations / Hardening Follow-ups → Tailwind v4`: "when v4 migration is scoped, ALSO (a) replace any JS-side `touched` form-validation tracking with `user-valid:` / `user-invalid:` variants (start with MagnetLead + CreateEvent), (b) evaluate `text-shadow-*` and `mask-*` for cover-image and sticker-preview surfaces, (c) audit flex/grid overflow bugs — the `-safe` alignment suffixes may fix them without bespoke `min-w-0` workarounds." NOT actionable today.
+- **Status:** pending-review
 
 ### Finding: 2026-04-20 — React Compiler v1.0 stable (Oct 2025) auto-memoizes; replaces manual `useMemo` / `useCallback` / `React.memo`
 - **Source:** https://react.dev/blog/2025/10/07/react-compiler-1 + https://react.dev/learn/react-compiler/introduction + https://certificates.dev/blog/react-compiler-no-more-usememo-and-usecallback

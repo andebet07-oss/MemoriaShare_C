@@ -134,8 +134,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
     closeGuestBook();
   }, [currentUser?.id, isAdminView, closeGuestBook]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleGuestBookSubmit = async (/** @type {any} */ e) => {
+  const handleGuestBookSubmit = async (e) => {
     e.preventDefault();
     const name = guestName.trim();
     if (!name) return;

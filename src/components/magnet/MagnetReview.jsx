@@ -2,7 +2,8 @@ import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Trash2, Loader2, Smile, X } from 'lucide-react';
 import { getStickerPack } from './stickerPacks';
 import { SVG_STICKERS } from './svgStickers';
-import { getFramePack, ALL_FRAMES, LABEL_H_RATIO } from './framePacks';
+import { LABEL_H_RATIO } from './framePacks';
+import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
 import memoriaService from '@/components/memoriaService';
 import { compressImage } from '@/functions/processImage';
 
@@ -147,33 +148,41 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
   }, []);
 
   // Render photo + frame to a preview canvas so the user sees the actual frame layout.
+  // Frame approval is checked against the DB (falls back to local seed on DB error).
   useEffect(() => {
     let cancelled = false;
     const frameId = event?.overlay_frame_url;
-    const eventFrame = (frameId && !frameId.startsWith('http'))
-      ? (ALL_FRAMES.find(f => f.id === frameId) ?? getFramePack(event?.name || '')[0])
-      : getFramePack(event?.name || '')[0];
-    if (!eventFrame) return;
+    const eventName = event?.name || '';
 
-    const img = new Image();
-    img.onload = () => {
-      if (cancelled) return;
-      const photoW = img.naturalWidth;
-      const photoH = img.naturalHeight;
-      const labelH = Math.round(photoW * LABEL_H_RATIO);
-      const totalH = photoH + labelH;
-      const canvas = document.createElement('canvas');
-      canvas.width = photoW; canvas.height = totalH;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, photoW, totalH);
-      ctx.drawImage(img, 0, 0);
-      eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
-      setPhotoFrac(photoH / totalH);
-      setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9));
-    };
-    img.onerror = () => {};
-    img.src = imageDataURL;
+    async function render() {
+      const assigned = (frameId && !frameId.startsWith('http'))
+        ? await findApprovedFrameFromDB(frameId)
+        : null;
+      const eventFrame = assigned ?? getApprovedFramePack(eventName)[0];
+      if (!eventFrame || cancelled) return;
+
+      const img = new Image();
+      img.onload = () => {
+        if (cancelled) return;
+        const photoW = img.naturalWidth;
+        const photoH = img.naturalHeight;
+        const labelH = Math.round(photoW * LABEL_H_RATIO);
+        const totalH = photoH + labelH;
+        const canvas = document.createElement('canvas');
+        canvas.width = photoW; canvas.height = totalH;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, photoW, totalH);
+        ctx.drawImage(img, 0, 0);
+        eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
+        setPhotoFrac(photoH / totalH);
+        setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9));
+      };
+      img.onerror = () => {};
+      img.src = imageDataURL;
+    }
+
+    render();
     return () => { cancelled = true; };
   }, [imageDataURL, event?.overlay_frame_url]); // eslint-disable-line
 
@@ -233,11 +242,12 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       ctx.fillRect(0, 0, photoW, totalH);
       ctx.drawImage(img, 0, 0);
 
-      // Resolve frame: admin stores frame_id in overlay_frame_url; fall back to pack[0]
+      // Resolve frame: DB-authoritative check; fallback to local seed on DB error.
       const frameId = event?.overlay_frame_url;
-      const eventFrame = (frameId && !frameId.startsWith('http'))
-        ? (ALL_FRAMES.find(f => f.id === frameId) ?? getFramePack(event?.name || '')[0])
-        : getFramePack(event?.name || '')[0];
+      const assigned = (frameId && !frameId.startsWith('http'))
+        ? await findApprovedFrameFromDB(frameId)
+        : null;
+      const eventFrame = assigned ?? getApprovedFramePack(event?.name || '')[0];
       if (eventFrame) eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
       for (const s of stickers) {
         const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
