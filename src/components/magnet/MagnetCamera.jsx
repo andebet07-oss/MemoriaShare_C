@@ -203,6 +203,13 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
 
   function handleRetake() { setCapturedURL(null); setMode('camera'); capturingRef.current = false; }
 
+  function handlePrintJobCreated() {
+    setCapturedURL(null);
+    setMode('camera');
+    capturingRef.current = false;
+    onPrintJobCreated?.();
+  }
+
   async function handleFile(e) {
     const file = e.target.files?.[0]; if (!file) return;
     const url = await new Promise((res, rej) => {
@@ -213,7 +220,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
 
   // ── Review mode ────────────────────────────────────────────────────────────────
   if (mode === 'review' && capturedURL) {
-    return <MagnetReview imageDataURL={capturedURL} event={event} userId={userId} onRetake={handleRetake} onPrintJobCreated={onPrintJobCreated} />;
+    return <MagnetReview imageDataURL={capturedURL} event={event} userId={userId} onRetake={handleRetake} onPrintJobCreated={handlePrintJobCreated} />;
   }
 
   // ── In-app browser fallback ────────────────────────────────────────────────────

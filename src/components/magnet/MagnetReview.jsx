@@ -364,7 +364,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
           <Trash2 className="w-5 h-5 text-white/70" />
         </button>
 
-        <button onClick={compositeAndSubmit} disabled={isSubmitting} className="flex-1 h-14 font-black text-base rounded-full disabled:opacity-50 active:scale-[0.97] transition-all flex items-center justify-center gap-2" style={{ background: isSubmitting ? 'rgba(124,134,225,0.45)' : 'linear-gradient(145deg,#8c97e6,#7c86e1)', color: '#ffffff', boxShadow: isSubmitting ? 'none' : '0 4px 28px rgba(124,134,225,0.35)' }}>
+        <button onClick={compositeAndSubmit} disabled={isSubmitting || modal !== null} className="flex-1 h-14 font-black text-base rounded-full disabled:opacity-50 active:scale-[0.97] transition-all flex items-center justify-center gap-2" style={{ background: isSubmitting ? 'rgba(124,134,225,0.45)' : 'linear-gradient(145deg,#8c97e6,#7c86e1)', color: '#ffffff', boxShadow: isSubmitting ? 'none' : '0 4px 28px rgba(124,134,225,0.35)' }}>
           {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#ffffff' }} /> : 'שלח להדפסה'}
         </button>
 
