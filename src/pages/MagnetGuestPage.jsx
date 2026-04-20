@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, List, Loader2, Magnet } from 'lucide-react';
+import { Camera, List, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import memoriaService from '@/components/memoriaService';
@@ -85,7 +85,7 @@ export default function MagnetGuestPage({ event }) {
   const readyCount = printJobs.filter(j => j.status === 'ready').length;
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden" dir="rtl">
+    <div className="min-h-screen bg-black relative overflow-hidden font-heebo" dir="rtl">
 
       {/* Background */}
       <div className="fixed inset-0">
@@ -100,10 +100,6 @@ export default function MagnetGuestPage({ event }) {
 
         {/* Event header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 mb-3">
-            <Magnet className="w-3.5 h-3.5 text-violet-400" />
-            <span className="text-violet-300 text-xs font-semibold">מגנטים · שירות פרימיום</span>
-          </div>
           <h1 className="text-3xl font-bold text-white mb-1">{event.name}</h1>
           <p className={`text-sm font-semibold ${remainingPrints === 0 ? 'text-red-400' : 'text-white/70'}`}>
             {remainingPrints === 0 ? 'מכסת ההדפסות הסתיימה' : `נותרו לך ${remainingPrints} הדפסות`}

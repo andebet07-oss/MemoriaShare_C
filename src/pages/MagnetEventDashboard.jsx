@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Loader2, Printer, Copy, Check, ArrowRight, Users, Calendar, Hash, Lock } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2, Printer, Copy, Check, ArrowRight, Users, Calendar, Hash, Lock, ImageIcon } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 
 function InfoRow({ icon: Icon, label, value, mono = false }) {
@@ -20,6 +20,29 @@ export default function MagnetEventDashboard() {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [isSavingCover, setIsSavingCover] = useState(false);
+  const [coverPreview, setCoverPreview] = useState(null);
+  const coverInputRef = useRef(null);
+  const queryClient = useQueryClient();
+
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !event?.id) return;
+    const objectUrl = URL.createObjectURL(file);
+    setCoverPreview(objectUrl);
+    setIsSavingCover(true);
+    try {
+      const { file_url } = await memoriaService.storage.uploadCoverImage(file, event.id);
+      await memoriaService.events.update(event.id, { cover_image: file_url });
+      queryClient.invalidateQueries({ queryKey: ['magnet-event', eventId] });
+    } catch (err) {
+      console.error('[MagnetDashboard] Cover upload failed:', err);
+    } finally {
+      setIsSavingCover(false);
+      URL.revokeObjectURL(objectUrl);
+      setCoverPreview(null);
+    }
+  };
 
   const { data: event, isLoading, error } = useQuery({
     queryKey: ['magnet-event', eventId],
@@ -101,6 +124,44 @@ export default function MagnetEventDashboard() {
         <InfoRow icon={Hash}     label="קוד אירוע"    value={event.unique_code} mono />
         <InfoRow icon={Lock}     label="PIN"          value={event.pin_code}    mono />
         <InfoRow icon={Users}    label="הדפסות לאורח" value={event.print_quota_per_device ? `${event.print_quota_per_device} הדפסות` : null} />
+      </div>
+
+      {/* Cover image */}
+      <div className="rounded-2xl p-4 mb-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-3">תמונת רקע לדף הנחיתה</p>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleCoverUpload}
+        />
+        <button
+          type="button"
+          onClick={() => coverInputRef.current?.click()}
+          disabled={isSavingCover}
+          className="relative w-full h-32 rounded-xl overflow-hidden border border-dashed border-white/10 hover:border-primary/50 transition-colors group"
+          style={{ background: 'rgba(255,255,255,0.02)' }}
+        >
+          {(coverPreview || event.cover_image) ? (
+            <>
+              <img src={coverPreview || event.cover_image} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="text-white text-xs font-semibold">לחץ להחלפה</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-1.5 text-white/40">
+              <ImageIcon className="w-6 h-6" />
+              <span className="text-xs">+ העלה תמונת רקע</span>
+            </div>
+          )}
+          {isSavingCover && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 text-white animate-spin" />
+            </div>
+          )}
+        </button>
       </div>
 
       {/* Guest link */}

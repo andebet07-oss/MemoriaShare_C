@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Trash2, Loader2, Smile, X } from 'lucide-react';
 import { getStickerPack } from './stickerPacks';
 import { SVG_STICKERS } from './svgStickers';
