@@ -103,21 +103,21 @@ function drawSticker(ctx, s, w, h, svgImg) {
 
 const PaperPlane = () => (
   <svg width="68" height="68" viewBox="0 0 68 68" fill="none" className="animate-paper-fly">
-    <path d="M6 34L62 6L42 62L32 40L6 34Z" fill="#caff4a" opacity="0.9"/>
-    <path d="M32 40L42 34L6 34" stroke="#84cc16" strokeWidth="1.8" strokeLinejoin="round"/>
-    <path d="M32 40L42 62" stroke="#84cc16" strokeWidth="1.4"/>
+    <path d="M6 34L62 6L42 62L32 40L6 34Z" fill="#7c86e1" opacity="0.9"/>
+    <path d="M32 40L42 34L6 34" stroke="#5b6acc" strokeWidth="1.8" strokeLinejoin="round"/>
+    <path d="M32 40L42 62" stroke="#5b6acc" strokeWidth="1.4"/>
   </svg>
 );
 
 const Champagne = () => (
   <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
-    <path d="M26 6H42L48 30L34 40L20 30L26 6Z" fill="rgba(202,255,74,0.2)" stroke="#caff4a" strokeWidth="1.5"/>
-    <path d="M34 40V58M26 58H42" stroke="#caff4a" strokeWidth="2" strokeLinecap="round"/>
-    <circle cx="18" cy="16" r="2.5" fill="#caff4a" opacity="0.65"/>
-    <circle cx="50" cy="12" r="2" fill="#caff4a" opacity="0.5"/>
-    <circle cx="54" cy="26" r="1.5" fill="#caff4a" opacity="0.55"/>
-    <circle cx="14" cy="28" r="2" fill="#caff4a" opacity="0.4"/>
-    <path d="M22 9L18 5M46 11L50 7" stroke="#caff4a" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M26 6H42L48 30L34 40L20 30L26 6Z" fill="rgba(124,134,225,0.2)" stroke="#8c97e6" strokeWidth="1.5"/>
+    <path d="M34 40V58M26 58H42" stroke="#8c97e6" strokeWidth="2" strokeLinecap="round"/>
+    <circle cx="18" cy="16" r="2.5" fill="#8c97e6" opacity="0.65"/>
+    <circle cx="50" cy="12" r="2" fill="#8c97e6" opacity="0.5"/>
+    <circle cx="54" cy="26" r="1.5" fill="#8c97e6" opacity="0.55"/>
+    <circle cx="14" cy="28" r="2" fill="#8c97e6" opacity="0.4"/>
+    <path d="M22 9L18 5M46 11L50 7" stroke="#8c97e6" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
 
@@ -364,8 +364,8 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
           <Trash2 className="w-5 h-5 text-white/70" />
         </button>
 
-        <button onClick={compositeAndSubmit} disabled={isSubmitting} className="flex-1 h-14 font-black text-base rounded-full disabled:opacity-50 active:scale-[0.97] transition-all flex items-center justify-center gap-2" style={{ background: isSubmitting ? 'rgba(163,230,53,0.45)' : 'linear-gradient(145deg,#caff4a,#a3e635)', color: '#1a2a00', boxShadow: isSubmitting ? 'none' : '0 4px 28px rgba(163,230,53,0.35)' }}>
-          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#1a2a00' }} /> : 'שלח להדפסה'}
+        <button onClick={compositeAndSubmit} disabled={isSubmitting} className="flex-1 h-14 font-black text-base rounded-full disabled:opacity-50 active:scale-[0.97] transition-all flex items-center justify-center gap-2" style={{ background: isSubmitting ? 'rgba(124,134,225,0.45)' : 'linear-gradient(145deg,#8c97e6,#7c86e1)', color: '#ffffff', boxShadow: isSubmitting ? 'none' : '0 4px 28px rgba(124,134,225,0.35)' }}>
+          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#ffffff' }} /> : 'שלח להדפסה'}
         </button>
 
         <button onClick={() => setShowPicker(true)} aria-label="הוסף מדבקה" className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-transform" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
@@ -389,7 +389,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
           <Champagne />
           <p className="text-white font-black text-2xl tracking-wide">נשלח!</p>
           <p className="text-white/55 text-sm text-center leading-relaxed">התמונה שלך בתור ההדפסה<br/>המגנט יהיה מוכן בקרוב</p>
-          <div className="px-5 py-2 rounded-full text-xs font-semibold" style={{ background: 'rgba(202,255,74,0.12)', color: '#caff4a', border: '1px solid rgba(202,255,74,0.28)' }}>סוגרים תוך שנייה...</div>
+          <div className="px-5 py-2 rounded-full text-xs font-semibold" style={{ background: 'rgba(124,134,225,0.12)', color: '#8c97e6', border: '1px solid rgba(124,134,225,0.28)' }}>סוגרים תוך שנייה...</div>
         </div>
       )}
 
