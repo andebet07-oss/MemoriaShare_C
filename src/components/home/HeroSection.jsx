@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from "@/components/ui/button";
 
 export default function HeroSection({ onOpenChooser }) {
   const eventPhotos = [
@@ -54,8 +55,8 @@ export default function HeroSection({ onOpenChooser }) {
 
               <div className="flex justify-between items-center">
                 <div className="text-left">
-                  <p className="text-white text-[6px] md:text-[8px] font-bold leading-none drop-shadow-lg"><bdi>15</bdi> SHOTS</p>
-                  <p className="text-white/50 text-[5px] md:text-[6px] drop-shadow-lg">REMAINING</p>
+                  <p className="text-white text-[6px] md:text-[8px] font-bold leading-none drop-shadow-lg"><bdi>15</bdi> תמונות</p>
+                  <p className="text-white/50 text-[5px] md:text-[6px] drop-shadow-lg">נותרו</p>
                 </div>
                 <div className="w-11 h-11 md:w-14 md:h-14 rounded-full border-[2.5px] border-white/80 p-[3px] bg-transparent">
                   <div className="w-full h-full bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
@@ -115,18 +116,18 @@ export default function HeroSection({ onOpenChooser }) {
             <MiniIPhone
               image={eventPhotos[0]}
               className="-rotate-6 translate-y-5 opacity-80 z-10"
-              title="Party Night"
+              title="ערב מסיבה"
             />
             <MiniIPhone
               image={eventPhotos[1]}
               className="z-30 -translate-y-3"
-              title="Wedding Vibes"
+              title="אווירת חתונה"
               isCenter={true}
             />
             <MiniIPhone
               image={eventPhotos[2]}
               className="rotate-6 translate-y-5 opacity-80 z-10"
-              title="Classic Ceremony"
+              title="טקס קלאסי"
             />
           </div>
 
@@ -135,13 +136,13 @@ export default function HeroSection({ onOpenChooser }) {
             className="flex justify-center animate-in fade-in duration-700"
             style={{ animationDelay: '450ms' }}
           >
-            <button
+            <Button
               onClick={onOpenChooser}
-              className="px-12 py-4 bg-cool-50 text-cool-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-indigo-soft"
+              className="px-12 py-4 h-auto bg-cool-50 text-cool-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-indigo-soft rounded-md"
               style={{ letterSpacing: '0.05em' }}
             >
               צרו אירוע
-            </button>
+            </Button>
           </div>
 
         </div>

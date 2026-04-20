@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster"
+import { LoadingState } from '@/components/ui/LoadingState'
 import GlobalErrorBoundary from '@/components/GlobalErrorBoundary'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -55,12 +56,12 @@ function MagnetGuestEntry() {
   });
 
   if (isLoading) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[#0a0a0e]">
-      <div className="w-6 h-6 border-2 border-white/10 border-t-violet-500 rounded-full animate-spin" />
+    <div className="fixed inset-0 flex items-center justify-center bg-cool-950">
+      <LoadingState />
     </div>
   );
   if (!event) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[#0a0a0e]">
+    <div className="fixed inset-0 flex items-center justify-center bg-cool-950">
       <p className="text-white/30 text-sm">אירוע לא נמצא</p>
     </div>
   );
@@ -71,11 +72,7 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-      </div>
-    );
+    return <LoadingState fullScreen />;
   }
 
   if (authError) {
@@ -125,12 +122,6 @@ const AuthenticatedApp = () => {
         <Route path="/MyEvents"            element={<Navigate to="/host" replace />} />
         <Route path="/CreateEvent"         element={<Navigate to="/host/events/create" replace />} />
         <Route path="/EventSuccess"        element={<Navigate to="/host" replace />} />
-
-        {/* Legacy query-param event routes (keep working) */}
-        <Route path="/Event"              element={<GuestLayout><Event /></GuestLayout>} />
-        <Route path="/EventGallery"       element={<GuestLayout><EventGallery /></GuestLayout>} />
-        <Route path="/MagnetLead"         element={<GuestLayout><MagnetLead /></GuestLayout>} />
-        <Route path="/Dashboard"          element={<LayoutWrapper currentPageName="Dashboard"><Dashboard /></LayoutWrapper>} />
 
         <Route path="*" element={<PageNotFound />} />
       </Routes>

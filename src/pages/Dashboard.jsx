@@ -118,10 +118,10 @@ function ExportArchiveCard({ eventId, eventName }) {
   };
 
   return (
-    <div className="bg-[#1a1a1a] rounded-xl p-4 space-y-3">
+    <div className="bg-card rounded-xl p-4 space-y-3">
       <div className="text-right">
-        <h2 className="text-sm font-semibold text-gray-200">הורדת כל התמונות</h2>
-        <p className="text-xs text-gray-500 mt-0.5">אריזת כל תמונות האירוע לקובץ ZIP ישירות בדפדפן</p>
+        <h2 className="text-sm font-semibold text-foreground/80">הורדת כל התמונות</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">אריזת כל תמונות האירוע לקובץ ZIP ישירות בדפדפן</p>
       </div>
 
       {status === 'completed' && zipObjectUrl ? (
@@ -132,13 +132,13 @@ function ExportArchiveCard({ eventId, eventName }) {
       ) : status === 'running' ? (
         <div className="bg-black/50 rounded-xl p-3 border border-white/5">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs text-gray-400 flex items-center gap-1">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Loader2 className="w-3 h-3 animate-spin" />
               {progress < 96 ? 'מוריד תמונות...' : 'אורז קובץ ZIP...'}
             </span>
             <span className="text-xs font-bold text-indigo-400">{progress}%</span>
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-border rounded-full h-1.5 overflow-hidden">
             <div className="bg-indigo-500 h-full transition-all duration-300" style={{ width: `${Math.max(5, progress)}%` }}>
               <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
             </div>
@@ -187,42 +187,42 @@ function EventSettingsTab({ event, onEventUpdate }) {
   return (
     <div className="space-y-4 mt-2">
       {/* שם האירוע */}
-      <div className="bg-[#1a1a1a] rounded-xl p-4 space-y-3">
+      <div className="bg-card rounded-xl p-4 space-y-3">
         <div className="text-right">
-          <h2 className="text-sm font-semibold text-gray-200">שם האירוע</h2>
-          <p className="text-xs text-gray-500 mt-0.5">הכותרת שתופיע לאורחים</p>
+          <h2 className="text-sm font-semibold text-foreground/80">שם האירוע</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">הכותרת שתופיע לאורחים</p>
         </div>
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="שם האירוע"
-          className="bg-[#2a2a2a] border-gray-700 text-white text-right rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30"
+          className="bg-secondary border-border text-white text-right rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30"
           dir="rtl"
         />
       </div>
 
       {/* תמונת כריכה */}
-      <div className="bg-[#1a1a1a] rounded-xl p-4 space-y-3">
+      <div className="bg-card rounded-xl p-4 space-y-3">
         <div className="text-right">
-          <h2 className="text-sm font-semibold text-gray-200">תמונת כריכה</h2>
-          <p className="text-xs text-gray-500 mt-0.5">הרקע שיופיע לאורחים כשהם נכנסים לאירוע</p>
+          <h2 className="text-sm font-semibold text-foreground/80">תמונת כריכה</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">הרקע שיופיע לאורחים כשהם נכנסים לאירוע</p>
         </div>
 
         {/* תצוגה מקדימה */}
         {coverImage && (
-          <div className="w-full h-40 rounded-lg overflow-hidden bg-[#2a2a2a]">
+          <div className="w-full h-40 rounded-lg overflow-hidden bg-secondary">
             <img src={coverImage} alt="תמונת כריכה" className="w-full h-full object-cover" />
           </div>
         )}
 
         <label htmlFor="settings-cover-upload" className="cursor-pointer block">
-          <div className="w-full bg-[#2a2a2a] hover:bg-[#333] border border-gray-700 border-dashed rounded-lg py-4 flex flex-col items-center justify-center gap-2 transition-all">
+          <div className="w-full bg-secondary hover:bg-secondary/80 border border-border border-dashed rounded-lg py-4 flex flex-col items-center justify-center gap-2 transition-all">
             {isUploading ? (
               <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
             ) : (
-              <ImageIcon className="w-5 h-5 text-gray-400" />
+              <ImageIcon className="w-5 h-5 text-muted-foreground" />
             )}
-            <span className="text-xs text-gray-400 font-medium">
+            <span className="text-xs text-muted-foreground font-medium">
               {isUploading ? 'מעלה...' : coverImage ? 'החלפת תמונה' : 'העלאת תמונה'}
             </span>
           </div>
@@ -231,17 +231,17 @@ function EventSettingsTab({ event, onEventUpdate }) {
       </div>
 
       {/* הגדרת פרטיות גלריה */}
-      <div className="bg-[#1a1a1a] rounded-xl p-4">
+      <div className="bg-card rounded-xl p-4">
         <div className="flex items-center justify-between">
           <Switch
             checked={autoPublish}
             onCheckedChange={setAutoPublish}
             id="auto-publish-toggle"
-            className="data-[state=checked]:bg-indigo-500 data-[state=unchecked]:bg-gray-600 [&>span]:bg-white shrink-0"
+            className="data-[state=checked]:bg-indigo-500 data-[state=unchecked]:bg-muted [&>span]:bg-white shrink-0"
           />
           <div className="text-right flex-1 mr-3">
-            <label htmlFor="auto-publish-toggle" className="text-sm font-semibold text-gray-200 cursor-pointer flex items-center justify-end gap-2">
-              {autoPublish ? <Eye className="w-4 h-4 text-indigo-400" /> : <EyeOff className="w-4 h-4 text-gray-500" />}
+            <label htmlFor="auto-publish-toggle" className="text-sm font-semibold text-foreground/80 cursor-pointer flex items-center justify-end gap-2">
+              {autoPublish ? <Eye className="w-4 h-4 text-indigo-400" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
               גלריה ציבורית
             </label>
             <p className="text-xs text-white/50 mt-1 leading-relaxed">
@@ -270,11 +270,11 @@ function EventSettingsTab({ event, onEventUpdate }) {
 
       {/* Delete Account Dialog */}
       <Dialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount}>
-        <DialogContent className="bg-gray-900/95 backdrop-blur-md border border-red-900/30 text-white w-[90vw] max-w-md rounded-2xl" dir="rtl">
+        <DialogContent className="bg-background/95 backdrop-blur-md border border-red-900/30 text-white w-[90vw] max-w-md rounded-2xl" dir="rtl">
           <DialogHeader className="text-center">
             <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
             <DialogTitle className="text-xl font-bold text-red-400">מחיקת חשבון</DialogTitle>
-            <DialogDescription className="text-gray-400 pt-2 text-sm">
+            <DialogDescription className="text-muted-foreground pt-2 text-sm">
               האם אתה בטוח שברצונך למחוק את חשבונך? פעולה זו אינה הפיכה וכל הנתונים יימחקו לצמיתות.
             </DialogDescription>
           </DialogHeader>
@@ -297,10 +297,10 @@ function EventSettingsTab({ event, onEventUpdate }) {
       </Dialog>
 
       {/* Delete Account */}
-      <div className="bg-[#1a1a1a] rounded-xl p-4 border border-red-900/30">
+      <div className="bg-card rounded-xl p-4 border border-red-900/30">
         <div className="text-right mb-3">
           <h2 className="text-sm font-semibold text-red-400">מחיקת חשבון</h2>
-          <p className="text-xs text-gray-500 mt-0.5">פעולה זו תמחק את החשבון לצמיתות</p>
+          <p className="text-xs text-muted-foreground mt-0.5">פעולה זו תמחק את החשבון לצמיתות</p>
         </div>
         <Button
           onClick={() => setShowDeleteAccount(true)}
@@ -499,8 +499,8 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400" />
+      <div className="min-h-screen flex items-center justify-center bg-cool-950">
+        <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -508,10 +508,10 @@ export default function Dashboard() {
   if (pageError) {
     if (pageError === 'NO_EVENT_ID') {
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] text-white text-center px-4" dir="rtl">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-cool-950 text-white text-center px-4" dir="rtl">
           <AlertTriangle className="w-16 h-16 text-yellow-400 mb-4" />
           <h1 className="text-3xl font-bold mb-2">לא צוין אירוע</h1>
-          <p className="text-gray-400 mb-6 max-w-md">כדי לנהל אירוע, יש לגשת לדף זה דרך "האירועים שלי".</p>
+          <p className="text-muted-foreground mb-6 max-w-md">כדי לנהל אירוע, יש לגשת לדף זה דרך "האירועים שלי".</p>
           <Button onClick={() => navigate(createPageUrl("MyEvents"))} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
             חזרה לאירועים שלי
           </Button>
@@ -520,10 +520,10 @@ export default function Dashboard() {
     }
     if (pageError === 'AUTH_REQUIRED') {
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] text-white text-center px-4" dir="rtl">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-cool-950 text-white text-center px-4" dir="rtl">
           <Lock className="w-16 h-16 text-yellow-400 mb-4" />
           <h1 className="text-3xl font-bold mb-2">נדרשת התחברות</h1>
-          <p className="text-gray-400 mb-6 max-w-md">יש להתחבר כדי לנהל אירוע.</p>
+          <p className="text-muted-foreground mb-6 max-w-md">יש להתחבר כדי לנהל אירוע.</p>
           <Button onClick={() => navigate(createPageUrl("Home"))} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
             חזרה לדף הבית
           </Button>
@@ -531,10 +531,10 @@ export default function Dashboard() {
       );
     }
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] text-white text-center px-4" dir="rtl">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-cool-950 text-white text-center px-4" dir="rtl">
         <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
         <h1 className="text-3xl font-bold mb-2">אירוע לא נמצא</h1>
-        <p className="text-gray-400 mb-6">לא מצאנו אירוע התואם לקישור.</p>
+        <p className="text-muted-foreground mb-6">לא מצאנו אירוע התואם לקישור.</p>
         <Button onClick={() => navigate(createPageUrl("MyEvents"))} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
           חזרה לאירועים שלי
         </Button>
@@ -544,10 +544,10 @@ export default function Dashboard() {
 
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] text-white text-center px-4" dir="rtl">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-cool-950 text-white text-center px-4" dir="rtl">
         <Lock className="w-16 h-16 text-red-500 mb-4" />
         <h1 className="text-3xl font-bold mb-2">אין לך הרשאת גישה</h1>
-        <p className="text-gray-400 mb-6">עמוד זה זמין רק למנהל האירוע או למנהל המערכת.</p>
+        <p className="text-muted-foreground mb-6">עמוד זה זמין רק למנהל האירוע או למנהל המערכת.</p>
         <Button onClick={() => navigate(createPageUrl("Home"))} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
           חזרה לדף הבית
         </Button>
@@ -557,10 +557,10 @@ export default function Dashboard() {
 
   if (!event) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] text-white text-center px-4" dir="rtl">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-cool-950 text-white text-center px-4" dir="rtl">
         <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
         <h1 className="text-3xl font-bold mb-2">אירוע לא נמצא</h1>
-        <p className="text-gray-400 mb-6">לא מצאנו אירוע התואם לקישור.</p>
+        <p className="text-muted-foreground mb-6">לא מצאנו אירוע התואם לקישור.</p>
         <Button onClick={() => navigate(createPageUrl("MyEvents"))} className="bg-indigo-600 hover:bg-indigo-700 min-h-[44px]">
           חזרה לאירועים שלי
         </Button>
@@ -569,7 +569,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[#0a0a0a] text-white" dir="rtl">
+    <div className="min-h-[100dvh] w-full bg-cool-950 text-white" dir="rtl">
       <RealtimeNotification notifications={notifications} onDismiss={dismissNotification} />
 
       {/* Admin inspection banner — shown only when admin views another host's event */}
@@ -590,24 +590,24 @@ export default function Dashboard() {
       <div className="max-w-md mx-auto px-4 pt-6 pb-6">
           {/* Tabs */}
           <Tabs defaultValue="share" className="mb-4">
-            <TabsList className="grid w-full grid-cols-5 bg-[#1a1a1a] rounded-xl p-1 h-auto">
-              <TabsTrigger value="cohosts" className="flex flex-col h-auto py-2 text-gray-400 data-[state=active]:bg-[#0a0a0a] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all">
+            <TabsList className="grid w-full grid-cols-5 bg-card rounded-xl p-1 h-auto">
+              <TabsTrigger value="cohosts" className="flex flex-col h-auto py-2 text-muted-foreground data-[state=active]:bg-cool-950 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all">
                 <Users className="w-5 h-5 mb-1" />
                 <span className="text-xs">צוות</span>
               </TabsTrigger>
-              <TabsTrigger value="gallery" className="flex flex-col h-auto py-2 text-gray-400 data-[state=active]:bg-[#0a0a0a] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all">
+              <TabsTrigger value="gallery" className="flex flex-col h-auto py-2 text-muted-foreground data-[state=active]:bg-cool-950 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all">
                 <Image className="w-5 h-5 mb-1" />
                 <span className="text-xs">גלריה</span>
               </TabsTrigger>
-              <TabsTrigger value="share" className="flex flex-col h-auto py-2 text-indigo-400 data-[state=active]:bg-[#0a0a0a] data-[state=active]:text-indigo-400 data-[state=active]:shadow-sm rounded-lg transition-all">
+              <TabsTrigger value="share" className="flex flex-col h-auto py-2 text-indigo-400 data-[state=active]:bg-cool-950 data-[state=active]:text-indigo-400 data-[state=active]:shadow-sm rounded-lg transition-all">
                 <Share2 className="w-5 h-5 mb-1" />
                 <span className="text-xs">שיתוף</span>
               </TabsTrigger>
-              <TabsTrigger value="moderation" className="flex flex-col h-auto py-2 text-gray-400 data-[state=active]:bg-[#0a0a0a] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all">
+              <TabsTrigger value="moderation" className="flex flex-col h-auto py-2 text-muted-foreground data-[state=active]:bg-cool-950 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all">
                 <ShieldCheck className="w-5 h-5 mb-1" />
                 <span className="text-xs">ניהול</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex flex-col h-auto py-2 text-gray-400 data-[state=active]:bg-[#0a0a0a] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all">
+              <TabsTrigger value="settings" className="flex flex-col h-auto py-2 text-muted-foreground data-[state=active]:bg-cool-950 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all">
                 <Settings className="w-5 h-5 mb-1" />
                 <span className="text-xs">הגדרות</span>
               </TabsTrigger>
@@ -622,19 +622,19 @@ export default function Dashboard() {
             <TabsContent value="share" className="space-y-4">
               
               {/* Share Link Section */}
-              <div className="bg-[#1a1a1a] rounded-xl p-4">
-                <h2 className="text-sm font-semibold text-gray-200 mb-1 text-right">קישור</h2>
-                <p className="text-xs text-gray-500 mb-3 text-right">כל אחד עם הקישור יכול לפתוח את האירוע</p>
+              <div className="bg-card rounded-xl p-4">
+                <h2 className="text-sm font-semibold text-foreground/80 mb-1 text-right">קישור</h2>
+                <p className="text-xs text-muted-foreground mb-3 text-right">כל אחד עם הקישור יכול לפתוח את האירוע</p>
                 
-                <div className="bg-[#2a2a2a] rounded-lg p-3 mb-3">
-                  <p className="text-xs text-gray-400 break-all text-right">
+                <div className="bg-secondary rounded-lg p-3 mb-3">
+                  <p className="text-xs text-muted-foreground break-all text-right">
                     {`${BASE_URL}${createPageUrl(`Event?code=${event.unique_code}`)}&pin=${event.pin_code}`}
                   </p>
                 </div>
                 
                 <Button
                   onClick={handleCopyLink}
-                  className="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 h-auto rounded-full text-sm font-medium transition-all"
+                  className="w-full bg-secondary hover:bg-secondary/80 text-white px-4 py-2 h-auto rounded-full text-sm font-medium transition-all"
                 >
                   <Copy className="w-4 h-4 mr-2" />
                   {copied ? "הועתק!" : "העתק קישור"}
@@ -642,20 +642,20 @@ export default function Dashboard() {
               </div>
 
               {/* QR Code Section */}
-              <div className="bg-[#1a1a1a] rounded-xl p-4">
+              <div className="bg-card rounded-xl p-4">
                 <div className="flex items-start gap-4 mb-4">
                   {/* Left - Color pickers */}
                   <div className="flex flex-col items-center gap-2 pt-1">
-                    <Label className="text-xs text-gray-400">צבע</Label>
+                    <Label className="text-xs text-muted-foreground">צבע</Label>
                     <button
                       onClick={() => setQrFgColor("#000000")}
-                      className={`w-8 h-8 rounded-full border-2 ${qrFgColor === "#000000" ? "border-indigo-400 ring-2 ring-indigo-500/30" : "border-gray-600"} flex items-center justify-center transition-all`}
+                      className={`w-8 h-8 rounded-full border-2 ${qrFgColor === "#000000" ? "border-indigo-400 ring-2 ring-indigo-500/30" : "border-border"} flex items-center justify-center transition-all`}
                     >
                       <div className="w-5 h-5 rounded-full bg-black" />
                     </button>
                     <button
                       onClick={() => setQrFgColor("#ffffff")}
-                      className={`w-8 h-8 rounded-full border-2 ${qrFgColor === "#ffffff" ? "border-indigo-400 ring-2 ring-indigo-500/30" : "border-gray-600"} flex items-center justify-center transition-all`}
+                      className={`w-8 h-8 rounded-full border-2 ${qrFgColor === "#ffffff" ? "border-indigo-400 ring-2 ring-indigo-500/30" : "border-border"} flex items-center justify-center transition-all`}
                     >
                       <div className="w-5 h-5 rounded-full bg-white" />
                     </button>
@@ -664,8 +664,8 @@ export default function Dashboard() {
                   {/* Right - Title, description, QR code */}
                   <div className="flex-1 flex flex-col items-end gap-2">
                     <div className="text-right">
-                      <h2 className="text-sm font-semibold text-gray-200">קוד QR</h2>
-                      <p className="text-xs text-gray-500 mt-0.5">כל מי שסורק יכול לפתוח את האירוע</p>
+                      <h2 className="text-sm font-semibold text-foreground/80">קוד QR</h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">כל מי שסורק יכול לפתוח את האירוע</p>
                     </div>
                     <div className={`p-2 rounded-lg ${qrFgColor === "#ffffff" ? "bg-black" : "bg-white"}`}>
                       <img
@@ -679,7 +679,7 @@ export default function Dashboard() {
                 
                 <Button 
                   onClick={handleDownloadQR}
-                  className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold px-4 py-2.5 rounded-full text-sm transition-all"
+                  className="w-full bg-secondary hover:bg-secondary/80 text-white font-semibold px-4 py-2.5 rounded-full text-sm transition-all"
                 >
                   הורדה
                   <Download className="w-4 h-4 ml-2" />
@@ -692,7 +692,7 @@ export default function Dashboard() {
               {/* Action Buttons */}
               <div className="flex flex-col gap-3 pt-2">
                 <Link to={createPageUrl(`EventGallery?code=${event.unique_code}`)} className="w-full">
-                  <Button className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold text-sm h-10 rounded-lg transition-all">
+                  <Button className="w-full bg-secondary hover:bg-secondary/80 text-white font-semibold text-sm h-10 rounded-lg transition-all">
                     <ExternalLink className="w-4 h-4 mr-2" />
                     צפייה בגלריה
                   </Button>
@@ -717,29 +717,29 @@ export default function Dashboard() {
                   <div className="space-y-4 mt-2">
 
                     {/* בקשות הסרה */}
-                    <div className="bg-[#1a1a1a] rounded-xl p-4">
+                    <div className="bg-card rounded-xl p-4">
                       <div className="text-right mb-2">
-                        <h2 className="text-sm font-semibold text-gray-200">בקשות הסרת תמונות</h2>
-                        <p className="text-xs text-gray-500 mt-0.5">אורחים שביקשו להסיר תמונות מהגלריה</p>
+                        <h2 className="text-sm font-semibold text-foreground/80">בקשות הסרת תמונות</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">אורחים שביקשו להסיר תמונות מהגלריה</p>
                       </div>
                       <DeletionRequestsPanel eventId={event?.id} />
                     </div>
 
-                    <div className="bg-[#1a1a1a] rounded-xl p-4">
+                    <div className="bg-card rounded-xl p-4">
                       <div className="text-right mb-4">
-                        <h2 className="text-sm font-semibold text-gray-200">ניהול תמונות</h2>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <h2 className="text-sm font-semibold text-foreground/80">ניהול תמונות</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {unapprovedPhotos.length} תמונות ממתינות לאישור
                         </p>
                       </div>
                       {unapprovedPhotos.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 text-center">
                           <ShieldCheck className="w-12 h-12 text-green-500 mb-3" />
-                          <p className="text-sm text-gray-400">אין תמונות הממתינות לאישור</p>
+                          <p className="text-sm text-muted-foreground">אין תמונות הממתינות לאישור</p>
                         </div>
                       ) : (
                         <>
-                          <p className="text-xs text-gray-500 text-right mb-3">הקש על תמונות לבחירה, ולאחר מכן בחר פעולה</p>
+                          <p className="text-xs text-muted-foreground text-right mb-3">הקש על תמונות לבחירה, ולאחר מכן בחר פעולה</p>
                           <div className="grid grid-cols-3 gap-2">
                             {unapprovedPhotos.map((photo, index) => (
                               <PhotoCard
@@ -772,7 +772,7 @@ export default function Dashboard() {
               {/* Bulk moderation sticky bar */}
               {selectedModerationIds.size > 0 && (
                 <div
-                  className="fixed bottom-0 left-0 w-full z-50 bg-zinc-900/95 backdrop-blur-md border-t border-white/10 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] animate-in slide-in-from-bottom duration-200"
+                  className="fixed bottom-0 left-0 w-full z-50 bg-background/95 backdrop-blur-md border-t border-white/10 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] animate-in slide-in-from-bottom duration-200"
                   dir="rtl"
                 >
                   <div className="flex items-center justify-between max-w-lg mx-auto">

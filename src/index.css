@@ -132,11 +132,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Serif headings by default */
-  h1, h2, h3 {
-    @apply font-playfair;
-  }
-
   /* Thin custom scrollbar — indigo accent */
   ::-webkit-scrollbar        { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track  { @apply bg-transparent; }
@@ -254,6 +249,13 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /**
+   * Scrollbar utility — hides scrollbar while preserving scroll behaviour
+   * Usage: <div className="scrollbar-hide overflow-x-auto">
+   */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
   /**
    * Monogram display style

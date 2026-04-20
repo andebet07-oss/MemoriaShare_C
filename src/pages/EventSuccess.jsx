@@ -194,14 +194,6 @@ export default function EventSuccess() {
         </DialogContent>
       </Dialog>
 
-      <style>{`
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
-        .animate-float-slow { animation: float 6s ease-in-out infinite; }
-        .animate-pulse-slow { animation: pulse 4s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.05); } }
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        .animate-shimmer { animation: shimmer 4s infinite linear; }
-      `}</style>
     </div>
   );
 }

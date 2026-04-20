@@ -113,7 +113,7 @@ export default function Header({ onOpenChooser }) {
 
           <div className="flex items-center justify-between p-6 border-b border-border">
             <img src="/LOGO.png" alt="MemoriaShare" className="h-8 w-auto object-contain" />
-            <button onClick={closeMenu} className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/40 hover:text-foreground transition-colors">
+            <button onClick={closeMenu} aria-label="סגור תפריט" className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/40 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
               <X className="w-6 h-6" />
             </button>
           </div>

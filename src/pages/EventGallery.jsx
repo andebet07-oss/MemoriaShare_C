@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { Camera, Upload, Sparkles, CheckCircle, Users, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import useEventGallery from "@/hooks/useEventGallery";
@@ -26,9 +28,9 @@ let _guestBookDismissed = false;
 function EmptyState({ isAdminView, onUpload, disabled, title, subtitle }) {
   return (
     <div className="text-center py-24 sm:py-32 px-4">
-      <Camera className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 text-gray-600" />
+      <Camera className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 text-muted-foreground" />
       <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3">{title || "עדיין לא הועלו תמונות"}</h3>
-      <p className="text-gray-400 text-base sm:text-lg mb-8 max-w-md mx-auto">{subtitle || "היו הראשונים להעלות תמונה מהאירוע!"}</p>
+      <p className="text-muted-foreground text-base sm:text-lg mb-8 max-w-md mx-auto">{subtitle || "היו הראשונים להעלות תמונה מהאירוע!"}</p>
       {!isAdminView && onUpload && (
         <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
           <Button onClick={() => onUpload('camera')} disabled={disabled}
@@ -183,7 +185,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
           initial={{ y: 60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-          className="w-full max-w-sm bg-[#111] border border-white/10 rounded-[28px] overflow-hidden shadow-2xl"
+          className="w-full max-w-sm bg-cool-900 border border-white/10 rounded-[28px] overflow-hidden shadow-2xl"
         >
           <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
           <form onSubmit={handleGuestBookSubmit} dir="rtl" className="p-7 flex flex-col gap-5">
@@ -240,23 +242,13 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
   }
 
   if (g.isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-600 border-t-transparent mx-auto mb-4" />
-          <p className="text-gray-300 font-medium">טוען גלריה...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState fullScreen message="טוען גלריה..." />;
   }
 
   if (g.pageError === 'LOAD_ERROR') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-center px-4" dir="rtl">
-        <div className="text-5xl mb-4">⚠️</div>
-        <h1 className="text-2xl font-bold text-white mb-2">שגיאה בטעינת הגלריה</h1>
-        <p className="text-gray-400 mb-6">{"לא ניתן היה לטעון את נתוני האירוע.\nאנא בדוק את החיבור לאינטרנט ונסה שוב."}</p>
-        <Button onClick={() => { g.loadEventAndPhotos(); }} className="bg-indigo-600 hover:bg-indigo-700 text-white min-h-[44px]">נסה שוב</Button>
+      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
+        <ErrorState message="לא ניתן היה לטעון את נתוני האירוע. אנא בדוק את החיבור לאינטרנט ונסה שוב." onRetry={g.loadEventAndPhotos} fullScreen />
       </div>
     );
   }
@@ -296,7 +288,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
               exit={{ scale: 0.85, y: 20, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 320, damping: 26 }}
               onClick={e => e.stopPropagation()}
-              className="w-full max-w-sm bg-[#111111] border border-white/10 rounded-[32px] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.9)]"
+              className="w-full max-w-sm bg-cool-900 border border-white/10 rounded-[32px] overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.9)]"
             >
               <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #25D366, #128C7E, #25D366)' }} />
               <div className="p-7 flex flex-col items-center gap-5 text-center">
@@ -308,7 +300,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                 </div>
                 <div className="space-y-1.5">
                   <h3 className="text-2xl font-black text-white tracking-tight">הועלו בהצלחה!</h3>
-                  <p className="text-gray-400 text-sm">כל התמונות עלו לאלבום</p>
+                  <p className="text-muted-foreground text-sm">כל התמונות עלו לאלבום</p>
                 </div>
                 <button onClick={() => g.setUploadSuccess(false)}
                   className="px-8 py-3 rounded-2xl text-sm font-bold text-white/70 hover:text-white hover:bg-white/5 border border-white/5">
@@ -347,7 +339,7 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
           <div className="py-2 -mx-4 sm:-mx-6">
             <div className="flex gap-3 sm:gap-4 justify-center px-4">
               <Button onClick={() => g.handleUploadClick('camera')} disabled={g.isUploadingBatch}
-                className={`rounded-2xl flex items-center gap-2 px-6 sm:px-8 py-4 font-semibold text-base sm:text-lg transition-all active:scale-95 shadow-lg border ${isLight ? 'bg-zinc-900 hover:bg-zinc-800 text-white border-zinc-700' : 'bg-gradient-to-r from-white/15 to-white/10 hover:from-white/25 hover:to-white/20 text-white border-white/20'}`}>
+                className={`rounded-2xl flex items-center gap-2 px-6 sm:px-8 py-4 font-semibold text-base sm:text-lg transition-all active:scale-95 shadow-lg border ${isLight ? 'bg-card hover:bg-secondary text-white border-border' : 'bg-gradient-to-r from-white/15 to-white/10 hover:from-white/25 hover:to-white/20 text-white border-white/20'}`}>
                 <Camera className="w-5 h-5" /> צלמו עכשיו
               </Button>
               <Button onClick={() => g.handleUploadClick('gallery')} disabled={g.isUploadingBatch}
@@ -387,18 +379,24 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
               /* ── Guest view ──────────────────────────────────────────────── */
               <>
                 {/* Instagram-style tab bar — always visible */}
-                <div className={`flex border-b mb-0 ${isLight ? 'border-zinc-200' : 'border-white/10'}`} dir="rtl">
+                <div role="tablist" className={`flex border-b mb-0 ${isLight ? 'border-zinc-200' : 'border-white/10'}`} dir="rtl">
                   <button
+                    role="tab"
+                    aria-selected={g.activeTab === 'my-photos'}
+                    aria-controls="tab-my-photos"
                     onClick={() => g.setActiveTab('my-photos')}
-                    className={`flex-1 py-3 text-sm font-semibold transition-colors relative ${g.activeTab === 'my-photos' ? (isLight ? 'text-zinc-900' : 'text-white') : (isLight ? 'text-zinc-400 hover:text-zinc-700' : 'text-white/40 hover:text-white/70')}`}
+                    className={`flex-1 py-3 text-sm font-semibold transition-colors relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${g.activeTab === 'my-photos' ? (isLight ? 'text-zinc-900' : 'text-white') : (isLight ? 'text-zinc-400 hover:text-zinc-700' : 'text-white/40 hover:text-white/70')}`}
                   >
                     התמונות שלי
                     {g.myPhotos.length > 0 && <span className={`mr-1.5 text-xs ${isLight ? 'text-zinc-400' : 'text-white/50'}`}>({g.myPhotos.length})</span>}
                     {g.activeTab === 'my-photos' && <span className={`absolute bottom-0 right-0 left-0 h-[2px] rounded-full ${isLight ? 'bg-zinc-900' : 'bg-white'}`} />}
                   </button>
                   <button
+                    role="tab"
+                    aria-selected={g.activeTab === 'shared'}
+                    aria-controls="tab-shared"
                     onClick={() => g.setActiveTab('shared')}
-                    className={`flex-1 py-3 text-sm font-semibold transition-colors relative ${g.activeTab === 'shared' ? (isLight ? 'text-zinc-900' : 'text-white') : (isLight ? 'text-zinc-400 hover:text-zinc-700' : 'text-white/40 hover:text-white/70')}`}
+                    className={`flex-1 py-3 text-sm font-semibold transition-colors relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${g.activeTab === 'shared' ? (isLight ? 'text-zinc-900' : 'text-white') : (isLight ? 'text-zinc-400 hover:text-zinc-700' : 'text-white/40 hover:text-white/70')}`}
                   >
                     גלריה ציבורית
                     {g.event.auto_publish_guest_photos && g.sharedPhotos.length > 0 && <span className={`mr-1.5 text-xs ${isLight ? 'text-zinc-400' : 'text-white/50'}`}>({g.sharedPhotos.length})</span>}
@@ -437,9 +435,9 @@ export default function EventGallery({ eventCode: propEventCode, isAdminView = f
                       hasMore={g.sharedHasMore} isFetchingMore={g.isFetchingMore} fetchNextPage={g.fetchNextPage} />
                   ) : (
                     <div className="text-center py-24 px-4">
-                      <Users className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                      <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
                       <h3 className="text-xl font-bold text-white mb-2">עדיין אין תמונות בגלריה</h3>
-                      <p className="text-gray-400 text-sm">תמונות שיאושרו על ידי מנהל האירוע יופיעו כאן</p>
+                      <p className="text-muted-foreground text-sm">תמונות שיאושרו על ידי מנהל האירוע יופיעו כאן</p>
                     </div>
                   )
                 )}

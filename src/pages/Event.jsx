@@ -3,6 +3,7 @@ import memoriaService from "@/components/memoriaService";
 import MagnetGuestPage from "@/pages/MagnetGuestPage";
 
 import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { Calendar, Camera, Loader2, Lock, Users, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -63,17 +64,13 @@ export default function EventPage() {
     navigate(createPageUrl(`EventGallery?code=${event.unique_code}`));
   };
 
-  if (isLoading) return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <Loader2 className="w-12 h-12 animate-spin text-gray-400" />
-    </div>
-  );
+  if (isLoading) return <LoadingState fullScreen />;
 
   if (!event) return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center text-center p-6">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center text-center p-6">
       <div className="max-w-md">
-        <h1 className="text-3xl font-bold mb-4">אירוע לא נמצא</h1>
-        <p className="text-gray-400 mb-8">ייתכן שהקוד שגוי או שהאירוע הוסר</p>
+        <h1 className="font-heebo font-extrabold text-3xl mb-4">אירוע לא נמצא</h1>
+        <p className="text-muted-foreground mb-8">ייתכן שהקוד שגוי או שהאירוע הוסר</p>
       </div>
     </div>
   );
@@ -180,10 +177,6 @@ export default function EventPage() {
         </div>
       </div>
 
-      <style>{`
-        @keyframes fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
-      `}</style>
     </div>
   );
 }

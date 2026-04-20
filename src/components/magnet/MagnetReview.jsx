@@ -101,7 +101,7 @@ function drawSticker(ctx, s, w, h, svgImg) {
 }
 
 const PaperPlane = () => (
-  <svg width="68" height="68" viewBox="0 0 68 68" fill="none" className="animate-paperPlane">
+  <svg width="68" height="68" viewBox="0 0 68 68" fill="none" className="animate-paper-fly">
     <path d="M6 34L62 6L42 62L32 40L6 34Z" fill="#caff4a" opacity="0.9"/>
     <path d="M32 40L42 34L6 34" stroke="#84cc16" strokeWidth="1.8" strokeLinejoin="round"/>
     <path d="M32 40L42 62" stroke="#84cc16" strokeWidth="1.4"/>
@@ -441,15 +441,6 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         </div>
       )}
 
-      <style>{`
-        @keyframes paperFly {
-          0%   { transform: translate(0,0) rotate(0deg); opacity:1; }
-          45%  { transform: translate(28px,-22px) rotate(10deg); opacity:1; }
-          72%  { transform: translate(46px,-38px) rotate(14deg); opacity:0.55; }
-          100% { transform: translate(0,0) rotate(0deg); opacity:1; }
-        }
-        .animate-paperPlane { animation: paperFly 1.3s ease-in-out infinite; }
-      `}</style>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Home, Image as ImageIcon, AlertTriangle, Search, Filter, Users, Plus, LayoutDashboard, ExternalLink, Copy, Trash2, Check, Camera } from "lucide-react";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import PullToRefresh from "../components/PullToRefresh";
@@ -40,7 +41,7 @@ const EventCard = React.memo(function EventCard({ event, onDelete, isAdmin = fal
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         {isLive && (
           <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded-md animate-pulse tracking-widest shadow-lg">
-            LIVE
+            שידור חי
           </div>
         )}
         {/* Stats overlay on image */}
@@ -55,7 +56,7 @@ const EventCard = React.memo(function EventCard({ event, onDelete, isAdmin = fal
         <p className="text-indigo-400 text-[10px] tracking-[0.3em] uppercase mb-1 font-bold">
           {new Date(event.date).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
-        <h3 className="font-playfair text-foreground text-xl leading-tight mb-4 truncate">{event.name}</h3>
+        <h3 className="font-heebo font-extrabold text-foreground text-xl leading-tight mb-4 truncate">{event.name}</h3>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
@@ -178,8 +179,8 @@ export default function MyEvents() {
 
   if (isLoading) {
     return (
-      <div className="dark min-h-screen flex items-center justify-center bg-cool-950">
-        <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
+      <div className="dark min-h-screen bg-cool-950">
+        <LoadingState fullScreen />
       </div>
     );
   }
@@ -187,10 +188,10 @@ export default function MyEvents() {
   if (!isAuthenticated || !user) {
     return (
       <div className="dark min-h-screen flex flex-col items-center justify-center text-center bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground px-6" dir="rtl">
-        <h1 className="font-playfair text-4xl md:text-5xl leading-[1.1] text-foreground/90 mb-4">גישה למנהלים בלבד</h1>
+        <h1 className="font-heebo font-extrabold text-4xl md:text-5xl leading-[1.1] text-foreground/90 mb-4">גישה למנהלים בלבד</h1>
         <p className="text-muted-foreground mb-8">עליך להתחבר כדי לראות את האירועים שלך.</p>
         <div className="flex gap-4">
-          <Button onClick={() => navigateToLogin()} className="luxury-button text-lg px-8 py-3 min-h-[44px]">התחברות</Button>
+          <Button onClick={() => navigateToLogin()} className="bg-cool-50 text-cool-950 hover:bg-foreground font-semibold text-lg px-8 py-3 h-auto min-h-[44px] shadow-indigo-soft rounded-md">התחברות</Button>
           <Button onClick={() => navigate(createPageUrl("Home"))} variant="outline" className="border-border text-foreground hover:bg-accent min-h-[44px]">
             <Home className="w-4 h-4 ml-2" /> דף הבית
           </Button>
@@ -210,7 +211,7 @@ export default function MyEvents() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <p className="text-indigo-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-3"><bdi>01</bdi> · ניהול</p>
-              <h1 className="font-playfair text-3xl md:text-4xl leading-[1.1] text-foreground/90 tracking-tight">האירועים שלי</h1>
+              <h1 className="font-heebo font-extrabold text-3xl md:text-4xl leading-[1.1] text-foreground/90 tracking-tight">האירועים שלי</h1>
               <p className="text-muted-foreground text-sm mt-2">{filteredEvents.length} אירועים</p>
             </div>
             <div className="flex items-center gap-3">
@@ -228,10 +229,10 @@ export default function MyEvents() {
                 <Filter className="w-5 h-5 text-muted-foreground" />
               </button>
               <Link to={createPageUrl("CreateEvent")}>
-                <button className="premium-submit-button flex items-center gap-2 px-5 py-2.5 text-sm font-bold">
+                <Button className="bg-cool-50 text-cool-950 hover:bg-foreground font-bold text-sm rounded-full px-5 py-2.5 h-auto shadow-indigo-soft active:scale-95 flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   אירוע חדש
-                </button>
+                </Button>
               </Link>
             </div>
           </div>
@@ -310,7 +311,7 @@ export default function MyEvents() {
               <div className="w-20 h-20 rounded-3xl bg-secondary border border-border flex items-center justify-center mb-6 shadow-xl">
                 <Camera className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h2 className="font-playfair text-3xl text-foreground/90 mb-3">
+              <h2 className="font-heebo font-extrabold text-3xl text-foreground/90 mb-3">
                 {searchTerm || statusFilter !== "all" || typeFilter !== "all" ? "לא נמצאו אירועים" : "עדיין אין אירועים"}
               </h2>
               <p className="text-muted-foreground text-sm mb-8 max-w-xs">
@@ -320,10 +321,10 @@ export default function MyEvents() {
               </p>
               {!searchTerm && statusFilter === "all" && typeFilter === "all" && (
                 <Link to={createPageUrl("CreateEvent")}>
-                  <button className="premium-submit-button flex items-center gap-2 px-8 py-3 text-base font-bold">
+                  <Button className="bg-cool-50 text-cool-950 hover:bg-foreground font-bold text-base rounded-full px-8 py-3 h-auto shadow-indigo-soft active:scale-95 flex items-center gap-2">
                     <Plus className="w-5 h-5" />
                     צור אירוע ראשון
-                  </button>
+                  </Button>
                 </Link>
               )}
             </div>
@@ -344,7 +345,7 @@ export default function MyEvents() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-3 pt-4 flex-col sm:flex-row">
-            <Button onClick={handleDeleteConfirmed} disabled={isDeleting} className="delete-button w-full sm:w-auto min-h-[44px]">
+            <Button onClick={handleDeleteConfirmed} disabled={isDeleting} variant="destructive" className="w-full sm:w-auto min-h-[44px]">
               {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "כן, מחק"}
             </Button>
             <DialogClose asChild>
@@ -354,19 +355,6 @@ export default function MyEvents() {
         </DialogContent>
       </Dialog>
 
-      <style>{`
-        .delete-button {
-          background: linear-gradient(135deg, #6e1a1a 0%, #a62626 100%);
-          color: #f3f4f6; font-weight: 600;
-          border: 1px solid rgba(255,120,120,0.2);
-          transition: all 0.2s ease-in-out;
-        }
-        .delete-button:hover {
-          background: linear-gradient(135deg, #a62626 0%, #c13030 100%);
-          transform: translateY(-1px);
-        }
-        .delete-button:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
-      `}</style>
     </>
   );
 }

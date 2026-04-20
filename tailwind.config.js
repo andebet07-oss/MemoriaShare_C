@@ -173,6 +173,24 @@ module.exports = {
           from: { backgroundPosition: '-200% 0' },
           to:   { backgroundPosition:  '200% 0' },
         },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%':      { transform: 'translateY(-8px)' },
+        },
+        'shimmer-pass': {
+          '0%':   { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'paper-fly': {
+          '0%':   { transform: 'translate(0,0) rotate(0deg)',        opacity: '1' },
+          '45%':  { transform: 'translate(28px,-22px) rotate(10deg)', opacity: '1' },
+          '72%':  { transform: 'translate(46px,-38px) rotate(14deg)', opacity: '0.55' },
+          '100%': { transform: 'translate(0,0) rotate(0deg)',        opacity: '1' },
+        },
+        'pulse-slow': {
+          '0%, 100%': { opacity: '0.8', transform: 'scale(1)' },
+          '50%':      { opacity: '0.4', transform: 'scale(1.05)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -182,6 +200,11 @@ module.exports = {
         'slide-up':       'slide-up 0.5s cubic-bezier(0.16,1,0.3,1)',
         'scale-in':       'scale-in 0.25s cubic-bezier(0.16,1,0.3,1)',
         'shimmer-sweep':  'shimmer-sweep 2s ease-in-out infinite',
+        'float-slow':     'float 6s ease-in-out infinite',
+        'shimmer-pass':   'shimmer-pass 4s infinite linear',
+        'paper-fly':      'paper-fly 1.3s ease-in-out infinite',
+        'pulse-slow':     'pulse-slow 4s ease-in-out infinite',
+        'shimmer':        'shimmer-pass 4s infinite linear',
       },
     },
   },
