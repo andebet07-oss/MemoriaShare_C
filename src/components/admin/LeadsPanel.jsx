@@ -127,12 +127,15 @@ export default function LeadsPanel() {
   );
 
   return (
-    <div dir="rtl">
+    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20" dir="rtl">
       {/* Header row */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-base font-bold text-white">לידים</h2>
-          <p className="text-white/30 text-xs mt-0.5">{leads.length} סה״כ</p>
+          <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1">
+            <bdi>04</bdi> · לידים
+          </p>
+          <h2 className="font-playfair text-2xl text-foreground">לידים</h2>
+          <p className="text-muted-foreground text-xs mt-0.5">{leads.length} סה״כ</p>
         </div>
         <button
           onClick={fetchLeads}
@@ -192,7 +195,7 @@ export default function LeadsPanel() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <span className="font-bold text-white text-[15px] leading-snug truncate">
+                      <span className="font-playfair text-foreground text-lg leading-snug truncate">
                         {eventName || '—'}
                       </span>
                       <StatusDot status={lead.status} />
@@ -200,21 +203,21 @@ export default function LeadsPanel() {
 
                     {/* Secondary info line */}
                     <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                      <span className="text-white/50 text-xs">{lead.full_name}</span>
+                      <span className="text-muted-foreground text-xs">{lead.full_name}</span>
                       {formattedDate && (
-                        <span className="flex items-center gap-1 text-white/35 text-xs">
+                        <span className="flex items-center gap-1 text-muted-foreground/70 text-xs">
                           <CalendarDays className="w-3 h-3" />
                           {formattedDate}
                         </span>
                       )}
                       {location && (
-                        <span className="flex items-center gap-1 text-white/35 text-xs">
+                        <span className="flex items-center gap-1 text-muted-foreground/70 text-xs">
                           <MapPin className="w-3 h-3" />
                           {location}
                         </span>
                       )}
                       {guestCount && (
-                        <span className="flex items-center gap-1 text-white/35 text-xs">
+                        <span className="flex items-center gap-1 text-muted-foreground/70 text-xs">
                           <Users className="w-3 h-3" />
                           {guestCount}
                         </span>

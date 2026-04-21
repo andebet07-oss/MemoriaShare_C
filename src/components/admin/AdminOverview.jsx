@@ -86,7 +86,7 @@ export default function AdminOverview() {
       {/* Leads by status */}
       {leads.length > 0 && (
         <div className="mb-6 rounded-2xl p-4 bg-card border border-border">
-          <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-[0.3em] mb-3">לידים לפי סטטוס</p>
+          <p className="text-violet-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-3">לידים לפי סטטוס</p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             {['new', 'contacted', 'converted', 'closed'].map(s => {
               const count = leads.filter(l => l.status === s).length;
@@ -103,7 +103,7 @@ export default function AdminOverview() {
       )}
 
       {/* Recent events */}
-      <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-[0.3em] mb-3">אירועים אחרונים</p>
+      <p className="text-violet-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-3">אירועים אחרונים</p>
       <div className="space-y-2">
         {recent.map(ev => (
           <button
