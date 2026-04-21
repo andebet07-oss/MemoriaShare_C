@@ -266,7 +266,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         const fCtx = finalCanvas.getContext('2d');
         for (const s of stickers) {
           const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
-          drawSticker(fCtx, s, hw, hh, svgImg);
+          drawSticker(fCtx, s, fw, fh, svgImg);
         }
       } else {
         // Procedural drawFrame pipeline
@@ -277,7 +277,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         if (eventFrame) eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
         for (const s of stickers) {
           const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
-          drawSticker(ctx, s, photoW, photoH, svgImg);
+          drawSticker(ctx, s, photoW, totalH, svgImg);
         }
       }
       const blob = await canvasToJpegBlob(finalCanvas, 0.92);
@@ -329,11 +329,11 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
             </div>
           )}
 
-          {/* Sticker drag area — covers photo portion only */}
+          {/* Sticker drag area — full magnet including white border */}
           <div
             ref={photoRef}
-            className="absolute top-0 inset-x-0 overflow-hidden"
-            style={{ height: `${photoFrac * 100}%`, touchAction: draggingUid ? 'none' : 'auto' }}
+            className="absolute inset-0"
+            style={{ touchAction: draggingUid ? 'none' : 'auto' }}
           >
             {stickers.map(s => (
               <div
