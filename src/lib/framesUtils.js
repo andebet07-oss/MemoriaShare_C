@@ -43,16 +43,27 @@ export function findApprovedFrame(frameId) {
  * DB-authoritative approved-frame lookup for assignment paths.
  * Primary: checks frames_meta table status.
  * Fallback: local FRAMES_META seed (used only when DB call fails).
- * Returns the frame object (from framePacks) or null if archived/unknown.
+ *
+ * Returns either:
+ *   - A procedural frame object { id, name, drawFrame, ... } from framePacks
+ *   - A PNG frame descriptor  { id, isPng: true, image_url, hole_bbox }
+ *   - null if archived/unknown
  */
 export async function findApprovedFrameFromDB(frameId) {
   if (!frameId || frameId.startsWith('http')) return null;
   try {
     const row = await memoriaService.frameMeta.getById(frameId);
     if (!row || row.status !== 'approved') return null;
+
+    // PNG frame — return lightweight descriptor; no drawFrame needed
+    if (row.image_url && row.hole_bbox) {
+      return { id: frameId, isPng: true, image_url: row.image_url, hole_bbox: row.hole_bbox };
+    }
+
+    // Procedural frame — resolve from local pack
     return ALL_FRAMES.find(f => f.id === frameId) ?? null;
   } catch {
-    // DB unavailable — fall back to local seed
+    // DB unavailable — fall back to local seed (procedural only)
     return findApprovedFrame(frameId);
   }
 }

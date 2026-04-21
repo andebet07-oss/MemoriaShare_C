@@ -4,8 +4,8 @@ import { getStickerPack } from './stickerPacks';
 import { SVG_STICKERS } from './svgStickers';
 import { LABEL_H_RATIO } from './framePacks';
 import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
+import { compositePngFrame, canvasToJpegBlob } from '@/lib/compositePngFrame';
 import memoriaService from '@/components/memoriaService';
-import { compressImage } from '@/functions/processImage';
 
 const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
 const EMOJI_SIZE = 52;
@@ -162,13 +162,25 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       if (!eventFrame || cancelled) return;
 
       const img = new Image();
-      img.onload = () => {
-        if (cancelled) return;
+      img.onerror = () => {};
+      img.src = imageDataURL;
+      await new Promise((res) => { img.onload = res; img.onerror = res; });
+      if (cancelled) return;
+
+      let canvas;
+      if (eventFrame.isPng) {
+        // PNG overlay pipeline — compositePngFrame handles sizing
+        canvas = await compositePngFrame(img, eventFrame);
+        setPhotoFrac(eventFrame.hole_bbox.h <= 1
+          ? eventFrame.hole_bbox.h
+          : eventFrame.hole_bbox.h / canvas.height);
+      } else {
+        // Procedural drawFrame pipeline
         const photoW = img.naturalWidth;
         const photoH = img.naturalHeight;
         const labelH = Math.round(photoW * LABEL_H_RATIO);
         const totalH = photoH + labelH;
-        const canvas = document.createElement('canvas');
+        canvas = document.createElement('canvas');
         canvas.width = photoW; canvas.height = totalH;
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#ffffff';
@@ -176,10 +188,8 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         ctx.drawImage(img, 0, 0);
         eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
         setPhotoFrac(photoH / totalH);
-        setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9));
-      };
-      img.onerror = () => {};
-      img.src = imageDataURL;
+      }
+      if (!cancelled) setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9));
     }
 
     render();
@@ -237,24 +247,40 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       canvas.height = totalH;
       const ctx = canvas.getContext('2d');
 
-      // White base (label area will be drawn by frame)
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, photoW, totalH);
-      ctx.drawImage(img, 0, 0);
-
       // Resolve frame: DB-authoritative check; fallback to local seed on DB error.
       const frameId = event?.overlay_frame_url;
       const assigned = (frameId && !frameId.startsWith('http'))
         ? await findApprovedFrameFromDB(frameId)
         : null;
       const eventFrame = assigned ?? getApprovedFramePack(event?.name || '')[0];
-      if (eventFrame) eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
-      for (const s of stickers) {
-        const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
-        // s.x / s.y are relative to the photo area — pass photoW/photoH, not totalH
-        drawSticker(ctx, s, photoW, photoH, svgImg);
+
+      let finalCanvas;
+      if (eventFrame?.isPng) {
+        // PNG overlay pipeline — composite handles sizing, stickers drawn after
+        finalCanvas = await compositePngFrame(img, eventFrame);
+        // Draw stickers into the hole area of the PNG canvas
+        const hb = eventFrame.hole_bbox;
+        const fw = finalCanvas.width, fh = finalCanvas.height;
+        const hw = hb.w <= 1 ? Math.round(hb.w * fw) : hb.w;
+        const hh = hb.h <= 1 ? Math.round(hb.h * fh) : hb.h;
+        const fCtx = finalCanvas.getContext('2d');
+        for (const s of stickers) {
+          const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
+          drawSticker(fCtx, s, hw, hh, svgImg);
+        }
+      } else {
+        // Procedural drawFrame pipeline
+        finalCanvas = canvas;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, photoW, totalH);
+        ctx.drawImage(img, 0, 0);
+        if (eventFrame) eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
+        for (const s of stickers) {
+          const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
+          drawSticker(ctx, s, photoW, photoH, svgImg);
+        }
       }
-      const blob = await compressImage(canvas);
+      const blob = await canvasToJpegBlob(finalCanvas, 0.92);
       const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
       const { file_url, path } = await memoriaService.storage.upload(file, event.id);
       photo = await memoriaService.photos.create({ event_id: event.id, file_url, path, created_by: userId, is_approved: true, is_hidden: false, filter_applied: 'none' });

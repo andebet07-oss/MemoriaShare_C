@@ -1,10 +1,14 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Search, X as XIcon, Layers } from 'lucide-react';
+import { Search, X as XIcon, Layers, Upload } from 'lucide-react';
 import { FRAME_PACKS } from '@/components/magnet/framePacks';
 import { STYLE_LABELS, CATEGORY_LABELS } from '@/lib/framesMeta';
 import { useFramesMeta } from '@/hooks/useFramesMeta';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import memoriaService from '@/components/memoriaService';
 import FrameCard from '@/components/admin/frames/FrameCard';
 import FrameDetailPanel from '@/components/admin/frames/FrameDetailPanel';
+import FramePngPreview from '@/components/admin/frames/FramePngPreview';
+import FrameUploadDialog from '@/components/admin/frames/FrameUploadDialog';
 
 // Flatten FRAME_PACKS into a list with category attached — drawing data only, no metadata
 const ENRICHED = Object.entries(FRAME_PACKS).flatMap(([cat, frames]) =>
@@ -14,18 +18,30 @@ const ENRICHED = Object.entries(FRAME_PACKS).flatMap(([cat, frames]) =>
 const CATEGORIES = [{ key: 'all', label: 'הכל' }, ...Object.keys(FRAME_PACKS).map(k => ({ key: k, label: CATEGORY_LABELS[k] ?? k }))];
 const STYLES     = [{ key: 'all', label: 'כל הסגנונות' }, ...Object.keys(STYLE_LABELS).map(k => ({ key: k, label: STYLE_LABELS[k] }))];
 const SORTS      = [{ value: 'curated', label: 'מאורגן' }, { value: 'quality', label: 'ניקוד איכות' }, { value: 'newest', label: 'חדש ביותר' }];
+const SOURCES    = [{ value: 'all', label: 'הכל' }, { value: 'code', label: 'קוד' }, { value: 'png', label: 'PNG' }];
 
 export default function FramesLibrary() {
   const [search,      setSearch]      = useState('');
   const [catFilter,   setCatFilter]   = useState('all');
   const [styleFilter, setStyleFilter] = useState('all');
   const [sortBy,      setSortBy]      = useState('curated');
+  const [sourceFilter,setSourceFilter]= useState('all');
   const [selected,    setSelected]    = useState(null);
+  const [showUpload,  setShowUpload]  = useState(false);
 
+  const queryClient = useQueryClient();
   const { meta, isLoading } = useFramesMeta();
+
+  // Fetch PNG frames from DB
+  const { data: pngFrames = [], isLoading: pngLoading } = useQuery({
+    queryKey: ['admin-png-frames'],
+    queryFn:  () => memoriaService.frameMeta.listPngFrames(),
+    staleTime: 30_000,
+  });
 
   const approvedTotal = useMemo(() => ENRICHED.filter(f => meta[f.id]?.status === 'approved').length, [meta]);
   const archivedTotal = useMemo(() => ENRICHED.filter(f => meta[f.id]?.status === 'archived').length, [meta]);
+  const pngTotal      = pngFrames.length;
 
   // Escape closes detail panel
   useEffect(() => {
@@ -43,7 +59,9 @@ export default function FramesLibrary() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let list = ENRICHED.filter(f => {
+
+    // Procedural (code) frames
+    let codeList = sourceFilter === 'png' ? [] : ENRICHED.filter(f => {
       const m = meta[f.id];
       if (catFilter !== 'all' && f.category !== catFilter)       return false;
       if (styleFilter !== 'all' && m?.style !== styleFilter)      return false;
@@ -52,11 +70,20 @@ export default function FramesLibrary() {
       return true;
     });
 
-    if (sortBy === 'curated') list.sort((a, b) => (meta[b.id]?.sortWeight ?? 0)   - (meta[a.id]?.sortWeight ?? 0));
-    if (sortBy === 'quality') list.sort((a, b) => (meta[b.id]?.quality ?? 0)       - (meta[a.id]?.quality ?? 0));
-    if (sortBy === 'newest')  list.sort((a, b) => (b.isNew ? 1 : 0)               - (a.isNew ? 1 : 0));
-    return list;
-  }, [search, catFilter, styleFilter, sortBy, meta]);
+    if (sortBy === 'curated') codeList.sort((a, b) => (meta[b.id]?.sortWeight ?? 0) - (meta[a.id]?.sortWeight ?? 0));
+    if (sortBy === 'quality') codeList.sort((a, b) => (meta[b.id]?.quality ?? 0)     - (meta[a.id]?.quality ?? 0));
+    if (sortBy === 'newest')  codeList.sort((a, b) => (b.isNew ? 1 : 0)              - (a.isNew ? 1 : 0));
+
+    // PNG frames
+    let pngList = sourceFilter === 'code' ? [] : pngFrames.filter(f => {
+      if (catFilter !== 'all' && f.category !== catFilter)             return false;
+      if (styleFilter !== 'all' && f.style !== styleFilter)            return false;
+      if (q && !(f.frame_id ?? '').includes(q))                        return false;
+      return true;
+    });
+
+    return { codeList, pngList };
+  }, [search, catFilter, styleFilter, sortBy, sourceFilter, meta, pngFrames]);
 
   const reset = useCallback(() => { setSearch(''); setCatFilter('all'); setStyleFilter('all'); }, []);
 
@@ -64,12 +91,22 @@ export default function FramesLibrary() {
     <div className="min-h-full p-6 md:p-8" dir="rtl">
 
       {/* ── Page header ── */}
-      <div className="mb-7">
+      <div className="flex items-start justify-between mb-7">
+        <div>
         <p className="text-violet-400 text-[10px] font-bold tracking-[0.35em] uppercase mb-1.5">Admin · 01</p>
         <h1 className="font-playfair text-3xl text-foreground leading-tight">ספריית מסגרות</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {isLoading ? '…' : `${approvedTotal} מסגרות מאושרות\u2005·\u2005${archivedTotal} בארכיון`}
-        </p>
+            {(isLoading || pngLoading) ? '…' : `${approvedTotal} קוד · ${pngTotal} PNG · ${archivedTotal} בארכיון`}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowUpload(true)}
+          className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl text-white shrink-0 transition-all active:scale-95"
+          style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', boxShadow: '0 4px 16px rgba(124,58,237,0.3)' }}
+        >
+          <Upload className="w-4 h-4" />
+          העלאת מסגרת
+        </button>
       </div>
 
       {/* ── Category pill strip ── */}
@@ -92,6 +129,25 @@ export default function FramesLibrary() {
         ))}
       </div>
 
+
+      {/* ── Source filter ── */}
+      <div className="flex gap-2 mb-4">
+        {SOURCES.map(({ value, label }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setSourceFilter(value)}
+            className={[
+              'px-3 py-1 rounded-full text-[11px] font-bold transition-all',
+              sourceFilter === value
+                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                : 'text-muted-foreground border border-border hover:text-foreground',
+            ].join(' ')}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       {/* ── Filter row ── */}
       <div className="flex flex-wrap gap-3 mb-2 items-center">
         {/* Search */}
@@ -150,15 +206,15 @@ export default function FramesLibrary() {
 
       {/* ── Result count ── */}
       <p className="text-[11px] text-muted-foreground/40 mb-5 mt-3" aria-live="polite" aria-atomic="true">
-        {isLoading ? '...' : `${filtered.length} מסגרות`}
+        {(isLoading || pngLoading) ? '...' : `${filtered.codeList.length + filtered.pngList.length} מסגרות`}
       </p>
 
       {/* ── Grid ── */}
-      {!isLoading && filtered.length === 0 ? (
+      {!isLoading && !pngLoading && filtered.codeList.length === 0 && filtered.pngList.length === 0 ? (
         <Empty onReset={reset} />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-12">
-          {filtered.map(f => (
+          {filtered.codeList.map(f => (
             <FrameCard
               key={f.id}
               frame={f}
@@ -167,6 +223,37 @@ export default function FramesLibrary() {
               isSelected={selected?.id === f.id}
               onClick={frame => setSelected(frame)}
             />
+          ))}
+          {filtered.pngList.map(f => (
+            <button
+              key={f.frame_id}
+              type="button"
+              onClick={() => {/* PNG detail panel TBD */}}
+              className="group relative flex flex-col rounded-xl overflow-hidden text-right transition-all active:scale-[0.97] border border-border bg-card hover:border-violet-500/30 hover:shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
+            >
+              <div className="relative w-full" style={{ paddingBottom: '133%' }}>
+                <FramePngPreview
+                  frame={{ image_url: f.image_url, hole_bbox: f.hole_bbox }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+                />
+                <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-indigo-500/80 text-white text-[8px] font-black tracking-widest uppercase">
+                  PNG
+                </div>
+                {f.status === 'draft' && (
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-amber-500/80 text-white text-[8px] font-black tracking-widest uppercase">
+                    • טיוטא
+                  </div>
+                )}
+              </div>
+              <div className="px-3 pt-2.5 pb-3 space-y-1">
+                <span className="text-[8px] font-bold tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400">
+                  {f.style?.replace('_', ' ') ?? 'PNG'}
+                </span>
+                <p className="text-[13px] font-semibold text-foreground font-heebo leading-tight truncate">{f.frame_id}</p>
+                <p className="text-[10px] text-muted-foreground/70">{f.category ?? ''}</p>
+              </div>
+            </button>
           ))}
         </div>
       )}
@@ -194,6 +281,13 @@ export default function FramesLibrary() {
             />
           </div>
         </>
+      )}
+
+      {showUpload && (
+        <FrameUploadDialog
+          onClose={() => setShowUpload(false)}
+          onUploaded={() => { queryClient.invalidateQueries({ queryKey: ['admin-png-frames'] }); }}
+        />
       )}
 
       <style>{`

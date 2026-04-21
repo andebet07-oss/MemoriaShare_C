@@ -560,7 +560,7 @@ const memoriaService = {
       try {
         const { data, error } = await supabase
           .from('frames_meta')
-          .select('frame_id, status')
+          .select('frame_id, status, image_url, hole_bbox')
           .eq('frame_id', frameId)
           .maybeSingle();
         if (error) throw error;
@@ -583,6 +583,71 @@ const memoriaService = {
         return data;
       } catch (error) {
         console.error('MemoriaService [frameMeta.upsert]: Failed to upsert frame', row?.frame_id, error);
+        throw error;
+      }
+    },
+
+    /**
+     * Upload a PNG frame asset to the library bucket and insert/update the
+     * frames_meta row. Returns the public image_url.
+     *
+     * @param {File}   file      - PNG file with alpha channel
+     * @param {object} meta      - { slug, name, style, category, aspect, hole_bbox, quality_score? }
+     */
+    uploadLibraryPng: async (file, meta) => {
+      const { slug, name, style, category, aspect, hole_bbox, quality_score = 0 } = meta;
+      const storagePath = `overlays/library/${style}/${slug}.png`;
+
+      // Upload to storage (upsert so re-upload works)
+      const { error: uploadError } = await supabase.storage
+        .from('overlays')
+        .upload(storagePath, file, { upsert: true, contentType: 'image/png' });
+      if (uploadError) {
+        console.error('MemoriaService [frameMeta.uploadLibraryPng]: Upload failed', uploadError);
+        throw uploadError;
+      }
+
+      const { data: urlData } = supabase.storage.from('overlays').getPublicUrl(storagePath);
+      const image_url = urlData.publicUrl;
+
+      // Upsert frames_meta row
+      const { data, error: dbError } = await supabase
+        .from('frames_meta')
+        .upsert({
+          frame_id:      slug,
+          status:        'draft',
+          quality_score,
+          style:         style || 'minimal_luxury',
+          palette:       'ivory',
+          sort_weight:   0,
+          output_width_mm: 100,
+          image_url,
+          hole_bbox,
+          aspect:        aspect || 'portrait',
+          category,
+          updated_at:    new Date().toISOString(),
+        }, { onConflict: 'frame_id' })
+        .select()
+        .single();
+      if (dbError) {
+        console.error('MemoriaService [frameMeta.uploadLibraryPng]: DB upsert failed', dbError);
+        throw dbError;
+      }
+      return { image_url, row: data };
+    },
+
+    /** Fetch all PNG-type frames (image_url IS NOT NULL) for the admin library PNG tab. */
+    listPngFrames: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('frames_meta')
+          .select('*')
+          .not('image_url', 'is', null)
+          .order('sort_weight', { ascending: false });
+        if (error) throw error;
+        return data ?? [];
+      } catch (error) {
+        console.error('MemoriaService [frameMeta.listPngFrames]: Failed', error);
         throw error;
       }
     },
