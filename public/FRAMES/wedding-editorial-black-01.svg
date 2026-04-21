@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" width="2400" height="3600">
+  <defs>
+    <linearGradient id="gBlackFade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="gGrayTop" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#fafafa"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Border background panels ── -->
+  <rect x="0"   y="0"    width="800" height="130" fill="url(#gGrayTop)"/>
+  <rect x="0"   y="1070" width="800" height="130" fill="#fafafa"/>
+  <rect x="0"   y="130"  width="50"  height="940" fill="#ffffff"/>
+  <rect x="750" y="130"  width="50"  height="940" fill="#ffffff"/>
+
+  <!-- Solid black top/bottom rule -->
+  <rect x="0" y="0"  width="800" height="8" fill="#0a0a0a"/>
+  <rect x="0" y="1192" width="800" height="8" fill="#0a0a0a"/>
+
+  <!-- ── Outer triple-line frame ── -->
+  <rect x="12" y="14" width="776" height="1172" fill="none" stroke="#0a0a0a" stroke-width="3"/>
+  <rect x="18" y="20" width="764" height="1160" fill="none" stroke="#0a0a0a" stroke-width="0.5"/>
+  <rect x="22" y="24" width="756" height="1152" fill="none" stroke="#0a0a0a" stroke-width="0.5"/>
+
+  <!-- ── Inner border around hole ── -->
+  <rect x="46" y="126" width="708" height="948" fill="none" stroke="#0a0a0a" stroke-width="2"/>
+  <rect x="50" y="130" width="700" height="940" fill="none" stroke="#0a0a0a" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- ══ TOP: Architectural geometric ornament ══ -->
+  <!-- Horizontal hairlines flanking center -->
+  <line x1="80"  y1="45" x2="328" y2="45" stroke="#0a0a0a" stroke-width="0.8"/>
+  <line x1="472" y1="45" x2="720" y2="45" stroke="#0a0a0a" stroke-width="0.8"/>
+  <line x1="80"  y1="50" x2="310" y2="50" stroke="#0a0a0a" stroke-width="0.4" opacity="0.4"/>
+  <line x1="490" y1="50" x2="720" y2="50" stroke="#0a0a0a" stroke-width="0.4" opacity="0.4"/>
+
+  <!-- Center geometric: concentric squares -->
+  <rect x="375" y="30" width="50" height="30" fill="none" stroke="#0a0a0a" stroke-width="1.2"/>
+  <rect x="381" y="36" width="38" height="18" fill="none" stroke="#0a0a0a" stroke-width="0.6" opacity="0.6"/>
+  <rect x="387" y="38" width="26" height="14" fill="#0a0a0a" opacity="0.08"/>
+
+  <!-- Top corner geometric brackets -->
+  <g stroke="#0a0a0a" stroke-width="1.5" fill="none">
+    <!-- TL outer -->
+    <polyline points="12,55 12,14 55,14"/>
+    <polyline points="22,55 22,24 55,24"/>
+    <!-- TR outer -->
+    <polyline points="788,55 788,14 745,14"/>
+    <polyline points="778,55 778,24 745,24"/>
+  </g>
+
+  <!-- ══ BOTTOM: Mirrored ornament ══ -->
+  <line x1="80"  y1="1155" x2="328" y2="1155" stroke="#0a0a0a" stroke-width="0.8"/>
+  <line x1="472" y1="1155" x2="720" y2="1155" stroke="#0a0a0a" stroke-width="0.8"/>
+  <line x1="80"  y1="1150" x2="310" y2="1150" stroke="#0a0a0a" stroke-width="0.4" opacity="0.4"/>
+  <line x1="490" y1="1150" x2="720" y2="1150" stroke="#0a0a0a" stroke-width="0.4" opacity="0.4"/>
+  <rect x="375" y="1140" width="50" height="30" fill="none" stroke="#0a0a0a" stroke-width="1.2"/>
+  <rect x="381" y="1146" width="38" height="18" fill="none" stroke="#0a0a0a" stroke-width="0.6" opacity="0.6"/>
+  <rect x="387" y="1148" width="26" height="14" fill="#0a0a0a" opacity="0.08"/>
+  <g stroke="#0a0a0a" stroke-width="1.5" fill="none">
+    <polyline points="12,1145 12,1186 55,1186"/>
+    <polyline points="22,1145 22,1176 55,1176"/>
+    <polyline points="788,1145 788,1186 745,1186"/>
+    <polyline points="778,1145 778,1176 745,1176"/>
+  </g>
+
+  <!-- ══ Sides: vertical hairlines ══ -->
+  <line x1="30" y1="150" x2="30" y2="1050" stroke="#0a0a0a" stroke-width="0.4" opacity="0.25"/>
+  <line x1="770" y1="150" x2="770" y2="1050" stroke="#0a0a0a" stroke-width="0.4" opacity="0.25"/>
+
+  <!-- ══ Hole corner minimal brackets ══ -->
+  <g stroke="#0a0a0a" stroke-width="1.2" fill="none" opacity="0.6">
+    <polyline points="50,155 50,130 76,130"/>
+    <polyline points="724,130 750,130 750,155"/>
+    <polyline points="50,1045 50,1070 76,1070"/>
+    <polyline points="724,1070 750,1070 750,1045"/>
+  </g>
+
+  <!-- ══ Side mid-point diamond accents ══ -->
+  <g fill="none" stroke="#0a0a0a" stroke-width="1" opacity="0.35">
+    <rect x="20" y="592" width="16" height="16" transform="rotate(45,28,600)"/>
+    <rect x="764" y="592" width="16" height="16" transform="rotate(45,772,600)"/>
+  </g>
+  <circle cx="28"  cy="600" r="3" fill="#0a0a0a" opacity="0.3"/>
+  <circle cx="772" cy="600" r="3" fill="#0a0a0a" opacity="0.3"/>
+
+  <!-- ══ Top/bottom dot-dash rule below stripe ══ -->
+  <g stroke="#0a0a0a" stroke-width="0.6" opacity="0.3" stroke-dasharray="4,6">
+    <line x1="80" y1="10" x2="720" y2="10"/>
+    <line x1="80" y1="1190" x2="720" y2="1190"/>
+  </g>
+</svg>

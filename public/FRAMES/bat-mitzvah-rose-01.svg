@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" width="2400" height="3600">
+  <defs>
+    <linearGradient id="gRose" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#e8a0bf"/>
+      <stop offset="50%"  stop-color="#d4789e"/>
+      <stop offset="100%" stop-color="#e8a0bf"/>
+    </linearGradient>
+    <linearGradient id="gGold3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#f0d080"/>
+      <stop offset="100%" stop-color="#d4a830"/>
+    </linearGradient>
+    <linearGradient id="gRoseTop" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#fff0f6"/>
+      <stop offset="100%" stop-color="#fce8f1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Border background panels ── -->
+  <rect x="0"   y="0"    width="800" height="130" fill="url(#gRoseTop)"/>
+  <rect x="0"   y="1070" width="800" height="130" fill="#fce8f1"/>
+  <rect x="0"   y="130"  width="50"  height="940" fill="#fff5f9"/>
+  <rect x="750" y="130"  width="50"  height="940" fill="#fff5f9"/>
+
+  <!-- Rose pink top/bottom accent stripe -->
+  <rect x="0" y="0"    width="800" height="10" fill="url(#gRose)"/>
+  <rect x="0" y="10"   width="800" height="3"  fill="#f0d080" opacity="0.5"/>
+  <rect x="0" y="1190" width="800" height="10" fill="url(#gRose)"/>
+  <rect x="0" y="1187" width="800" height="3"  fill="#f0d080" opacity="0.5"/>
+
+  <!-- ── Outer double border ── -->
+  <rect x="8"  y="18" width="784" height="1164" fill="none" stroke="#d4789e" stroke-width="3.5"/>
+  <rect x="14" y="24" width="772" height="1152" fill="none" stroke="#f0d080" stroke-width="1" opacity="0.6"/>
+
+  <!-- ── Inner border around hole ── -->
+  <rect x="46" y="126" width="708" height="948" fill="none" stroke="#d4789e" stroke-width="2.5"/>
+  <rect x="51" y="131" width="698" height="938" fill="none" stroke="#f0d080" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- ══ TOP: Rose floral cluster ══ -->
+  <g transform="translate(400,65)">
+    <!-- Rose petals (simplified) -->
+    <ellipse cx="0"   cy="-28" rx="16" ry="22" fill="#e8a0bf" opacity="0.8"/>
+    <ellipse cx="24"  cy="-16" rx="16" ry="22" fill="#d4789e" opacity="0.7" transform="rotate(72,24,-16)"/>
+    <ellipse cx="22"  cy="10"  rx="16" ry="22" fill="#e8a0bf" opacity="0.7" transform="rotate(144,22,10)"/>
+    <ellipse cx="-22" cy="10"  rx="16" ry="22" fill="#d4789e" opacity="0.7" transform="rotate(-144,-22,10)"/>
+    <ellipse cx="-24" cy="-16" rx="16" ry="22" fill="#e8a0bf" opacity="0.7" transform="rotate(-72,-24,-16)"/>
+    <!-- Rose center -->
+    <circle r="12" fill="#c45e88" opacity="0.9"/>
+    <circle r="7"  fill="#a03e6a"/>
+    <circle r="3"  fill="#f0d080"/>
+
+    <!-- Gold leaves flanking -->
+    <path d="M-50,-10 C-65,5 -60,25 -45,22 C-40,10 -42,-5 -50,-10" fill="#c8a030" opacity="0.6"/>
+    <path d="M50,-10  C65,5  60,25  45,22  C40,10  42,-5  50,-10"  fill="#c8a030" opacity="0.6"/>
+    <path d="M-70,15  C-80,30 -70,48 -55,42 C-52,28 -58,16 -70,15" fill="#c8a030" opacity="0.5"/>
+    <path d="M70,15   C80,30  70,48  55,42  C52,28  58,16  70,15"  fill="#c8a030" opacity="0.5"/>
+
+    <!-- Small dot accents -->
+    <circle cx="-95" cy="5"  r="4" fill="#f0d080" opacity="0.7"/>
+    <circle cx="95"  cy="5"  r="4" fill="#f0d080" opacity="0.7"/>
+    <circle cx="-112" cy="20" r="2.5" fill="#d4789e" opacity="0.5"/>
+    <circle cx="112"  cy="20" r="2.5" fill="#d4789e" opacity="0.5"/>
+    <circle cx="-125" cy="35" r="2" fill="#c8a030" opacity="0.4"/>
+    <circle cx="125"  cy="35" r="2" fill="#c8a030" opacity="0.4"/>
+  </g>
+
+  <!-- ══ BOTTOM: Rose cluster mirrored ══ -->
+  <g transform="translate(400,1135) rotate(180)">
+    <ellipse cx="0"   cy="-28" rx="16" ry="22" fill="#e8a0bf" opacity="0.8"/>
+    <ellipse cx="24"  cy="-16" rx="16" ry="22" fill="#d4789e" opacity="0.7" transform="rotate(72,24,-16)"/>
+    <ellipse cx="22"  cy="10"  rx="16" ry="22" fill="#e8a0bf" opacity="0.7" transform="rotate(144,22,10)"/>
+    <ellipse cx="-22" cy="10"  rx="16" ry="22" fill="#d4789e" opacity="0.7" transform="rotate(-144,-22,10)"/>
+    <ellipse cx="-24" cy="-16" rx="16" ry="22" fill="#e8a0bf" opacity="0.7" transform="rotate(-72,-24,-16)"/>
+    <circle r="12" fill="#c45e88" opacity="0.9"/>
+    <circle r="7"  fill="#a03e6a"/>
+    <circle r="3"  fill="#f0d080"/>
+    <path d="M-50,-10 C-65,5 -60,25 -45,22 C-40,10 -42,-5 -50,-10" fill="#c8a030" opacity="0.6"/>
+    <path d="M50,-10  C65,5  60,25  45,22  C40,10  42,-5  50,-10"  fill="#c8a030" opacity="0.6"/>
+    <circle cx="-95" cy="5"  r="4" fill="#f0d080" opacity="0.7"/>
+    <circle cx="95"  cy="5"  r="4" fill="#f0d080" opacity="0.7"/>
+  </g>
+
+  <!-- ══ Corner rose buds ══ -->
+  <!-- TL -->
+  <g transform="translate(34,34)">
+    <circle r="16" fill="#e8a0bf" opacity="0.5"/>
+    <circle r="10" fill="#d4789e" opacity="0.7"/>
+    <circle r="5"  fill="#c45e88" opacity="0.9"/>
+    <circle r="2"  fill="#f0d080"/>
+  </g>
+  <!-- TR -->
+  <g transform="translate(766,34)">
+    <circle r="16" fill="#e8a0bf" opacity="0.5"/>
+    <circle r="10" fill="#d4789e" opacity="0.7"/>
+    <circle r="5"  fill="#c45e88" opacity="0.9"/>
+    <circle r="2"  fill="#f0d080"/>
+  </g>
+  <!-- BL -->
+  <g transform="translate(34,1166)">
+    <circle r="16" fill="#e8a0bf" opacity="0.5"/>
+    <circle r="10" fill="#d4789e" opacity="0.7"/>
+    <circle r="5"  fill="#c45e88" opacity="0.9"/>
+    <circle r="2"  fill="#f0d080"/>
+  </g>
+  <!-- BR -->
+  <g transform="translate(766,1166)">
+    <circle r="16" fill="#e8a0bf" opacity="0.5"/>
+    <circle r="10" fill="#d4789e" opacity="0.7"/>
+    <circle r="5"  fill="#c45e88" opacity="0.9"/>
+    <circle r="2"  fill="#f0d080"/>
+  </g>
+
+  <!-- ══ SIDES: Vine with small roses ══ -->
+  <g opacity="0.5">
+    <!-- Left vine -->
+    <path d="M25,200 C30,240 20,280 25,330 C30,380 20,430 25,480 C30,530 20,580 25,630 C30,680 20,730 25,780 C30,830 20,880 25,930 C30,980 20,1030 25,1070"
+          fill="none" stroke="#c8a030" stroke-width="1.5"/>
+    <!-- Small roses on left vine -->
+    <circle cx="25" cy="280" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="25" cy="280" r="4" fill="#c45e88"/>
+    <circle cx="25" cy="430" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="25" cy="430" r="4" fill="#c45e88"/>
+    <circle cx="25" cy="580" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="25" cy="580" r="4" fill="#c45e88"/>
+    <circle cx="25" cy="730" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="25" cy="730" r="4" fill="#c45e88"/>
+    <circle cx="25" cy="880" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="25" cy="880" r="4" fill="#c45e88"/>
+    <!-- Gold leaves on left vine -->
+    <path d="M25,350 C10,340 8,320 20,316" fill="#c8a030" opacity="0.6"/>
+    <path d="M25,500 C40,490 42,470 30,466" fill="#c8a030" opacity="0.6"/>
+    <path d="M25,650 C10,640 8,620 20,616" fill="#c8a030" opacity="0.6"/>
+    <path d="M25,800 C40,790 42,770 30,766" fill="#c8a030" opacity="0.6"/>
+    <path d="M25,950 C10,940 8,920 20,916" fill="#c8a030" opacity="0.6"/>
+
+    <!-- Right vine (mirror) -->
+    <path d="M775,200 C770,240 780,280 775,330 C770,380 780,430 775,480 C770,530 780,580 775,630 C770,680 780,730 775,780 C770,830 780,880 775,930 C770,980 780,1030 775,1070"
+          fill="none" stroke="#c8a030" stroke-width="1.5"/>
+    <circle cx="775" cy="280" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="775" cy="280" r="4" fill="#c45e88"/>
+    <circle cx="775" cy="430" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="775" cy="430" r="4" fill="#c45e88"/>
+    <circle cx="775" cy="580" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="775" cy="580" r="4" fill="#c45e88"/>
+    <circle cx="775" cy="730" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="775" cy="730" r="4" fill="#c45e88"/>
+    <circle cx="775" cy="880" r="7" fill="#e8a0bf" opacity="0.7"/>
+    <circle cx="775" cy="880" r="4" fill="#c45e88"/>
+    <path d="M775,350 C790,340 792,320 780,316" fill="#c8a030" opacity="0.6"/>
+    <path d="M775,500 C760,490 758,470 770,466" fill="#c8a030" opacity="0.6"/>
+    <path d="M775,650 C790,640 792,620 780,616" fill="#c8a030" opacity="0.6"/>
+    <path d="M775,800 C760,790 758,770 770,766" fill="#c8a030" opacity="0.6"/>
+    <path d="M775,950 C790,940 792,920 780,916" fill="#c8a030" opacity="0.6"/>
+  </g>
+
+  <!-- ══ Hole corner ornament ══ -->
+  <g fill="#d4789e" opacity="0.6">
+    <circle cx="50"  cy="130"  r="6"/>
+    <circle cx="750" cy="130"  r="6"/>
+    <circle cx="50"  cy="1070" r="6"/>
+    <circle cx="750" cy="1070" r="6"/>
+  </g>
+  <g fill="#f0d080" opacity="0.8">
+    <circle cx="50"  cy="130"  r="3"/>
+    <circle cx="750" cy="130"  r="3"/>
+    <circle cx="50"  cy="1070" r="3"/>
+    <circle cx="750" cy="1070" r="3"/>
+  </g>
+</svg>
