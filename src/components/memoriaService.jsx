@@ -595,7 +595,7 @@ const memoriaService = {
      * @param {object} meta      - { slug, name, style, category, aspect, hole_bbox, quality_score? }
      */
     uploadLibraryPng: async (file, meta) => {
-      const { slug, name, style, category, aspect, hole_bbox, quality_score = 0 } = meta;
+      const { slug, name, style, category, aspect, hole_bbox, text_config = null, quality_score = 0 } = meta;
       const storagePath = `overlays/library/${style}/${slug}.png`;
 
       // Upload to storage (upsert so re-upload works)
@@ -623,6 +623,7 @@ const memoriaService = {
           output_width_mm: 100,
           image_url,
           hole_bbox,
+          text_config,
           aspect:        aspect || 'portrait',
           category,
           updated_at:    new Date().toISOString(),

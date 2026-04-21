@@ -170,7 +170,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       let canvas;
       if (eventFrame.isPng) {
         // PNG overlay pipeline — compositePngFrame handles sizing
-        canvas = await compositePngFrame(img, eventFrame);
+        canvas = await compositePngFrame(img, eventFrame, { eventName });
         setPhotoFrac(eventFrame.hole_bbox.h <= 1
           ? eventFrame.hole_bbox.h
           : eventFrame.hole_bbox.h / canvas.height);
@@ -257,7 +257,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       let finalCanvas;
       if (eventFrame?.isPng) {
         // PNG overlay pipeline — composite handles sizing, stickers drawn after
-        finalCanvas = await compositePngFrame(img, eventFrame);
+        finalCanvas = await compositePngFrame(img, eventFrame, { eventName: event?.name });
         // Draw stickers into the hole area of the PNG canvas
         const hb = eventFrame.hole_bbox;
         const fw = finalCanvas.width, fh = finalCanvas.height;

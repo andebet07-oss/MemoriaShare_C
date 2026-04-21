@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" width="2400" height="3600">
+  <!-- wedding-polaroid-01: Ultra-minimal white Polaroid frame. Single thin border, generous bottom strip. -->
+  <!-- Inspired by: classic Israeli photo-magnet (Matt+Steph style). Design: white + clean = everything. -->
+
+  <!-- White border strips — center (x=20,y=20,w=760,h=860) stays transparent for photo -->
+  <rect x="0"   y="0"    width="800" height="20"  fill="#ffffff"/>
+  <rect x="0"   y="880"  width="800" height="320" fill="#ffffff"/>
+  <rect x="0"   y="20"   width="20"  height="860" fill="#ffffff"/>
+  <rect x="780" y="20"   width="20"  height="860" fill="#ffffff"/>
+
+  <!-- Outer border: single thin gray line -->
+  <rect x="0"   y="0"      width="800" height="1.5"  fill="#c8c8c8"/>
+  <rect x="0"   y="1198.5" width="800" height="1.5"  fill="#c8c8c8"/>
+  <rect x="0"   y="0"      width="1.5" height="1200" fill="#c8c8c8"/>
+  <rect x="798.5" y="0"    width="1.5" height="1200" fill="#c8c8c8"/>
+
+  <!-- Subtle inner hairline (6px inset) -->
+  <rect x="6"   y="6"      width="788" height="0.6"  fill="#e5e5e5"/>
+  <rect x="6"   y="1193.4" width="788" height="0.6"  fill="#e5e5e5"/>
+  <rect x="6"   y="6"      width="0.6" height="1188" fill="#e5e5e5"/>
+  <rect x="793.4" y="6"    width="0.6" height="1188" fill="#e5e5e5"/>
+
+  <!-- Photo hole edge: very faint top/bottom lines at hole boundary -->
+  <rect x="20"  y="879.5" width="760" height="0.5" fill="#dedede"/>
+</svg>

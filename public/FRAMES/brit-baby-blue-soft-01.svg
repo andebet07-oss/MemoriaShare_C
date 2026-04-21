@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" width="2400" height="3600">
+  <!-- brit-baby-blue-soft-01: White frame, soft sky-blue border, cloud shape + baby stars ornament at bottom -->
+
+  <!-- White border area — center (x=20,y=20,w=760,h=860) stays transparent -->
+  <rect x="0"   y="0"    width="800" height="20"  fill="#ffffff"/>
+  <rect x="0"   y="880"  width="800" height="320" fill="#ffffff"/>
+  <rect x="0"   y="20"   width="20"  height="860" fill="#ffffff"/>
+  <rect x="780" y="20"   width="20"  height="860" fill="#ffffff"/>
+
+  <!-- Outer blue border -->
+  <rect x="0"   y="0"    width="800" height="2"    fill="#6baed6"/>
+  <rect x="0"   y="1198" width="800" height="2"    fill="#6baed6"/>
+  <rect x="0"   y="0"    width="2"   height="1200" fill="#6baed6"/>
+  <rect x="798" y="0"    width="2"   height="1200" fill="#6baed6"/>
+
+  <!-- Inner blue hairline (8px inset) -->
+  <rect x="8"   y="8"      width="784" height="0.8"  fill="#6baed6" opacity="0.35"/>
+  <rect x="8"   y="1191.2" width="784" height="0.8"  fill="#6baed6" opacity="0.35"/>
+  <rect x="8"   y="8"      width="0.8" height="1184" fill="#6baed6" opacity="0.35"/>
+  <rect x="791.2" y="8"    width="0.8" height="1184" fill="#6baed6" opacity="0.35"/>
+
+  <!-- Photo hole edge hairline -->
+  <rect x="20" y="879.5" width="760" height="0.6" fill="#6baed6" opacity="0.3"/>
+
+  <!-- Soft corner dots (baby aesthetic) -->
+  <circle cx="12" cy="12"    r="4" fill="#6baed6" opacity="0.5"/>
+  <circle cx="788" cy="12"   r="4" fill="#6baed6" opacity="0.5"/>
+  <circle cx="12" cy="1188"  r="4" fill="#6baed6" opacity="0.5"/>
+  <circle cx="788" cy="1188" r="4" fill="#6baed6" opacity="0.5"/>
+
+  <!-- Baby star dots along top border strip -->
+  <!-- 4-point stars (simplified as + cross) scattered across top -->
+  <polygon points="70,8 72,4 74,8 78,10 74,12 72,16 70,12 66,10" fill="#6baed6" opacity="0.4"/>
+  <polygon points="200,8 202,4 204,8 208,10 204,12 202,16 200,12 196,10" fill="#6baed6" opacity="0.35"/>
+  <polygon points="350,8 352,4 354,8 358,10 354,12 352,16 350,12 346,10" fill="#6baed6" opacity="0.4"/>
+  <polygon points="450,8 452,4 454,8 458,10 454,12 452,16 450,12 446,10" fill="#6baed6" opacity="0.35"/>
+  <polygon points="600,8 602,4 604,8 608,10 604,12 602,16 600,12 596,10" fill="#6baed6" opacity="0.4"/>
+  <polygon points="730,8 732,4 734,8 738,10 734,12 732,16 730,12 726,10" fill="#6baed6" opacity="0.35"/>
+
+  <!-- Cloud shape at center of bottom strip (3 overlapping circles) -->
+  <circle cx="380" cy="908" r="18" fill="#d6eaf8" opacity="0.7"/>
+  <circle cx="400" cy="900" r="22" fill="#d6eaf8" opacity="0.7"/>
+  <circle cx="420" cy="908" r="18" fill="#d6eaf8" opacity="0.7"/>
+  <!-- Cloud base rect to flatten bottom -->
+  <rect x="362" y="908" width="76" height="14" fill="#d6eaf8" opacity="0.7"/>
+  <!-- Cloud outline -->
+  <path d="M 362 922 L 362 908 A 18 18 0 0 1 380 890 A 22 22 0 0 1 420 890 A 18 18 0 0 1 438 908 L 438 922 Z" fill="none" stroke="#6baed6" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- Small 4-point star above cloud -->
+  <polygon points="400,880 402,876 404,880 408,882 404,884 402,888 400,884 396,882" fill="#6baed6" opacity="0.55"/>
+
+  <!-- Soft horizontal dots line flanking cloud -->
+  <line x1="50"  y1="911" x2="352" y2="911" stroke="#6baed6" stroke-width="0.6" stroke-dasharray="4,6" opacity="0.45"/>
+  <line x1="448" y1="911" x2="750" y2="911" stroke="#6baed6" stroke-width="0.6" stroke-dasharray="4,6" opacity="0.45"/>
+
+  <!-- Small stars scattered in bottom strip -->
+  <polygon points="80,940 81.5,936 83,940 87,941.5 83,943 81.5,947 80,943 76,941.5" fill="#6baed6" opacity="0.3"/>
+  <polygon points="160,960 161.5,956 163,960 167,961.5 163,963 161.5,967 160,963 156,961.5" fill="#6baed6" opacity="0.25"/>
+  <polygon points="640,940 641.5,936 643,940 647,941.5 643,943 641.5,947 640,943 636,941.5" fill="#6baed6" opacity="0.3"/>
+  <polygon points="720,965 721.5,961 723,965 727,966.5 723,968 721.5,972 720,968 716,966.5" fill="#6baed6" opacity="0.25"/>
+</svg>

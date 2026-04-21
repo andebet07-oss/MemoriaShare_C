@@ -105,7 +105,7 @@ export default function FramesLibrary() {
           style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', boxShadow: '0 4px 16px rgba(124,58,237,0.3)' }}
         >
           <Upload className="w-4 h-4" />
-          העלאת מסגרת
+          העלאת מסגרות
         </button>
       </div>
 

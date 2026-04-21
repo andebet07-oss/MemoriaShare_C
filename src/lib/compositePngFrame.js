@@ -3,30 +3,26 @@
  *
  * Composites a photo onto a canvas using a PNG frame with a transparent hole.
  * The PNG is drawn on top of the photo; the hole reveals the photo beneath.
+ * Optionally renders the event name text at the bottom using per-frame text_config.
  *
  * hole_bbox is stored normalised (0-1) relative to the PNG canvas dimensions.
  * Accepts both normalised and pixel-unit bboxes (pixel if any value > 1).
  *
  * Usage:
- *   const canvas = await compositePngFrame(photoImg, { image_url, hole_bbox });
- *   // canvas is ready for toDataURL / toBlob
+ *   const canvas = await compositePngFrame(photoImg, frame, { eventName, maxWidth, maxHeight });
  */
 
 const PNG_CACHE = new Map();
 
 function loadImage(src) {
-  if (PNG_CACHE.has(src)) {
-    const cached = PNG_CACHE.get(src);
-    // Don't reuse a rejected promise — retry on next call
-    return cached;
-  }
+  if (PNG_CACHE.has(src)) return PNG_CACHE.get(src);
   const p = new Promise((resolve, reject) => {
     const img = new Image();
-    // crossOrigin only for cross-origin Supabase storage URLs; same-origin SVGs don't need it
+    // crossOrigin only for cross-origin Supabase storage URLs
     if (src.includes('supabase') || src.includes('storage')) img.crossOrigin = 'anonymous';
     img.onload  = () => resolve(img);
-    img.onerror = (e) => {
-      PNG_CACHE.delete(src); // remove failed entry so next render retries
+    img.onerror = () => {
+      PNG_CACHE.delete(src);
       reject(new Error(`Frame load failed: ${src}`));
     };
     img.src = src;
@@ -37,12 +33,12 @@ function loadImage(src) {
 
 /**
  * @param {HTMLImageElement} photoImg  - already-loaded photo image
- * @param {object}           frame     - { image_url: string, hole_bbox: {x,y,w,h} (normalised 0-1) }
- * @param {object}           [opts]    - { maxWidth?, maxHeight? } — cap canvas size (useful for previews)
+ * @param {object}           frame     - { image_url, hole_bbox, text_config? }
+ * @param {object}           [opts]    - { maxWidth?, maxHeight?, eventName? }
  * @returns {Promise<HTMLCanvasElement>}
  */
 export async function compositePngFrame(photoImg, frame, opts = {}) {
-  const { image_url, hole_bbox } = frame;
+  const { image_url, hole_bbox, text_config } = frame;
 
   const frameImg = await loadImage(image_url);
 
@@ -73,7 +69,7 @@ export async function compositePngFrame(photoImg, frame, opts = {}) {
   const hw = isNormalised ? Math.round(hole_bbox.w * fw) : hole_bbox.w;
   const hh = isNormalised ? Math.round(hole_bbox.h * fh) : hole_bbox.h;
 
-  // White base
+  // White base (frame background is always white/light per brand direction)
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, fw, fh);
 
@@ -92,6 +88,32 @@ export async function compositePngFrame(photoImg, frame, opts = {}) {
 
   // PNG frame overlay (transparent hole reveals photo)
   ctx.drawImage(frameImg, 0, 0, fw, fh);
+
+  // ── Event name text ────────────────────────────────────────────────────────
+  // Rendered over the white margin area below the hole, styled per text_config.
+  if (opts.eventName && text_config) {
+    const tc = text_config;
+    const fontSize   = Math.max(10, Math.round((tc.size  || 0.028) * fh));
+    const fontWeight = tc.weight || 'normal';
+    const fontFamily = tc.font   || 'Heebo, sans-serif';
+    const fontStr    = `${fontWeight} ${fontSize}px '${fontFamily}', sans-serif`;
+
+    try { await document.fonts.load(fontStr); } catch { /* use fallback */ }
+
+    ctx.save();
+    ctx.font         = fontStr;
+    ctx.textAlign    = tc.align || 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle    = tc.color || '#555555';
+
+    const tx = (tc.align === 'left')  ? Math.round(fw * 0.12)
+             : (tc.align === 'right') ? Math.round(fw * 0.88)
+             : Math.round(fw / 2);
+    const ty = Math.round((tc.y || 0.93) * fh);
+
+    ctx.fillText(opts.eventName, tx, ty);
+    ctx.restore();
+  }
 
   return canvas;
 }
