@@ -15,12 +15,20 @@
 const PNG_CACHE = new Map();
 
 function loadImage(src) {
-  if (PNG_CACHE.has(src)) return PNG_CACHE.get(src);
+  if (PNG_CACHE.has(src)) {
+    const cached = PNG_CACHE.get(src);
+    // Don't reuse a rejected promise — retry on next call
+    return cached;
+  }
   const p = new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    // crossOrigin only for cross-origin Supabase storage URLs; same-origin SVGs don't need it
+    if (src.includes('supabase') || src.includes('storage')) img.crossOrigin = 'anonymous';
     img.onload  = () => resolve(img);
-    img.onerror = () => reject(new Error(`Failed to load frame PNG: ${src}`));
+    img.onerror = (e) => {
+      PNG_CACHE.delete(src); // remove failed entry so next render retries
+      reject(new Error(`Frame load failed: ${src}`));
+    };
     img.src = src;
   });
   PNG_CACHE.set(src, p);
@@ -30,15 +38,28 @@ function loadImage(src) {
 /**
  * @param {HTMLImageElement} photoImg  - already-loaded photo image
  * @param {object}           frame     - { image_url: string, hole_bbox: {x,y,w,h} (normalised 0-1) }
+ * @param {object}           [opts]    - { maxWidth?, maxHeight? } — cap canvas size (useful for previews)
  * @returns {Promise<HTMLCanvasElement>}
  */
-export async function compositePngFrame(photoImg, frame) {
+export async function compositePngFrame(photoImg, frame, opts = {}) {
   const { image_url, hole_bbox } = frame;
 
   const frameImg = await loadImage(image_url);
 
-  const fw = frameImg.naturalWidth;
-  const fh = frameImg.naturalHeight;
+  const srcW = frameImg.naturalWidth  || 800;
+  const srcH = frameImg.naturalHeight || 1200;
+
+  // Scale down to maxWidth/maxHeight when provided (preview mode)
+  const scale = (opts.maxWidth || opts.maxHeight)
+    ? Math.min(
+        opts.maxWidth  ? opts.maxWidth  / srcW : 1,
+        opts.maxHeight ? opts.maxHeight / srcH : 1,
+        1,
+      )
+    : 1;
+
+  const fw = Math.round(srcW * scale);
+  const fh = Math.round(srcH * scale);
 
   const canvas = document.createElement('canvas');
   canvas.width  = fw;

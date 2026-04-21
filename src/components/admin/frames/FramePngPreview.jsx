@@ -55,9 +55,10 @@ export default function FramePngPreview({ frame, className = '', style }) {
         await new Promise((res) => { sampleImg.onload = res; });
 
         if (cancelled.current) return;
-        const result = await compositePngFrame(sampleImg, frame);
+        const result = await compositePngFrame(sampleImg, frame, { maxWidth: 600, maxHeight: 900 });
         if (!cancelled.current) setSrc(result.toDataURL('image/jpeg', 0.85));
-      } catch {
+      } catch (err) {
+        console.error('[FramePngPreview] composite failed:', err?.message);
         if (!cancelled.current) setError(true);
       }
     }
