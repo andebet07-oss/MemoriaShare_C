@@ -1,0 +1,215 @@
+- main [ref=e4]:
+  - generic [ref=e6]:
+    - generic [ref=e8]:
+      - navigation [ref=e9]:
+        - link "פיצ'רים" [ref=e10] [cursor=pointer]:
+          - /url: "#features"
+        - link "המלצות" [ref=e11] [cursor=pointer]:
+          - /url: "#testimonials"
+        - link "שאלות נפוצות" [ref=e12] [cursor=pointer]:
+          - /url: "#faq"
+        - button "צרו אירוע" [ref=e13] [cursor=pointer]
+        - button "כניסה" [ref=e14] [cursor=pointer]:
+          - img
+          - text: כניסה
+      - link "MemoriaShare":
+        - /url: /
+        - img "MemoriaShare"
+    - main [ref=e15]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic [ref=e20]: Memoria
+          - generic [ref=e22]: שיתוף תמונות חי באירועים
+        - heading "הזיכרונות שלכם, מכל הזוויות" [level=1] [ref=e23]:
+          - text: הזיכרונות שלכם,
+          - text: מכל הזוויות
+        - paragraph [ref=e24]:
+          - text: כל אורח מצלם מהטלפון שלו.
+          - text: כל התמונות מתאחדות בגלריה חיה אחת — בזמן אמת, בלי אפליקציה.
+        - generic [ref=e25]:
+          - generic [ref=e29]:
+            - img "event" [ref=e30]
+            - generic:
+              - generic:
+                - generic:
+                  - paragraph: ערב מסיבה
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: ⚡
+                  - generic:
+                    - generic: ".5"
+                    - generic: 1×
+                    - generic: "3"
+                  - generic:
+                    - img
+                - generic:
+                  - generic:
+                    - paragraph: 15 תמונות
+                    - paragraph: נותרו
+                  - generic:
+                    - img "last"
+          - generic [ref=e35]:
+            - img "event" [ref=e36]
+            - generic:
+              - generic:
+                - generic:
+                  - paragraph: אווירת חתונה
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: ⚡
+                  - generic:
+                    - generic: ".5"
+                    - generic: 1×
+                    - generic: "3"
+                  - generic:
+                    - img
+                - generic:
+                  - generic:
+                    - paragraph: 15 תמונות
+                    - paragraph: נותרו
+                  - generic:
+                    - img "last"
+          - generic [ref=e41]:
+            - img "event" [ref=e42]
+            - generic:
+              - generic:
+                - generic:
+                  - paragraph: טקס קלאסי
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: ⚡
+                  - generic:
+                    - generic: ".5"
+                    - generic: 1×
+                    - generic: "3"
+                  - generic:
+                    - img
+                - generic:
+                  - generic:
+                    - paragraph: 15 תמונות
+                    - paragraph: נותרו
+                  - generic:
+                    - img "last"
+        - button "צרו אירוע" [ref=e45] [cursor=pointer]
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - paragraph [ref=e50]: 01 · למה Memoria
+          - heading "הטכנולוגיה שקופה. הרגש נשאר." [level=2] [ref=e51]:
+            - text: הטכנולוגיה שקופה.
+            - text: הרגש נשאר.
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - generic [ref=e55]: "01"
+            - generic [ref=e56]:
+              - heading "בלי אפליקציה, בלי הרשמה" [level=3] [ref=e57]
+              - paragraph [ref=e58]: האורחים סורקים QR מהמצלמה ומעלים תמונות מיד — שום התקנה, שום סיסמה.
+          - generic [ref=e59]:
+            - generic [ref=e61]: "02"
+            - generic [ref=e62]:
+              - heading "גלריה חיה בזמן אמת" [level=3] [ref=e63]
+              - paragraph [ref=e64]: כל תמונה מופיעה מיידית לכל המוזמנים. ראו את האירוע מתפתח מכל הזוויות בו-זמנית.
+          - generic [ref=e65]:
+            - generic [ref=e67]: "03"
+            - generic [ref=e68]:
+              - heading "פרטיות ואבטחה מלאה" [level=3] [ref=e69]
+              - paragraph [ref=e70]: הגלריה שלכם מוגנת בקוד PIN פרטי. בטוח ומסודר הרבה יותר מקבוצת וואטסאפ.
+          - generic [ref=e71]:
+            - generic [ref=e73]: "04"
+            - generic [ref=e74]:
+              - heading "הורדה מלאה בקליק" [level=3] [ref=e75]
+              - paragraph [ref=e76]: אחרי האירוע, כל הגלריה אצלכם בקובץ אחד. כל התמונות, לנצח.
+          - generic [ref=e77]:
+            - generic [ref=e79]: "05"
+            - generic [ref=e80]:
+              - heading "עובד על כל טלפון" [level=3] [ref=e81]
+              - paragraph [ref=e82]: אייפון, אנדרואיד, גרסה ישנה — לא משנה. כל אורח יכול לצלם ולשתף.
+          - generic [ref=e83]:
+            - generic [ref=e85]: "06"
+            - generic [ref=e86]:
+              - heading "מגנטים מודפסים חי PREMIUM" [level=3] [ref=e87]:
+                - text: מגנטים מודפסים חי
+                - generic [ref=e88]: PREMIUM
+              - paragraph [ref=e89]: צוות מקצועי, עמדת הדפסה, מגנטים איכותיים — חוויה שהאורחים לא ישכחו.
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - paragraph [ref=e94]: 02 · איך זה עובד
+          - heading "שלושה שלבים. חווייה שלמה." [level=2] [ref=e95]:
+            - text: שלושה שלבים.
+            - text: חווייה שלמה.
+        - generic [ref=e96]:
+          - generic [ref=e97]:
+            - generic [ref=e98]: "01"
+            - heading "סורקים את הברקוד" [level=3] [ref=e100]
+            - paragraph [ref=e101]: המארח שולח קוד QR לאורחים. סריקה מהירה מהמצלמה — שום הורדה, שום הרשמה.
+          - generic [ref=e102]:
+            - generic [ref=e103]: "02"
+            - heading "מצלמים ומשתפים" [level=3] [ref=e105]
+            - paragraph [ref=e106]: האורחים מצלמים מהאירוע ומעלים ישירות — כל טלפון, כל רגע, כל זווית.
+          - generic [ref=e107]:
+            - generic [ref=e108]: "03"
+            - heading "נהנים מגלריה חיה" [level=3] [ref=e110]
+            - paragraph [ref=e111]: כל התמונות מתכנסות בזמן אמת. אחרי האירוע — מורידים הכל בקליק אחד. רוצים מגנטים מודפסים? יש גם את זה.
+      - generic [ref=e114]:
+        - generic [ref=e115]:
+          - paragraph [ref=e116]: 03 · לקוחות
+          - heading "הם כבר השתמשו ב-Memoria." [level=2] [ref=e117]:
+            - text: הם כבר
+            - text: השתמשו ב-Memoria.
+        - generic [ref=e118]:
+          - blockquote [ref=e119]:
+            - generic: "\""
+            - paragraph [ref=e120]: קיבלנו מאות תמונות מדהימות מהאורחים שלנו. זה היה פשוט, אלגנטי והוסיף כל כך הרבה לאירוע.
+            - generic [ref=e121]:
+              - generic [ref=e123]: — יעל ויונתן
+              - text: ·חתונה · 320 אורחים
+          - generic [ref=e124]:
+            - generic [ref=e125]:
+              - paragraph [ref=e126]: "\"הדרך הכי נוחה לאסוף תמונות מכל המשפחה. כולם השתתפו.\""
+              - generic [ref=e127]: דניאל לוי·בר מצווה · 180 אורחים
+            - generic [ref=e128]:
+              - paragraph [ref=e129]: "\"האורחים התלהבו מהפשטות. במקום לרדוף אחרי תמונות, הכל היה שם.\""
+              - generic [ref=e130]: מיכל כהן·אירוע פרטי · 85 אורחים
+      - generic [ref=e133]:
+        - generic [ref=e134]:
+          - paragraph [ref=e135]: 04 · שאלות
+          - heading "כל מה שצריך לדעת." [level=2] [ref=e136]:
+            - text: כל מה
+            - text: שצריך לדעת.
+        - generic [ref=e137]:
+          - button "מה זה Memoria ואיך זה עובד? +" [ref=e139] [cursor=pointer]:
+            - generic [ref=e140]: מה זה Memoria ואיך זה עובד?
+            - generic [ref=e141]: +
+          - button "האם האורחים צריכים להוריד אפליקציה? +" [ref=e143] [cursor=pointer]:
+            - generic [ref=e144]: האם האורחים צריכים להוריד אפליקציה?
+            - generic [ref=e145]: +
+          - button "מהי איכות התמונות שעולות לאלבום? +" [ref=e147] [cursor=pointer]:
+            - generic [ref=e148]: מהי איכות התמונות שעולות לאלבום?
+            - generic [ref=e149]: +
+          - button "האם אני יכול לשלוט בפרטיות התמונות? +" [ref=e151] [cursor=pointer]:
+            - generic [ref=e152]: האם אני יכול לשלוט בפרטיות התמונות?
+            - generic [ref=e153]: +
+          - button "כמה עולה להשתמש בשירות? +" [ref=e155] [cursor=pointer]:
+            - generic [ref=e156]: כמה עולה להשתמש בשירות?
+            - generic [ref=e157]: +
+          - button "האם ניתן להוריד את כל התמונות בסיום האירוע? +" [ref=e159] [cursor=pointer]:
+            - generic [ref=e160]: האם ניתן להוריד את כל התמונות בסיום האירוע?
+            - generic [ref=e161]: +
+          - button "מה ההבדל בין אלבום דיגיטלי לשירות המגנטים? +" [ref=e163] [cursor=pointer]:
+            - generic [ref=e164]: מה ההבדל בין אלבום דיגיטלי לשירות המגנטים?
+            - generic [ref=e165]: +
+      - generic [ref=e168]:
+        - paragraph [ref=e169]: בואו נתחיל
+        - heading "האירוע הבא שלכם מתחיל כאן." [level=2] [ref=e170]:
+          - text: האירוע הבא שלכם
+          - text: מתחיל כאן.
+        - button "צרו אירוע" [ref=e172] [cursor=pointer]
+        - button "צפו בהדגמה" [ref=e173] [cursor=pointer]
+    - generic [ref=e175]:
+      - link "Privacy Policy" [ref=e176] [cursor=pointer]:
+        - /url: /privacy.html
+      - generic [ref=e177]: ·
+      - link "Terms of Service" [ref=e178] [cursor=pointer]:
+        - /url: /terms.html
