@@ -28,9 +28,10 @@ function buildBaseUser(supabaseUser) {
  * Enrich a base user with DB profile data (role, phone, full_name override).
  * Called in the background AFTER the auth state has already settled.
  * Uses an AbortController so it never hangs indefinitely.
+ * Calls onDone() when complete (success or failure) so callers can flip profileReady.
  */
-async function enrichWithProfile(baseUser, setUser) {
-  if (!baseUser || baseUser.isAnonymous) return;
+async function enrichWithProfile(baseUser, setUser, onDone) {
+  if (!baseUser || baseUser.isAnonymous) { onDone?.(); return; }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 6000);
@@ -60,8 +61,10 @@ async function enrichWithProfile(baseUser, setUser) {
         return enriched;
       });
     }
+    onDone?.();
   } catch (err) {
     clearTimeout(timer);
+    onDone?.();
     if (err.name !== 'AbortError') {
       console.warn('AuthContext: background profile fetch failed', err.message);
     }
@@ -72,6 +75,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [profileReady, setProfileReady] = useState(false); // true once DB role is resolved
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
@@ -109,11 +113,15 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(!!base);
         setAuthError(null);
         settle();
-        // Enrich with DB profile data in the background (non-blocking)
-        if (base) enrichWithProfile(base, setUser);
+        if (base) {
+          enrichWithProfile(base, setUser, () => setProfileReady(true));
+        } else {
+          setProfileReady(true); // no user — nothing to enrich
+        }
       }).catch((err) => {
         console.error('AuthContext: getSession threw', err);
         settle();
+        setProfileReady(true);
       });
     }
 
@@ -125,9 +133,13 @@ export const AuthProvider = ({ children }) => {
       setUser(base);
       setIsAuthenticated(!!base);
       setAuthError(null);
+      setProfileReady(false); // reset while we re-enrich
       settle();
-      // Enrich with DB profile data in the background (non-blocking)
-      if (base) enrichWithProfile(base, setUser);
+      if (base) {
+        enrichWithProfile(base, setUser, () => setProfileReady(true));
+      } else {
+        setProfileReady(true);
+      }
     });
 
     return () => {
@@ -140,7 +152,9 @@ export const AuthProvider = ({ children }) => {
     const { data: { user: supabaseUser } } = await supabase.auth.getUser();
     const base = buildBaseUser(supabaseUser);
     setUser(base);
-    if (base) await enrichWithProfile(base, setUser);
+    setProfileReady(false);
+    if (base) await enrichWithProfile(base, setUser, () => setProfileReady(true));
+    else setProfileReady(true);
   };
 
   const logout = async (shouldRedirect = true) => {
@@ -166,6 +180,7 @@ export const AuthProvider = ({ children }) => {
       user,
       isAuthenticated,
       isLoadingAuth,
+      profileReady,
       isLoadingPublicSettings: false,
       authError,
       appPublicSettings: null,

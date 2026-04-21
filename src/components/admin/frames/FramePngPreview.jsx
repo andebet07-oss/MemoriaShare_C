@@ -87,7 +87,7 @@ export default function FramePngPreview({ frame, className = '', style }) {
     <img
       src={src}
       alt="תצוגת מסגרת"
-      className={`object-cover ${className}`}
+      className={`object-contain ${className}`}
       style={style}
     />
   );

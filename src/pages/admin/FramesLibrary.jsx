@@ -228,13 +228,13 @@ export default function FramesLibrary() {
             <button
               key={f.frame_id}
               type="button"
-              onClick={() => {/* PNG detail panel TBD */}}
+              onClick={() => setSelected({ id: f.frame_id, name: f.frame_id, isPng: true, image_url: f.image_url, hole_bbox: f.hole_bbox, category: f.category })}
               className="group relative flex flex-col rounded-xl overflow-hidden text-right transition-all active:scale-[0.97] border border-border bg-card hover:border-violet-500/30 hover:shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
             >
-              <div className="relative w-full" style={{ paddingBottom: '133%' }}>
+              <div className="relative w-full bg-cool-900" style={{ paddingBottom: '133%' }}>
                 <FramePngPreview
                   frame={{ image_url: f.image_url, hole_bbox: f.hole_bbox }}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full"
                   style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
                 />
                 <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-indigo-500/80 text-white text-[8px] font-black tracking-widest uppercase">

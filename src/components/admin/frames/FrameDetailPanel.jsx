@@ -7,6 +7,7 @@ import memoriaService from '@/components/memoriaService';
 import { useInvalidateFramesMeta } from '@/hooks/useFramesMeta';
 import { evaluateRubric } from '@/lib/framesRubric';
 import { useToast } from '@/components/ui/use-toast';
+import FramePngPreview from '@/components/admin/frames/FramePngPreview';
 
 const PW = 300;
 const PH = Math.round(PW * (1 + LABEL_H_RATIO));
@@ -44,6 +45,7 @@ export default function FrameDetailPanel({ frame, meta: metaProp, category, onCl
   const [metaDirty,   setMetaDirty]   = useState(false);
 
   const redraw = useCallback(() => {
+    if (frame.isPng) return; // PNG frames use FramePngPreview — no canvas needed
     document.fonts.ready.then(() => {
       drawOnCanvas(cvs.current, frame, eventData);
       if (safeZone) drawSafeZone(cvs.current, baseMeta.outputWidthMm ?? 100);
@@ -78,8 +80,8 @@ export default function FrameDetailPanel({ frame, meta: metaProp, category, onCl
   };
 
   const handleSaveMeta = async () => {
-    // Hard-fail gate: block approval if rubric has not passed
-    if (editStatus === 'approved') {
+    // Hard-fail gate: block approval if rubric has not passed (procedural frames only)
+    if (editStatus === 'approved' && !frame.isPng) {
       const { canApprove } = evaluateRubric(baseMeta.rubric_scores ?? {});
       if (!canApprove) {
         toast({
@@ -150,15 +152,22 @@ export default function FrameDetailPanel({ frame, meta: metaProp, category, onCl
       {/* ── Scrollable body ── */}
       <div className="flex-1 overflow-y-auto">
 
-        {/* Canvas preview */}
+        {/* Preview: FramePngPreview for PNG frames, canvas for procedural */}
         <div className="flex justify-center items-center py-6 px-4 bg-cool-950/60">
           <div style={{ position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.85)', borderRadius: 4 }}>
-            <canvas
-              ref={cvs}
-              width={PW}
-              height={PH}
-              style={{ display: 'block', borderRadius: 4 }}
-            />
+            {frame.isPng ? (
+              <FramePngPreview
+                frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox }}
+                style={{ width: PW, height: PH, display: 'block', borderRadius: 4 }}
+              />
+            ) : (
+              <canvas
+                ref={cvs}
+                width={PW}
+                height={PH}
+                style={{ display: 'block', borderRadius: 4 }}
+              />
+            )}
           </div>
         </div>
 

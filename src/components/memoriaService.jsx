@@ -560,7 +560,7 @@ const memoriaService = {
       try {
         const { data, error } = await supabase
           .from('frames_meta')
-          .select('frame_id, status, image_url, hole_bbox')
+          .select('frame_id, status, image_url, hole_bbox, text_config')
           .eq('frame_id', frameId)
           .maybeSingle();
         if (error) throw error;

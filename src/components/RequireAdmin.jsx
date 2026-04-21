@@ -10,17 +10,19 @@ import { useAuth } from '@/lib/AuthContext';
  * - Admin: renders children
  */
 export default function RequireAdmin({ children }) {
-  const { user, isLoadingAuth, isAuthenticated } = useAuth();
+  const { user, isLoadingAuth, isAuthenticated, profileReady } = useAuth();
   const navigate = useNavigate();
 
+  const stillLoading = isLoadingAuth || !profileReady;
+
   useEffect(() => {
-    if (isLoadingAuth) return;
+    if (stillLoading) return;
     if (!isAuthenticated || user?.role !== 'admin') {
       navigate('/', { replace: true });
     }
-  }, [isLoadingAuth, isAuthenticated, user?.role, navigate]);
+  }, [stillLoading, isAuthenticated, user?.role, navigate]);
 
-  if (isLoadingAuth) {
+  if (stillLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-[#0a0a0e]">
         <div className="w-7 h-7 border-2 border-white/10 border-t-violet-500 rounded-full animate-spin" />

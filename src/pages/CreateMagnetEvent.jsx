@@ -6,9 +6,14 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
 import { FRAME_PACKS, LABEL_H_RATIO } from "@/components/magnet/framePacks";
+import FramePngPreview from "@/components/admin/frames/FramePngPreview";
+
+// Maps FRAME_CATEGORIES keys (underscore) to DB category values (hyphen where needed)
+const CAT_DB_KEY = { bar_mitzvah: 'bar-mitzvah' };
 
 // Polaroid-style magnet preview
 function MagnetPreview({ eventData = {}, overlayPreview = null, previewH, previewW }) {
@@ -274,6 +279,66 @@ function FramePreviewModal({ frame, eventData, onClose, onSelect, isSelected }) 
   );
 }
 
+// PNG frame thumbnail — uses FramePngPreview composite
+function PngFrameThumbnail({ frame, isSelected, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(frame.frame_id)}
+      className="flex flex-col items-center gap-1.5 shrink-0 active:scale-95"
+      style={{ outline: 'none', transition: 'transform 0.15s' }}
+    >
+      <div style={{
+        position: 'relative',
+        width: THUMB_W,
+        height: THUMB_TOTAL_H,
+        borderRadius: '5px',
+        border: isSelected ? '2px solid #7c86e1' : '1.5px solid rgba(255,255,255,0.09)',
+        boxShadow: isSelected
+          ? '0 0 16px -2px rgba(124,134,225,0.65), 0 4px 14px rgba(0,0,0,0.5)'
+          : '0 3px 10px rgba(0,0,0,0.5)',
+        overflow: 'hidden',
+        background: '#111',
+      }}>
+        <FramePngPreview
+          frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox }}
+          className="w-full h-full"
+          style={{ width: '100%', height: '100%' }}
+        />
+        {isSelected && (
+          <div style={{
+            position: 'absolute', top: 4, right: 4,
+            width: 15, height: 15, borderRadius: '50%',
+            background: '#7c86e1',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+              <path d="M1.5 4L3 5.5L6.5 2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        )}
+        <div style={{
+          position: 'absolute', top: 4, left: 4,
+          padding: '1px 4px', borderRadius: '3px',
+          background: 'rgba(99,102,241,0.8)',
+          fontFamily: 'Heebo, sans-serif',
+          fontSize: '7px', fontWeight: 700,
+          color: '#fff', letterSpacing: '0.04em', lineHeight: '13px',
+        }}>PNG</div>
+      </div>
+      <span style={{
+        fontFamily: 'Heebo, sans-serif', fontSize: '10px',
+        color: isSelected ? '#818cf8' : 'rgba(255,255,255,0.45)',
+        fontWeight: isSelected ? 700 : 400,
+        maxWidth: THUMB_W, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        userSelect: 'none',
+      }}>
+        {frame.frame_id.split('-').slice(1).join(' ')}
+      </span>
+    </button>
+  );
+}
+
 const FRAME_CATEGORIES = [
   { key: 'wedding',     label: 'חתונה' },
   { key: 'bar_mitzvah', label: 'בר / בת מצווה' },
@@ -309,6 +374,12 @@ export default function CreateMagnetEvent() {
   const [success, setSuccess] = useState(null);
   const [previewFrame, setPreviewFrame] = useState(null); // frame object shown in preview modal
   const [activeFrameTab, setActiveFrameTab] = useState('wedding'); // selected category tab in step 4
+
+  const { data: pngFrames = [] } = useQuery({
+    queryKey: ['png-frames-picker'],
+    queryFn: () => memoriaService.frameMeta.listPngFrames(),
+    staleTime: 60_000,
+  });
 
   const quotaOptions = [1, 3, 5, 10, 20];
   const todayStr = new Date().toISOString().split('T')[0];
@@ -639,7 +710,7 @@ export default function CreateMagnetEvent() {
                     })}
                   </div>
 
-                  {/* Frames for active tab */}
+                  {/* Frames for active tab — procedural + PNG */}
                   <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }} dir="ltr">
                     {FRAME_PACKS[activeFrameTab].map(frame => (
                       <FrameThumbnail
@@ -650,6 +721,21 @@ export default function CreateMagnetEvent() {
                         eventData={form}
                       />
                     ))}
+                    {pngFrames
+                      .filter(f => f.status === 'approved' && f.category === (CAT_DB_KEY[activeFrameTab] ?? activeFrameTab))
+                      .map(f => (
+                        <PngFrameThumbnail
+                          key={f.frame_id}
+                          frame={f}
+                          isSelected={form.selectedFrameId === f.frame_id}
+                          onSelect={(id) => {
+                            handleChange('selectedFrameId', id);
+                            handleChange('overlayFile', null);
+                            setOverlayPreview(null);
+                          }}
+                        />
+                      ))
+                    }
                   </div>
 
                   {/* Custom PNG upload (advanced) */}

@@ -53,11 +53,15 @@ export async function findApprovedFrameFromDB(frameId) {
   if (!frameId || frameId.startsWith('http')) return null;
   try {
     const row = await memoriaService.frameMeta.getById(frameId);
-    if (!row || row.status !== 'approved') return null;
+
+    // No DB row — fall through to local seed (handles procedural frames not yet in DB)
+    if (!row) return findApprovedFrame(frameId);
+
+    if (row.status !== 'approved') return null;
 
     // PNG frame — return lightweight descriptor; no drawFrame needed
     if (row.image_url && row.hole_bbox) {
-      return { id: frameId, isPng: true, image_url: row.image_url, hole_bbox: row.hole_bbox };
+      return { id: frameId, isPng: true, image_url: row.image_url, hole_bbox: row.hole_bbox, text_config: row.text_config ?? null };
     }
 
     // Procedural frame — resolve from local pack
