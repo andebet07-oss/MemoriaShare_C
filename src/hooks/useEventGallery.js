@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import memoriaService from "@/components/memoriaService";
 import { useAuth } from '@/lib/AuthContext';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import confetti from 'canvas-confetti';
 import { supabase } from "@/lib/supabase";
 import { checkGuestQuota } from "@/functions/checkGuestQuota";
@@ -24,6 +24,7 @@ function getOrCreateDeviceUUID() {
  
 export default function useEventGallery({ propEventCode, isAdminView, adminPhotos, onAdminPhotosChange }) {
   const navigate = useNavigate();
+  const { code: routeCode } = useParams();
   const { user: currentUser, isLoadingAuth } = useAuth();
  
   const [event, setEvent] = useState(null);
@@ -205,7 +206,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     if (hasLoadedEvent.current) return;
     hasLoadedEvent.current = true;
     (async () => {
-      const eventCode = propEventCode || new URLSearchParams(window.location.search).get('code');
+      const eventCode = propEventCode || routeCode || new URLSearchParams(window.location.search).get('code');
       if (!eventCode) { setIsLoading(false); return; }
       try {
         const currentEventData = await memoriaService.events.getByCode(eventCode);

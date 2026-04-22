@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { supabase } from '@/lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,7 @@ export default function EventSuccess() {
   const [copied, setCopied] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const navigate = useNavigate();
+  const { id: eventId } = useParams();
 
   useEffect(() => {
     loadEvent();
@@ -97,8 +98,6 @@ export default function EventSuccess() {
   }, []);
 
   const loadEvent = async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const eventId = urlParams.get('id');
     if (!eventId) { setIsLoading(false); return; }
     try {
       const { data: eventData } = await supabase.from('events').select('*').eq('id', eventId).maybeSingle();
@@ -108,7 +107,7 @@ export default function EventSuccess() {
   };
 
   const BASE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
-  const eventUrl = event ? `${BASE_URL}${createPageUrl(`Event?code=${event.unique_code}`)}&pin=${event.pin_code}` : '';
+  const eventUrl = event ? `${BASE_URL}/event/${event.unique_code}` : '';
 
   const copyLink = () => {
     navigator.clipboard.writeText(eventUrl);

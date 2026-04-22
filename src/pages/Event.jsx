@@ -5,12 +5,13 @@ import MagnetGuestPage from "@/pages/MagnetGuestPage";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Calendar, Camera, Loader2, Lock, Users, Clock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { checkGuestQuota } from "@/functions/checkGuestQuota";
 
 export default function EventPage() {
   const navigate = useNavigate();
+  const { code: routeCode } = useParams();
 
   const [event, setEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,8 +25,7 @@ export default function EventPage() {
   }, []);
 
   const loadEvent = async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const eventCode = urlParams.get('code');
+    const eventCode = routeCode || new URLSearchParams(window.location.search).get('code');
     if (eventCode) {
       try {
         const found = await memoriaService.events.getByCode(eventCode);
