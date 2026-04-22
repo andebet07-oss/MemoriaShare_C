@@ -1,14 +1,15 @@
 ---
 type: project-memory
-updated: 2026-04-20T21:00Z
+updated: 2026-04-21T21:00Z
 ---
 
 # Project Memory — Active State
 
 ## Build Status
 - Branch: `main`
-- Last commit: `dcb0646` (2026-04-20 20:47 +0300) — MagnetCamera eslint cleanup (closes the `upgradeALL` series: ALL1→ALL5)
-- Series highlight (2026-04-20, 5 commits): Layout.jsx deleted → shared state components (LoadingState/ErrorState/EmptyState) → MagnetCamera hardened with cancellation token, timeout tracking, in-app browser fallback, GPU-first vintage filter, ARIA a11y pass → MagnetEventDashboard cover upload UI → MagnetGuestPage violet badge retired → EventGallery ARIA tabs → Hebrew-first landing copy.
+- Last commit: `276562a` (2026-04-21 16:04 +0300) — Fix PNG frames pipeline + admin auth race condition
+- Today's highlight (2026-04-21, 15 commits): **PNG Frame Overlay Pipeline shipped** (compositePngFrame + detectHoleBbox + FramePngPreview + FrameUploadDialog), **admin auth race fixed** (profileReady gate in AuthContext), 79 real polaroid PNG frames added (8 Figma + 71 Canva), placeholder SVG seeds removed, CORS headers for `/FRAMES/`, admin panels brand-aligned with tokens + Playfair, sticker packs gain `emoji` type.
+- Series highlight (2026-04-20, 5 commits): Layout.jsx deleted → shared state components (LoadingState/ErrorState/EmptyState) → MagnetCamera hardened → MagnetEventDashboard cover upload UI → MagnetGuestPage violet badge retired → EventGallery ARIA tabs → Hebrew-first landing copy.
 - Build: ✓ implicit green via Vercel auto-deploy on main push
 - Deployed: https://memoriashare.com (Vercel auto-deploy on push)
 
@@ -47,9 +48,13 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | Issue | Priority | Action |
 |-------|----------|--------|
+| `onAuthStateChange` deadlock audit | **HIGH — NEW 2026-04-21** | AuthContext was just touched (`276562a` profileReady fix). While fresh, verify the `supabase.auth.onAuthStateChange` callback either (a) is fully synchronous and only calls `setState`, or (b) wraps any post-event supabase-js work in `setTimeout(fn, 0)`. Awaiting supabase-js inside the callback deadlocks the WHOLE client silently. See long-term-memory §Common Pitfalls (2026-04-21 finding). |
 | `linked_event_id` migration missing | **HIGH** | Add to `CLEAN_RESET_SCHEMA.sql`; add bundle toggle on `MagnetEventDashboard` (verified still absent 2026-04-20) |
 | RLS delete silent-failure hardening | **HIGH** | Audit `CLEAN_RESET_SCHEMA.sql`: every table with a DELETE policy needs a matching SELECT/ALL policy. Add defensive `count > 0` check to `memoriaService.deletePhoto()` with Hebrew error `המחיקה נכשלה — אין לך הרשאה`. See long-term-memory §Common Pitfalls. |
-| Orphaned `.luxury-button` / `.premium-submit-button` class refs | **NEW 2026-04-20** | Layout.jsx deleted in `4933138` — grep the codebase for `luxury-button`, `premium-submit-button` and migrate any lingering usages to `<Button>` component from `@/components/ui/button`. |
+| iOS Safari address-bar cuts off page CTAs (`vh` → `dvh`) | **MEDIUM — NEW 2026-04-21** | Bulk replace `min-h-screen` → `min-h-dvh` on page roots (MagnetLead, EventSuccess, MagnetGuestPage, Home, CreateEvent, Dashboard, EventGallery). Use `min-h-svh` for tightly-sized centered forms where growth would push content off-center. Tailwind v3.4.17 already ships the utilities — no config change. See long-term-memory §New Learnings 2026-04-21 finding. |
+| Orphaned `.luxury-button` / `.premium-submit-button` class refs | **2026-04-20** | Layout.jsx deleted in `4933138` — grep the codebase for `luxury-button`, `premium-submit-button` and migrate any lingering usages to `<Button>` component from `@/components/ui/button`. |
+| PNG frame pipeline `crossOrigin` gotcha | **2026-04-21** | `compositePngFrame.js` must apply `crossOrigin='anonymous'` ONLY to Supabase-hosted URLs — applying to same-origin SVGs breaks them. Baked in, but future PNG-adjacent code (e.g. sticker SVG batch loader) needs the same guard. |
+| `vercel.json` CORS pattern generalization | **2026-04-21** | `/FRAMES/` CORS headers added in `d3398ab`. If new public-asset directories are added (e.g. `/STICKERS/`, `/OVERLAYS/`), replicate the header block. |
 | Duplicate `compressImage` in MagnetLead | Medium | Replace inline `compressImage` in `src/pages/MagnetLead.jsx` with import from `@/functions/processImage` (MagnetReview already imports from there) |
 | Canvas fonts may not be loaded at first draw | Medium | Gate first `MagnetReview` canvas draw on `document.fonts.ready` to avoid fallback-font flash for Great Vibes / Parisienne / Bebas Neue / Abril Fatface |
 | `events.cover_image` not surfaced on guest landing | Medium | Admin can upload via CreateMagnetEvent step 1 AND via MagnetEventDashboard (new `96dbbbe`). Still need to render it on MagnetLead / MagnetGuestPage backgrounds. |
@@ -77,6 +82,17 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | File | Date | Summary |
 |------|------|---------|
+| `src/lib/AuthContext.jsx` | 2026-04-21 | **Admin auth race fix** (`276562a`). New `profileReady` state — only true after `enrichWithProfile()` completes. `RequireAdmin` now gates on `!isLoadingAuth && profileReady`. Added 6s profile-enrichment timeout + 10s whole-auth-settle safety timer. Strict order: auth mutex release → base user → DB profile → role → gate passes. |
+| `src/functions/compositePngFrame.js` | 2026-04-21 | **NEW** (`d0db4cc`, hardened `f808345` + `276562a`). Canvas compositor overlaying photo + PNG frame + optional text. Supports `maxWidth`/`maxHeight` caps (preview cards = 600×900 to avoid 2400×3600 allocations). `crossOrigin='anonymous'` applied conditionally (Supabase URLs only — same-origin SVGs break with it). Failed-image promises deleted from cache on reject so retries actually work. |
+| `src/functions/detectHoleBbox.js` | 2026-04-21 | **NEW** (`d0db4cc`). Alpha-channel scan of a PNG frame to find the transparent cutout bbox → auto-positions photo and text inside it. Eliminates manual per-frame coordinate config for well-authored transparent PNGs. |
+| `src/components/admin/FramePngPreview.jsx` | 2026-04-21 | **NEW** (`d0db4cc`, fixed `f808345`). Real-time composite preview of PNG frame in admin grid. Uses `compositePngFrame()` with 600×900 cap. Retry on image load error (restores after transient CDN hiccups). |
+| `src/components/admin/FrameUploadDialog.jsx` | 2026-04-21 | **NEW** (`d0db4cc`). Batch multi-file PNG ingestion with per-frame `text_config` JSONB metadata persistence. |
+| `src/functions/framesUtils.js` | 2026-04-21 | `findApprovedFrameFromDB()` now falls back to local procedural seed pack via `findApprovedFrame()` when DB row is missing. Enables AI-designed SVG seeds to work in live picker without DB import. |
+| `src/components/admin/FrameDetailPanel.jsx` | 2026-04-21 | Branches rendering: `frame.isPng ? <FramePngPreview /> : <canvas />`. PNG frames skip the procedural rubric approval gate — approved as static assets with metadata. |
+| `src/components/admin/AdminEventsList.jsx` + `LeadsPanel.jsx` | 2026-04-21 | Brand-aligned (`0f094a8`): hardcoded `rgba(...)` → `bg-card` / `border-border` / `text-muted-foreground` / `bg-cool-950`. Editorial headings now `font-playfair`. |
+| `src/components/magnet/stickerPacks.js` | 2026-04-21 | `emoji` type promoted to first-class (was legacy-only). Wedding pack 15 → 35+ stickers with emoji variants (🍾, 💍, 👰). Hebrew content added: `מזל טוב`, `בר מצווה`. |
+| `vercel.json` | 2026-04-21 | CORS headers added for `/FRAMES/` static assets (`d3398ab`). Required for cross-origin-anonymous image loads to canvas without tainting. |
+| `public/FRAMES/` | 2026-04-21 | Placeholder SVG seeds purged (`c1df70f`). Added 7 AI-designed SVG seeds (`06c353e`), 8 Figma transparent PNGs (`f7def4d`), 71 Canva polaroids (`4e73962`). Library now: 7 SVG + 79 PNG = 86 frames. |
 | `src/components/magnet/MagnetCamera.jsx` | 2026-04-20 | eslint cleanup — removed `// eslint-disable-line` from useEffect dep arrays now that race conditions are guarded by `startIdRef` cancellation token (`dcb0646`, `c0d6cfd`). Full hardening pass: cancellation token + timeout tracking + in-app UA fallback + video-ready guard + GPU-first vintage filter + Hebrew aria-labels + retry button + escape-to-close + haptic on quota-exhaust. See long-term-memory §MagnetCamera Hardening Patterns. |
 | `src/pages/EventGallery.jsx` | 2026-04-20 | ARIA tab semantics — panels wrapped in `role="tabpanel" aria-labelledby`, buttons gain `id` + `aria-controls` (`ef3a614`). Also migrated to shared `LoadingState` / `ErrorState` (`4933138`). |
 | `src/Layout.jsx` | 2026-04-20 | **DELETED** (`4933138`). Inline `.luxury-button` + `.premium-submit-button` CSS retired; styling moved to `<Button>` component. |

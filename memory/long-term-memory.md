@@ -1,6 +1,6 @@
 ---
 type: long-term-memory
-updated: 2026-04-20T22:00Z
+updated: 2026-04-21T22:00Z
 ---
 
 # Long-Term Memory — Patterns & Distilled Facts
@@ -259,13 +259,89 @@ x-upsert: true
 ```
 Use this recipe when the path is **canonical per-resource** (e.g. one cover per event) so re-uploads replace in place instead of piling up orphaned files. Contrast with the per-photo upload path which uses `{event_id}/{timestamp}_{filename}` for append-only semantics.
 
+---
+
+## PNG Frame Overlay Pipeline (Canonical, 2026-04-21)
+
+Shipped in commit `d0db4cc`, hardened across `f808345` + `d3398ab` + `276562a`. Runs alongside the procedural (SVG `drawFrame()`) system — PNG frames are static-asset-authored designs; procedural frames are generated at runtime.
+
+### Primitives
+- **`src/functions/compositePngFrame.js`** — canvas compositor: photo + PNG overlay + optional text. Accepts `maxWidth`/`maxHeight` caps (required for preview cards).
+- **`src/functions/detectHoleBbox.js`** — alpha-channel scan → returns `{ x, y, w, h }` of the transparent cutout. Replaces per-frame hand-coded coordinates for well-authored transparent PNGs.
+- **`src/components/admin/FramePngPreview.jsx`** — real-time composite preview in admin grid (`600×900` cap).
+- **`src/components/admin/FrameUploadDialog.jsx`** — batch ingestion + per-frame `text_config` JSONB metadata.
+- **`src/functions/framesUtils.js::findApprovedFrameFromDB()`** — DB-first lookup with graceful local procedural fallback.
+
+### Hardening rules (learned the hard way)
+1. **`crossOrigin='anonymous'` is conditional.** Apply ONLY to Supabase-hosted (cross-origin) URLs. Applying to same-origin SVGs breaks them with CORS errors. Future image-loader code adjacent to this pipeline must enforce the same guard.
+2. **Delete failed image-load promises from the cache on reject.** A naïve `imageCache.set(url, promise)` keeps the rejected promise forever — next call returns the same rejection without retrying. Rejection handler must `imageCache.delete(url)` so subsequent calls re-try.
+3. **Cap canvas dimensions in preview mode.** Admin grid renders ~20 preview cards; unbounded 2400×3600 canvases per card caused memory thrashing. `compositePngFrame()` takes `maxWidth`/`maxHeight` args (preview = 600×900, export = native dimensions).
+4. **CORS headers required on `/FRAMES/` in `vercel.json`.** Cross-origin-anonymous image loads will taint a canvas unless the server responds with `Access-Control-Allow-Origin`. Canvas taint makes `toDataURL` / `getImageData` throw SecurityError. If new public-asset directories ship (e.g. `/STICKERS/`), replicate the header block.
+
+### Admin flow branching
+- PNG frames skip the procedural rubric approval gate — they're approved as static assets with metadata, not scored designs.
+- `FrameDetailPanel` branches: `frame.isPng ? <FramePngPreview /> : <canvas />`.
+- Both paths write to the same `frames` table; `isPng` flag routes rendering.
+
+### Frame library (as of 2026-04-21)
+- 7 AI-designed SVG seeds (`06c353e`) — "white-elegant" procedural; live in code via seed pack.
+- 8 transparent PNG polaroids from Figma (`f7def4d`).
+- 71 Canva polaroid frames extracted from 6 sheet exports (`4e73962`) — bulk Canva sheet-to-PNG pipeline.
+- All placeholder SVG seeds purged from `public/FRAMES/` (`c1df70f`).
+
+---
+
+## Admin Auth Race Pattern (Canonical, 2026-04-21)
+
+Learned in commit `276562a`. Applies whenever a component's render gating depends on a value enriched asynchronously AFTER auth settles.
+
+**The bug class:** `useAuth()` returns `{ user, isLoadingAuth }` — but `user` may be populated from the JWT (base identity) BEFORE an async `enrichWithProfile()` DB query resolves role/quota/profile fields. A component that checks `!isLoadingAuth && user?.role === 'admin'` can run with `user.role === undefined` during the enrichment window, redirecting away legitimate admins.
+
+**Canonical pattern:** expose a second readiness flag that is only true AFTER all async enrichment completes:
+```js
+// In AuthContext
+const [profileReady, setProfileReady] = useState(false);
+
+useEffect(() => {
+  if (!user) { setProfileReady(false); return; }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000); // 6s cap
+  enrichWithProfile(user.id, controller.signal)
+    .then(profile => { setUser(u => ({ ...u, ...profile })); setProfileReady(true); })
+    .catch(() => setProfileReady(true)) // fail-open so UI doesn't hang
+    .finally(() => clearTimeout(timer));
+  return () => { controller.abort(); clearTimeout(timer); };
+}, [user?.id]);
+```
+
+Also add a hard safety timer (10s) on the whole auth settle — if something hangs, flip to "unauthenticated" rather than perpetual spinner.
+
+Consumers gate on BOTH: `!isLoadingAuth && profileReady && user?.role === 'admin'`. The ordering contract becomes: **auth mutex release → base user from JWT → DB profile enrichment → gate passes**.
+
+**Rule:** never gate on `user?.someField` without confirming that field comes from the JWT (synchronously available) vs. from DB enrichment (async — requires a readiness flag).
+
 ## Tech Stack Rules (Non-Negotiable)
 - React 18 hooks only (no class components, no HOCs except 3rd-party wraps)
 - Tailwind utility-only (no custom .css, no in
 ---
 
 ## Common Pitfalls
-*updated: 2026-04-19T06:00Z*
+*updated: 2026-04-21T21:00Z*
+
+### Canvas image caches must delete failed promises on reject
+A naïve `imageCache.set(url, loadImage(url))` traps a rejected promise forever — every subsequent call returns the same cached rejection without retrying, so a transient CDN hiccup permanently bricks a frame URL. The rejection handler must `imageCache.delete(url)` so the next call actually re-loads.
+- **Where it hit Memoria:** initial `compositePngFrame.js` implementation (`d0db4cc`) — fixed in `276562a`.
+- **Rule:** any image-loader helper that caches in-flight promises must clear failed entries on rejection. Applies equally to font caches, sticker SVG caches, and future blob-URL caches.
+
+### Canvas cross-origin image loads must match server CORS headers — or `getImageData`/`toDataURL` throw SecurityError
+Loading an image with `img.crossOrigin = 'anonymous'` tells the browser to fetch it with CORS. If the server does not respond with `Access-Control-Allow-Origin`, the canvas becomes "tainted" the moment the image is drawn — and any subsequent `getImageData` or `toDataURL` call throws SecurityError. Worse: applying `crossOrigin='anonymous'` to a SAME-ORIGIN image is ALSO an error class — it can break the load entirely if the server responds with no CORS headers for same-origin requests.
+- **Rule:** apply `crossOrigin='anonymous'` ONLY to cross-origin URLs (Supabase, CDN). Leave it off for same-origin `/FRAMES/`, `/STICKERS/`, etc. — unless you've explicitly added CORS headers to those paths in `vercel.json`.
+- **Memoria pattern:** `/FRAMES/` has explicit CORS headers (`d3398ab`) so `crossOrigin='anonymous'` works there. If adding a new public-asset path, replicate the header block.
+
+### Async role enrichment can race with route gating
+`useAuth()` populates `user` from the JWT synchronously — but role, quota, and profile fields usually come from a separate DB fetch. A component that checks `user?.role === 'admin'` the tick after auth settles can see `role === undefined` and redirect legitimate admins away. See §Admin Auth Race Pattern for the canonical `profileReady` flag fix.
+- **Rule:** any gating on `user?.someField` where the field is enriched async must gate on a second readiness flag (`profileReady`). Never trust `user` alone.
+- **Where it hit Memoria:** `RequireAdmin` component (`276562a`, fixed 2026-04-21).
 
 ### Canvas `willReadFrequently` must be on FIRST `getContext('2d')` call
 `getContext('2d', { willReadFrequently: true })` only takes effect on the **first** invocation on a canvas element — later calls silently ignore the option because the rendering backend is already fixed. Any code path that ultimately calls `getImageData` / `putImageData` (EXIF stripping, watermark compositing, pixel-level filters) must set the flag on the first `getContext` call, or perf silently degrades.
@@ -329,7 +405,21 @@ Realtime Broadcast/Presence Authorization on private channels requires `@supabas
 ---
 
 ## New Learnings (research-scout nightly — pending review)
-*Last refreshed: 2026-04-20T22:00Z | Next review: 2026-04-27*
+*Last refreshed: 2026-04-21T22:00Z | Next review: 2026-04-27*
+
+### Finding: 2026-04-21 — Supabase Realtime `postgres_changes` silently drops events for rows the subscribed user cannot SELECT via RLS — even if the table has INSERT/UPDATE/DELETE policies and is added to the publication
+- **Source:** https://supabase.com/docs/guides/realtime/postgres-changes + https://github.com/supabase/supabase/issues/35195 + https://github.com/orgs/supabase/discussions/35196 + https://www.technetexperts.com/realtime-rls-solved/ + https://supabase.com/blog/realtime-row-level-security-in-postgresql
+- **Finding:** The Realtime service listens to the database WAL via the `supabase_realtime` publication using a privileged internal role, then — before broadcasting each change to a subscribed client — impersonates that client and evaluates the table's RLS SELECT policy against the affected row. If the user cannot SELECT that row, the event is silently dropped. No error surfaces on the client; the subscription stays "connected" and other events continue to flow for rows the user CAN see. Symptom: "my subscription works for some rows but not others" or "realtime stopped working after I enabled RLS." Crucially, even apps that never call `.select()` on the table (e.g. write-only event logs) MUST still define a SELECT policy purely for Realtime visibility. Confirmed active behavior through 2026 — Supabase engineers reaffirmed it in issue #35195 and discussion #35196 this year.
+- **Relevance:** Memoria's `useRealtimeNotifications` and `useEventGallery` subscribe to `postgres_changes` on the `photos` table filtered by `event_id`. If `photos` has a SELECT RLS policy that limits a guest to photos they uploaded (common design), real-time inserts by OTHER guests in the same event silently won't propagate — the gallery will look "frozen" for everyone but the uploader. This matches the no-error-but-nothing-happens failure class of the existing "Supabase RLS DELETE silently fails" and "signUp obfuscated user" entries. Potentially explains any prior "why isn't the gallery updating live?" intermittent report we haven't investigated. Also directly impacts MemoriaMagnet `PrintStation` if the operator's RLS SELECT scope is narrower than the realtime stream it subscribes to.
+- **Action:** (1) Audit `CLEAN_RESET_SCHEMA.sql` — for every table subscribed to in `useRealtimeNotifications`, `useEventGallery`, and `PrintStation`, confirm a PERMISSIVE SELECT RLS policy exists that matches the realtime subscription filter scope. Specifically `photos`, `print_queue` (if present), and any notification table. (2) If a table has an "owner only" SELECT policy but the realtime feed needs to broadcast to ALL event guests, create a secondary policy like `CREATE POLICY "event_members_can_see_photos" ON photos FOR SELECT USING (event_id IN (SELECT event_id FROM event_members WHERE user_id = auth.uid()))` — or for anonymous-guest events, gate by a session token column. (3) Add to `Common Pitfalls`: "Supabase Realtime `postgres_changes` events are filtered by RLS SELECT — even INSERT/DELETE events require a matching SELECT policy for the row, or they silently never fire. No error, no warning." (4) When writing any new realtime subscription, the schema-audit checklist gains a line: "does the subscribed user have RLS SELECT visibility into every row the subscription will broadcast?"
+- **Status:** pending-review
+
+### Finding: 2026-04-21 — Supabase Realtime caches the access policy per-client at channel-subscribe time — RLS policy changes do NOT propagate to live subscribers until they reconnect or send a fresh JWT via `realtime.setAuth()`
+- **Source:** https://supabase.com/docs/guides/realtime/authorization + https://supabase.com/docs/guides/realtime/getting_started + https://supabase.com/docs/reference/javascript/v1 (realtime authorization section)
+- **Finding:** Supabase Realtime builds its RLS access-policy cache for a given client at two moments: (a) when the client first connects to a channel, and (b) when the client sends a new `access_token` message (via `supabase.realtime.setAuth(jwt)` or automatic JWT refresh). Between those events, the server evaluates inbound WAL changes against the CACHED policy snapshot — NOT the live policy. Consequence: if an admin runs `ALTER POLICY` or `DROP POLICY ... CREATE POLICY ...` on a table, every currently-connected subscriber continues to see events filtered by the OLD policy until their client reconnects or rotates its JWT. The same applies to role/claim changes (e.g. promoting a user to admin): Realtime won't honor the new permissions mid-session. Client-perceived symptom: "I updated the RLS and it works in SQL queries, but my dashboard still doesn't see new rows" — the fix is a page reload (which reconnects) or a forced `setAuth()` call.
+- **Relevance:** Directly relevant to Memoria admin workflows. When Efi toggles a `photos` RLS policy, or when a host's role/claims change mid-session (e.g. upgrading from free to paid tier unlocks broader event visibility), the live dashboard WILL lag behind the database until refresh. Not a P0, but worth knowing before we ship any "live role change" feature. Also interacts with the already-documented "Supabase `getClaims()` uses JWKS locally" finding — rotating claims server-side doesn't invalidate any in-flight JWT until its TTL expires, compounding the stale-cache window. Companion to the Realtime SELECT-gate finding above (same day).
+- **Action:** (1) NOT actionable today — no workflow currently depends on live RLS/claim changes. (2) When we scope host tier upgrades or mid-session admin promotion, add an explicit `supabase.realtime.setAuth(jwt)` call in the flow to force the Realtime server to re-evaluate access against the new claims — don't rely on the next JWT auto-refresh (can be up to 1h). (3) Document as a sub-bullet under `Future Migrations / Hardening Follow-ups`: "mid-session RLS / claims change requires explicit `realtime.setAuth()` to refresh per-client policy cache, otherwise Realtime filters against stale snapshot until reconnect." (4) Pairs with the `onAuthStateChange` deadlock finding — if we DO call `setAuth` in response to an auth event, wrap it in `setTimeout(fn, 0)` to sidestep the known auth-lock re-entrancy bug.
+- **Status:** pending-review
 
 ### Finding: 2026-04-20 — iOS Safari: a 2nd `getUserMedia()` call silently mutes the prior track — must `track.stop()` before switching cameras
 - **Source:** https://webrtchacks.com/guide-to-safari-webrtc/ + https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia + https://github.com/jeeliz/jeelizFaceFilter/issues/15
@@ -420,4 +510,18 @@ Realtime Broadcast/Presence Authorization on private channels requires `@supabas
 - **Finding:** Two compounding canvas performance patterns now broadly supported (Safari 16.4+, 2023): (1) **OffscreenCanvas** transfers rendering to a Web Worker via `canvas.transferControlToOffscreen()` — main thread no longer blocks on paint. (2) **Text bitmap caching**: render each static sticker text glyph once to a 1× offscreen `<canvas>` keyed by `(text, fontFamily, size, fill, stroke)`, cache the resulting `ImageBitmap` in a `Map`, then `ctx.drawImage(cachedBitmap, x, y)` on every frame instead of re-running `ctx.fillText()` + `ctx.strokeText()` (which re-shapes glyphs from scratch every frame). Measured ~2× FPS on mid-range Android for draggable text overlays with ≥5 stickers on screen. Note: unmanaged `ImageBitmap` / `Image` objects account for ~68% of canvas memory leaks — always `bitmap.close()` (or drop the Map reference) when cache size exceeds a cap.
 - **Relevance:** Directly applicable to `MagnetReview.jsx` sticker drag/rotate. Our existing Canvas 2D rules already note that `fillText(sameString, ...)` re-shapes every frame — this finding provides the concrete implementation pattern (OffscreenCanvas + ImageBitmap cache, with a bounded LRU) and adds the Web Worker offload angle. The Web Worker tier is extra work and NOT needed for ≤10 stickers, but the bitmap cache pattern IS worth implementing now.
 - **Action:** (1) Implement a `stickerTextBitmapCache` Map in `MagnetReview.jsx` / `drawSticker()` keyed by sticker signature; bound to ~100 entries (LRU evict + `bitmap.close()`) to avoid the Image-object memory-leak class. (2) Defer the OffscreenCanvas + Worker tier until/unless sticker count grows past ~15 on screen — adds complexity (message passing, fallback for Safari <16.4) that isn't justified today. (3) Document the bitmap-cache pattern as a concrete companion to the existing "Canvas 2D — Three compounding gotchas" rule.
+- **Status:** pending-review
+
+### Finding: 2026-04-21 — CSS `dvh` / `svh` / `lvh` viewport units fix the "iOS Safari address-bar jumps and cuts off camera UI" bug — now Baseline Widely Available (Tailwind v3.4+ ships `h-dvh` / `h-svh` / `h-lvh` utilities)
+- **Source:** https://ishadeed.com/article/new-viewport-units/ + https://zenn.dev/tonkotsuboy_com/articles/svh-dvh-lvh-for-all-browser?locale=en + https://tailscan.com/blog/tailwind-css-dynamic-viewport-unit-classes + https://developer.mozilla.org/en-US/docs/Web/CSS/length
+- **Finding:** Three viewport-height units specifically designed for mobile browser chrome: (1) **`svh`** = Small viewport height — computed AS IF the browser chrome (address bar, toolbar) is fully expanded. Use for "must fit on first paint" surfaces. (2) **`lvh`** = Large viewport height — computed AS IF chrome is fully collapsed. Use for "can fill the screen once user scrolls". (3) **`dvh`** = Dynamic viewport height — re-computed in real time as chrome shows/hides. Use for live-full-screen surfaces that must stay full-screen regardless of scroll state. All three reached **Baseline Widely Available** in June 2025 (Chrome 108+, Firefox 101+, Safari 15.4+, Edge 108+) — ~95%+ of Memoria's mobile audience by 2026-04. The long-standing `vh` unit is broken on iOS Safari because it resolves to `lvh` (chrome-hidden height), so `h-screen` / `min-h-screen` on a full-page layout causes the bottom ~50-80px to be cut off below the expanded address bar on page load until the user scrolls. Tailwind v3.4+ ships utilities out of the box: `h-dvh`, `h-svh`, `h-lvh`, `min-h-dvh`, `min-h-svh`, `min-h-lvh`, and their width cousins `w-dvw` / `svw` / `lvw`. No config change required on our `tailwindcss ^3.4.17`.
+- **Relevance:** Direct hit on two known Memoria pain points. (1) **CameraCapture.jsx + MagnetCamera.jsx** — both use `fixed inset-0` (per CLAUDE.md §3.6) so they're insulated from the `vh` bug. But any full-screen modal or dialog that uses `min-h-screen` on iOS Safari Mobile IS cut off by the expanded address bar. (2) **Page roots across the app** — `MagnetGuestPage`, `EventGallery`, `Dashboard`, `Home`, `MagnetLead`, `CreateEvent`, `EventSuccess` all use `min-h-screen` somewhere in the page shell gradient. On iOS Safari on first load, the bottom CTA button on `MagnetLead` step 4 and the "בקש קישור" button on `EventSuccess` can both be cut by the address bar — matches support-contact reports we haven't investigated. Pairs with the existing "iOS Safari randomizes deviceId" / "iOS standalone PWA breaks getUserMedia" family of iOS WebKit paper cuts.
+- **Action:** (1) Append a rule to CLAUDE.md §3.1 Mobile-First Design: "for full-page shells, prefer `min-h-dvh` over `min-h-screen` so iOS Safari's collapsing address bar doesn't cut off bottom CTAs. Use `min-h-svh` when the surface must NOT grow (e.g. login card — shouldn't gain dead space when chrome hides)." (2) Bulk-replace `min-h-screen` → `min-h-dvh` on: `MagnetLead`, `EventSuccess`, `MagnetGuestPage`, `Home`, `CreateEvent`, `Dashboard`, `EventGallery` page roots. Leave `min-h-svh` for tightly-sized centered forms (login, 1-step modals) where growth would push the card off-center when the address bar hides. (3) For the floating bottom bar pattern in `MagnetLead` step 4 + `MagnetCamera` controls, continue using `paddingBottom: calc(env(safe-area-inset-bottom, 0px) + Npx)` as already documented — the viewport unit swap complements but does not replace safe-area insets. (4) Add to UI Anti-patterns: "bare `h-screen` / `min-h-screen` on iOS-reachable surfaces — use `h-dvh` / `min-h-dvh` instead".
+- **Status:** pending-review
+
+### Finding: 2026-04-21 — Supabase `onAuthStateChange` callback deadlocks the entire client if it awaits ANY supabase-js method — officially-warned foot-gun, one-line workaround with `setTimeout(..., 0)`
+- **Source:** https://supabase.com/docs/reference/javascript/auth-onauthstatechange + https://github.com/supabase/auth-js/issues/762 + https://supabase.com/docs/guides/troubleshooting/why-is-my-supabase-api-call-not-returning-PGzXw0 + https://github.com/supabase/supabase-js/issues/2013
+- **Finding:** There is a documented re-entrancy deadlock in `supabase-js`: if the `onAuthStateChange` callback is `async` and `await`s any other method on the same Supabase client (`.from()`, `.storage.upload()`, `.auth.getUser()`, etc.), the internal auth lock is still held when the inner call tries to acquire it → the inner call hangs forever, AND every subsequent call from any other code path using that client ALSO hangs indefinitely. The app goes silent — no error, no timeout, just frozen data fetches. Symptom diagnosed from user reports: "after the user signs in, all queries stop returning; reload fixes it until next auth event". The Supabase team officially warns against async callbacks here, and the sanctioned workaround is to defer any Supabase work to a new macrotask: `onAuthStateChange((event, session) => { setTimeout(async () => { /* supabase calls here */ }, 0); })`. Confirmed active bug in supabase-js as of 2026; present in all v2.x releases.
+- **Relevance:** `@/lib/AuthContext` almost certainly subscribes to `onAuthStateChange` to populate host profile on sign-in (fetching the user's events, quotas, role). If that callback is `async` and awaits a `supabase.from('profiles').select()` or `memoriaService.getMyEvents()`, Memoria is one race away from a production hang affecting every host post-login — no error in Sentry, no crash, just a dead dashboard. This is the same "no-error-but-nothing-happens" failure class as the existing "Supabase RLS DELETE silently fails" and "signUp with unverified email returns obfuscated user" entries — deserves a peer slot in `Common Pitfalls`.
+- **Action:** (1) Audit `@/lib/AuthContext` NOW — read the `supabase.auth.onAuthStateChange` subscription and confirm either (a) the callback is synchronous and schedules nothing that awaits supabase-js, or (b) any post-event Supabase work is wrapped in `setTimeout(fn, 0)`. If async + awaits-supabase is present, this is a latent P0. (2) If a refactor is needed, the canonical shape is: `onAuthStateChange((event, session) => { setState({ session, user: session?.user ?? null }); setTimeout(() => loadProfile(session?.user?.id), 0); })` — update auth state synchronously, dispatch async profile fetch to next tick. (3) Add to CLAUDE.md §2 Tech Stack Rules → Authentication: "never await a supabase-js method inside an `onAuthStateChange` callback; wrap in `setTimeout(fn, 0)` to avoid the internal auth-lock deadlock". (4) Add to `Common Pitfalls`: "Supabase `onAuthStateChange` + `async` callback + `await supabase.*` = whole-client deadlock with no error. One-tick setTimeout is the workaround."
 - **Status:** pending-review

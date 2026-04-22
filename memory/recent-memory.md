@@ -1,10 +1,100 @@
 ---
 type: recent-memory
-updated: 2026-04-20T21:00Z
+updated: 2026-04-21T21:00Z
 horizon: 48 hours
 ---
 
 # Recent Memory (Last 48 Hours)
+
+## Session 2026-04-21 — `pov upgradeALL` series continues + PNG Frames Pipeline + admin auth race fix (15 commits)
+
+### Commits (chronological)
+- `e14f475` (00:02) — upgradeALL7
+- `a236af3` (00:22) — upgradeALL8
+- `0f094a8` (07:28) — admin events panel aligned to brand design system
+- `5f50cee` (07:33) — upgradeALL9
+- `d0ce328` (08:41) — upgradeALL10
+- `06c353e` (09:08) — **add:** 7 AI-designed SVG photo booth frames for PNG overlay pipeline
+- `f808345` (09:15) — **fix:** FramePngPreview composite scaled to 600×900 for preview; fix crossOrigin; retry on error
+- `d3398ab` (09:17) — **fix:** CORS headers for `/FRAMES/` static assets
+- `d0db4cc` (10:33) — **feat:** PNG frame overlay pipeline + white-elegant SVG seed frames
+- `c1df70f` (11:57) — chore: remove all placeholder SVG seed frames from `public/FRAMES/`
+- `f7def4d` (12:34) — **add:** 8 transparent PNG polaroid frames from Figma
+- `4e73962` (12:46) — **add:** 71 Canva polaroid frames extracted from 6 sheet exports
+- `a52e6ab` (12:55) — upgradeALL11
+- `5d13611` (13:24) — upgradeALL_12
+- `276562a` (16:04) — **fix:** PNG frames pipeline + admin auth race condition
+
+### Decision A — NEW: PNG Frame Overlay Pipeline (`d0db4cc`, extensively hardened)
+Introduces a parallel PNG-asset frame rendering path alongside the existing procedural (SVG `drawFrame()`) system. Design assets can now be batch-uploaded as PNGs with transparent cutouts; text position is auto-detected from the alpha-channel hole.
+
+**New primitives:**
+- `src/functions/compositePngFrame.js` — canvas compositor; overlays photo + PNG frame; optional text injection; respects `maxWidth`/`maxHeight` caps.
+- `src/functions/detectHoleBbox.js` — alpha-channel scan to find the transparent cutout bounding box → auto-positions photo and text inside it.
+- `src/components/admin/FramePngPreview.jsx` — real-time preview of composited PNG frame in admin grid.
+- `src/components/admin/FrameUploadDialog.jsx` — batch multi-file ingestion with per-frame `text_config` JSONB metadata.
+- `src/functions/framesUtils.js::findApprovedFrameFromDB()` — DB-first lookup with graceful fallback to local procedural seed pack.
+
+**Critical pitfalls captured inline:**
+1. **`crossOrigin='anonymous'` MUST be conditional** — applying to same-origin SVG assets breaks them. Apply only to Supabase-hosted URLs (cross-origin).
+2. **Failed image promises were cached indefinitely** — initial implementation never retried on error. Fixed in `276562a`: delete the failed cache entry in the rejection handler so next call retries.
+3. **Canvas sizing in preview was unbounded** — 2400×3600 canvas allocations per admin grid card caused memory thrashing; `f808345` added `maxWidth`/`maxHeight` args (600×900 for preview cards) to `compositePngFrame()`.
+4. **CORS required for `/FRAMES/` static assets** — `d3398ab` added CORS headers to `vercel.json` so the cross-origin-anonymous-loaded images can be drawn to canvas without tainting it (`getImageData` requires un-tainted).
+
+**Admin flow:** PNG frames skip the procedural rubric approval gate — approved as static assets with metadata (not scored designs). `FrameDetailPanel` branches: `frame.isPng ? <FramePngPreview /> : <canvas />`.
+
+### Decision B — Admin Auth Race Condition Fix (`276562a`, HIGH PRIORITY)
+**Bug:** `RequireAdmin` gated on `!isLoadingAuth && user?.role === 'admin'`, but role enrichment happened asynchronously in a background `enrichWithProfile()` call. Between JWT auth settling and DB role loading, `user?.role` was undefined → admin pages redirected unauthorized even for super-admin.
+
+**Fix:** New `profileReady` state in `@/lib/AuthContext`. Only true after `enrichWithProfile()` completes. `RequireAdmin` now gates on BOTH `!isLoadingAuth && profileReady`. Also added:
+- 6s timeout on profile enrichment (don't block auth indefinitely if profile fetch hangs)
+- 10s safety timer on whole auth settle
+- Strict ordering: auth mutex release → base user built → DB profile fetched → role available → `RequireAdmin` passes
+
+**Companion concern (from research-scout 2026-04-21 finding):** the `onAuthStateChange` deadlock pitfall — if the callback awaits any supabase-js method, the whole client deadlocks. Auth context was just touched; this is the moment to audit whether the subscription wraps post-event work in `setTimeout(fn, 0)`. See project-memory tech debt.
+
+### Decision C — Frame Assets Migration: Placeholder SVGs → Real Polaroid PNGs
+- `c1df70f` removed **all placeholder SVG seed frames** from `public/FRAMES/`.
+- `f7def4d` added **8 transparent PNG polaroid frames** extracted from Figma designs.
+- `4e73962` added **71 Canva polaroid frames** extracted from 6 sheet exports (bulk Canva import pipeline).
+- `06c353e` added **7 AI-designed SVG photo booth frames** — these are the "white-elegant" procedural seeds used by the new PNG pipeline as fallback.
+
+Total frame library now: 7 SVG seeds + 79 PNG polaroids = 86 curated frames available in admin grid.
+
+### Decision D — Admin Panels Brand-Aligned (`0f094a8`)
+`AdminEventsList` + `LeadsPanel` replaced hardcoded `rgba(...)` strings with design tokens:
+- `bg-card`, `border-border`, `text-muted-foreground`, `bg-cool-950`
+- Editorial headings now use `font-playfair` (magazine aesthetic, consistent with consumer surfaces)
+
+**New banned pattern:** hardcoded `rgba(...)` strings in admin panel component files. Use semantic tokens (already rule for share surfaces; now enforced on admin side too).
+
+### Decision E — Sticker Packs Expanded with `emoji` Type (`5d13611`)
+`stickerPacks.js` gains `emoji` type alongside existing `svg` / `script-text` / `retro-text` / `editorial-text`. Wedding pack grew 15 → 35+ stickers with emoji variants (🍾, 💍, 👰). Emoji renders natively via `ctx.fillText` — no SVG cache needed. Hebrew sticker content observed: `מזל טוב`, `בר מצווה`.
+
+The legacy `emoji` type notation in `drawSticker()` (previously only in long-term-memory §Sticker System v2) is now first-class and actively used in the 4 stock packs.
+
+### Decision F — Admin Events Panel Brand Sweep (continued in upgradeALL8–12)
+Part of a broader design-system alignment across admin CRM surfaces. Specific diffs not inspected but expected: token migration, `font-playfair` headings, editorial micro-labels, `shadow-indigo-soft` on interactive surfaces.
+
+### Files changed (summary)
+- **New:** `src/functions/compositePngFrame.js`, `src/functions/detectHoleBbox.js`, `src/components/admin/FramePngPreview.jsx`, `src/components/admin/FrameUploadDialog.jsx`, 7 SVG + 79 PNG frames under `public/FRAMES/`
+- **Modified:** `src/lib/AuthContext.jsx` (profileReady + timeouts), `src/functions/framesUtils.js` (DB-first + local fallback), `src/components/admin/AdminEventsList.jsx`, `src/components/admin/LeadsPanel.jsx`, `src/components/admin/FrameDetailPanel.jsx` (PNG/canvas branch), `src/components/magnet/stickerPacks.js` (emoji type + 20+ new stickers), `vercel.json` (CORS for `/FRAMES/`)
+- **Deleted:** all placeholder SVG seeds from `public/FRAMES/`
+
+### Tech debt delta
+- ✅ PNG frame pipeline shipped with CORS + retry + preview scaling fixes
+- ✅ Admin auth race condition — closed with `profileReady` gate
+- ✅ Admin panels hardcoded rgba → semantic tokens
+- ✅ Frame library expanded from placeholder SVGs to 79 real polaroid PNGs
+- 🆕 **HIGH:** audit `onAuthStateChange` subscription in AuthContext for the supabase-js deadlock foot-gun (wrap post-event work in `setTimeout(fn, 0)`). Auth context was just touched — ride the same PR if possible.
+- 🆕 **MEDIUM:** bulk replace `min-h-screen` → `min-h-dvh` on page roots to fix iOS Safari address-bar cutoff (per 2026-04-21 `dvh` finding). Low-risk, high-impact paper-cut.
+- 🆕 `vercel.json` now carries CORS config for `/FRAMES/` — if additional public-asset paths are added (e.g. `/STICKERS/`), replicate the pattern.
+- ⚠️ `linked_event_id` migration STILL missing (HIGH, unchanged since 2026-04-16)
+- ⚠️ Duplicate `compressImage` in MagnetLead still present
+- ⚠️ Canvas fonts still not gated on `document.fonts.ready`
+- ⚠️ `events.cover_image` still not surfaced on guest landing backgrounds
+
+---
 
 ## Session 2026-04-20 — `pov upgradeALL` series (5 commits, accessibility + component library + MagnetCamera hardening)
 
