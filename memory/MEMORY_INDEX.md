@@ -1,6 +1,6 @@
 # Memory System Index
 
-Last consolidation: **2026-04-21T21:00Z** (automated — 15 commits: PNG Frames Pipeline shipped, admin auth race fixed, 79 polaroid PNG frames added, admin panels brand-aligned, sticker packs gain `emoji` type)
+Last consolidation: **2026-04-22T18:00Z** (automated — 3 commits: routing refactor fallout fixed across Event/EventSuccess/useEventGallery, PNG frame aspect propagated to detail panel, 2026-04-21 memory consolidation committed as `upgradeALL_13`)
 
 This directory holds structured memory for the Memoria project across sessions.
 
@@ -12,7 +12,9 @@ This directory holds structured memory for the Memoria project across sessions.
 
 ## Critical Facts (at-a-glance)
 
-- **HEAD:** `276562a` (2026-04-21 16:04 +0300) — Fix PNG frames pipeline + admin auth race condition (closes `upgradeALL_12` series).
+- **HEAD:** `702adff` (2026-04-22 17:16 +0300) — `upgradeALL_13` (memory consolidation, no code). Last functional HEAD: `9c0924e` (2026-04-22 17:14) — Fix share events broken after routing refactor.
+- **ROUTING REFACTOR FALLOUT CLOSED (2026-04-22, `9c0924e`):** `createPageUrl` path-param refactor (`4933138`, 2026-04-20) silently broke share events for two days — every new link resolved `code` to null because `useEventGallery.js`, `Event.jsx`, `EventSuccess.jsx` still read `window.location.search`. Fixed via `useParams()` + query-param fallback. EventSuccess also had malformed share URL (double `?&` from concatenating `&pin=...` onto a no-query path) — rewritten as clean `${BASE_URL}/event/${unique_code}`. See long-term-memory §Common Pitfalls new entry.
+- **PNG FRAME ASPECT PROPAGATION (2026-04-22, `4b38ddf`):** Square PNG frames (`frame.aspect === 'square'`) were being letterboxed in the admin grid + detail panel because `PH` assumed portrait ratio. Fixed by splitting `PH_PORTRAIT` / `PH_SQUARE` in FrameDetailPanel and forwarding `aspect` through `setSelected()` in FramesLibrary.
 - **PNG FRAMES PIPELINE SHIPPED (2026-04-21, `d0db4cc`):** Parallel to procedural `drawFrame()`. New primitives: `compositePngFrame.js`, `detectHoleBbox.js` (alpha-channel cutout detection), `FramePngPreview.jsx`, `FrameUploadDialog.jsx`. Hardening rules (crossOrigin only for Supabase URLs; delete failed-image promises from cache on reject; cap canvas to 600×900 in preview; CORS on `/FRAMES/`) documented in long-term-memory §PNG Frame Overlay Pipeline.
 - **ADMIN AUTH RACE FIXED (2026-04-21, `276562a`):** `profileReady` state in AuthContext gates role-enrichment completion. `RequireAdmin` now requires both `!isLoadingAuth && profileReady`. 6s enrichment timeout + 10s whole-auth safety timer. See long-term-memory §Admin Auth Race Pattern.
 - **FRAME LIBRARY EXPANDED (2026-04-21):** 7 AI-designed SVG seeds + 8 Figma transparent PNGs + 71 Canva polaroids = 86 frames. Placeholder SVG seeds purged. Sources: `06c353e`, `f7def4d`, `4e73962`, `c1df70f`.
@@ -29,4 +31,4 @@ This directory holds structured memory for the Memoria project across sessions.
 - **STICKER SYSTEM V2 (2026-04-17 PM):** Y2K / Pinterest aesthetic. 5 types in `stickerPacks.js`. 24 SVG stickers with white die-cut stroke in `svgStickers.js`. Emoji now 1st-class (2026-04-21).
 - **MAGNETREVIEW PREVIEW COMPOSITE (2026-04-18):** Review screen bakes photo + frame + label to `previewUrl` data URL. `photoFrac` constrains sticker drag zone. **Rule:** at submit, `drawSticker(ctx, s, photoW, photoH, ...)` — NEVER `canvas.height`.
 - **SHADOW UTILITY:** `shadow-indigo-soft` = `0 4px 20px -4px rgba(124,134,225,0.25)`.
-- **OPEN TECH DEBT (HIGH):** `onAuthStateChange` deadlock audit (NEW — auth context just touched, perfect window), `linked_event_id` migration, RLS DELETE audit. (MEDIUM): `min-h-screen` → `min-h-dvh` bulk replace (iOS address-bar fix), duplicate `compressImage` in MagnetLead, canvas fonts not gated on `document.fonts.ready`, `events.cover_image` not displayed on guest landing, MagnetGuestPage violet re-audit. See project-memory.md.
+- **OPEN TECH DEBT (HIGH):** `onAuthStateChange` deadlock audit (auth context touched `276562a`), `linked_event_id` migration, RLS DELETE audit. (MEDIUM): `min-h-screen` → `min-h-dvh` bulk replace, duplicate `compressImage` in MagnetLead, canvas fonts not gated on `document.fonts.ready`, `events.cover_image` not displayed on guest landing, MagnetGuestPage violet re-audit. (LOW — NEW 2026-04-22): audit other pages for dangling `window.location.search` reads after path-param refactor. See project-memory.md.

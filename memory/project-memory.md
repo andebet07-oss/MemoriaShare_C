@@ -1,14 +1,15 @@
 ---
 type: project-memory
-updated: 2026-04-21T21:00Z
+updated: 2026-04-22T18:00Z
 ---
 
 # Project Memory — Active State
 
 ## Build Status
 - Branch: `main`
-- Last commit: `276562a` (2026-04-21 16:04 +0300) — Fix PNG frames pipeline + admin auth race condition
-- Today's highlight (2026-04-21, 15 commits): **PNG Frame Overlay Pipeline shipped** (compositePngFrame + detectHoleBbox + FramePngPreview + FrameUploadDialog), **admin auth race fixed** (profileReady gate in AuthContext), 79 real polaroid PNG frames added (8 Figma + 71 Canva), placeholder SVG seeds removed, CORS headers for `/FRAMES/`, admin panels brand-aligned with tokens + Playfair, sticker packs gain `emoji` type.
+- Last commit: `702adff` (2026-04-22 17:16 +0300) — `upgradeALL_13` (memory consolidation, no code). Last functional code HEAD: `9c0924e` (2026-04-22 17:14).
+- Today's highlight (2026-04-22, 3 commits): **Routing refactor fallout fixed** — share events (`/event/:code`) now resolve correctly from `useParams()` instead of stale `window.location.search` reads (`9c0924e`); EventSuccess share URL no longer produces malformed `?&` concatenation. **PNG frame aspect** propagated from grid → detail panel so square PNGs render 1:1 (`4b38ddf`).
+- Series highlight (2026-04-21, 15 commits): **PNG Frame Overlay Pipeline shipped** (compositePngFrame + detectHoleBbox + FramePngPreview + FrameUploadDialog), **admin auth race fixed** (profileReady gate in AuthContext), 79 real polaroid PNG frames added, CORS headers for `/FRAMES/`, admin panels brand-aligned.
 - Series highlight (2026-04-20, 5 commits): Layout.jsx deleted → shared state components (LoadingState/ErrorState/EmptyState) → MagnetCamera hardened → MagnetEventDashboard cover upload UI → MagnetGuestPage violet badge retired → EventGallery ARIA tabs → Hebrew-first landing copy.
 - Build: ✓ implicit green via Vercel auto-deploy on main push
 - Deployed: https://memoriashare.com (Vercel auto-deploy on push)
@@ -48,6 +49,7 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | Issue | Priority | Action |
 |-------|----------|--------|
+| Dangling `window.location.search` reads elsewhere | **LOW — NEW 2026-04-22** | After the path-param refactor (`9c0924e` fixed Event, EventSuccess, useEventGallery), grep the codebase for any remaining `window.location.search` reads — likely candidates: legacy admin pages, MagnetLead query-string entry points. Migrate to `useParams()` / `useSearchParams()` with a string fallback. |
 | `onAuthStateChange` deadlock audit | **HIGH — NEW 2026-04-21** | AuthContext was just touched (`276562a` profileReady fix). While fresh, verify the `supabase.auth.onAuthStateChange` callback either (a) is fully synchronous and only calls `setState`, or (b) wraps any post-event supabase-js work in `setTimeout(fn, 0)`. Awaiting supabase-js inside the callback deadlocks the WHOLE client silently. See long-term-memory §Common Pitfalls (2026-04-21 finding). |
 | `linked_event_id` migration missing | **HIGH** | Add to `CLEAN_RESET_SCHEMA.sql`; add bundle toggle on `MagnetEventDashboard` (verified still absent 2026-04-20) |
 | RLS delete silent-failure hardening | **HIGH** | Audit `CLEAN_RESET_SCHEMA.sql`: every table with a DELETE policy needs a matching SELECT/ALL policy. Add defensive `count > 0` check to `memoriaService.deletePhoto()` with Hebrew error `המחיקה נכשלה — אין לך הרשאה`. See long-term-memory §Common Pitfalls. |
@@ -82,6 +84,11 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | File | Date | Summary |
 |------|------|---------|
+| `src/hooks/useEventGallery.js` | 2026-04-22 | **Routing fix** (`9c0924e`). Imports `useParams`; event-code resolution now `propEventCode || routeCode || new URLSearchParams(window.location.search).get('code')`. Fixes silent null-code failure after `createPageUrl` path-param refactor. |
+| `src/pages/Event.jsx` | 2026-04-22 | **Routing fix** (`9c0924e`). `useParams()` with query-param fallback in `loadEvent()`. |
+| `src/pages/EventSuccess.jsx` | 2026-04-22 | **Routing fix** (`9c0924e`). `useParams()` for `{ id: eventId }`. Share URL cleaned: old malformed `createPageUrl(\`Event?code=${...}\`)&pin=${...}` (double `?&`) replaced with `${BASE_URL}/event/${event.unique_code}`. PIN param dropped from share URL. |
+| `src/components/admin/frames/FrameDetailPanel.jsx` | 2026-04-22 | **Aspect fix** (`4b38ddf`). Split `PH` → `PH_PORTRAIT` + `PH_SQUARE = PW`; branches at render on `frame.isPng && frame.aspect === 'square'`. |
+| `src/pages/admin/FramesLibrary.jsx` | 2026-04-22 | **Aspect fix** (`4b38ddf`). `setSelected(...)` forwards `aspect: f.aspect`; grid thumbnail `paddingBottom` conditional `'100%'` (square) vs `'133%'` (portrait). |
 | `src/lib/AuthContext.jsx` | 2026-04-21 | **Admin auth race fix** (`276562a`). New `profileReady` state — only true after `enrichWithProfile()` completes. `RequireAdmin` now gates on `!isLoadingAuth && profileReady`. Added 6s profile-enrichment timeout + 10s whole-auth-settle safety timer. Strict order: auth mutex release → base user → DB profile → role → gate passes. |
 | `src/functions/compositePngFrame.js` | 2026-04-21 | **NEW** (`d0db4cc`, hardened `f808345` + `276562a`). Canvas compositor overlaying photo + PNG frame + optional text. Supports `maxWidth`/`maxHeight` caps (preview cards = 600×900 to avoid 2400×3600 allocations). `crossOrigin='anonymous'` applied conditionally (Supabase URLs only — same-origin SVGs break with it). Failed-image promises deleted from cache on reject so retries actually work. |
 | `src/functions/detectHoleBbox.js` | 2026-04-21 | **NEW** (`d0db4cc`). Alpha-channel scan of a PNG frame to find the transparent cutout bbox → auto-positions photo and text inside it. Eliminates manual per-frame coordinate config for well-authored transparent PNGs. |

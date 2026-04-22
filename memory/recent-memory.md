@@ -1,10 +1,47 @@
 ---
 type: recent-memory
-updated: 2026-04-21T21:00Z
+updated: 2026-04-22T18:00Z
 horizon: 48 hours
 ---
 
 # Recent Memory (Last 48 Hours)
+
+## Session 2026-04-22 — Routing refactor fallout + PNG frame aspect fix + memory consolidation commit (3 commits)
+
+### Commits (chronological)
+- `4b38ddf` (17:03) — **fix:** PNG frame aspect ratio in admin grid and detail panel
+- `9c0924e` (17:14) — **fix:** share events broken after routing refactor
+- `702adff` (17:16) — `upgradeALL_13` (memory consolidation of 2026-04-21 work, no code changes)
+
+### Decision A — Share events broken after `createPageUrl` path-param refactor (`9c0924e`, HIGH IMPACT)
+**Bug:** The route refactor in `4933138` (2026-04-20) switched `createPageUrl` to emit path-based URLs (`/event/:code`, `/host/events/:id`) but three consumers still read `window.location.search` for the event code/ID — so every freshly-generated share link resolved the code to `null` and the gallery failed to load. Likely user-visible since 2026-04-20 for any event created after the refactor.
+
+**Fix:** Migrated three files to `useParams()` with a query-param fallback for legacy links already distributed:
+- `src/hooks/useEventGallery.js` — `{ code: routeCode }` from `useParams()`; resolution: `propEventCode || routeCode || new URLSearchParams(window.location.search).get('code')`.
+- `src/pages/Event.jsx` — same pattern for `loadEvent()`.
+- `src/pages/EventSuccess.jsx` — `{ id: eventId }` from `useParams()`. ALSO fixed a malformed share URL construction: old `${BASE_URL}${createPageUrl(\`Event?code=${...}\`)}&pin=${...}` produced double-`?&` garbage URLs; replaced with clean `${BASE_URL}/event/${event.unique_code}` (PIN param dropped from share URL entirely).
+
+**New canonical pattern:** after a query-param → path-param route refactor, EVERY page/hook that reads the former query params must switch to `useParams()` + retain a query-string fallback for legacy QR codes / share URLs already printed or sent out. Grep the codebase for `window.location.search` after any routing refactor.
+
+### Decision B — PNG frame aspect ratio propagation (`4b38ddf`)
+**Bug:** Square-aspect PNG frames (`frame.aspect === 'square'`) were being laid out in the admin grid + detail panel using the portrait ratio (`PH = PW * (1 + LABEL_H_RATIO)` ≈ 1.33×), causing letterboxing on 1:1 frames.
+
+**Fix:**
+- `FrameDetailPanel.jsx`: split `PH` into `PH_PORTRAIT` (old formula) and `PH_SQUARE = PW`, then branch at render: `const PH = frame.isPng && frame.aspect === 'square' ? PH_SQUARE : PH_PORTRAIT;`.
+- `FramesLibrary.jsx`: `setSelected(...)` now forwards `aspect: f.aspect` so the detail panel actually receives it. Grid thumbnail `paddingBottom` now conditional: `f.aspect === 'square' ? '100%' : '133%'`.
+
+**Rule:** frame metadata (`aspect`, `isPng`, `text_config`) must flow from the grid-level selection handler into child layout state. Don't compute aspect in the detail panel — let the list pass it down.
+
+### Decision C — Memory consolidation committed (`702adff`)
+Pure memory update (no source code touched). Captured 15 commits of 2026-04-21 work (PNG pipeline, admin auth race fix, 79 polaroid PNG frames, admin brand alignment, sticker `emoji` type). Horizon timestamp in the file heading was NOT bumped at the time — still shows `2026-04-21T21:00Z`. This current consolidation bumps it.
+
+### Tech debt delta
+- ✅ Routing refactor fallout — closed. All path-param consumers migrated.
+- ✅ PNG frame square aspect — closed.
+- ⚠️ **Open (same as prior):** `onAuthStateChange` deadlock audit (HIGH), `linked_event_id` migration (HIGH), RLS DELETE audit (HIGH), `min-h-screen` → `min-h-dvh` bulk replace (MEDIUM), duplicate `compressImage` in MagnetLead, canvas fonts not gated on `document.fonts.ready`, `events.cover_image` not surfaced on guest landing, MagnetGuestPage violet re-audit.
+- 🆕 **LOW:** after this refactor, audit other pages for dangling `window.location.search` reads — a grep-able sweep.
+
+---
 
 ## Session 2026-04-21 — `pov upgradeALL` series continues + PNG Frames Pipeline + admin auth race fix (15 commits)
 
