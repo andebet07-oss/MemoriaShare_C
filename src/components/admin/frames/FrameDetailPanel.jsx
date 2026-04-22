@@ -10,7 +10,8 @@ import { useToast } from '@/components/ui/use-toast';
 import FramePngPreview from '@/components/admin/frames/FramePngPreview';
 
 const PW = 300;
-const PH = Math.round(PW * (1 + LABEL_H_RATIO));
+const PH_PORTRAIT = Math.round(PW * (1 + LABEL_H_RATIO));
+const PH_SQUARE   = PW;
 
 const STATUS_OPTIONS = [
   { value: 'approved',   label: '✓ מאושר'     },
@@ -25,6 +26,7 @@ const STATUS_OPTIONS = [
 export default function FrameDetailPanel({ frame, meta: metaProp, category, onClose }) {
   const cvs    = useRef(null);
   const { toast } = useToast();
+  const PH = frame.isPng && frame.aspect === 'square' ? PH_SQUARE : PH_PORTRAIT;
   const invalidate = useInvalidateFramesMeta();
 
   // Prefer DB meta; fall back to local seed
