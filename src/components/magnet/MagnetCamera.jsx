@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, RotateCw, Zap, ZapOff, CameraOff, Loader2, Upload, Wand2 } from 'lucide-react';
+import { X, RotateCw, Zap, ZapOff, CameraOff, Loader2, Upload, Film } from 'lucide-react';
 import MagnetReview from './MagnetReview';
 
 const VINTAGE_FILTER = 'sepia(0.35) contrast(0.88) brightness(1.08) saturate(1.15)';
@@ -298,16 +298,32 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
           <X className="w-4 h-4 text-white" />
         </button>
 
-        {/* F17: bumped to /60 for WCAG AA contrast */}
-        <p id={quotaId} className={`text-xs font-medium tracking-wide ${remainingPrints <= 0 ? 'text-red-400' : 'text-white/60'}`}>
-          {remainingPrints <= 0 ? 'מכסת ההדפסות הסתיימה' : `נותרו ${remainingPrints} הדפסות`}
-        </p>
+        {/* Quota badge — number-first, amber warning at ≤3, red pill when exhausted */}
+        <div id={quotaId}
+          className="flex flex-col items-center justify-center px-4 py-1.5 rounded-full"
+          style={{
+            background: remainingPrints <= 0 ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.08)',
+            border: `1px solid ${remainingPrints <= 0 ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.12)'}`,
+            backdropFilter: 'blur(12px)',
+          }}>
+          {remainingPrints <= 0 ? (
+            <span className="text-red-400 text-[10px] font-bold leading-none">המכסה הסתיימה</span>
+          ) : (
+            <>
+              <span className={`text-xl font-black leading-none tabular-nums ${remainingPrints <= 3 ? 'text-amber-400' : 'text-white'}`}>
+                {remainingPrints}
+              </span>
+              <span className="text-[9px] text-white/35 font-medium mt-0.5">נותרו</span>
+            </>
+          )}
+        </div>
 
+        {/* Vintage film filter toggle */}
         <button onClick={() => setVintage(v => !v)}
           aria-label={vintage ? 'בטל פילטר וינטאג׳' : 'הפעל פילטר וינטאג׳'} aria-pressed={vintage}
           className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           style={{ background: vintage ? 'rgba(124,134,225,0.15)' : 'rgba(255,255,255,0.07)', border: `1px solid ${vintage ? 'rgba(124,134,225,0.45)' : 'rgba(255,255,255,0.12)'}`, backdropFilter: 'blur(12px)' }}>
-          <Wand2 className={`w-4 h-4 ${vintage ? 'text-indigo-300' : 'text-white/60'}`} />
+          <Film className={`w-4 h-4 ${vintage ? 'text-indigo-300' : 'text-white/60'}`} />
         </button>
       </div>
 
