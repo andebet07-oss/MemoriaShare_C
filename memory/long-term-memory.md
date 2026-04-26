@@ -1,6 +1,6 @@
 ---
 type: long-term-memory
-updated: 2026-04-26T22:00Z
+updated: 2026-04-26T22:30Z
 ---
 
 # Long-Term Memory — Patterns & Distilled Facts
@@ -347,7 +347,7 @@ Consumers gate on BOTH: `!isLoadingAuth && profileReady && user?.role === 'admin
 ---
 
 ## Common Pitfalls
-*updated: 2026-04-26T22:00Z*
+*updated: 2026-04-26T22:30Z*
 
 ### Query-param → path-param route refactor requires migrating every consumer at once
 When `createPageUrl` (or any route helper) switches from emitting query strings (`/Event?code=ABC`) to path params (`/event/ABC`), EVERY page and hook that previously read `window.location.search` or `new URLSearchParams(...)` for those values must be migrated to `useParams()` in the SAME PR — otherwise freshly-generated URLs resolve the param to `null` and the page silently loads an empty state with no error.
@@ -364,7 +364,7 @@ A naïve `imageCache.set(url, loadImage(url))` traps a rejected promise forever 
 ### Canvas cross-origin image loads must match server CORS headers — or `getImageData`/`toDataURL` throw SecurityError
 Loading an image with `img.crossOrigin = 'anonymous'` tells the browser to fetch it with CORS. If the server does not respond with `Access-Control-Allow-Origin`, the canvas becomes "tainted" the moment the image is drawn — and any subsequent `getImageData` or `toDataURL` call throws SecurityError. Worse: applying `crossOrigin='anonymous'` to a SAME-ORIGIN image is ALSO an error class — it can break the load entirely if the server responds with no CORS headers for same-origin requests.
 - **Rule:** apply `crossOrigin='anonymous'` ONLY to cross-origin URLs (Supabase, CDN). Leave it off for same-origin `/FRAMES/`, `/STICKERS/`, etc. — unless you've explicitly added CORS headers to those paths in `vercel.json`.
-- **Memoria pattern:** `/FRAMES/` has explicit CORS headers (`d3398ab`) so `crossOrigin='anonymous'` works there. If adding a new public-asset path, replicate the header block.
+- **Memoria pattern:** `/FRAMES/` AND `/FRAMES-PROCESSED/` both have explicit CORS headers in `vercel.json` (`d3398ab` + `cbd2058`) so `crossOrigin='anonymous'` works there. If adding a new public-asset path drawn to canvas (e.g. `/STICKERS/`, `/OVERLAYS/`), replicate the header block.
 
 ### Async role enrichment can race with route gating
 `useAuth()` populates `user` from the JWT synchronously — but role, quota, and profile fields usually come from a separate DB fetch. A component that checks `user?.role === 'admin'` the tick after auth settles can see `role === undefined` and redirect legitimate admins away. See §Admin Auth Race Pattern for the canonical `profileReady` flag fix.
@@ -381,6 +381,21 @@ With RLS enabled, `supabase.from('t').delete().match(...)` only deletes rows als
 - **Defensive pattern:** after `.delete()`, verify returned `count > 0`; throw a Hebrew error (`המחיקה נכשלה — אין לך הרשאה`) otherwise. Never trust a missing error object as "success."
 - **Schema audit rule:** every table with a DELETE policy in `CLEAN_RESET_SCHEMA.sql` MUST have a matching SELECT/ALL policy covering the same rows.
 - **Source:** https://supabase.com/docs/guides/database/postgres/row-level-security + https://supabase.com/docs/guides/troubleshooting/rls-performance-and-best-practices-Z5Jjwv.
+
+### Prefer inline correlated `EXISTS` over `SECURITY DEFINER` helpers in RLS policies
+When extending RLS policies with a "is this user a member / editor / X of this row" check, prefer an inline correlated `EXISTS (SELECT 1 FROM <permissions_table> WHERE ...)` subquery over wrapping the check in a `SECURITY DEFINER` helper function. SECURITY DEFINER bypasses the calling user's RLS context (it runs as the function owner) — every call is a hidden privilege-escalation surface and is harder to audit. Inline EXISTS runs under the correct `auth.uid()` context, is visible at the policy level, and is cheap enough with a `(event_id, role)` index.
+- **Memoria pattern:** the Phase 1 `event_permissions` migration (`cbd2058`) extends 4 existing photo/event policies with `OR EXISTS (SELECT 1 FROM event_permissions ep WHERE ep.event_id = <table>.id AND ep.user_id = (select auth.uid()) AND ep.role = 'editor')`. **No `is_editor_for_event(UUID)` SECURITY DEFINER function exists** — and explicitly should not be created. Same rule for any future "is_member_of(event_id)", "is_subscriber(event_id)", etc. checks.
+- **Index requirement:** every `(table.fk_id, role)` pattern in EXISTS needs a covering index. `event_permissions` ships with `(event_id, role)` for this purpose.
+- **Rollback safety:** policy DROP+CREATE is idempotent and rollback-safe. SECURITY DEFINER helpers leak across migrations — easier to forget to drop on rollback.
+
+### Migrating a sharing/permissions system from email-keyed to UUID-keyed: BOTH must coexist for several phases
+Memoria's pre-2026-04-26 sharing was an `events.co_hosts text[]` email array. Phase 1 (`cbd2058`) introduced `event_permissions(event_id, user_id UUID, role)`. **Until Phase 7 (drop `co_hosts`), every access decision must check BOTH systems with union logic:** a user can be in `co_hosts[]` by email but have no UUID row yet, or vice versa. Dropping either check before the migration completes silently locks out legitimate users.
+- **Canonical priority block (apply verbatim — see `.claude/agent-memory/03-task-decomposer/arch_role_resolution_pattern.md` for the full table + code):**
+  - admin > creator > new-system-editor > legacy-cohost > new-system-viewer > guest
+  - **Conflict rule:** if a user has a `viewer` row AND their email is in `co_hosts[]`, effective role is **editor** (priority 4 beats 5 — higher privilege wins). The viewer grant does NOT downgrade a legacy co-host. Only Phase 7 can collapse this.
+- **Code sites in Memoria using this block (must stay in sync):** `src/hooks/useEventGallery.js` (3 places: code-load, delayed event-load, realtime handler) + `src/pages/Dashboard.jsx`.
+- **`isOwner` backward-compat rule:** when migrating from a single boolean (`isOwner`) to a four-value role (`'owner'|'editor'|'viewer'|'guest'`), keep the boolean in the hook return for one full release window. Consumers (e.g. `EventGallery.jsx`, `GalleryHeader.jsx`) migrate at their own pace; remove the legacy field in a separate cleanup PR.
+- **Phase 7 simplification preview:** drop `isLegacyCoHost` line; `effectiveIsEditor = isNewEditor`; `effectiveIsViewer = isNewViewer`. Update the priority table to 4 rows.
 
 ### Supabase Realtime `postgres_changes` events filtered by RLS SELECT — silently drop for rows the subscribed user can't SELECT
 Realtime impersonates the subscribed client and evaluates the table's SELECT RLS policy per-row before broadcasting each change. INSERT/UPDATE/DELETE events for rows the user can't SELECT are silently dropped — no error, subscription stays "connected." Even write-only event-log tables need a SELECT policy purely for Realtime visibility. Symptom: "gallery looks frozen for everyone but the uploader" or "realtime stopped working after I enabled RLS."
@@ -592,4 +607,11 @@ Realtime Broadcast/Presence Authorization on private channels requires `@supabas
 ## New Learnings (research-scout nightly — pending review)
 *Last refreshed: 2026-04-26T22:00Z (post-promotion, weekly review run) | Next review: 2026-05-03*
 
-(empty — last weekly promotion 2026-04-26 promoted 29 findings: +8 to Common Pitfalls, +5 to WebRTC Camera Rules, +3 to Performance Patterns, +8 to Future Migrations (with 5 additional sub-bullet folds into existing Tailwind v4 + React 19 + Realtime blocks). Awaiting next nightly hunt.)
+### Finding: 2026-04-26 — Supabase JS
+- **Source:** https://supabase.com/docs/guides/api/automatic-retries-in-supabase-js
+- **Finding:** `supabase-js` now transparently retries GET/HEAD requests up to 3× with exponential backoff (1s → 2s → 4s, capped at 30s, with jitter) on transient errors (HTTP 408 / 409 / 503 / 504 / 520, network failures). Only idempotent methods retry — POST/PATCH/PUT/DELETE are NEVER auto-retried. Each retry adds an `X-Retry-Count` header. Enabled by default, no code change needed.
+- **Relevance:** Memoria's loading states (CLAUDE.md §3.2 mandates `isLoading` for >200ms ops) silently extend to ~7s on a failing GET — UX timers and user-facing error messages need to account for the longer worst-case. Inversely, all WRITE paths (`memoriaService.uploadPhoto`, `requestPhotoDeletion`, `signUp`, RLS-bound INSERTs) still get ZERO automatic retries, so any flaky-network hardening must be hand-rolled there. Also informs `useRealtimeNotifications` / `useEventGallery` reconnect logic — fetch-side retries are now bundled but the realtime channel itself is independent.
+- **Action:** (1) Audit Hebrew error messages that say "נסה שוב" — for GET-shaped flows, the user has already auto-retried 3×, so a final error should suggest a different recovery (refresh / check connection) rather than another tap. (2) For WRITE-side flows, ADD an explicit retry-once-with-backoff helper for upload + delete-request paths — auto-retry won't cover them. (3) Add an `X-Retry-Count` watcher to dev/debug logs to surface flaky upstream behavior. (4) Update CLAUDE.md §3.2 async pattern with one-liner: "GET/HEAD auto-retry up to 3× — POST/PATCH/PUT/DELETE do NOT; hand-roll retry on writes only."
+- **Status:** pending-review
+
+

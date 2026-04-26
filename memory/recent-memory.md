@@ -1,12 +1,132 @@
 ---
 type: recent-memory
-updated: 2026-04-26T22:00Z
-horizon: 48 hours (stretched — quiet period since 2026-04-22)
+updated: 2026-04-26T22:30Z
+horizon: 48 hours
 ---
 
 # Recent Memory (Last 48 Hours)
 
-> **Quiet period note (2026-04-26):** No new commits since `9306eee` (2026-04-22 22:43). HEAD unchanged across 2026-04-23, 24, 25, 26. Sessions below are retained beyond strict 48hr horizon because they are the most recent functional context — nothing newer exists to replace them. Next consolidation will refresh once new work lands.
+> **Quiet period broken (2026-04-26 evening):** After 4 days of no commits since `9306eee` (2026-04-22 22:43), two new commits landed today: `cbd2058` (21:21 — FRAMES1 photo-print library) and `dd11a8e` (21:31 — `upgradeALL_25` memory + agent infra + Phase 1/2 of event_permissions sharing feature). HEAD is now `dd11a8e`.
+
+## Session 2026-04-26 PM — FRAMES1 photo-print library + event_permissions Phase 1/2 (sharing feature scaffolded) (2 commits)
+
+### Commits (chronological)
+- `cbd2058` (21:21) — **Add FRAMES1 photo-print frame library (30 landscape templates)** + `20260423_event_permissions_phase1.sql` migration + `sharp@^0.34.5` dep + `scripts/import-frames1.mjs` (355 LOC) + `scripts/frames-triage.json` (+1062 lines)
+- `dd11a8e` (21:31) — **`upgradeALL_25`** — Phase 2 service layer for event sharing (`memoriaService.profiles.getByEmail`, `memoriaService.eventPermissions.{getByEvent,getForUser,grant,revoke}`) + role resolution rewrite in `useEventGallery.js` and `Dashboard.jsx` + new realtime `permissions-${eventId}` channel + agent infra scaffolding + memory updates
+
+### Decision A — Phase 1 of event-sharing migration: `event_permissions` table + RLS (`cbd2058`, +239 LOC SQL)
+**File:** `supabase/migrations/20260423_event_permissions_phase1.sql`. Idempotent (IF NOT EXISTS / DROP POLICY IF EXISTS). Adds UUID-based viewer/editor sharing alongside the legacy email-based `events.co_hosts` array. **Both systems will coexist until Phase 7 (co_hosts column drop).**
+
+Schema highlights:
+- `event_permissions` — `(id, event_id, user_id, role CHECK IN ('viewer','editor'), granted_by, created_at)` + UNIQUE `(event_id, user_id)` + 3 indexes (`event_id`, `user_id`, `(event_id, role)`).
+- `REPLICA IDENTITY FULL` so realtime payloads carry old/new row data — required for the new `permissions-${eventId}` channel in `useEventGallery.js` to read `payload.new.user_id` AND `payload.old.user_id` on DELETE events.
+- Added to `supabase_realtime` publication.
+
+RLS policies on `event_permissions`:
+- **SELECT:** `auth.uid() = user_id OR is_admin() OR EXISTS(events.created_by = auth.uid())` — grantee sees own row; event owner sees all.
+- **INSERT:** owner or admin only (creator records grants).
+- **DELETE:** owner or admin only (revoke).
+
+RLS extensions on existing tables (each policy DROP+CREATE preserves original conditions, appends one `OR EXISTS event_permissions ep WHERE ep.role = 'editor'` clause):
+- `events_update_owner` — editors can update events.
+- `photos_select_owner` — editors see ALL photos (incl. hidden, unapproved).
+- `photos_update_owner` — editors approve/hide.
+- `photos_delete_owner` — editors delete (parity with co-hosts).
+- **NEW:** `photos_select_viewer` — `is_hidden = false AND EXISTS (... role IN ('viewer','editor'))`. Viewers see non-hidden photos regardless of `is_approved` (more permissive than public, less than owner).
+
+**Explicitly excluded:** `events_delete_owner` — editors CANNOT delete events; only the original creator. Per-policy intent comments document this.
+
+### Decision B — RLS pattern: inline `EXISTS`, NO `is_editor_for_event(UUID)` SECURITY DEFINER helper
+Captured in `.claude/agent-memory/03-task-decomposer/project_permissions_feature.md`: do NOT extract a SECURITY DEFINER helper function for the editor check. **Reason:** SECURITY DEFINER bypasses the calling user's RLS context; inline correlated `EXISTS` runs under the correct `auth.uid()` context, is auditable, and avoids a hidden privilege-escalation surface. **Rule:** every editor-role RLS check uses inline `EXISTS (SELECT 1 FROM event_permissions ep WHERE ep.event_id = <table>.id AND ep.user_id = (select auth.uid()) AND ep.role = 'editor')`.
+
+### Decision C — Phase 2 service layer: `memoriaService.profiles` + `memoriaService.eventPermissions` (`dd11a8e`, +96 LOC)
+Two new namespaces in `src/components/memoriaService.jsx`:
+- **`profiles.getByEmail(email)`** — case-insensitive lookup against `profiles` table; **never throws, returns null on RLS block or miss** (Phase 6 RLS not yet deployed). Used to resolve email → UUID before insert into `event_permissions`.
+- **`eventPermissions`** — `getByEvent(eventId)` (oldest-first list), `getForUser(eventId, userId)` (single row or null), `grant({ eventId, email, role, grantedBy })` (resolves email → uuid via profiles, throws `USER_NOT_FOUND`, upserts on `event_id,user_id`), `revoke({ permissionId })` (delete by PK).
+
+All five functions follow the standard try/catch + `console.error` + Hebrew-error-state pattern. `grant` uses `.upsert({...}, { onConflict: 'event_id,user_id' })` so re-granting the same email different roles updates the row in place.
+
+### Decision D — Role resolution rewritten: dual-system (`event_permissions` UUIDs + legacy `co_hosts` emails) (`dd11a8e`)
+**Canonical priority table (first match wins) — codified in `arch_role_resolution_pattern.md`:**
+
+| Priority | Condition | Effective Role |
+|---|---|---|
+| 1 | `currentUser.role === 'admin'` | `owner` |
+| 2 | `event.created_by === currentUser.id` | `owner` |
+| 3 | `event_permissions` row, role=`editor` | `editor` |
+| 4 | email in `event.co_hosts[]` (legacy) | `editor` |
+| 5 | `event_permissions` row, role=`viewer` (AND not in co_hosts) | `viewer` |
+| 6 | none of the above | `guest` |
+
+**Conflict rule — higher privilege wins:** if a user has a `viewer` row AND their email is in `co_hosts[]`, effective role is `editor` (priority 4 beats 5). The viewer grant does NOT downgrade a legacy co-host. Only Phase 7 (drop `co_hosts`) can collapse this.
+
+**Migrated sites (both received the canonical block verbatim):**
+- `src/hooks/useEventGallery.js` — three locations: initial code-load resolver, delayed event-load resolver, AND a new realtime handler. Hook now exposes `effectiveRole` ('owner'|'editor'|'viewer'|'guest') in its return, alongside the existing `isOwner` (kept for backward compat — `isOwner = role === 'owner' || role === 'editor'`). `getEffectiveMaxUploads()` and `eventMaxPhotos` derivation switched from `isCoHost` to `effectiveRole === 'editor'` for the 50-photo tier.
+- `src/pages/Dashboard.jsx` — gating function: editors get Dashboard access; **viewers do NOT** (Dashboard is a host-management surface). Service-layer `getForUser` failure is non-fatal — falls through to legacy co_hosts check.
+
+**isOwner backward-compat:** the hook STILL returns `isOwner` because `EventGallery.jsx` and `GalleryHeader.jsx` consume it. Removal is a separate cleanup PR after all consumers migrate to `effectiveRole`.
+
+### Decision E — NEW realtime channel: `permissions-${eventId}` in `useEventGallery.js`
+Subscribes to `event_permissions` filtered by `event_id=eq.${eventId}`. On change, only re-resolves the role if `payload.new?.user_id || payload.old?.user_id === currentUser.id` (ignore other users' grants). Re-runs the priority-table block, calls `setEffectiveRole(role)` and `setIsOwner(...)`.
+
+**Why:** when an admin grants/revokes the current user's role mid-session (e.g. an editor is demoted while viewing the gallery), the UI should react without requiring a page reload. **Cleanup:** standard `return () => supabase.removeChannel(channel)`.
+
+This is the **fifth** realtime channel in the codebase (was 4 per `invariant_realtime_channels.md`). Channel inventory now: `photos-realtime-${eventId}`, `photos-notifications-${eventId}`, `guest-prints-${eventId}-${userId}`, `print-jobs-${eventId}`, **`permissions-${eventId}`** (NEW).
+
+### Decision F — FRAMES1 photo-print library: 30 landscape A1 templates, sharp-based pipeline (`cbd2058`)
+**Background:** 58 source webp templates landed in `public/FRAMES1/frames/`. A triage script classified them into A1 (30 clean, auto-importable), A2 (28 composite-photo frames needing manual Figma prep), and noise. Only A1 frames committed to the live library.
+
+**Pipeline (`scripts/import-frames1.mjs`, 355 LOC):**
+- Uses `sharp@^0.34.5` (new dep — added to `devDependencies`) for webp→PNG-32 conversion + alpha-channel hole detection.
+- Replaces the source studio-phone strip baked into the templates with `MEMORIA | 055-7209335` branding text.
+- Clears the bottom name/date zone (sets to transparent so the compositor's `text_config` zone can render dynamic event text).
+- Writes processed PNGs to `public/FRAMES-PROCESSED/` (new directory).
+- Modes: `--triage` (classify only, no DB), `--import` (real upload), `--import --dry` (preview).
+- Reads `.env.local` for `VITE_SUPABASE_URL` + `VITE_SUPABASE_SERVICE_ROLE_KEY`.
+
+**Output:** 30 PNGs (sizes 9KB–42KB). Frame `80` has unique hole bbox `{x:0.05, y:0.041, w:0.869, h:0.758}`; the other 29 share `{x:0.03, y:0.019, w:0.889, h:0.779}`. All use `text_config: {font:"Heebo", size:0.028, weight:"bold", align:"center", color:"#333333", y:0.91}`.
+
+**DB:** `frames_meta` constraints extended to allow `landscape` (aspect) and `photo_print` (style) enum values. 30 new rows inserted with `status='active'` (NOT `'approved'` — hmm — need to verify), `style='photo_print'`, `category='wedding'`, `aspect='landscape'`, `sort_weight 71-100`. Side effect: 123 old programmatic frames archived (`minimal_luxury` / `modern_editorial` / `festive_chic` styles).
+
+**Vercel CORS extended:** `vercel.json` now has TWO public-asset CORS blocks — `/FRAMES/(.*)` (existing, from `d3398ab`) and `/FRAMES-PROCESSED/(.*)` (new). Same `Access-Control-Allow-Origin: *` header. Pattern: every new transparent-image directory drawn to canvas needs a CORS block here.
+
+### Decision G — Agent memory infrastructure scaffolded (`dd11a8e`)
+New `.claude/agents/` definitions: `01-system-architect.md`, `02-impact-analyzer.md`, `03-task-decomposer.md`. Dedicated agent memory under `.claude/agent-memory/{03-task-decomposer,memoria-architect}/`. Includes:
+- **Architect snapshot** (`architecture_snapshot_2026_04_22.md`): domain map, routing tree, god-files inventory.
+- **Verified invariants:** `invariant_service_layer.md` (only memoriaService + 2 page exceptions call `supabase.from` directly), `invariant_realtime_channels.md` (4 channels, all scoped — now 5 after Decision E above; needs update).
+- **Known risks:** god-files (Dashboard 753, CreateMagnetEvent 741, useEventGallery 741, MagnetLead 615, memoriaService 600, CreateEvent 555), `auth_mutex_workarounds` (memoriaService raw-fetches with localStorage JWT to bypass v2 auth-mutex deadlock), `triple_array_fanout` (useEventGallery photos/myPhotos/sharedPhotos must be mutated together in every realtime handler), `useAuth_profileReady_gap` (consumers skipping the gate cause admin-role flicker), `orphan_storage_on_db_insert_failure` (storage.upload + photos.create non-atomic), `quota_ceiling_duplicated` (200/50/15 ceiling computed in 3 sites; checkGuestQuota only knows 15), `magnet_guest_entry_no_event_type_guard` (`/magnet/:code` renders for any event_type → cross-product bleed risk).
+- **Task-decomposer memory:** the role-resolution canonical block + permissions feature plan referenced above.
+
+These are agent-internal context; not loaded into the main `recent-memory` / `long-term-memory` index, but **the seven risks above are the authoritative tech-debt list as of 2026-04-22 and should be reconciled against `project-memory.md` known-issues table.**
+
+### Files changed
+- **New SQL:** `supabase/migrations/20260423_event_permissions_phase1.sql` (+239), `scripts/insert-frames-meta.sql` (~50)
+- **New scripts:** `scripts/import-frames1.mjs` (+355), `scripts/frames-triage.json` (+1062)
+- **New assets:** 30 PNGs in `public/FRAMES-PROCESSED/`, 58 webps in `public/FRAMES1/frames/`, `public/FRAMES1/frames-triage.json` (+640)
+- **New agent infra:** 3 agent definitions + 11 architect/decomposer memory files
+- **Modified source:** `src/components/memoriaService.jsx` (+96 — profiles + eventPermissions namespaces), `src/hooks/useEventGallery.js` (+~70 — effectiveRole + permissions channel), `src/pages/Dashboard.jsx` (+~14 — dual-system gating)
+- **Modified config:** `vercel.json` (+6 — `/FRAMES-PROCESSED/` CORS block), `package.json` + `package-lock.json` (sharp@^0.34.5)
+- **Doc:** `MemoriaShare_Spec.docx` (new spec doc — not source-tracked content, ignore for code rules)
+
+### Tech debt delta
+- ✅ event_permissions schema + Phase 1 RLS landed.
+- ✅ Phase 2 service layer landed; UI consumers (`useEventGallery`, `Dashboard`) migrated.
+- 🆕 **HIGH — NEW 2026-04-26:** Phases 3–7 of event-sharing rollout pending (per `project_permissions_feature.md`):
+  - Phase 3: UI for grant/revoke (a `PermissionsManager` component or extension of `CoHostsManager.jsx`).
+  - Phase 4: integrate effectiveRole into UI — viewer-only states, editor surfaces. EventGallery.jsx, GalleryHeader.jsx still consume `isOwner` not `effectiveRole`.
+  - Phase 5: fix `CoHostsManager.jsx` line ~29 bug — `trimmed === event.created_by` compares email to UUID, always false.
+  - Phase 6: deploy `profiles` SELECT RLS so `getByEmail` lookups stop returning null for non-self profiles.
+  - Phase 7: drop `events.co_hosts` column → simplify role-resolution to single-system check. Remove `isLegacyCoHost` line; `effectiveIsEditor = isNewEditor`; `effectiveIsViewer = isNewViewer`.
+- 🆕 **MEDIUM — NEW 2026-04-26:** new `permissions-${eventId}` realtime channel — update `invariant_realtime_channels.md` (now 5 channels, not 4). Coalescing opportunity: useEventGallery now subscribes to `photos` AND `event_permissions` for the same event — two websockets per gallery view (three when host's `useRealtimeNotifications` mounts on top).
+- 🆕 **MEDIUM — NEW 2026-04-26:** archived 123 programmatic frames (`minimal_luxury` / `modern_editorial` / `festive_chic`) — verify nothing in `framesUtils.js` / `framePacks.js` still references them as fallbacks. If `findApprovedFrame()` falls back to a now-archived style, picker will show empties.
+- 🆕 **LOW — NEW 2026-04-26:** 28 A2 composite-photo frames (`scripts/frames-triage.json`) require manual Figma prep before they can join the library. No deadline — track as backlog.
+- 🆕 **LOW — NEW 2026-04-26:** `frames_meta` rows inserted with `status='active'` rather than `'approved'` — verify the UI picker queries `status IN ('approved','active')` or treats `active` as the new canonical state. (Schema constraint allows both — was the value flipped?)
+- 🆕 **LOW — NEW 2026-04-26:** `sharp` is now a build-time devDependency. Vercel build environment must support `sharp`'s native bindings — verify the next `main` push deploys cleanly.
+
+### Architectural risks promoted from architect memory (re-surface as known issues)
+The 7 architect risks (god files, auth mutex workarounds, triple-array fanout, useAuth profileReady gap, orphan storage on DB insert failure, quota ceiling triplication, magnet guest entry no event_type guard) are pre-existing — the architect agent inventoried them at `2026-04-22`. They overlap partially with `project-memory.md` known issues; reconcile in next consolidation rather than spamming the issue table now.
+
+---
 
 ## Session 2026-04-22 PM — Camera quota badge + UploadManager panel brand redesign (2 commits, NOT captured by `upgradeALL_14`)
 
