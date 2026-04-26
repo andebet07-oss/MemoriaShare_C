@@ -376,11 +376,23 @@ export default function Dashboard() {
       const currentEvent = await memoriaService.events.get(eventId);
 
       if (currentEvent) {
-        const isAdmin = currentUser.role === 'admin';
-        const isEventCreator = currentEvent.created_by === currentUser.id;  // UUID comparison
-        const isCoHost = Array.isArray(currentEvent.co_hosts) && currentEvent.co_hosts.includes(currentUser.email); // email (legacy)
+        const isAdmin        = currentUser.role === 'admin';
+        const isCreator      = currentEvent.created_by === currentUser.id;
+        const isLegacyCoHost = Array.isArray(currentEvent.co_hosts) && currentEvent.co_hosts.includes(currentUser.email);
 
-        const hasAccess = isAdmin || isEventCreator || isCoHost;
+        let grantedRole = null;
+        if (!isAdmin && !isCreator) {
+          try {
+            const permRow = await memoriaService.eventPermissions.getForUser(currentEvent.id, currentUser.id);
+            grantedRole = permRow?.role ?? null;
+          } catch {
+            // non-fatal: legacy co_hosts check below still applies
+          }
+        }
+
+        const effectiveIsEditor = isLegacyCoHost || grantedRole === 'editor';
+        // viewer role does NOT grant Dashboard access — Dashboard is a host-management surface
+        const hasAccess = isAdmin || isCreator || effectiveIsEditor;
 
         if (!hasAccess) {
           setIsAuthorized(false);

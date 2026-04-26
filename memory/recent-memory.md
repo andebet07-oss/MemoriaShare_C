@@ -1,10 +1,62 @@
 ---
 type: recent-memory
-updated: 2026-04-22T18:00Z
-horizon: 48 hours
+updated: 2026-04-26T22:00Z
+horizon: 48 hours (stretched — quiet period since 2026-04-22)
 ---
 
 # Recent Memory (Last 48 Hours)
+
+> **Quiet period note (2026-04-26):** No new commits since `9306eee` (2026-04-22 22:43). HEAD unchanged across 2026-04-23, 24, 25, 26. Sessions below are retained beyond strict 48hr horizon because they are the most recent functional context — nothing newer exists to replace them. Next consolidation will refresh once new work lands.
+
+## Session 2026-04-22 PM — Camera quota badge + UploadManager panel brand redesign (2 commits, NOT captured by `upgradeALL_14`)
+
+### Commits (chronological)
+- `e5f31ec` (22:07) — **Redesign camera quota badge and swap filter icon to Film** (MagnetCamera)
+- `6643fd2` (22:42) — **Redesign UploadManager pending photos panel** (gallery UploadManager)
+
+> **Note:** `9306eee` (22:43, `upgradeALL_14`) ran memory consolidation for the earlier 3 afternoon commits (routing fix / PNG aspect / `upgradeALL_13`) and missed these two. Captured here by the scheduled nightly consolidation.
+
+### Decision A — Camera quota badge: gray text → frosted pill with number-first typography (`e5f31ec`)
+**Problem:** Header copy `נותרו N הדפסות` in `text-xs text-white/60` blended into the camera chrome and didn't convey urgency when prints were almost exhausted. No numerical prominence, no visual state change as the quota approached zero.
+
+**Fix:** `MagnetCamera.jsx` (H1 quota element, `quotaId`) rebuilt as a frosted pill badge:
+- Container: `flex flex-col items-center px-4 py-1.5 rounded-full` with `backdropFilter: blur(12px)`.
+- **Neutral state** (`remainingPrints > 3`): `rgba(255,255,255,0.08)` bg + `rgba(255,255,255,0.12)` border + `text-white` number + muted `text-white/35` "נותרו" sub-label.
+- **Warning state** (`remainingPrints <= 3`): amber number `text-amber-400`, same frosted bg — provides visual urgency before quota runs out.
+- **Exhausted state** (`remainingPrints <= 0`): red bg `rgba(239,68,68,0.12)` + red border + collapsed copy `המכסה הסתיימה` (no number shown).
+- Numeric display: `text-xl font-black leading-none tabular-nums` — number dominates, label shrinks to `text-[9px]`.
+
+### Decision B — Lucide `Wand2` → `Film` for vintage filter toggle (`e5f31ec`)
+Semantic correction: the vintage filter applies a film-emulation look (sepia + contrast + saturation). The previous `Wand2` (magic wand) iconography suggested arbitrary "magic effects." `Film` icon reads as "film grain / cinema look" at a glance and aligns with the `optimizeSpeed`-style rasterization the filter actually does.
+
+Now mirrored in `UploadManager.jsx`'s filter pill set (see below) — the `vintage` filter ID uses the `Film` icon there too, replacing the `🎞` emoji that was in the old pill row.
+
+### Decision C — UploadManager pending-photos panel: full brand re-skin (`6643fd2`, +152/-51 LOC)
+**Before:** Generic `bg-gradient-to-br from-gray-900/70 to-gray-800/50` panel with heavy `text-2xl font-bold` header + `rounded-3xl` outer shell + pill CTAs using `bg-gray-800/50 border-gray-600`. Aesthetic belonged to the pre-POV era — indistinguishable from stock shadcn output and clashed with the locked cool-dark brand palette.
+
+**After:** Panel re-skinned to match the Memoria editorial system end-to-end:
+- **Panel shell:** `rgba(255,255,255,0.02)` background + `rgba(255,255,255,0.07)` border + `backdrop-blur(12px)` + `rounded-2xl overflow-hidden` (no more `rounded-3xl`).
+- **Editorial header:** indigo icon badge (`rgba(124,134,225,0.12)` bg + `ImageIcon` at 14px) + micro-label `text-[9px] tracking-[0.25em] uppercase text-indigo-400` "ממתינות להעלאה" + bold Hebrew count "N תמונות נבחרו" + count pill `text-indigo-300 bg-[rgba(124,134,225,0.12)] tabular-nums`. Matches the admin editorial-label pattern in `AdminOverview` / `FramesLibrary`.
+- **Photo thumbs:** `rounded-[14px]` (not `rounded-xl`), depth shadow `boxShadow: 0 4px 16px rgba(0,0,0,0.4)`, 1px brand border `rgba(255,255,255,0.08)`. Remove button moved to top-right as a minimal 24×24 frosted circle (was 32×32 on top-left).
+- **Filter pills:** extracted to module-level `FILTERS` constant `[{id:'none',label:'רגיל'},{id:'vintage',icon:Film},{id:'black_white',label:'B&W'}]`. Compact 28px height. Selected state uses indigo tokens `rgba(124,134,225,0.18)` bg + `rgba(124,134,225,0.4)` border + `#a5acee` text. Vintage pill now uses `Film` icon instead of `🎞` emoji (consistent with camera toggle from `e5f31ec`).
+- **Primary CTA ("העלה N תמונות"):** indigo brand gradient `linear-gradient(135deg, #7c86e1, #6368c7)` with glow shadow `0 4px 20px rgba(124,134,225,0.3)` (effectively `shadow-indigo-soft` scaled up). Migrates off the legacy `<Button>` variant.
+- **Secondary actions:** 3 equal ghost buttons in one row (`צלם / גלריה / בטל הכל`) — previously the layout was 1 full-width + 1 full-width + 2 half-width across a `flex-col sm:flex-row` split. New pattern is a symmetric 3-column grid below the primary CTA.
+- **Progress + preparing modals:** matching indigo brand treatment — `rgba(18,18,20,0.96)` bg, indigo-haloed spinner ring `rgba(124,134,225,0.12)` with `rgba(124,134,225,0.25)` border, header `text-base font-bold` (was `text-xl`), progress bar swapped from `<Progress>` component to raw `div` with `linear-gradient(90deg, #7c86e1, #6d76d1)` fill. Percentage label now `text-indigo-400 text-[11px]`.
+
+**Pattern reinforced:** any gallery/photo-upload chrome on the Share side that still uses `bg-gray-*` / `border-gray-*` tokens is now behind the brand. Grep candidates for follow-up sweeps: `Dashboard.jsx` secondary panels, `EventGallery.jsx` filter bar chrome (if any), `Home.jsx` hero auxiliary chips.
+
+### Files changed
+- `src/components/magnet/MagnetCamera.jsx` — quota badge re-typography + `Wand2`→`Film` icon swap (+22/-6)
+- `src/components/gallery/UploadManager.jsx` — full pending-panel re-skin + module-level `FILTERS` const + Film icon integration (+152/-51)
+
+### Tech debt delta
+- ✅ Share-side photo-upload chrome now brand-aligned (previously a `bg-gray-900/70` aesthetic outlier).
+- ✅ Vintage filter iconography consistent across MagnetCamera and UploadManager (both use `Film`).
+- 🆕 **LOW — NEW 2026-04-22 PM:** grep for remaining `bg-gray-*` / `border-gray-*` / `text-gray-*` on the Share side (`src/components/gallery/**`, `src/components/home/**`, `src/pages/Dashboard.jsx`, `src/pages/MyEvents.jsx`) — the UploadManager sweep exposed that `Button` variants with legacy `bg-gray-700→bg-gray-800` gradients are still wired elsewhere. Likely small candidates remain.
+- 🆕 **LOW — NEW 2026-04-22 PM:** the new primary-CTA gradient `linear-gradient(135deg, #7c86e1, #6368c7)` is hardcoded inline — if this becomes a second site (e.g. `Event.jsx` upload CTA parity), extract to a shared token (Tailwind config `backgroundImage.brand-primary` or a `.btn-brand` utility class). Until it has a second consumer, keep inline.
+
+---
+
 
 ## Session 2026-04-22 — Routing refactor fallout + PNG frame aspect fix + memory consolidation commit (3 commits)
 

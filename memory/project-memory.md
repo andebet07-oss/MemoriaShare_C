@@ -1,14 +1,16 @@
 ---
 type: project-memory
-updated: 2026-04-22T18:00Z
+updated: 2026-04-26T22:00Z
 ---
 
 # Project Memory — Active State
 
 ## Build Status
 - Branch: `main`
-- Last commit: `702adff` (2026-04-22 17:16 +0300) — `upgradeALL_13` (memory consolidation, no code). Last functional code HEAD: `9c0924e` (2026-04-22 17:14).
-- Today's highlight (2026-04-22, 3 commits): **Routing refactor fallout fixed** — share events (`/event/:code`) now resolve correctly from `useParams()` instead of stale `window.location.search` reads (`9c0924e`); EventSuccess share URL no longer produces malformed `?&` concatenation. **PNG frame aspect** propagated from grid → detail panel so square PNGs render 1:1 (`4b38ddf`).
+- Last commit: `9306eee` (2026-04-22 22:43 +0300) — `upgradeALL_14` (memory consolidation of afternoon 3 commits). Last functional code HEAD: `6643fd2` (2026-04-22 22:42) — UploadManager pending-panel brand redesign.
+- **Quiet period 2026-04-23 → 2026-04-26 (4 days, 0 new commits).** No code, schema, or config changes since `9306eee`. Build state and tech-debt list below remain current; Vercel still serving `9306eee`.
+- Today's highlight (2026-04-22 PM, 2 commits — NOT in `upgradeALL_14`): **Camera quota badge** rebuilt as frosted pill with number-first typography, amber warning at ≤3, red pill when exhausted; Lucide `Wand2` → `Film` for vintage filter toggle (`e5f31ec`). **UploadManager pending-photos panel** fully re-skinned to brand (indigo editorial header + 14px rounded thumbs + compact filter pills + indigo-gradient primary CTA, retired `bg-gray-*` outlier aesthetic) (`6643fd2`).
+- Previous afternoon highlight (2026-04-22, 3 commits): **Routing refactor fallout fixed** — share events (`/event/:code`) now resolve correctly from `useParams()` instead of stale `window.location.search` reads (`9c0924e`); EventSuccess share URL no longer produces malformed `?&` concatenation. **PNG frame aspect** propagated from grid → detail panel so square PNGs render 1:1 (`4b38ddf`).
 - Series highlight (2026-04-21, 15 commits): **PNG Frame Overlay Pipeline shipped** (compositePngFrame + detectHoleBbox + FramePngPreview + FrameUploadDialog), **admin auth race fixed** (profileReady gate in AuthContext), 79 real polaroid PNG frames added, CORS headers for `/FRAMES/`, admin panels brand-aligned.
 - Series highlight (2026-04-20, 5 commits): Layout.jsx deleted → shared state components (LoadingState/ErrorState/EmptyState) → MagnetCamera hardened → MagnetEventDashboard cover upload UI → MagnetGuestPage violet badge retired → EventGallery ARIA tabs → Hebrew-first landing copy.
 - Build: ✓ implicit green via Vercel auto-deploy on main push
@@ -84,6 +86,8 @@ Plan file: `~/.claude/plans/wobbly-wobbling-crab.md`
 
 | File | Date | Summary |
 |------|------|---------|
+| `src/components/gallery/UploadManager.jsx` | 2026-04-22 PM | **Brand re-skin** (`6643fd2`, +152/-51). Pending-photos panel: `rgba(255,255,255,0.02)` panel + `blur(12px)` backdrop; editorial header with indigo icon badge + `tracking-[0.25em] uppercase` micro-label + count pill; thumbs `rounded-[14px]` + depth shadow; module-level `FILTERS` const with Film icon on vintage pill; primary CTA = indigo gradient `linear-gradient(135deg,#7c86e1,#6368c7)` + `0 4px 20px rgba(124,134,225,0.3)` glow; 3-equal-column secondary actions; progress/preparing modals re-themed with indigo spinner ring + tokenized bg. Retired `bg-gradient-to-br from-gray-900/70 to-gray-800/50` outlier aesthetic. |
+| `src/components/magnet/MagnetCamera.jsx` | 2026-04-22 PM | **Quota badge redesign** (`e5f31ec`, +22/-6). `text-xs text-white/60` copy → frosted pill badge with `backdrop-blur(12px)`; number-first typography (`text-xl font-black tabular-nums`); tri-state color — white normal, `text-amber-400` when `remainingPrints <= 3`, red pill `rgba(239,68,68,0.12)` with collapsed copy `המכסה הסתיימה` when exhausted. **Icon swap:** vintage filter toggle now uses Lucide `Film` (semantically accurate) instead of `Wand2`. |
 | `src/hooks/useEventGallery.js` | 2026-04-22 | **Routing fix** (`9c0924e`). Imports `useParams`; event-code resolution now `propEventCode || routeCode || new URLSearchParams(window.location.search).get('code')`. Fixes silent null-code failure after `createPageUrl` path-param refactor. |
 | `src/pages/Event.jsx` | 2026-04-22 | **Routing fix** (`9c0924e`). `useParams()` with query-param fallback in `loadEvent()`. |
 | `src/pages/EventSuccess.jsx` | 2026-04-22 | **Routing fix** (`9c0924e`). `useParams()` for `{ id: eventId }`. Share URL cleaned: old malformed `createPageUrl(\`Event?code=${...}\`)&pin=${...}` (double `?&`) replaced with `${BASE_URL}/event/${event.unique_code}`. PIN param dropped from share URL. |

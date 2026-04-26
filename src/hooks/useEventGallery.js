@@ -35,6 +35,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [effectiveRole, setEffectiveRole] = useState('guest'); // 'owner' | 'editor' | 'viewer' | 'guest'
   const [userUploadedCount, setUserUploadedCount] = useState(0);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -235,8 +236,26 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       try {
         let ownerOrAdmin = false;
         if (currentUser) {
-          const isCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(currentUser.email);
-          ownerOrAdmin = currentUser.role === 'admin' || event.created_by === currentUser.id || isCoHost;
+          const isSystemAdmin = currentUser.role === 'admin';
+          const isCreator     = event.created_by === currentUser.id;
+          const isLegacyCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(currentUser.email);
+
+          let grantedRole = null;
+          if (!isSystemAdmin && !isCreator) {
+            const permRow = await memoriaService.eventPermissions.getForUser(event.id, currentUser.id);
+            grantedRole = permRow?.role ?? null;
+          }
+
+          const effectiveIsEditor = isLegacyCoHost || grantedRole === 'editor';
+          const effectiveIsViewer = grantedRole === 'viewer' && !isLegacyCoHost;
+
+          let role = 'guest';
+          if (isSystemAdmin || isCreator) role = 'owner';
+          else if (effectiveIsEditor)     role = 'editor';
+          else if (effectiveIsViewer)     role = 'viewer';
+
+          setEffectiveRole(role);
+          ownerOrAdmin = role === 'owner' || role === 'editor';
           setIsOwner(ownerOrAdmin);
         }
         const myAllPhotos = await fetchMyPhotosFromBackend(event.id, userIdSnapshot);
@@ -265,8 +284,26 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
         setEvent(currentEventData);
         let ownerOrAdmin = false;
         if (currentUser) {
-          const isCoHost = Array.isArray(currentEventData.co_hosts) && currentEventData.co_hosts.includes(currentUser.email);
-          ownerOrAdmin = currentUser.role === 'admin' || currentEventData.created_by === currentUser.id || isCoHost;
+          const isSystemAdmin = currentUser.role === 'admin';
+          const isCreator     = currentEventData.created_by === currentUser.id;
+          const isLegacyCoHost = Array.isArray(currentEventData.co_hosts) && currentEventData.co_hosts.includes(currentUser.email);
+
+          let grantedRole = null;
+          if (!isSystemAdmin && !isCreator) {
+            const permRow = await memoriaService.eventPermissions.getForUser(currentEventData.id, currentUser.id);
+            grantedRole = permRow?.role ?? null;
+          }
+
+          const effectiveIsEditor = isLegacyCoHost || grantedRole === 'editor';
+          const effectiveIsViewer = grantedRole === 'viewer' && !isLegacyCoHost;
+
+          let role = 'guest';
+          if (isSystemAdmin || isCreator) role = 'owner';
+          else if (effectiveIsEditor)     role = 'editor';
+          else if (effectiveIsViewer)     role = 'viewer';
+
+          setEffectiveRole(role);
+          ownerOrAdmin = role === 'owner' || role === 'editor';
           setIsOwner(ownerOrAdmin);
         }
         const myAllPhotos = await fetchMyPhotosFromBackend(currentEventData.id, userIdSnapshot);
@@ -335,7 +372,37 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
       ).subscribe();
     return () => supabase.removeChannel(channel);
   }, [isAdminView, event?.id, currentUser?.id]);
- 
+
+  // ─── Real-time permissions subscription ──────────────────────────────────
+  useEffect(() => {
+    if (!event?.id || !currentUser?.id) return;
+    const eventId    = event.id;
+    const userId     = currentUser.id;
+    const channel = supabase
+      .channel(`permissions-${eventId}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'event_permissions', filter: `event_id=eq.${eventId}` },
+        async (payload) => {
+          const affectedUserId = payload.new?.user_id || payload.old?.user_id;
+          if (affectedUserId !== userId) return;
+          const permRow = await memoriaService.eventPermissions.getForUser(eventId, userId);
+          const grantedRole    = permRow?.role ?? null;
+          const isSystemAdmin  = currentUser.role === 'admin';
+          const isCreator      = event.created_by === userId;
+          const isLegacyCoHost = Array.isArray(event.co_hosts) && event.co_hosts.includes(currentUser.email);
+          const effectiveIsEditor = isLegacyCoHost || grantedRole === 'editor';
+          const effectiveIsViewer = grantedRole === 'viewer' && !isLegacyCoHost;
+          let role = 'guest';
+          if (isSystemAdmin || isCreator) role = 'owner';
+          else if (effectiveIsEditor)     role = 'editor';
+          else if (effectiveIsViewer)     role = 'viewer';
+          setEffectiveRole(role);
+          setIsOwner(role === 'owner' || role === 'editor');
+        }
+      ).subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [event?.id, currentUser?.id]);
+
   // ─── Fetch next page ──────────────────────────────────────────────────────
   const fetchNextPage = useCallback(() => {
     if (isFetchingMore || !event) return;
@@ -435,9 +502,9 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
     if (!event || !currentUser) return event?.max_uploads_per_user || 15;
     if (currentUser.email === 'effitag@gmail.com') return 200;
     if (event.created_by === currentUser.id) return 200;
-    if (Array.isArray(event.co_hosts) && event.co_hosts.includes(currentUser.email)) return 50;
+    if (effectiveRole === 'editor') return 50;
     return event.max_uploads_per_user || 15;
-  }, [event, currentUser]);
+  }, [event, currentUser, effectiveRole]);
  
   const addToPendingPhotos = async (file, isFrontCamera = false, filterType = 'none') => {
     if (!file.type.startsWith('image/')) { alert('יש לבחור קובץ תמונה בלבד.'); return; }
@@ -716,11 +783,10 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
   // ─── Derived values ───────────────────────────────────────────────────────
   const isSuperAdmin = currentUser?.email === 'effitag@gmail.com';
   const isOriginalCreator = !!(currentUser?.id && event?.created_by === currentUser.id);
-  const isCoHost = !!(Array.isArray(event?.co_hosts) && event.co_hosts.includes(currentUser?.email));
- 
+
   let eventMaxPhotos;
   if (isSuperAdmin || isOriginalCreator) eventMaxPhotos = 200;
-  else if (isCoHost) eventMaxPhotos = 50;
+  else if (effectiveRole === 'editor')   eventMaxPhotos = 50;
   else eventMaxPhotos = event?.max_uploads_per_user || 15;
  
   const remainingPhotos = Math.max(0, eventMaxPhotos - userUploadedCount);
@@ -735,7 +801,7 @@ export default function useEventGallery({ propEventCode, isAdminView, adminPhoto
  
   return {
     event, photos, myPhotos, sharedPhotos, activeTab, setActiveTab,
-    isLoading, pageError, isOwner, currentUser, navigate,
+    isLoading, pageError, isOwner, effectiveRole, currentUser, navigate,
     handleGuestDeletePhoto, handleRequestDeletion,
     liveNotification, setLiveNotification,
     userUploadedCount, uploadSuccess, setUploadSuccess,

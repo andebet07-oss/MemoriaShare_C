@@ -167,15 +167,14 @@ async function convertToFramePng(filePath, bbox, width, height) {
     }
   }
 
-  // Also mask the studio watermark area: the strip above the hole (between top margin
-  // and bbox.y) on the left half of the image — that's where studio names appear.
-  if (bbox.y > 0.08) {
+  // Mask the studio watermark area: the entire top strip from y=0 to bbox.y,
+  // left 65% of width — that's where studio names typically appear.
+  if (bbox.y > 0.052) {
     const wmBt = Math.round(bbox.y * height);
     const wmW  = Math.round(width * 0.65);
-    for (let y = Math.round(MARGIN * height); y < wmBt; y++) {
+    for (let y = 0; y < wmBt; y++) {
       for (let x = 0; x < wmW; x++) {
         const idx = (y * width + x) * 4;
-        // Overwrite with white (these are header/watermark zones, not decorative frame)
         data[idx]     = 255;
         data[idx + 1] = 255;
         data[idx + 2] = 255;
