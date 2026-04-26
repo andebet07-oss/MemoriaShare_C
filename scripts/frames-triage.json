@@ -1,0 +1,1062 @@
+[
+  {
+    "slug": "1",
+    "filename": "1.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/1.png",
+    "imageUrl": "/FRAMES-PROCESSED/1.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "10",
+    "filename": "10.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/10.png",
+    "imageUrl": "/FRAMES-PROCESSED/10.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "11",
+    "filename": "11.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/11.png",
+    "imageUrl": "/FRAMES-PROCESSED/11.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "12",
+    "filename": "12.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/12.png",
+    "imageUrl": "/FRAMES-PROCESSED/12.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "13-7",
+    "filename": "13-7.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.17,
+    "classification": "A2"
+  },
+  {
+    "slug": "15-7",
+    "filename": "15-7.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.17,
+    "classification": "A2"
+  },
+  {
+    "slug": "16",
+    "filename": "16.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/16.png",
+    "imageUrl": "/FRAMES-PROCESSED/16.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "17",
+    "filename": "17.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/17.png",
+    "imageUrl": "/FRAMES-PROCESSED/17.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "2-7",
+    "filename": "2-7.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.05,
+    "classification": "A2"
+  },
+  {
+    "slug": "22-6",
+    "filename": "22-6.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.17,
+    "classification": "A2"
+  },
+  {
+    "slug": "22",
+    "filename": "22.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/22.png",
+    "imageUrl": "/FRAMES-PROCESSED/22.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "23",
+    "filename": "23.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.98,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/23.png",
+    "imageUrl": "/FRAMES-PROCESSED/23.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "24",
+    "filename": "24.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/24.png",
+    "imageUrl": "/FRAMES-PROCESSED/24.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "25",
+    "filename": "25.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/25.png",
+    "imageUrl": "/FRAMES-PROCESSED/25.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "27_mit",
+    "filename": "27_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.09,
+    "classification": "A2"
+  },
+  {
+    "slug": "28-6",
+    "filename": "28-6.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.26,
+    "classification": "A2"
+  },
+  {
+    "slug": "28",
+    "filename": "28.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.98,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/28.png",
+    "imageUrl": "/FRAMES-PROCESSED/28.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "29-6",
+    "filename": "29-6.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.26,
+    "classification": "A2"
+  },
+  {
+    "slug": "29",
+    "filename": "29.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/29.png",
+    "imageUrl": "/FRAMES-PROCESSED/29.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "3",
+    "filename": "3.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.98,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/3.png",
+    "imageUrl": "/FRAMES-PROCESSED/3.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "32",
+    "filename": "32.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/32.png",
+    "imageUrl": "/FRAMES-PROCESSED/32.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "34",
+    "filename": "34.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/34.png",
+    "imageUrl": "/FRAMES-PROCESSED/34.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "34_mit",
+    "filename": "34_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.09,
+    "classification": "A2"
+  },
+  {
+    "slug": "35_mit",
+    "filename": "35_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.09,
+    "classification": "A2"
+  },
+  {
+    "slug": "36_mit",
+    "filename": "36_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.09,
+    "classification": "A2"
+  },
+  {
+    "slug": "37_mit",
+    "filename": "37_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.09,
+    "classification": "A2"
+  },
+  {
+    "slug": "38",
+    "filename": "38.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/38.png",
+    "imageUrl": "/FRAMES-PROCESSED/38.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "4",
+    "filename": "4.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.98,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/4.png",
+    "imageUrl": "/FRAMES-PROCESSED/4.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "40-5",
+    "filename": "40-5.webp",
+    "width": 602,
+    "height": 404,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.3,
+    "classification": "A2"
+  },
+  {
+    "slug": "41-5",
+    "filename": "41-5.webp",
+    "width": 602,
+    "height": 404,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.29,
+    "classification": "A2"
+  },
+  {
+    "slug": "41",
+    "filename": "41.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.98,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/41.png",
+    "imageUrl": "/FRAMES-PROCESSED/41.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "42",
+    "filename": "42.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.22,
+    "classification": "A2"
+  },
+  {
+    "slug": "42_mit-2",
+    "filename": "42_mit-2.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.26,
+    "classification": "A2"
+  },
+  {
+    "slug": "43",
+    "filename": "43.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.98,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/43.png",
+    "imageUrl": "/FRAMES-PROCESSED/43.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "43_mit",
+    "filename": "43_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.27,
+    "classification": "A2"
+  },
+  {
+    "slug": "44",
+    "filename": "44.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/44.png",
+    "imageUrl": "/FRAMES-PROCESSED/44.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "44_mit-2",
+    "filename": "44_mit-2.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.32,
+    "classification": "A2"
+  },
+  {
+    "slug": "44_mit",
+    "filename": "44_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.09,
+    "classification": "A2"
+  },
+  {
+    "slug": "45",
+    "filename": "45.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.98,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/45.png",
+    "imageUrl": "/FRAMES-PROCESSED/45.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "48_mit-1",
+    "filename": "48_mit-1.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.11,
+    "classification": "A2"
+  },
+  {
+    "slug": "49",
+    "filename": "49.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/49.png",
+    "imageUrl": "/FRAMES-PROCESSED/49.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "5",
+    "filename": "5.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.98,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/5.png",
+    "imageUrl": "/FRAMES-PROCESSED/5.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "50",
+    "filename": "50.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/50.png",
+    "imageUrl": "/FRAMES-PROCESSED/50.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "51",
+    "filename": "51.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/51.png",
+    "imageUrl": "/FRAMES-PROCESSED/51.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "51_mit",
+    "filename": "51_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.15,
+    "classification": "A2"
+  },
+  {
+    "slug": "51_mit_2",
+    "filename": "51_mit_2.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.15,
+    "classification": "A2"
+  },
+  {
+    "slug": "52",
+    "filename": "52.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/52.png",
+    "imageUrl": "/FRAMES-PROCESSED/52.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "55_mit-1",
+    "filename": "55_mit-1.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.01,
+    "classification": "A2"
+  },
+  {
+    "slug": "6-7",
+    "filename": "6-7.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.05,
+    "classification": "A2"
+  },
+  {
+    "slug": "6",
+    "filename": "6.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/6.png",
+    "imageUrl": "/FRAMES-PROCESSED/6.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "62",
+    "filename": "62.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 0.97,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/62.png",
+    "imageUrl": "/FRAMES-PROCESSED/62.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "62_mit",
+    "filename": "62_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.15,
+    "classification": "A2"
+  },
+  {
+    "slug": "7-7",
+    "filename": "7-7.webp",
+    "width": 596,
+    "height": 596,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.07,
+    "classification": "A2"
+  },
+  {
+    "slug": "79",
+    "filename": "79.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 1,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/79.png",
+    "imageUrl": "/FRAMES-PROCESSED/79.png",
+    "holeBbox": {
+      "x": 0.03,
+      "y": 0.019178082191780823,
+      "w": 0.889,
+      "h": 0.7794520547945205
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "7_mit",
+    "filename": "7_mit.webp",
+    "width": 602,
+    "height": 450,
+    "aspect": "landscape",
+    "category": "bar_mitzvah",
+    "lightRatio": 0.11,
+    "classification": "A2"
+  },
+  {
+    "slug": "8-7",
+    "filename": "8-7.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.17,
+    "classification": "A2"
+  },
+  {
+    "slug": "80",
+    "filename": "80.jpg.webp",
+    "width": 1000,
+    "height": 730,
+    "aspect": "landscape",
+    "category": "wedding",
+    "lightRatio": 1,
+    "classification": "A1",
+    "outputPath": "public/FRAMES-PROCESSED/80.png",
+    "imageUrl": "/FRAMES-PROCESSED/80.png",
+    "holeBbox": {
+      "x": 0.05,
+      "y": 0.0410958904109589,
+      "w": 0.869,
+      "h": 0.7575342465753425
+    },
+    "textConfig": {
+      "font": "Heebo",
+      "size": 0.028,
+      "weight": "bold",
+      "align": "center",
+      "color": "#333333",
+      "y": 0.91
+    }
+  },
+  {
+    "slug": "9-8",
+    "filename": "9-8.webp",
+    "width": 602,
+    "height": 602,
+    "aspect": "square",
+    "category": "wedding",
+    "lightRatio": 0.17,
+    "classification": "A2"
+  }
+]
