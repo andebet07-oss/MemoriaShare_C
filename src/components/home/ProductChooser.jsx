@@ -31,7 +31,7 @@ function ChooserContent({ onClose }) {
 
   const handleMagnet = () => {
     onClose();
-    navigate('/MagnetLead');
+    navigate('/magnet/lead');
   };
 
   return (
