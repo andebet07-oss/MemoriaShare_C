@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { compositePngFrame } from '@/lib/compositePngFrame';
 
-// Sample photo used when no real photo is available — a solid warm-gray rect
 function makeSamplePhoto(w, h) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
@@ -11,7 +10,6 @@ function makeSamplePhoto(w, h) {
   grad.addColorStop(1, '#7a6e65');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
-  // Silhouette hint
   ctx.fillStyle = 'rgba(0,0,0,0.15)';
   ctx.beginPath();
   ctx.ellipse(w / 2, h * 0.35, w * 0.15, w * 0.15, 0, 0, Math.PI * 2);
@@ -24,15 +22,15 @@ function makeSamplePhoto(w, h) {
 
 /**
  * Renders a PNG frame with a sample photo composite.
- * Accepts the same `frame` shape as MagnetReview: { image_url, hole_bbox }.
- *
  * Props:
- *   frame       — { image_url: string, hole_bbox: {x,y,w,h} (normalised 0-1) }
- *   className   — extra Tailwind classes on the <img> wrapper
- *   style       — inline style on the wrapper
+ *   frame      — { image_url, hole_bbox, text_config? }
+ *   eventName  — preview event name string (optional)
+ *   eventDate  — preview date string (optional)
+ *   className  — extra Tailwind classes
+ *   style      — inline style on wrapper
  */
 export default function FramePngPreview({ frame, eventName, eventDate, className = '', style }) {
-  const [src, setSrc] = useState(null);
+  const [src, setSrc]     = useState(null);
   const [error, setError] = useState(false);
   const cancelled = useRef(false);
 
@@ -43,8 +41,7 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
 
     async function render() {
       try {
-        // Build a sample photo image element
-        const fw = 600, fh = 900; // approximate target; compositePngFrame uses actual PNG dimensions
+        const fw = 600, fh = 900;
         const hb = frame.hole_bbox;
         const hw = hb.w <= 1 ? Math.round(hb.w * fw) : hb.w;
         const hh = hb.h <= 1 ? Math.round(hb.h * fh) : hb.h;
@@ -57,8 +54,8 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
         if (cancelled.current) return;
         const result = await compositePngFrame(sampleImg, frame, {
           maxWidth: 600, maxHeight: 900,
-          eventName: eventName ?? 'חתונת שרה ודוד',
-          eventDate: eventDate ?? '12 ביוני 2026',
+          eventName: eventName ?? '\u05d7\u05ea\u05d5\u05e0\u05ea \u05e9\u05e8\u05d4 \u05d5\u05d3\u05d5\u05d3',
+          eventDate: eventDate ?? '12 \u05d1\u05d9\u05d5\u05e0\u05d9 2026',
         });
         if (!cancelled.current) setSrc(result.toDataURL('image/jpeg', 0.85));
       } catch (err) {
@@ -75,7 +72,7 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
   if (error) {
     return (
       <div className={`flex items-center justify-center bg-cool-800/60 text-muted-foreground/40 text-xs ${className}`} style={style}>
-        תצוגה מקדימה לא זמינה
+        \u05ea\u05e6\u05d5\u05d2\u05d4 \u05de\u05e7\u05d3\u05d9\u05de\u05d9\u05ea \u05dc\u05d0 \u05d6\u05de\u05d9\u05e0\u05d4
       </div>
     );
   }
@@ -83,4 +80,17 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
   if (!src) {
     return (
       <div className={`flex items-center justify-center bg-cool-800/40 ${className}`} style={style}>
-        <div className="w-5 h-5 border-2 border-violet-500/30 border-t-violet
+        <div className="w-5 h-5 border-2 border-violet-500/30 border-t-violet-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt="\u05ea\u05e6\u05d5\u05d2\u05ea \u05de\u05e1\u05d2\u05e8\u05ea"
+      className={`object-contain ${className}`}
+      style={style}
+    />
+  );
+}
