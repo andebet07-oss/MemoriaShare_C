@@ -18,8 +18,9 @@ function loadImage(src) {
   if (PNG_CACHE.has(src)) return PNG_CACHE.get(src);
   const p = new Promise((resolve, reject) => {
     const img = new Image();
-    // crossOrigin only for cross-origin Supabase storage URLs
-    if (src.includes('supabase') || src.includes('storage')) img.crossOrigin = 'anonymous';
+    // Always anonymous — prevents tainted-canvas on cross-origin hosts
+    // (www.memoriashare.com vs memoriashare.com, Supabase storage, CDN, etc.)
+    img.crossOrigin = 'anonymous';
     img.onload  = () => resolve(img);
     img.onerror = () => {
       PNG_CACHE.delete(src);
@@ -89,38 +90,36 @@ export async function compositePngFrame(photoImg, frame, opts = {}) {
   // PNG frame overlay (transparent hole reveals photo)
   ctx.drawImage(frameImg, 0, 0, fw, fh);
 
-  // ── Event name text ────────────────────────────────────────────────────────
-  // Rendered over the white margin area below the hole, styled per text_config.
-  if (opts.eventName && text_config) {
-    const tc = text_config;
-    const fontSize   = Math.max(10, Math.round((tc.size  || 0.028) * fh));
-    const fontWeight = tc.weight || 'normal';
-    const fontFamily = tc.font   || 'Heebo, sans-serif';
-    const fontStr    = `${fontWeight} ${fontSize}px '${fontFamily}', sans-serif`;
+  // ── Text layers (event name, date, icon) ───────────────────────────────────
+  // text_config schema:
+  //   event_name: { font, size, weight, color, align, y }
+  //   date:       { font, size, weight, color, align, y }
+  //   icon:       { emoji, y }   — rendered as large emoji above the text
+  if (text_config) {
+    const renderText = async (cfg, text) => {
+      if (!cfg || !text) return;
+      const fontSize   = Math.max(10, Math.round((cfg.size || 0.028) * fh));
+      const fontWeight = cfg.weight || 'normal';
+      const fontFamily = cfg.font   || 'Heebo';
+      const fontStr    = `${fontWeight} ${fontSize}px '${fontFamily}', sans-serif`;
 
-    try { await document.fonts.load(fontStr); } catch { /* use fallback */ }
+      try { await document.fonts.load(fontStr); } catch { /* fallback */ }
 
-    ctx.save();
-    ctx.font         = fontStr;
-    ctx.textAlign    = tc.align || 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle    = tc.color || '#555555';
+      ctx.save();
+      ctx.font         = fontStr;
+      ctx.textAlign    = cfg.align || 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle    = cfg.color || '#444444';
 
-    const tx = (tc.align === 'left')  ? Math.round(fw * 0.12)
-             : (tc.align === 'right') ? Math.round(fw * 0.88)
-             : Math.round(fw / 2);
-    const ty = Math.round((tc.y || 0.93) * fh);
+      const tx = (cfg.align === 'left')  ? Math.round(fw * 0.12)
+               : (cfg.align === 'right') ? Math.round(fw * 0.88)
+               : Math.round(fw / 2);
+      const ty = Math.round((cfg.y || 0.88) * fh);
 
-    ctx.fillText(opts.eventName, tx, ty);
-    ctx.restore();
-  }
+      ctx.fillText(text, tx, ty);
+      ctx.restore();
+    };
 
-  return canvas;
-}
-
-/**
- * Convenience: given a canvas (from compositePngFrame), return a compressed JPEG blob.
- */
-export function canvasToJpegBlob(canvas, quality = 0.9) {
-  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
-}
+    const renderIcon = async (cfg) => {
+      if (!cfg?.emoji) return;
+      

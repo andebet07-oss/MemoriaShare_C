@@ -55,7 +55,7 @@ export default function FramePngPreview({ frame, className = '', style }) {
         await new Promise((res) => { sampleImg.onload = res; });
 
         if (cancelled.current) return;
-        const result = await compositePngFrame(sampleImg, frame, { maxWidth: 600, maxHeight: 900, eventName: 'חתונת שרה ודוד' });
+        const result = await compositePngFrame(sampleImg, frame, { maxWidth: 600, maxHeight: 900, eventName: 'חתונת שרה ודוד', eventDate: '12 ביוני 2026' });
         if (!cancelled.current) setSrc(result.toDataURL('image/jpeg', 0.85));
       } catch (err) {
         console.error('[FramePngPreview] composite failed:', err?.message);
@@ -88,7 +88,4 @@ export default function FramePngPreview({ frame, className = '', style }) {
       src={src}
       alt="תצוגת מסגרת"
       className={`object-contain ${className}`}
-      style={style}
-    />
-  );
-}
+ 
