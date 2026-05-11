@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Image, Magnet, MessageSquare, Hash } from 'lucide-react';
+import { Loader2, Image, Magnet, MessageSquare, Hash, Plus, Phone, CalendarDays, MapPin, Users } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 
 const STATUS_HE = { new: 'חדש', contacted: 'יצרנו קשר', converted: 'הומר', closed: 'סגור' };
@@ -35,6 +35,74 @@ function KpiCard({ icon: Icon, label, value, sub, color = 'violet', onClick }) {
   );
 }
 
+function parseLeadDetails(details = '') {
+  const parts = details.split(' · ');
+  const coverPart = parts.find(p => p.startsWith('cover:'));
+  return {
+    eventName:     parts[0]?.trim() || '',
+    location:      parts[1]?.trim() || '',
+    guestCount:    parts[2]?.trim() || '',
+    coverImageUrl: coverPart ? coverPart.replace('cover:', '') : '',
+  };
+}
+
+function NewLeadCard({ lead, onCreateEvent }) {
+  const { eventName, location, guestCount } = parseLeadDetails(lead.details);
+  const formattedDate = lead.event_date
+    ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'short', year: 'numeric' })
+        .format(new Date(lead.event_date + 'T00:00:00'))
+    : null;
+
+  return (
+    <div
+      className="rounded-2xl p-4 flex flex-col gap-3"
+      style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)' }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-playfair text-foreground text-lg leading-snug truncate">
+            {eventName || lead.full_name}
+          </p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+            <span className="text-muted-foreground text-xs">{lead.full_name}</span>
+            {formattedDate && (
+              <span className="flex items-center gap-1 text-muted-foreground/70 text-xs">
+                <CalendarDays className="w-3 h-3" />{formattedDate}
+              </span>
+            )}
+            {location && (
+              <span className="flex items-center gap-1 text-muted-foreground/70 text-xs">
+                <MapPin className="w-3 h-3" />{location}
+              </span>
+            )}
+            {guestCount && (
+              <span className="flex items-center gap-1 text-muted-foreground/70 text-xs">
+                <Users className="w-3 h-3" />{guestCount}
+              </span>
+            )}
+          </div>
+        </div>
+        <a
+          href={`tel:${lead.phone}`}
+          onClick={e => e.stopPropagation()}
+          className="shrink-0 flex items-center gap-1.5 text-violet-400 hover:text-violet-300 text-xs font-semibold transition-colors"
+        >
+          <Phone className="w-3.5 h-3.5" />
+          <span dir="ltr">{lead.phone}</span>
+        </a>
+      </div>
+      <button
+        onClick={() => onCreateEvent(lead)}
+        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all active:scale-[0.98]"
+        style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)' }}
+      >
+        <Plus className="w-4 h-4" />
+        צור אירוע מגנטים
+      </button>
+    </div>
+  );
+}
+
 export default function AdminOverview() {
   const navigate = useNavigate();
 
@@ -52,10 +120,25 @@ export default function AdminOverview() {
 
   const shareCount  = events.filter(e => e.event_type === 'share').length;
   const magnetCount = events.filter(e => e.event_type === 'magnet').length;
-  const newLeads    = leads.filter(l => l.status === 'new').length;
+  const newLeads    = leads.filter(l => l.status === 'new');
   const recent      = events.slice(0, 8);
 
   const isLoading = eventsLoading || leadsLoading;
+
+  const handleCreateEvent = (lead) => {
+    const { eventName, coverImageUrl } = parseLeadDetails(lead.details);
+    navigate('/admin/events/magnet/create', {
+      state: {
+        fromLead: {
+          leadId:        lead.id,
+          eventName:     eventName || lead.details || '',
+          eventDate:     lead.event_date || '',
+          contactName:   lead.full_name || '',
+          coverImageUrl: coverImageUrl || '',
+        },
+      },
+    });
+  };
 
   if (isLoading) return (
     <div className="flex justify-center py-16">
@@ -79,22 +162,36 @@ export default function AdminOverview() {
       <div className="grid grid-cols-2 gap-3 mb-6">
         <KpiCard icon={Image}         label="אירועי שיתוף"  value={shareCount}    color="blue"   onClick={() => navigate('/admin/events/share')} />
         <KpiCard icon={Magnet}        label="אירועי מגנט"   value={magnetCount}   color="violet" onClick={() => navigate('/admin/events/magnet')} />
-        <KpiCard icon={MessageSquare} label="לידים חדשים"   value={newLeads}      color="indigo" sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
-        <KpiCard icon={Hash}          label="סה״כ אירועים"  value={events.length} color="lime"   onClick={() => navigate('/admin/events/share')} />
+        <KpiCard icon={MessageSquare} label="לידים חדשים"   value={newLeads.length} color="indigo" sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
+        <KpiCard icon={Hash}          label="סה״כ אירועים"  value={events.length} color="lime"   onClick={() => navigate('/admin/events/magnet')} />
       </div>
 
-      {/* Leads by status */}
-      {leads.length > 0 && (
+      {/* New leads — actionable cards */}
+      {newLeads.length > 0 && (
+        <div className="mb-6">
+          <p className="text-violet-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-3">
+            ממתינים לטיפול · {newLeads.length}
+          </p>
+          <div className="space-y-2.5">
+            {newLeads.map(lead => (
+              <NewLeadCard key={lead.id} lead={lead} onCreateEvent={handleCreateEvent} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Status summary — only when all leads are handled */}
+      {leads.length > 0 && newLeads.length === 0 && (
         <div className="mb-6 rounded-2xl p-4 bg-card border border-border">
           <p className="text-violet-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-3">לידים לפי סטטוס</p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
-            {['new', 'contacted', 'converted', 'closed'].map(s => {
-              const count = leads.filter(l => l.status === s).length;
+            {['new', 'contacted', 'converted', 'closed'].map(st => {
+              const count = leads.filter(l => l.status === st).length;
               if (!count) return null;
               return (
-                <div key={s} className="flex items-center gap-1.5">
-                  <span className={`font-playfair text-2xl ${STATUS_COLORS[s]}`}>{count}</span>
-                  <span className="text-muted-foreground text-xs">{STATUS_HE[s]}</span>
+                <div key={st} className="flex items-center gap-1.5">
+                  <span className={`font-playfair text-2xl ${STATUS_COLORS[st]}`}>{count}</span>
+                  <span className="text-muted-foreground text-xs">{STATUS_HE[st]}</span>
                 </div>
               );
             })}
