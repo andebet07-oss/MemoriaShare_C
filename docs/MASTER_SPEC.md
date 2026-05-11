@@ -1,7 +1,7 @@
 # MemoriaShare — Master System Specification
 **Authority:** This document is the single Source of Truth for the current production state of MemoriaShare (April 2026).  
 **Supersedes:** `PRD.md` (product intent), `docs/ARCHITECTURE_SPEC.md` (auth sub-spec).  
-**Last updated:** 2026-04-07
+**Last updated:** 2026-05-11
 
 ---
 
@@ -576,9 +576,11 @@ Both `useEventGallery` and `useRealtimeNotifications` return `() => supabase.rem
 
 ### 6.3 Rendering Performance at 500+ Photos
 
-**Current approach:** Photos are loaded in pages of 30 (`PHOTOS_PER_PAGE = 30`) via an infinite-scroll observer. The state arrays (`photos`, `myPhotos`, `sharedPhotos`) grow linearly. At 500 photos, the arrays hold 500 objects in memory — acceptable for a mobile browser.
+**Current approach:** Photos are loaded in pages of 30 (`PHOTOS_PER_PAGE = 30`) via Virtuoso's `endReached` callback (no manual IntersectionObserver). The state arrays (`photos`, `myPhotos`, `sharedPhotos`) grow linearly. At 500 photos, the arrays hold 500 objects in memory — acceptable for a mobile browser.
 
-**Known scaling risk:** `PhotoGrid` renders all loaded photos at once with no windowing/virtualization. `react-virtuoso` is already in `package.json` but not yet wired to the gallery. At 500+ photos, this will cause visible render jank on low-end devices. This is the primary performance improvement needed before high-volume events.
+**Virtualization — SHIPPED:** `PhotoGrid.jsx` uses `<VirtuosoGrid useWindowScroll>` from `react-virtuoso@^4.18.4`. Only the visible window + a 600px buffer (`increaseViewportBy={600}`) renders DOM nodes; the rest are unmounted. `endReached` drives infinite scroll via `useEventGallery.fetchNextPage()`. The `components`, `itemContent`, and `endReached` callbacks are memoised with stable references — required by Virtuoso, otherwise the grid remounts on every parent render. Grid layout: `grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-px`.
+
+**Remaining scaling risk:** Thumbnails are not yet generated server-side — `PhotoCard` loads `photo.file_url` (original, ~1920px) into a 3-col 125px tile. Bandwidth and decode cost dominate on mobile. The `photos.file_urls JSONB { thumbnail, medium, original }` column is reserved but unused. Next infra step: server-side resize pipeline (Phase 4).
 
 ---
 
@@ -653,7 +655,7 @@ Event owner is exempt from all three rules.
 | Issue | Severity | Mitigation |
 |---|---|---|
 | Quota is a soft client-side check | Medium | Acceptable for v1; add DB trigger for atomic enforcement at scale |
-| No photo virtualization | Medium | Add `react-virtuoso` to PhotoGrid for events >200 photos |
+| Thumbnails not generated server-side | Medium | `photos.file_urls` column reserved but unused; gallery loads full-res originals into thumb tiles. Resize pipeline is the next Phase 4 deliverable |
 | Co-hosts stored as emails (legacy) | Low | UUID migration deferred; current code works but is inconsistent with UUID-first architecture |
 | `device_uuid` column unused | Low | Dead column; safe to drop in a future migration |
 | `upload_diagnostics` table never written to in current code | Low | Diagnostic scaffolding; either wire it or drop it |
@@ -680,8 +682,8 @@ Event owner is exempt from all three rules.
 - Public API for integration with event platforms
 
 **Phase 4 — Infrastructure scale**
-- Supabase Edge Function for server-side image resize + EXIF stripping
-- Windowed/virtualized PhotoGrid (react-virtuoso) for 500+ photo events
+- ~~Windowed/virtualized PhotoGrid (react-virtuoso) for 500+ photo events~~ — **SHIPPED** (see §6.3)
+- Server-side image resize + EXIF stripping → populate `photos.file_urls { thumbnail, medium, original }` *(next)*
 - CDN layer (CloudFront or Supabase CDN) for global low-latency delivery
 - Atomic quota enforcement via PostgreSQL trigger
 - Webhook notifications (WhatsApp / email) to host on new uploads

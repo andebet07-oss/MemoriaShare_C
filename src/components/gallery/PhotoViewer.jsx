@@ -146,7 +146,7 @@ export default function PhotoViewer({
                   </button>
                 )}
 
-                <img src={selectedPhoto.file_url} alt="תמונה מוגדלת" className="max-w-full max-h-full object-contain pointer-events-none select-none" />
+                <img src={selectedPhoto.file_urls?.medium ?? selectedPhoto.file_url} alt="תמונה מוגדלת" className="max-w-full max-h-full object-contain pointer-events-none select-none" />
 
                 {!isAdminView && (
                   <div className="absolute bottom-12 left-4 right-4 flex justify-center gap-3 z-50">

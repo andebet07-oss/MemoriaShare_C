@@ -29,3 +29,7 @@ dist-ssr
 
 .env
 node_modules/
+
+# Per-script env files (e.g. scripts/backfill-thumbnails.env) — contain
+# SUPABASE_SERVICE_ROLE_KEY and SUPABASE_WEBHOOK_SECRET. NEVER commit.
+scripts/*.env
