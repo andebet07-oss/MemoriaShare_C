@@ -14,10 +14,12 @@ const STATUS_STYLE = {
 
 function parseDetails(details = '') {
   const parts = details.split(' · ');
+  const coverPart = parts.find(p => p.startsWith('cover:'));
   return {
-    eventName:  parts[0]?.trim() || '',
-    location:   parts[1]?.trim() || '',
-    guestCount: parts[2]?.trim() || '',
+    eventName:     parts[0]?.trim() || '',
+    location:      parts[1]?.trim() || '',
+    guestCount:    parts[2]?.trim() || '',
+    coverImageUrl: coverPart ? coverPart.replace('cover:', '') : '',
   };
 }
 
@@ -101,14 +103,15 @@ export default function LeadsPanel() {
   };
 
   const handleCreateEvent = (lead) => {
-    const { eventName } = parseDetails(lead.details);
+    const { eventName, coverImageUrl } = parseDetails(lead.details);
     navigate('/admin/events/magnet/create', {
       state: {
         fromLead: {
-          leadId:      lead.id,
-          eventName:   eventName || lead.details || '',
-          eventDate:   lead.event_date || '',
-          contactName: lead.full_name || '',
+          leadId:        lead.id,
+          eventName:     eventName || lead.details || '',
+          eventDate:     lead.event_date || '',
+          contactName:   lead.full_name || '',
+          coverImageUrl: coverImageUrl || '',
         },
       },
     });

@@ -365,7 +365,8 @@ export default function CreateMagnetEvent() {
     print_quota_per_device: 5,
     selectedFrameId: null,  // frame_id from framePacks, stored in overlay_frame_url
     overlayFile: null,       // custom PNG upload (overrides selectedFrameId if set)
-    coverImageFile: null,    // optional background photo for guest landing page
+    coverImageFile: null,    // new File selected by admin in this wizard
+    coverImageUrl: fromLead?.coverImageUrl ?? '',  // pre-existing URL from lead submission
   });
   const [overlayPreview, setOverlayPreview] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState('');
@@ -442,8 +443,12 @@ export default function CreateMagnetEvent() {
         await memoriaService.events.update(event.id, { overlay_frame_url: form.selectedFrameId });
       }
       if (form.coverImageFile) {
+        // Admin uploaded a new file in this wizard — upload it
         const { file_url } = await memoriaService.storage.uploadCoverImage(form.coverImageFile, event.id);
         await memoriaService.events.update(event.id, { cover_image: file_url });
+      } else if (form.coverImageUrl) {
+        // URL came from the lead form — already uploaded, write it directly
+        await memoriaService.events.update(event.id, { cover_image: form.coverImageUrl });
       }
       setSuccess({ event_code: event.unique_code, pin_code: event.pin_code, event_id: event.id });
     } catch (err) {
