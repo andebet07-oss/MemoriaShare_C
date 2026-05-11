@@ -31,7 +31,7 @@ function makeSamplePhoto(w, h) {
  *   className   — extra Tailwind classes on the <img> wrapper
  *   style       — inline style on the wrapper
  */
-export default function FramePngPreview({ frame, className = '', style }) {
+export default function FramePngPreview({ frame, eventName, eventDate, className = '', style }) {
   const [src, setSrc] = useState(null);
   const [error, setError] = useState(false);
   const cancelled = useRef(false);
@@ -55,7 +55,11 @@ export default function FramePngPreview({ frame, className = '', style }) {
         await new Promise((res) => { sampleImg.onload = res; });
 
         if (cancelled.current) return;
-        const result = await compositePngFrame(sampleImg, frame, { maxWidth: 600, maxHeight: 900, eventName: 'חתונת שרה ודוד', eventDate: '12 ביוני 2026' });
+        const result = await compositePngFrame(sampleImg, frame, {
+          maxWidth: 600, maxHeight: 900,
+          eventName: eventName ?? 'חתונת שרה ודוד',
+          eventDate: eventDate ?? '12 ביוני 2026',
+        });
         if (!cancelled.current) setSrc(result.toDataURL('image/jpeg', 0.85));
       } catch (err) {
         console.error('[FramePngPreview] composite failed:', err?.message);
@@ -65,7 +69,8 @@ export default function FramePngPreview({ frame, className = '', style }) {
 
     render();
     return () => { cancelled.current = true; };
-  }, [frame.image_url, frame.hole_bbox]); // eslint-disable-line
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frame.image_url, frame.hole_bbox, JSON.stringify(frame.text_config), eventName, eventDate]);
 
   if (error) {
     return (
@@ -78,14 +83,4 @@ export default function FramePngPreview({ frame, className = '', style }) {
   if (!src) {
     return (
       <div className={`flex items-center justify-center bg-cool-800/40 ${className}`} style={style}>
-        <div className="w-5 h-5 border-2 border-violet-500/30 border-t-violet-400 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt="תצוגת מסגרת"
-      className={`object-contain ${className}`}
- 
+        <div className="w-5 h-5 border-2 border-violet-500/30 border-t-violet
