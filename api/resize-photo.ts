@@ -28,7 +28,7 @@ import sharp from 'sharp';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 export const config = {
-  runtime: 'nodejs20.x',
+  runtime: 'nodejs',
   maxDuration: 30,
 };
 
