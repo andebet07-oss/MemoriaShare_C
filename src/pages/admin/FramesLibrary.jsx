@@ -59,8 +59,6 @@ function FrameCard({ frame, isEditing, onEdit }) {
           {styleLabel    && <><span className="opacity-30">·</span><span>{styleLabel}</span></>}
           {frame.aspect  && <><span className="opacity-30">·</span><span className="capitalize">{frame.aspect}</span></>}
         </div>
-
-        {/* Edit button */}
         <button
           onClick={() => onEdit(frame.frame_id)}
           className="mt-1 flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-[0.97]"
@@ -88,8 +86,7 @@ export default function FramesLibrary() {
 
   const activeCount  = frames.filter(f => f.status === 'approved').length;
   const editingFrame = frames.find(f => f.frame_id === editingId) ?? null;
-
-  const handleEdit = (id) => setEditingId(prev => prev === id ? null : id);
+  const handleEdit   = (id) => setEditingId(prev => prev === id ? null : id);
 
   return (
     <div className="min-h-full p-5 md:p-8" dir="rtl">
@@ -120,4 +117,32 @@ export default function FramesLibrary() {
 
       {!isLoading && !error && frames.length === 0 && (
         <div className="flex flex-col items-center justify-center py-32 text-center">
-          <div className="w-16 h
+          <div className="w-16 h-16 rounded-2xl bg-cool-800/60 border border-border flex items-center justify-center mb-4">
+            <Layers className="w-7 h-7 text-muted-foreground/30" />
+          </div>
+          <p className="text-sm text-muted-foreground mb-1">ספריית המסגרות ריקה</p>
+          <p className="text-xs text-muted-foreground/40">מסגרות חדשות יתווספו כאן</p>
+        </div>
+      )}
+
+      {!isLoading && !error && frames.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {frames.map(frame => (
+            <FrameCard
+              key={frame.frame_id}
+              frame={frame}
+              isEditing={editingId === frame.frame_id}
+              onEdit={handleEdit}
+            />
+          ))}
+          {editingFrame && (
+            <FrameTextEditor
+              frame={editingFrame}
+              onClose={() => setEditingId(null)}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
