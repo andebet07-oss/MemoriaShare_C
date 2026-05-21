@@ -1,12 +1,82 @@
 ---
 type: recent-memory
-updated: 2026-04-26T22:30Z
-horizon: 48 hours
+updated: 2026-05-11T22:00Z
+horizon: 48 hours (NB: HEAD now 6 days stale — session blocks below preserved as actionable tech-debt context, not as fresh "recent" decisions)
 ---
 
 # Recent Memory (Last 48 Hours)
 
-> **Quiet period broken (2026-04-26 evening):** After 4 days of no commits since `9306eee` (2026-04-22 22:43), two new commits landed today: `cbd2058` (21:21 — FRAMES1 photo-print library) and `dd11a8e` (21:31 — `upgradeALL_25` memory + agent infra + Phase 1/2 of event_permissions sharing feature). HEAD is now `dd11a8e`.
+> **2026-05-11 — Fourth consecutive quiet consolidation run (no commits in 6 days):** HEAD unchanged at `8c27742` (2026-05-05 22:15 +0300). Reflog confirms no movement past that commit; refs/heads/main still points to `8c277424c71923e8d96fb00cab3cea6c19239b3d`. ~144 hours since last commit. No new decisions, patterns, scope changes, or tech-debt items. Frames system still single-frame (`polaroid-classic.png`); event-sharing rollout still Phase 1+2 (P3–P7 pending); architect-flagged 7 risks still unreconciled. **Tooling incident this run:** `mcp__workspace__bash` was stuck in a "process with name serene-eager-bohr already running" loop — every invocation timed out. Worked around by reading `.git/HEAD`, `.git/refs/heads/main`, and `.git/logs/HEAD` directly via Read tool. Live `git log --since` queries not possible this cycle. **Action for orchestrator:** clear the stuck workspace process before next consolidation. Only horizon timestamps bumped.
+
+> **2026-05-08 — Third consecutive quiet consolidation run (no commits today):** HEAD unchanged at `8c27742` (2026-05-05 22:15 +0300). `git log 8c27742..HEAD` empty for ~68 hours. No new decisions, patterns, scope changes, or tech-debt items. Frames system still single-frame (`polaroid-classic.png`); event-sharing rollout still Phase 1+2 (P3–P7 pending); architect-flagged 7 risks still unreconciled. **Worktree note:** stale `.git/worktrees/dazzling-bartik` reference STILL present and now actively breaks `git status` invocations from inside the worktree dir (fatal: "not a git repository"). Standalone `git log` from repo root still works fine. Promote housekeeping prune from LOW to LOW-but-actionable next maintenance window. Only horizon timestamps bumped.
+
+> **2026-05-07 — Second quiet consolidation run (no commits today):** HEAD unchanged at `8c27742` (2026-05-05 22:15 +0300). `git log 8c27742..HEAD` returned empty — zero commits in the last 24-36h window. No new decisions, patterns, or scope changes. Frames system still in single-frame state (`polaroid-classic.png`); event-sharing rollout still at Phase 1+2 with P3-P7 pending; architect-flagged risks unreconciled. **Side note (LOW housekeeping):** stale git worktree reference for `dazzling-bartik` (Cowork sub-worktree) remains in `.git/worktrees/`; benign but worth a `git worktree prune` at next maintenance pass. No memory file content needed updating today — only horizon timestamps bumped.
+
+> **2026-05-06 — Quiet consolidation run (no commits):** HEAD unchanged at `8c27742`. Memory hygiene applied: long-term-memory's frame-library section split into "current state (1 frame)" / "ingestion workflow (DB-only)" / "historical archive". All 2026-05-05 PM Frames-Hard-Reset decisions remain captured in the session block immediately below.
+
+> **9-day quiet period broken (2026-05-05 evening):** After no functional commits since `bfc1cd6` / `7592960` (both 2026-04-26), six commits landed on 2026-05-05 — all centered on a complete **Frames system hard reset**. HEAD is now `8c27742`. The April-26 FRAMES1 photo-print library (30 templates) and the entire 2026-04-21 PNG/SVG seed library have been wiped from code AND DB; the system has been rebooted from a single new frame.
+
+## Session 2026-05-05 PM — Frames Hard Reset (5 functional commits + 1 memory commit)
+
+### Commits (chronological)
+- `61740bf` (18:56) — **`pov upgradeALL_100`** — `.claude/settings.local.json` + 16 LOC long-term-memory tweak. No functional code.
+- `51f28ea` (19:28) — **Remove all frame definitions** — `framePacks.js` 1423 → 21 LOC, `framesMeta.js` 99 → 31 LOC. Empty exports preserved so existing imports don't break. DB rows already cleared out-of-band.
+- `15a6d16` (19:58) — **Simplify FramesLibrary to empty state, delete unused admin frame components.** `FramesLibrary.jsx` 316 → ~50 LOC empty state. **Deleted (1278 LOC total):** `src/components/admin/frames/FrameCard.jsx` (86), `FrameDetailPanel.jsx` (335), `FrameUploadDialog.jsx` (549).
+- `680785d` (20:53) — **Add `polaroid-classic` — first frame in clean system.** `public/FRAMES/polaroid-classic.png` (776×1031, 682×682 transparent square hole, white border). Matching `frames_meta` row inserted out-of-band with `hole_bbox` + `text_config` placeholder zones.
+- `c775237` (21:11) — **Show frames grid in FramesLibrary from DB query.** Static empty state replaced with live `memoriaService.frameMeta.listPngFrames()` call; renders `FramePngPreview` card per row with status / category / style / aspect badges.
+- `8c27742` (22:15) — **Polish polaroid-classic + high-fidelity admin card.** PNG regenerated with r=16 rounded outer corners via SVG+sharp `dest-out` composite (size: 6720 → 7180 bytes). FrameCard inline in FramesLibrary upgraded: dark gradient preview bg, drop-shadow on frame, status-dot badge, checkerboard-hinted bg so transparency reads cleanly.
+
+### Decision A — Burn it down: programmatic SVG seeds + Canva polaroids + Figma PNGs + FRAMES1 photo-print all retired (`51f28ea` + `15a6d16`)
+**Reason (inferred from commit messages — no chat context for this autonomous run):** the user wanted "fresh start" after the FRAMES1 import (2026-04-26) and the prior 86-frame library (2026-04-21) accumulated mismatched aspects, status enums (`'active'` vs `'approved'`), styles (`minimal_luxury` / `modern_editorial` / `festive_chic` / `photo_print`), and three different ingestion paths.
+
+**What was preserved:**
+- The PNG composite pipeline primitives (`compositePngFrame.js`, `detectHoleBbox.js`, `framesUtils.js`) — code intact.
+- `FramePngPreview.jsx` — still in use, now rendered inline in FramesLibrary.
+- Hardening rules (crossOrigin guard, failed-image cache delete, 600×900 preview cap, CORS on `/FRAMES/`) — still canonical.
+- The `frames_meta` table schema with `hole_bbox` + `text_config` JSONB columns.
+- The procedural canvas drawing path stubs in `framePacks.js` / `framesMeta.js` — empty exports keep imports compiling; picker just returns nothing.
+
+**What's gone:**
+- `FrameCard.jsx`, `FrameDetailPanel.jsx`, `FrameUploadDialog.jsx` — admin batch ingestion + per-frame text-config UI deleted. Future frames must be inserted directly into the DB (see Decision C).
+- All 86 prior PNG/SVG frames in `public/FRAMES/` (only `polaroid-classic.png` is referenced now; orphan-file audit pending).
+- The 30 FRAMES1 photo-print templates in `public/FRAMES-PROCESSED/` are decoupled from any UI — DB rows cleared. Verify on next session whether the directory itself was also pruned.
+- Procedural seed pack — `framesMeta.js` and `framePacks.js` now export empty / stub-only.
+
+### Decision B — Rebuild starts from a real-world transparent PNG, NOT a procedural seed (`680785d`)
+`polaroid-classic.png` is a hand-authored transparent PNG, not generated by `drawFrame()`. The clean system commits to **PNG-as-canonical** going forward; the procedural SVG `drawFrame()` path is retained for legacy fallback only.
+
+**Frame sizing convention reset:** 776×1031 portrait with a centered 682×682 square hole. This is *not* the 600×900 admin-preview cap (that's still enforced in `compositePngFrame.js`); it's the native PNG dimensions.
+
+### Decision C — `FrameUploadDialog` deleted means new frames are added via DB-only flow
+With the upload UI gone, the workflow for adding a new frame is now:
+1. Author the transparent PNG (Figma/Canva/sharp pipeline).
+2. Drop it into `public/FRAMES/`.
+3. Manually `INSERT INTO frames_meta (frame_id, png_url, hole_bbox, text_config, status, style, category, aspect, sort_weight) VALUES (...)`.
+4. FramesLibrary picks it up automatically from the live DB query.
+
+**Open question:** is there future intent to rebuild a streamlined upload UI, or stay DB-only for the foreseeable future? Tracked as follow-up in project-memory tech debt.
+
+### Decision D — `sharp` retained, used inline for frame post-processing (`8c27742`)
+The `dest-out` rounded-corners regen (mask: 776×1031 SVG with `<rect rx="16" ry="16">` → composite with mode `dest-out` to clear the corners) demonstrates `sharp` is now part of the routine frame-authoring workflow, not just the (now-defunct) FRAMES1 import script. **Implication:** `sharp@^0.34.5` should stay as a devDependency even though `import-frames1.mjs` may itself be obsolete.
+
+### Decision E — FrameCard styling = inline component now, dark-surface aesthetic (`8c27742`)
+The new admin card (replacing the deleted `FrameCard.jsx`) lives inline in `FramesLibrary.jsx`. Visual recipe:
+- Container: dark gradient surface (cool-900 → cool-950 family).
+- Frame preview: `drop-shadow` for depth.
+- Checkerboard-hinted background so PNG transparency reads visually.
+- Top-right: status dot badge (active/approved/draft).
+- Below: status / category / style / aspect text labels.
+
+This becomes the canonical admin-card recipe for future frame-related listings.
+
+### What this invalidates in older memory
+- **Project-memory FRAMES1 tech-debt rows:** `status='active'` verification, archived programmatic frames audit, sharp native binding on Vercel, and 28 A2 frames pending Figma prep — all moot, library is gone. Resolved by removal.
+- **Long-term-memory §PNG Frame Overlay Pipeline:** the "Frame library (as of 2026-04-21)" sub-section listing 7+8+71 frames is now historical. Library count reset to 1.
+- **Long-term-memory §Primitives list:** `FrameUploadDialog.jsx` is no longer a primitive — file deleted. Remove from the list.
+- **invariant_realtime_channels.md (architect agent):** unchanged by this session — still 5 channels including `permissions-${eventId}`.
+- **Event-sharing rollout phases 3-7:** unchanged — no permissions work in this session.
+
+---
 
 ## Session 2026-04-26 PM — FRAMES1 photo-print library + event_permissions Phase 1/2 (sharing feature scaffolded) (2 commits)
 

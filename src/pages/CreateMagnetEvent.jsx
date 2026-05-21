@@ -453,7 +453,8 @@ export default function CreateMagnetEvent() {
       setSuccess({ event_code: event.unique_code, pin_code: event.pin_code, event_id: event.id });
     } catch (err) {
       console.error('CreateMagnetEvent: submit failed', err);
-      setErrors({ submit: 'שגיאה ביצירת האירוע. ייתכן שהקוד כבר קיים.' });
+      const msg = err?.message || err?.code || 'שגיאה לא ידועה';
+      setErrors({ submit: `שגיאה ביצירת האירוע: ${msg}` });
     } finally {
       setIsLoading(false);
     }

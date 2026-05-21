@@ -86,7 +86,7 @@ export default function FramesLibrary() {
 
   const activeCount  = frames.filter(f => f.status === 'approved').length;
   const editingFrame = frames.find(f => f.frame_id === editingId) ?? null;
-  const handleEdit   = (id) => setEditingId(prev => prev === id ? null : id);
+  const handleEdit = (id) => setEditingId(prev => prev === id ? null : id);
 
   return (
     <div className="min-h-full p-5 md:p-8" dir="rtl">

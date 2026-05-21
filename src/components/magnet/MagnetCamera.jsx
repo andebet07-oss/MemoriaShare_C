@@ -27,6 +27,9 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   const capturingRef  = useRef(false);
   const startIdRef    = useRef(0);   // F08: cancellation token for overlapping startCamera calls
   const timeoutsRef   = useRef([]);  // F07: track all setTimeout ids for unmount cleanup
+  // UX-03: synchronous counter for confirmed prints not yet reflected in `remainingPrints`
+  // prop (parent's fetchPrintJobs is async). Resets when prop catches up.
+  const capturedCountRef = useRef(0);
 
   const [isFront,    setIsFront]    = useState(false);
   const [flash,      setFlash]      = useState('off');
@@ -50,6 +53,9 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
 
   // F07: clear all pending timeouts on unmount
   useEffect(() => () => timeoutsRef.current.forEach(clearTimeout), []);
+
+  // UX-03: reset synchronous counter once parent's fetchPrintJobs() catches up
+  useEffect(() => { capturedCountRef.current = 0; }, [remainingPrints]);
 
   // Camera lifecycle
   useEffect(() => {
@@ -140,8 +146,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
 
   async function handleCapture() {
     if (!videoRef.current || loading || capturingRef.current) return;
-    // F09: give haptic feedback instead of silent ignore when quota is 0
-    if (remainingPrints <= 0) {
+    // F09 + UX-03: subtract local counter so rapid taps before prop refresh are blocked
+    if (remainingPrints - capturedCountRef.current <= 0) {
       if (navigator.vibrate) navigator.vibrate([10, 50, 10]);
       return;
     }
@@ -204,6 +210,9 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   function handleRetake() { setCapturedURL(null); setMode('camera'); capturingRef.current = false; }
 
   function handlePrintJobCreated() {
+    // UX-03: increment synchronously so a tap immediately after returning from review
+    // sees the just-consumed print before parent's fetchPrintJobs() resolves.
+    capturedCountRef.current++;
     setCapturedURL(null);
     setMode('camera');
     capturingRef.current = false;
@@ -257,7 +266,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   })();
 
   const quotaId = 'magnet-camera-quota';
-  const isDisabled = loading || remainingPrints <= 0;
+  const isDisabled = loading || (remainingPrints - capturedCountRef.current) <= 0;
 
   // ── Main camera UI ─────────────────────────────────────────────────────────────
   return (

@@ -14,6 +14,9 @@ DROP FUNCTION IF EXISTS handle_new_user();
 DROP TRIGGER IF EXISTS trg_enforce_print_quota ON print_jobs;
 DROP FUNCTION IF EXISTS enforce_print_quota();
 
+DROP TRIGGER IF EXISTS trg_check_lead_rate_limit ON leads;
+DROP FUNCTION IF EXISTS check_lead_rate_limit();
+
 DROP TABLE IF EXISTS upload_diagnostics CASCADE;
 DROP TABLE IF EXISTS print_jobs         CASCADE;
 DROP TABLE IF EXISTS leads              CASCADE;
@@ -147,6 +150,7 @@ CREATE INDEX idx_events_unique_code      ON events(unique_code);
 CREATE INDEX idx_events_created_by       ON events(created_by);
 CREATE INDEX idx_print_jobs_event_id     ON print_jobs(event_id);
 CREATE INDEX idx_print_jobs_guest        ON print_jobs(event_id, guest_user_id);
+CREATE INDEX idx_leads_phone_created_at  ON leads(phone, created_at DESC);
 
 -- ============================================================
 -- TRIGGER: auto-create profile on first sign-up
@@ -241,6 +245,32 @@ $$;
 CREATE TRIGGER trg_enforce_print_quota
   BEFORE INSERT ON print_jobs
   FOR EACH ROW EXECUTE FUNCTION enforce_print_quota();
+
+-- ── UX-05: Lead rate limit (3 per phone per hour) ────────────
+-- SECURITY DEFINER so the COUNT bypasses leads_select_admin
+-- and works for anonymous public form submissions.
+CREATE OR REPLACE FUNCTION check_lead_rate_limit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF (
+    SELECT COUNT(*) FROM leads
+    WHERE phone       = NEW.phone
+      AND created_at  > NOW() - INTERVAL '1 hour'
+  ) >= 3 THEN
+    RAISE EXCEPTION 'LEAD_RATE_LIMIT_EXCEEDED'
+      USING HINT = 'Too many lead submissions from this phone in the last hour';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_check_lead_rate_limit
+  BEFORE INSERT ON leads
+  FOR EACH ROW EXECUTE FUNCTION check_lead_rate_limit();
 
 -- ============================================================
 -- ROW LEVEL SECURITY

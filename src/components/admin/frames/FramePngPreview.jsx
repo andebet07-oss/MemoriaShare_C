@@ -30,7 +30,7 @@ function makeSamplePhoto(w, h) {
  *   style      — inline style on wrapper
  */
 export default function FramePngPreview({ frame, eventName, eventDate, className = '', style }) {
-  const [src, setSrc]     = useState(null);
+  const [src, setSrc] = useState(null);
   const [error, setError] = useState(false);
   const cancelled = useRef(false);
 
@@ -54,8 +54,8 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
         if (cancelled.current) return;
         const result = await compositePngFrame(sampleImg, frame, {
           maxWidth: 600, maxHeight: 900,
-          eventName: eventName ?? '\u05d7\u05ea\u05d5\u05e0\u05ea \u05e9\u05e8\u05d4 \u05d5\u05d3\u05d5\u05d3',
-          eventDate: eventDate ?? '12 \u05d1\u05d9\u05d5\u05e0\u05d9 2026',
+          eventName: eventName ?? 'חתונת שרה ודוד',
+          eventDate: eventDate ?? '12 ביוני 2026',
         });
         if (!cancelled.current) setSrc(result.toDataURL('image/jpeg', 0.85));
       } catch (err) {
@@ -72,7 +72,7 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
   if (error) {
     return (
       <div className={`flex items-center justify-center bg-cool-800/60 text-muted-foreground/40 text-xs ${className}`} style={style}>
-        \u05ea\u05e6\u05d5\u05d2\u05d4 \u05de\u05e7\u05d3\u05d9\u05de\u05d9\u05ea \u05dc\u05d0 \u05d6\u05de\u05d9\u05e0\u05d4
+        תצוגה מקדימית לא זמינה
       </div>
     );
   }
@@ -88,7 +88,7 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
   return (
     <img
       src={src}
-      alt="\u05ea\u05e6\u05d5\u05d2\u05ea \u05de\u05e1\u05d2\u05e8\u05ea"
+      alt="תצוגת מסגרת"
       className={`object-contain ${className}`}
       style={style}
     />

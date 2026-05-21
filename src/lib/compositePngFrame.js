@@ -90,6 +90,16 @@ export async function compositePngFrame(photoImg, frame, opts = {}) {
   // PNG frame overlay (transparent hole reveals photo)
   ctx.drawImage(frameImg, 0, 0, fw, fh);
 
+  // ── Clear text strip below hole (erases baked placeholder text in frame PNG) ─
+  // Ensures our dynamic text always renders on a clean white background
+  if (text_config) {
+    const textStripY = hy + hh;
+    if (textStripY < fh) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, textStripY, fw, fh - textStripY);
+    }
+  }
+
   // ── Text layers (event name, date, icon) ───────────────────────────────────
   // text_config schema:
   //   event_name: { font, size, weight, color, align, y }
