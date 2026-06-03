@@ -23,18 +23,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FRAMES_DIR = path.join(__dirname, '../public/FRAMES');
 
 // ── Portrait canvas geometry ───────────────────────────────────────────────
-// Classic polaroid proportions: ~6-7% side borders, ~20% bottom strip.
-// At a typical 4" wide magnet this gives ~6-7mm white border on sides/top
-// and ~20mm white strip at the bottom — clearly visible white "frame".
-const W       = 1000;
-const BORDER  = 65;          // top / left / right border width (px)
-const HOLE_X  = BORDER;      // 65
-const HOLE_Y  = BORDER;      // 65
-const HOLE_W  = W - BORDER * 2;              // 870
-const HOLE_H  = Math.round(HOLE_W * 4 / 3); // 1160  (exact 3:4)
-const STRIP_Y = HOLE_Y + HOLE_H;            // 1225
-const STRIP_H = 255;
-const H       = STRIP_Y + STRIP_H;          // 1480
+// Photo hole: exactly 776×1031 px as specified by the Pacdora template.
+// White border: 50px on left/right/top → clearly visible polaroid frame.
+// Bottom strip: 185px for name/date/decoration (≈15% of total height).
+const HOLE_W  = 776;
+const HOLE_H  = 1031;
+const BORDER  = 50;           // top / left / right border
+const HOLE_X  = BORDER;       // 50
+const HOLE_Y  = BORDER;       // 50
+const STRIP_H = 185;
+const W       = HOLE_W + BORDER * 2;   // 876
+const STRIP_Y = HOLE_Y + HOLE_H;       // 1081
+const H       = STRIP_Y + STRIP_H;     // 1266
 
 console.log(`Canvas: ${W}×${H}  Hole: ${HOLE_W}×${HOLE_H} at (${HOLE_X},${HOLE_Y})`);
 console.log(`Hole bbox (normalised): { x:${(HOLE_X/W).toFixed(4)}, y:${(HOLE_Y/H).toFixed(4)}, w:${(HOLE_W/W).toFixed(4)}, h:${(HOLE_H/H).toFixed(4)} }`);
@@ -141,12 +141,11 @@ const FRAMES = [
     // Only a small typographic heart — too small/mixed with text to crop cleanly.
     // Leave no image decoration; text_config icon provides the ♡ emoji.
     decorations: [],
-    // Text positions for H=1480, STRIP_Y=1225, STRIP_H=255
-    // Icon at y≈0.855 (1265px, 40px below hole), name at y≈0.900, date at y≈0.940
+    // Strip: y=1081..1266 (185px). Icon at ~y=1110, name at ~y=1155, date at ~y=1200
     textConfig: {
-      event_name: { y: 0.900, font: 'Heebo', size: 0.030, weight: '700', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.942, font: 'Heebo', size: 0.022, weight: '400', color: '#666666', align: 'center' },
-      icon:       { emoji: '♡', y: 0.857, x: 0.5 },
+      event_name: { y: 0.912, font: 'Heebo', size: 0.032, weight: '700', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.955, font: 'Heebo', size: 0.023, weight: '400', color: '#666666', align: 'center' },
+      icon:       { emoji: '♡', y: 0.872, x: 0.5 },
       preserve_strip: true,
     },
   },
@@ -155,9 +154,9 @@ const FRAMES = [
     src: 'frame-heart-calligraphy.png',
     decorations: [],
     textConfig: {
-      event_name: { y: 0.900, font: 'Frank Ruhl Libre', size: 0.030, weight: '400', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.942, font: 'Heebo', size: 0.022, weight: '400', color: '#666666', align: 'center' },
-      icon:       { emoji: '♡', y: 0.857, x: 0.5 },
+      event_name: { y: 0.912, font: 'Frank Ruhl Libre', size: 0.032, weight: '400', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.955, font: 'Heebo', size: 0.023, weight: '400', color: '#666666', align: 'center' },
+      icon:       { emoji: '♡', y: 0.872, x: 0.5 },
       preserve_strip: true,
     },
   },
@@ -166,25 +165,25 @@ const FRAMES = [
     src: 'frame-olive-branches.png',
     decorations: [
       {
-        region: { left: 255, top: 600, width: 118, height: 130 }, // left bunch
-        targetW: 110,
+        region: { left: 255, top: 600, width: 118, height: 130 },
+        targetW: 90,
         placement: (imgW, imgH) => ({
-          left: Math.round(W / 2 - imgW - 60),
-          top:  Math.round(STRIP_Y + 18),
+          left: Math.round(W / 2 - imgW - 45),
+          top:  Math.round(STRIP_Y + 12),
         }),
       },
       {
-        region: { left: 625, top: 600, width: 118, height: 130 }, // right bunch
-        targetW: 110,
+        region: { left: 625, top: 600, width: 118, height: 130 },
+        targetW: 90,
         placement: (imgW, imgH) => ({
-          left: Math.round(W / 2 + 60),
-          top:  Math.round(STRIP_Y + 18),
+          left: Math.round(W / 2 + 45),
+          top:  Math.round(STRIP_Y + 12),
         }),
       },
     ],
     textConfig: {
-      event_name: { y: 0.900, font: 'Heebo', size: 0.028, weight: '700', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.942, font: 'Heebo', size: 0.021, weight: '400', color: '#666666', align: 'center' },
+      event_name: { y: 0.912, font: 'Heebo', size: 0.030, weight: '700', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.955, font: 'Heebo', size: 0.022, weight: '400', color: '#666666', align: 'center' },
       preserve_strip: true,
     },
   },
@@ -194,16 +193,16 @@ const FRAMES = [
     decorations: [
       {
         region: { left: 2, top: 600, width: 252, height: 130 },
-        targetW: 200,
+        targetW: 170,
         placement: (imgW, imgH) => ({
           left: Math.round((W - imgW) / 2),
-          top:  Math.round(STRIP_Y + 14),
+          top:  Math.round(STRIP_Y + 10),
         }),
       },
     ],
     textConfig: {
-      event_name: { y: 0.900, font: 'Heebo', size: 0.028, weight: '700', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.942, font: 'Heebo', size: 0.021, weight: '400', color: '#666666', align: 'center' },
+      event_name: { y: 0.912, font: 'Heebo', size: 0.030, weight: '700', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.955, font: 'Heebo', size: 0.022, weight: '400', color: '#666666', align: 'center' },
       preserve_strip: true,
     },
   },
@@ -213,16 +212,16 @@ const FRAMES = [
     decorations: [
       {
         region: { left: 2, top: 580, width: 158, height: 150 },
-        targetW: 120,
+        targetW: 100,
         placement: (imgW, imgH) => ({
           left: Math.round((W - imgW) / 2),
-          top:  Math.round(STRIP_Y + 10),
+          top:  Math.round(STRIP_Y + 8),
         }),
       },
     ],
     textConfig: {
-      event_name: { y: 0.900, font: 'Heebo', size: 0.028, weight: '700', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.942, font: 'Heebo', size: 0.021, weight: '400', color: '#666666', align: 'center' },
+      event_name: { y: 0.912, font: 'Heebo', size: 0.030, weight: '700', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.955, font: 'Heebo', size: 0.022, weight: '400', color: '#666666', align: 'center' },
       preserve_strip: true,
     },
   },
