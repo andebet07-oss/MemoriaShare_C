@@ -21,6 +21,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FRAMES_DIR = path.join(__dirname, '../public/FRAMES');
+// Wedding design sources (landscape WebP mock-ups, 1000×730) — artwork is
+// cropped from these for the 3 "artwork" wedding variants (arrows/couple/rings).
+const NEW_DIR = path.join(__dirname, '../public/FRAMES1/FRAMES-NEW');
 
 // ── Portrait canvas geometry ───────────────────────────────────────────────
 // Photo hole: exactly 776×1031 px as specified by the Pacdora template.
@@ -85,6 +88,20 @@ async function cropInfo(srcPath, region, targetW, threshold = 208) {
   const scale = targetW / meta.width;
   const targetH = Math.round(meta.height * scale);
   const resized = await sharp(cleaned).resize(targetW, targetH).png().toBuffer();
+  return { buffer: resized, width: targetW, height: targetH };
+}
+
+/**
+ * Crop a region and resize WITHOUT near-white keying. Used for artwork that
+ * contains legitimate white pixels (e.g. a bride's white dress) which keying
+ * would erase. The white background of the crop blends invisibly into the
+ * white frame strip, so no transparency is needed.
+ */
+async function cropPlain(srcPath, region, targetW) {
+  const cropped = await sharp(srcPath).extract(region).png().toBuffer();
+  const meta = await sharp(cropped).metadata();
+  const targetH = Math.round(meta.height * (targetW / meta.width));
+  const resized = await sharp(cropped).resize(targetW, targetH).png().toBuffer();
   return { buffer: resized, width: targetW, height: targetH };
 }
 
@@ -206,6 +223,66 @@ const FRAMES = [
       preserve_strip: true,
     },
   },
+
+  // ── Wedding ARTWORK variants (artwork cropped from FRAMES-NEW WebP) ──────────
+  // The name+date+♥ are rendered dynamically by compositePngFrame/FrameStripText;
+  // only the decorative artwork is baked into these PNGs.
+  {
+    id: 'wedding-arrows',
+    dir: NEW_DIR,
+    src: '17.jpg.webp',
+    out: 'frame-wedding-arrows-portrait.png',
+    decorations: [
+      { // left arrow (points right) — sits left of the name
+        region: { left: 180, top: 636, width: 185, height: 42 }, keyed: true, targetW: 150,
+        placement: (w, h) => ({ left: 24, top: Math.round(STRIP_Y + 70 - h / 2) }),
+      },
+      { // right arrow (points left) — sits right of the name
+        region: { left: 632, top: 636, width: 190, height: 42 }, keyed: true, targetW: 150,
+        placement: (w, h) => ({ left: W - 150 - 24, top: Math.round(STRIP_Y + 70 - h / 2) }),
+      },
+    ],
+    textConfig: {
+      event_name: { y: 0.918, font: 'Heebo', size: 0.034, weight: '700', color: '#1a1a1a', align: 'center', inline_icon: '❤', inline_icon_color: '#e8654f' },
+      date:       { y: 0.962, font: 'Heebo', size: 0.022, weight: '400', color: '#666666', align: 'center' },
+      preserve_strip: true,
+    },
+  },
+  {
+    id: 'wedding-couple',
+    dir: NEW_DIR,
+    src: '45.jpg.webp',
+    out: 'frame-wedding-couple-portrait.png',
+    decorations: [
+      { // bride + groom illustration — bottom-right corner (no keying: white dress)
+        region: { left: 800, top: 500, width: 170, height: 228 }, keyed: false, targetW: 120,
+        placement: (w, h) => ({ left: W - w - 12, top: Math.round(H - h - 8) }),
+      },
+    ],
+    textConfig: {
+      event_name: { y: 0.915, font: 'David Libre', size: 0.034, weight: '500', color: '#1a1a1a', align: 'left' },
+      date:       { y: 0.962, font: 'David Libre', size: 0.022, weight: '400', color: '#666666', align: 'left' },
+      preserve_strip: true,
+    },
+  },
+  {
+    id: 'wedding-rings',
+    dir: NEW_DIR,
+    src: '11.jpg.webp',
+    out: 'frame-wedding-rings-portrait.png',
+    decorations: [
+      { // interlocking rings emblem — centered above the name
+        region: { left: 452, top: 631, width: 92, height: 50 }, keyed: true, targetW: 80,
+        placement: (w, h) => ({ left: Math.round(W / 2 - w / 2), top: Math.round(STRIP_Y + 8) }),
+      },
+    ],
+    textConfig: {
+      event_name: { y: 0.928, font: 'Frank Ruhl Libre', size: 0.030, weight: '400', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.968, font: 'Heebo', size: 0.021, weight: '400', color: '#666666', align: 'center' },
+      preserve_strip: true,
+    },
+  },
+
   {
     id: 'landscape-camera-heart',
     src: 'frame-camera-heart.png',
@@ -235,17 +312,19 @@ async function run() {
 
   for (const frame of FRAMES) {
     console.log(`\nProcessing ${frame.id}…`);
-    const srcPath = path.join(FRAMES_DIR, frame.src);
+    const srcPath = path.join(frame.dir || FRAMES_DIR, frame.src);
 
     // Start from a fresh base for each frame
     let composite = [...[]]; // compositing layers to apply
 
-    // Prepare decoration crops
+    // Prepare decoration crops (keyed = near-white→transparent; else plain opaque)
     for (const dec of frame.decorations) {
-      const { buffer, width, height } = await cropInfo(srcPath, dec.region, dec.targetW);
-      const { left, top } = dec.placement(width, height);
-      console.log(`  decoration: ${width}×${height} → (${left}, ${top})`);
-      composite.push({ input: buffer, left, top });
+      const crop = (dec.keyed === false)
+        ? await cropPlain(srcPath, dec.region, dec.targetW)
+        : await cropInfo(srcPath, dec.region, dec.targetW);
+      const { left, top } = dec.placement(crop.width, crop.height);
+      console.log(`  decoration: ${crop.width}×${crop.height} → (${left}, ${top})`);
+      composite.push({ input: crop.buffer, left, top });
     }
 
     let output;
@@ -255,7 +334,7 @@ async function run() {
       output = base;
     }
 
-    const outName = `${frame.src.replace('.png', '')}-portrait.png`;
+    const outName = frame.out || `${frame.src.replace('.png', '')}-portrait.png`;
     const outPath = path.join(FRAMES_DIR, outName);
     await sharp(output).png({ compressionLevel: 8 }).toFile(outPath);
     console.log(`  ✓ saved → ${outName}`);
@@ -270,7 +349,7 @@ async function run() {
     h: parseFloat((HOLE_H/H).toFixed(4)),
   })}`);
   for (const frame of FRAMES) {
-    const outName = frame.src.replace('.png', '') + '-portrait.png';
+    const outName = frame.out || (frame.src.replace('.png', '') + '-portrait.png');
     console.log(`\n  frame_id: '${frame.id}'`);
     console.log(`  image_url: 'https://www.memoriashare.com/FRAMES/${outName}'`);
     console.log(`  text_config: ${JSON.stringify(frame.textConfig)}`);

@@ -105,12 +105,71 @@ export async function compositePngFrame(photoImg, frame, opts = {}) {
 
   // ── Text layers (event name, date, icon) ───────────────────────────────────
   // text_config schema:
-  //   event_name: { font, size, weight, color, align, y }
+  //   event_name: { font, size, weight, color, align, y, inline_icon?, inline_icon_color? }
   //   date:       { font, size, weight, color, align, y }
-  //   icon:       { emoji, y }   — rendered as large emoji above the text
+  //   icon:       { emoji, y }   — rendered as large emoji above the text (stacked)
+  //
+  // inline_icon (e.g. "♥"): when set on event_name, the name is split on its
+  // connector ("&" / Hebrew "ו" / "+") and rendered as  [part1] ♥ [part2]
+  // centered, mirroring the source wedding designs ("מיכל ♥ תומר"). Falls back
+  // to a plain centered name when no connector is found.
   if (text_config) {
+    const splitNames = (name) => {
+      const ampersand = name.split(/\s*&\s*/);
+      if (ampersand.length === 2) return ampersand;
+      const heAnd = name.split(/\s+ו/);        // Hebrew vav connector: "מיכל ותומר"
+      if (heAnd.length === 2) return heAnd;
+      const plus = name.split(/\s*\+\s*/);
+      if (plus.length === 2) return plus;
+      return null;
+    };
+
+    const renderInlineName = async (cfg, text) => {
+      const fontSize   = Math.max(10, Math.round((cfg.size || 0.028) * fh));
+      const fontWeight = cfg.weight || 'normal';
+      const fontFamily = cfg.font   || 'Heebo';
+      const fontStr    = `${fontWeight} ${fontSize}px '${fontFamily}', sans-serif`;
+      const iconStr    = `${fontSize}px serif`;
+      try { await document.fonts.load(fontStr); } catch { /* fallback */ }
+
+      const parts = splitNames(text);
+      const ty    = Math.round((cfg.y || 0.88) * fh);
+      const gap   = Math.round(fontSize * 0.45);
+
+      ctx.save();
+      ctx.textBaseline = 'middle';
+
+      if (!parts) {
+        ctx.font = fontStr; ctx.textAlign = 'center'; ctx.fillStyle = cfg.color || '#444444';
+        ctx.fillText(text, Math.round(fw / 2), ty);
+        ctx.restore();
+        return;
+      }
+
+      const [a, b] = parts.map(s => s.trim());
+      ctx.font = fontStr;
+      const wA = ctx.measureText(a).width;
+      const wB = ctx.measureText(b).width;
+      ctx.font = iconStr;
+      const wI = ctx.measureText(cfg.inline_icon).width;
+      const total = wA + gap + wI + gap + wB;
+      let x = Math.round(fw / 2 - total / 2);
+
+      ctx.textAlign = 'left';
+      ctx.font = fontStr; ctx.fillStyle = cfg.color || '#444444';
+      ctx.fillText(a, x, ty);                         x += wA + gap;
+      ctx.font = iconStr; ctx.fillStyle = cfg.inline_icon_color || cfg.color || '#444444';
+      ctx.fillText(cfg.inline_icon, x, ty);           x += wI + gap;
+      ctx.font = fontStr; ctx.fillStyle = cfg.color || '#444444';
+      ctx.fillText(b, x, ty);
+      ctx.restore();
+    };
+
     const renderText = async (cfg, text) => {
       if (!cfg || !text) return;
+
+      if (cfg.inline_icon) { await renderInlineName(cfg, text); return; }
+
       const fontSize   = Math.max(10, Math.round((cfg.size || 0.028) * fh));
       const fontWeight = cfg.weight || 'normal';
       const fontFamily = cfg.font   || 'Heebo';

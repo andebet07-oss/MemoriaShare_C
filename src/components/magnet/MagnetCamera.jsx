@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, RotateCw, Zap, ZapOff, CameraOff, Loader2, Upload, Film } from 'lucide-react';
 import MagnetReview from './MagnetReview';
+import FrameStripText from './FrameStripText';
 import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
 
 const VINTAGE_FILTER = 'sepia(0.35) contrast(0.88) brightness(1.08) saturate(1.15)';
@@ -407,6 +408,10 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
                   {/* Real frame PNG overlaid on top */}
                   <img src={eventFrame.image_url} alt="" aria-hidden="true"
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
+
+                  {/* Live design text (name + date + ♥) so the guest sees the full
+                      design, not a blank white strip. Mirrors compositePngFrame. */}
+                  <FrameStripText textConfig={eventFrame.text_config} eventName={event?.name} dateFmt={dateFmt} />
                 </div>
               );
             })()
