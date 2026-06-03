@@ -23,15 +23,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FRAMES_DIR = path.join(__dirname, '../public/FRAMES');
 
 // ── Portrait canvas geometry ───────────────────────────────────────────────
-const W      = 1000;
-const BORDER = 40;          // top / left / right border width (px)
-const HOLE_X = BORDER;      // 40
-const HOLE_Y = BORDER;      // 40
-const HOLE_W = W - BORDER * 2;              // 920
-const HOLE_H = Math.round(HOLE_W * 4 / 3); // 1227  (exact 3:4)
-const STRIP_Y = HOLE_Y + HOLE_H;           // 1267
-const STRIP_H = 190;
-const H = STRIP_Y + STRIP_H;               // 1457
+// Classic polaroid proportions: ~6-7% side borders, ~20% bottom strip.
+// At a typical 4" wide magnet this gives ~6-7mm white border on sides/top
+// and ~20mm white strip at the bottom — clearly visible white "frame".
+const W       = 1000;
+const BORDER  = 65;          // top / left / right border width (px)
+const HOLE_X  = BORDER;      // 65
+const HOLE_Y  = BORDER;      // 65
+const HOLE_W  = W - BORDER * 2;              // 870
+const HOLE_H  = Math.round(HOLE_W * 4 / 3); // 1160  (exact 3:4)
+const STRIP_Y = HOLE_Y + HOLE_H;            // 1225
+const STRIP_H = 255;
+const H       = STRIP_Y + STRIP_H;          // 1480
 
 console.log(`Canvas: ${W}×${H}  Hole: ${HOLE_W}×${HOLE_H} at (${HOLE_X},${HOLE_Y})`);
 console.log(`Hole bbox (normalised): { x:${(HOLE_X/W).toFixed(4)}, y:${(HOLE_Y/H).toFixed(4)}, w:${(HOLE_W/W).toFixed(4)}, h:${(HOLE_H/H).toFixed(4)} }`);
@@ -93,31 +96,24 @@ async function cropInfo(srcPath, region, targetW, threshold = 208) {
  *   - transparent 3:4 photo hole
  */
 async function buildBase() {
-  // SVG produces the white background + soft gray vignette border.
-  // The vignette is a blurred gray stroke on the inside of the frame edge,
-  // matching the subtle depth effect in the original landscape frames.
-  const vignetteInset = 14;
+  // Clean white polaroid card: solid white with a 1px light-gray outer edge.
+  // No vignette/shadow — the strong contrast between the photo and the white
+  // border is what makes the polaroid effect visible and clean.
   const vigSvg = Buffer.from(`
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  <!-- Solid white background -->
+  <rect width="${W}" height="${H}" fill="white"/>
+  <!-- 1px light-gray outer card edge (very subtle, just defines the card boundary) -->
+  <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}"
+        fill="none" stroke="rgb(200,200,200)" stroke-width="1"/>
+  <!-- Thin inner shadow at hole edge: 4px blurred dark stroke gives photo depth -->
   <defs>
-    <filter id="b" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="17"/>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4"/>
     </filter>
   </defs>
-  <!-- White base -->
-  <rect width="${W}" height="${H}" fill="white"/>
-  <!-- Blurred gray inner-edge ring: sits just outside the hole, inside the border -->
-  <rect x="${vignetteInset}" y="${vignetteInset}"
-        width="${W - vignetteInset * 2}" height="${H - vignetteInset * 2}"
-        rx="4" fill="none"
-        stroke="rgba(138,138,138,0.58)" stroke-width="32"
-        filter="url(#b)"/>
-  <!-- Recover white fill inside vignette ring (non-hole area) -->
-  <rect x="${BORDER + 1}" y="${BORDER + 1}"
-        width="${HOLE_W - 2}" height="${HOLE_H - 2}"
-        fill="white"/>
-  <!-- Bottom strip is also white -->
-  <rect x="0" y="${STRIP_Y}" width="${W}" height="${STRIP_H}" fill="white"/>
+  <rect x="${HOLE_X}" y="${HOLE_Y}" width="${HOLE_W}" height="${HOLE_H}"
+        fill="none" stroke="rgba(0,0,0,0.18)" stroke-width="8" filter="url(#s)"/>
 </svg>`);
 
   // Rasterise SVG → RGBA PNG
@@ -163,94 +159,88 @@ const FRAMES = [
     // Only a small typographic heart — too small/mixed with text to crop cleanly.
     // Leave no image decoration; text_config icon provides the ♡ emoji.
     decorations: [],
+    // Text positions for H=1480, STRIP_Y=1225, STRIP_H=255
+    // Icon at y≈0.855 (1265px, 40px below hole), name at y≈0.900, date at y≈0.940
     textConfig: {
-      event_name: { y: 0.905, font: 'Heebo', size: 0.028, weight: '700', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.952, font: 'Heebo', size: 0.020, weight: '400', color: '#666666', align: 'center' },
-      icon:       { emoji: '♡', y: 0.872, x: 0.5 },
+      event_name: { y: 0.900, font: 'Heebo', size: 0.030, weight: '700', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.942, font: 'Heebo', size: 0.022, weight: '400', color: '#666666', align: 'center' },
+      icon:       { emoji: '♡', y: 0.857, x: 0.5 },
       preserve_strip: true,
     },
   },
   {
     id: 'landscape-heart-calligraphy',
     src: 'frame-heart-calligraphy.png',
-    // The calligraphy heart is a font glyph inline with the names — too small.
     decorations: [],
     textConfig: {
-      event_name: { y: 0.905, font: 'Frank Ruhl Libre', size: 0.028, weight: '400', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.952, font: 'Heebo', size: 0.020, weight: '400', color: '#666666', align: 'center' },
-      icon:       { emoji: '♡', y: 0.872, x: 0.5 },
+      event_name: { y: 0.900, font: 'Frank Ruhl Libre', size: 0.030, weight: '400', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.942, font: 'Heebo', size: 0.022, weight: '400', color: '#666666', align: 'center' },
+      icon:       { emoji: '♡', y: 0.857, x: 0.5 },
       preserve_strip: true,
     },
   },
   {
     id: 'landscape-olive-branches',
     src: 'frame-olive-branches.png',
-    // Left olive bunch: far-left of strip, before any text; right bunch: far-right.
-    // Source text starts ~x=370 and ends ~x=640, so we stay well clear.
-    // Start crop at y=622 to clear the landscape frame's bottom vignette border (y≈608-621).
     decorations: [
       {
         region: { left: 255, top: 600, width: 118, height: 130 }, // left bunch
-        targetW: 100,
+        targetW: 110,
         placement: (imgW, imgH) => ({
-          left: Math.round(W / 2 - imgW - 55),
-          top:  Math.round(STRIP_Y + (STRIP_H - imgH) / 2 - 12),
+          left: Math.round(W / 2 - imgW - 60),
+          top:  Math.round(STRIP_Y + 18),
         }),
       },
       {
         region: { left: 625, top: 600, width: 118, height: 130 }, // right bunch
-        targetW: 100,
+        targetW: 110,
         placement: (imgW, imgH) => ({
-          left: Math.round(W / 2 + 55),
-          top:  Math.round(STRIP_Y + (STRIP_H - imgH) / 2 - 12),
+          left: Math.round(W / 2 + 60),
+          top:  Math.round(STRIP_Y + 18),
         }),
       },
     ],
     textConfig: {
-      event_name: { y: 0.912, font: 'Heebo', size: 0.026, weight: '700', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.955, font: 'Heebo', size: 0.019, weight: '400', color: '#666666', align: 'center' },
+      event_name: { y: 0.900, font: 'Heebo', size: 0.028, weight: '700', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.942, font: 'Heebo', size: 0.021, weight: '400', color: '#666666', align: 'center' },
       preserve_strip: true,
     },
   },
   {
     id: 'landscape-wedding-car',
     src: 'frame-wedding-car.png',
-    // Car illustration on the left side; text starts ~x=270 in source.
-    // Start crop at y=620 to clear the landscape frame's bottom vignette border.
     decorations: [
       {
         region: { left: 2, top: 600, width: 252, height: 130 },
-        targetW: 190,
-        // Centre the car above the caption in the portrait strip
+        targetW: 200,
         placement: (imgW, imgH) => ({
           left: Math.round((W - imgW) / 2),
-          top:  Math.round(STRIP_Y + 8),
+          top:  Math.round(STRIP_Y + 14),
         }),
       },
     ],
     textConfig: {
-      event_name: { y: 0.912, font: 'Heebo', size: 0.026, weight: '700', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.955, font: 'Heebo', size: 0.019, weight: '400', color: '#666666', align: 'center' },
+      event_name: { y: 0.900, font: 'Heebo', size: 0.028, weight: '700', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.942, font: 'Heebo', size: 0.021, weight: '400', color: '#666666', align: 'center' },
       preserve_strip: true,
     },
   },
   {
     id: 'landscape-camera-heart',
     src: 'frame-camera-heart.png',
-    // Camera icon at bottom-left; text starts ~x=175 in source.
     decorations: [
       {
         region: { left: 2, top: 580, width: 158, height: 150 },
-        targetW: 110,
+        targetW: 120,
         placement: (imgW, imgH) => ({
           left: Math.round((W - imgW) / 2),
-          top:  Math.round(STRIP_Y + 4),
+          top:  Math.round(STRIP_Y + 10),
         }),
       },
     ],
     textConfig: {
-      event_name: { y: 0.912, font: 'Heebo', size: 0.026, weight: '700', color: '#1a1a1a', align: 'center' },
-      date:       { y: 0.955, font: 'Heebo', size: 0.019, weight: '400', color: '#666666', align: 'center' },
+      event_name: { y: 0.900, font: 'Heebo', size: 0.028, weight: '700', color: '#1a1a1a', align: 'center' },
+      date:       { y: 0.942, font: 'Heebo', size: 0.021, weight: '400', color: '#666666', align: 'center' },
       preserve_strip: true,
     },
   },
