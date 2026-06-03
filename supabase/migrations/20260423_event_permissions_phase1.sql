@@ -65,35 +65,46 @@ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END$$;
 
--- ── 4. RLS policies: event_permissions ───────────────────────
+-- ── 4. Helper function ───────────────────────────────────────
+
+-- is_event_owner: checks event ownership without querying events under RLS.
+-- SECURITY DEFINER bypasses RLS on events, which prevents the 42P17
+-- infinite-recursion cycle that would otherwise form:
+--   events_update_owner → reads event_permissions
+--   event_permissions_select → reads events  ← cycle!
+-- Using SECURITY DEFINER here breaks the cycle identically to is_admin().
+CREATE OR REPLACE FUNCTION is_event_owner(p_event_id UUID)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM events WHERE id = p_event_id AND created_by = auth.uid()
+  );
+$$;
+
+-- ── 5. RLS policies: event_permissions ───────────────────────
 
 -- SELECT: grantee sees their own row; event owner sees all rows for
 -- their events; admins see everything.
+-- Uses is_event_owner() (SECURITY DEFINER) to avoid events→event_permissions→events cycle.
 DROP POLICY IF EXISTS "event_permissions_select" ON event_permissions;
 CREATE POLICY "event_permissions_select"
   ON event_permissions FOR SELECT
   USING (
     auth.uid() = user_id
     OR is_admin()
-    OR EXISTS (
-      SELECT 1 FROM events e
-      WHERE e.id = event_id
-        AND e.created_by = auth.uid()
-    )
+    OR is_event_owner(event_id)
   );
 
 -- INSERT: only the event owner or an admin may create grants.
--- granted_by is recorded but not enforced here — the owner knows their own id.
 DROP POLICY IF EXISTS "event_permissions_insert" ON event_permissions;
 CREATE POLICY "event_permissions_insert"
   ON event_permissions FOR INSERT
   WITH CHECK (
     is_admin()
-    OR EXISTS (
-      SELECT 1 FROM events e
-      WHERE e.id = event_id
-        AND e.created_by = auth.uid()
-    )
+    OR is_event_owner(event_id)
   );
 
 -- DELETE: only the event owner or an admin may revoke grants.
@@ -102,20 +113,18 @@ CREATE POLICY "event_permissions_delete"
   ON event_permissions FOR DELETE
   USING (
     is_admin()
-    OR EXISTS (
-      SELECT 1 FROM events e
-      WHERE e.id = event_id
-        AND e.created_by = auth.uid()
-    )
+    OR is_event_owner(event_id)
   );
 
--- ── 5. Extend existing policies with editor role ─────────────
+-- ── 6. Extend existing policies with editor role ─────────────
 -- Each policy below is dropped and recreated with one new OR EXISTS
 -- clause appended. All original conditions are preserved verbatim.
 -- events_delete_owner is intentionally excluded — editors cannot
 -- delete events, only the original creator can.
 
 -- events_update_owner: editor-role grantees may update event fields.
+-- NOTE: must use events.id explicitly. Unqualified `id` resolves to ep.id
+-- because event_permissions also has an `id` column (PostgreSQL scoping rule).
 DROP POLICY IF EXISTS "events_update_owner" ON events;
 CREATE POLICY "events_update_owner"
   ON events FOR UPDATE
@@ -125,7 +134,7 @@ CREATE POLICY "events_update_owner"
     OR is_admin()
     OR EXISTS (
       SELECT 1 FROM event_permissions ep
-      WHERE ep.event_id = id
+      WHERE ep.event_id = events.id
         AND ep.user_id  = auth.uid()
         AND ep.role     = 'editor'
     )
@@ -136,7 +145,7 @@ CREATE POLICY "events_update_owner"
     OR is_admin()
     OR EXISTS (
       SELECT 1 FROM event_permissions ep
-      WHERE ep.event_id = id
+      WHERE ep.event_id = events.id
         AND ep.user_id  = auth.uid()
         AND ep.role     = 'editor'
     )

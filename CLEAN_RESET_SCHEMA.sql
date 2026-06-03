@@ -17,12 +17,16 @@ DROP FUNCTION IF EXISTS enforce_print_quota();
 DROP TRIGGER IF EXISTS trg_check_lead_rate_limit ON leads;
 DROP FUNCTION IF EXISTS check_lead_rate_limit();
 
-DROP TABLE IF EXISTS upload_diagnostics CASCADE;
-DROP TABLE IF EXISTS print_jobs         CASCADE;
-DROP TABLE IF EXISTS leads              CASCADE;
-DROP TABLE IF EXISTS photos             CASCADE;
-DROP TABLE IF EXISTS events             CASCADE;
-DROP TABLE IF EXISTS profiles           CASCADE;
+DROP FUNCTION IF EXISTS is_event_owner(UUID);
+DROP FUNCTION IF EXISTS is_admin();
+
+DROP TABLE IF EXISTS upload_diagnostics  CASCADE;
+DROP TABLE IF EXISTS print_jobs          CASCADE;
+DROP TABLE IF EXISTS leads               CASCADE;
+DROP TABLE IF EXISTS event_permissions   CASCADE;
+DROP TABLE IF EXISTS photos              CASCADE;
+DROP TABLE IF EXISTS events              CASCADE;
+DROP TABLE IF EXISTS profiles            CASCADE;
 
 -- ── Storage bucket ────────────────────────────────────────────
 -- Drop old storage policies before recreating
@@ -79,6 +83,18 @@ CREATE TABLE events (
   print_quota_per_device    INTEGER     NOT NULL DEFAULT 5,  -- Magnet only: max prints per guest user
   created_date              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_date              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ── event_permissions ────────────────────────────────────────
+-- UUID-based viewer/editor sharing grants on events.
+CREATE TABLE event_permissions (
+  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id    UUID        NOT NULL REFERENCES events(id)      ON DELETE CASCADE,
+  user_id     UUID        NOT NULL REFERENCES auth.users(id)  ON DELETE CASCADE,
+  role        TEXT        NOT NULL CHECK (role IN ('viewer', 'editor')),
+  granted_by  UUID        NOT NULL REFERENCES auth.users(id),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (event_id, user_id)
 );
 
 -- ── photos ───────────────────────────────────────────────────
@@ -151,6 +167,9 @@ CREATE INDEX idx_events_created_by       ON events(created_by);
 CREATE INDEX idx_print_jobs_event_id     ON print_jobs(event_id);
 CREATE INDEX idx_print_jobs_guest        ON print_jobs(event_id, guest_user_id);
 CREATE INDEX idx_leads_phone_created_at  ON leads(phone, created_at DESC);
+CREATE INDEX idx_event_permissions_event_id   ON event_permissions(event_id);
+CREATE INDEX idx_event_permissions_user_id    ON event_permissions(user_id);
+CREATE INDEX idx_event_permissions_event_role ON event_permissions(event_id, role);
 
 -- ============================================================
 -- TRIGGER: auto-create profile on first sign-up
@@ -207,6 +226,22 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles
     WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
+-- Helper: check event ownership without triggering events RLS.
+-- Needed to break the 42P17 cycle:
+--   events_update_owner → reads event_permissions (with RLS)
+--   event_permissions_select → reads events (with RLS) ← cycle!
+-- SECURITY DEFINER reads events bypassing RLS, terminating the chain.
+CREATE OR REPLACE FUNCTION is_event_owner(p_event_id UUID)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM events WHERE id = p_event_id AND created_by = auth.uid()
   );
 $$;
 
@@ -278,6 +313,7 @@ CREATE TRIGGER trg_check_lead_rate_limit
 
 ALTER TABLE profiles           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_permissions  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE photos             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE upload_diagnostics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE leads              ENABLE ROW LEVEL SECURITY;
@@ -333,25 +369,69 @@ CREATE POLICY "events_insert_authenticated"
     AND (select auth.email()) IS NOT NULL
   );
 
--- Creator (by UUID) or co-host (by email, legacy) can update
--- UX-04: admins can update any event, not just the ones they created
+-- Creator (by UUID) or co-host (by email, legacy) or editor-role grantee can update.
+-- UX-04: admins can update any event.
+-- NOTE: ep.event_id = events.id must be explicit — unqualified `id` resolves to ep.id
+-- because event_permissions also has an `id` column (PostgreSQL subquery scoping rule).
 CREATE POLICY "events_update_owner"
   ON events FOR UPDATE
   USING (
     (select auth.uid()) = created_by
     OR (select auth.jwt()) ->> 'email' = ANY(co_hosts)
     OR is_admin()
+    OR EXISTS (
+      SELECT 1 FROM event_permissions ep
+      WHERE ep.event_id = events.id
+        AND ep.user_id  = auth.uid()
+        AND ep.role     = 'editor'
+    )
   )
   WITH CHECK (
     (select auth.uid()) = created_by
     OR (select auth.jwt()) ->> 'email' = ANY(co_hosts)
     OR is_admin()
+    OR EXISTS (
+      SELECT 1 FROM event_permissions ep
+      WHERE ep.event_id = events.id
+        AND ep.user_id  = auth.uid()
+        AND ep.role     = 'editor'
+    )
   );
 
 -- Only creator can delete
 CREATE POLICY "events_delete_owner"
   ON events FOR DELETE
   USING ((select auth.uid()) = created_by);
+
+-- ── event_permissions ─────────────────────────────────────────
+-- Uses is_event_owner() (SECURITY DEFINER) to avoid the RLS cycle:
+--   events_update_owner reads event_permissions → event_permissions_select
+--   reads events → 42P17 if events RLS is re-entered.
+
+-- SELECT: grantee sees their own row; event owner sees all rows; admins see everything.
+CREATE POLICY "event_permissions_select"
+  ON event_permissions FOR SELECT
+  USING (
+    auth.uid() = user_id
+    OR is_admin()
+    OR is_event_owner(event_id)
+  );
+
+-- INSERT: only event owner or admin may create grants.
+CREATE POLICY "event_permissions_insert"
+  ON event_permissions FOR INSERT
+  WITH CHECK (
+    is_admin()
+    OR is_event_owner(event_id)
+  );
+
+-- DELETE: only event owner or admin may revoke grants.
+CREATE POLICY "event_permissions_delete"
+  ON event_permissions FOR DELETE
+  USING (
+    is_admin()
+    OR is_event_owner(event_id)
+  );
 
 -- ── photos ───────────────────────────────────────────────────
 
@@ -376,7 +456,7 @@ CREATE POLICY "photos_select_own"
   ON photos FOR SELECT
   USING ((select auth.uid()) = created_by);
 
--- Event owners and co-hosts can read ALL photos (including hidden/unapproved)
+-- Event owners, co-hosts, and editor-role grantees can read ALL photos (incl. hidden/unapproved)
 CREATE POLICY "photos_select_owner"
   ON photos FOR SELECT
   USING (
@@ -387,6 +467,25 @@ CREATE POLICY "photos_select_owner"
           (select auth.uid()) = e.created_by
           OR (select auth.jwt()) ->> 'email' = ANY(e.co_hosts)
         )
+    )
+    OR EXISTS (
+      SELECT 1 FROM event_permissions ep
+      WHERE ep.event_id = event_id
+        AND ep.user_id  = auth.uid()
+        AND ep.role     = 'editor'
+    )
+  );
+
+-- Viewer and editor grantees can read non-hidden photos (any approval state)
+CREATE POLICY "photos_select_viewer"
+  ON photos FOR SELECT
+  USING (
+    is_hidden = false
+    AND EXISTS (
+      SELECT 1 FROM event_permissions ep
+      WHERE ep.event_id = event_id
+        AND ep.user_id  = auth.uid()
+        AND ep.role     IN ('viewer', 'editor')
     )
   );
 
@@ -409,7 +508,7 @@ CREATE POLICY "photos_update_uploader"
     deletion_status IN ('none', 'requested')
   );
 
--- Event owners and co-hosts can update ALL fields including moderation fields
+-- Event owners, co-hosts, and editor-role grantees can update ALL fields (incl. moderation)
 CREATE POLICY "photos_update_owner"
   ON photos FOR UPDATE
   USING (
@@ -421,9 +520,15 @@ CREATE POLICY "photos_update_owner"
           OR (select auth.jwt()) ->> 'email' = ANY(e.co_hosts)
         )
     )
+    OR EXISTS (
+      SELECT 1 FROM event_permissions ep
+      WHERE ep.event_id = event_id
+        AND ep.user_id  = auth.uid()
+        AND ep.role     = 'editor'
+    )
   );
 
--- Uploader or event owner/co-host can delete
+-- Uploader, event owner/co-host, or editor-role grantee can delete
 CREATE POLICY "photos_delete_owner"
   ON photos FOR DELETE
   USING (
@@ -435,6 +540,12 @@ CREATE POLICY "photos_delete_owner"
           (select auth.uid()) = e.created_by
           OR (select auth.jwt()) ->> 'email' = ANY(e.co_hosts)
         )
+    )
+    OR EXISTS (
+      SELECT 1 FROM event_permissions ep
+      WHERE ep.event_id = event_id
+        AND ep.user_id  = auth.uid()
+        AND ep.role     = 'editor'
     )
   );
 
@@ -511,8 +622,9 @@ CREATE POLICY "storage_photos_delete_owner"
 -- REALTIME
 -- Enable on photos so the gallery receives live-update events.
 -- ============================================================
-ALTER TABLE photos      REPLICA IDENTITY FULL;
-ALTER TABLE print_jobs  REPLICA IDENTITY FULL;
+ALTER TABLE photos             REPLICA IDENTITY FULL;
+ALTER TABLE print_jobs         REPLICA IDENTITY FULL;
+ALTER TABLE event_permissions  REPLICA IDENTITY FULL;
 
 DO $$
 BEGIN
@@ -523,6 +635,12 @@ END$$;
 DO $$
 BEGIN
   ALTER PUBLICATION supabase_realtime ADD TABLE print_jobs;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END$$;
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE event_permissions;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END$$;
 

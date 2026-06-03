@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, RotateCw, Zap, ZapOff, CameraOff, Loader2, Upload, Film } from 'lucide-react';
 import MagnetReview from './MagnetReview';
+import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
 
 const VINTAGE_FILTER = 'sepia(0.35) contrast(0.88) brightness(1.08) saturate(1.15)';
 const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
@@ -43,6 +44,8 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   const [frontFlash, setFrontFlash] = useState(false);
   const [mode,       setMode]       = useState('camera');
   const [capturedURL, setCapturedURL] = useState(null);
+  // Resolved frame for WYSIWYG viewfinder overlay
+  const [eventFrame, setEventFrame]  = useState(null);
 
   // F07: helper that registers timeout id for cleanup
   function later(fn, ms) {
@@ -53,6 +56,22 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
 
   // F07: clear all pending timeouts on unmount
   useEffect(() => () => timeoutsRef.current.forEach(clearTimeout), []);
+
+  // Resolve the event's assigned frame (PNG or procedural) for WYSIWYG viewfinder.
+  // Falls back to local seed on DB error, or null if no frame assigned.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadFrame() {
+      const frameId = event?.overlay_frame_url;
+      const assigned = (frameId && !frameId.startsWith('http'))
+        ? await findApprovedFrameFromDB(frameId)
+        : null;
+      const resolved = assigned ?? getApprovedFramePack(event?.name || '')[0] ?? null;
+      if (!cancelled) setEventFrame(resolved);
+    }
+    loadFrame();
+    return () => { cancelled = true; };
+  }, [event?.overlay_frame_url, event?.name]);
 
   // UX-03: reset synchronous counter once parent's fetchPrintJobs() catches up
   useEffect(() => { capturedCountRef.current = 0; }, [remainingPrints]);
@@ -336,38 +355,89 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
         </button>
       </div>
 
-      {/* ── Polaroid viewfinder ── */}
+      {/* ── WYSIWYG viewfinder — shows the real assigned frame around the live feed ── */}
       {!camError && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ paddingTop: 72, paddingBottom: 140 }}>
-          <div className="flex flex-col bg-white"
-            style={{ width: 'min(74vw, 288px)', borderRadius: 2, padding: '7px 7px 0', boxShadow: '0 28px 72px rgba(0,0,0,0.8), 0 4px 18px rgba(0,0,0,0.5)', transform: 'rotate(-0.8deg)' }}>
+          {eventFrame?.isPng ? (
+            // PNG frame WYSIWYG viewfinder:
+            //   - An invisible copy of the frame img (width=100%, height=auto)
+            //     establishes the container's natural aspect ratio.
+            //   - Video is positioned absolutely using hole_bbox CSS percentages.
+            //   - The real frame PNG is overlaid on top (same layer order as the compositor).
+            // Because hole_bbox is normalised to the frame PNG's own W×H, the
+            // percentage positions map exactly onto the container regardless of
+            // the frame's actual pixel dimensions.
+            (() => {
+              const hb = eventFrame.hole_bbox;
+              return (
+                <div style={{
+                  position: 'relative',
+                  width: 'min(74vw, 288px)',
+                  transform: 'rotate(-0.8deg)',
+                  boxShadow: '0 28px 72px rgba(0,0,0,0.8), 0 4px 18px rgba(0,0,0,0.5)',
+                }}>
+                  {/* Transparent placeholder — makes the container adopt the frame's natural height */}
+                  <img src={eventFrame.image_url} alt="" aria-hidden="true"
+                    style={{ display: 'block', width: '100%', height: 'auto', visibility: 'hidden', pointerEvents: 'none' }} />
 
-            {/* Live video area */}
-            <div className="relative overflow-hidden bg-zinc-900" style={{ aspectRatio: '3/4' }}>
-              {loading && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 bg-zinc-900">
-                  <Loader2 className="w-7 h-7 text-white/25 animate-spin" />
+                  {/* Live video clipped to the hole bbox */}
+                  <div style={{
+                    position: 'absolute',
+                    left:   `${hb.x * 100}%`,
+                    top:    `${hb.y * 100}%`,
+                    width:  `${hb.w * 100}%`,
+                    height: `${hb.h * 100}%`,
+                    overflow: 'hidden',
+                    background: '#111',
+                  }}>
+                    {loading && (
+                      <div className="absolute inset-0 flex items-center justify-center z-10 bg-zinc-900">
+                        <Loader2 className="w-7 h-7 text-white/25 animate-spin" />
+                      </div>
+                    )}
+                    <video ref={videoRef} autoPlay playsInline muted
+                      style={{
+                        position: 'absolute', inset: 0, width: '100%', height: '100%',
+                        objectFit: 'cover',
+                        transform: isFront ? 'scaleX(-1)' : 'none',
+                        filter: vintage ? VINTAGE_FILTER : 'none',
+                      }} />
+                  </div>
+
+                  {/* Real frame PNG overlaid on top */}
+                  <img src={eventFrame.image_url} alt="" aria-hidden="true"
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
                 </div>
-              )}
-              <video ref={videoRef} autoPlay playsInline muted
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ transform: isFront ? 'scaleX(-1)' : 'none', filter: vintage ? VINTAGE_FILTER : 'none' }} />
-            </div>
-
-            {/* Polaroid label strip */}
-            <div className="flex flex-col items-center justify-center" style={{ paddingTop: 11, paddingBottom: 13, gap: 3 }}>
-              <span className="text-[#1a1a1a] font-bold text-[12px] leading-none text-center truncate w-full px-2"
-                style={{ fontFamily: 'Heebo, Assistant, sans-serif' }}>
-                {event?.name || 'Memoria'}
-              </span>
-              {dateFmt && (
-                <span className="text-[#999] text-[10px] tracking-widest"
-                  style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.12em' }}>
-                  {dateFmt}
+              );
+            })()
+          ) : (
+            // Fallback: generic white polaroid (no frame or procedural frame)
+            <div className="flex flex-col bg-white"
+              style={{ width: 'min(74vw, 288px)', borderRadius: 2, padding: '7px 7px 0', boxShadow: '0 28px 72px rgba(0,0,0,0.8), 0 4px 18px rgba(0,0,0,0.5)', transform: 'rotate(-0.8deg)' }}>
+              <div className="relative overflow-hidden bg-zinc-900" style={{ aspectRatio: '3/4' }}>
+                {loading && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 bg-zinc-900">
+                    <Loader2 className="w-7 h-7 text-white/25 animate-spin" />
+                  </div>
+                )}
+                <video ref={videoRef} autoPlay playsInline muted
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ transform: isFront ? 'scaleX(-1)' : 'none', filter: vintage ? VINTAGE_FILTER : 'none' }} />
+              </div>
+              <div className="flex flex-col items-center justify-center" style={{ paddingTop: 11, paddingBottom: 13, gap: 3 }}>
+                <span className="text-[#1a1a1a] font-bold text-[12px] leading-none text-center truncate w-full px-2"
+                  style={{ fontFamily: 'Heebo, Assistant, sans-serif' }}>
+                  {event?.name || 'Memoria'}
                 </span>
-              )}
+                {dateFmt && (
+                  <span className="text-[#999] text-[10px] tracking-widest"
+                    style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.12em' }}>
+                    {dateFmt}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 

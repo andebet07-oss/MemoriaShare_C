@@ -91,8 +91,11 @@ export async function compositePngFrame(photoImg, frame, opts = {}) {
   ctx.drawImage(frameImg, 0, 0, fw, fh);
 
   // ── Clear text strip below hole (erases baked placeholder text in frame PNG) ─
-  // Ensures our dynamic text always renders on a clean white background
-  if (text_config) {
+  // Ensures our dynamic text always renders on a clean white background.
+  // Skipped when text_config.preserve_strip = true — used by portrait frames
+  // whose strip contains vector decoration artwork (branches, car icons, etc.)
+  // that must survive to be visible under the rendered text.
+  if (text_config && !text_config.preserve_strip) {
     const textStripY = hy + hh;
     if (textStripY < fh) {
       ctx.fillStyle = '#ffffff';
