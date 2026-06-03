@@ -96,30 +96,12 @@ async function cropInfo(srcPath, region, targetW, threshold = 208) {
  *   - transparent 3:4 photo hole
  */
 async function buildBase() {
-  // Clean white polaroid card: solid white with a 1px light-gray outer edge.
-  // No vignette/shadow — the strong contrast between the photo and the white
-  // border is what makes the polaroid effect visible and clean.
-  const vigSvg = Buffer.from(`
-<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-  <!-- Solid white background -->
-  <rect width="${W}" height="${H}" fill="white"/>
-  <!-- 1px light-gray outer card edge (very subtle, just defines the card boundary) -->
-  <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}"
-        fill="none" stroke="rgb(200,200,200)" stroke-width="1"/>
-  <!-- Thin inner shadow at hole edge: 4px blurred dark stroke gives photo depth -->
-  <defs>
-    <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="4"/>
-    </filter>
-  </defs>
-  <rect x="${HOLE_X}" y="${HOLE_Y}" width="${HOLE_W}" height="${HOLE_H}"
-        fill="none" stroke="rgba(0,0,0,0.18)" stroke-width="8" filter="url(#s)"/>
-</svg>`);
-
-  // Rasterise SVG → RGBA PNG
-  const framePng = await sharp(vigSvg, { density: 96 })
-    .resize(W, H)
-    .ensureAlpha()
+  // Pure white background — no SVG effects, no shadows, no borders.
+  // The photo inside the transparent hole provides natural contrast against
+  // the white frame. Any graphic effect would bleed onto the white area.
+  const framePng = await sharp({
+    create: { width: W, height: H, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } },
+  })
     .png()
     .toBuffer();
 
