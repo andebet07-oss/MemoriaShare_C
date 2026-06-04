@@ -7,9 +7,9 @@ import CardElegant from "./cards/CardElegant";
 import CardBlurred from "./cards/CardBlurred";
 
 const THEMES = [
-  { id: "minimalist", label: "מינימלי", desc: "לבן נקי, הרבה אוויר" },
-  { id: "elegant",    label: "קלאסי",   desc: "סריף עדין על רקע שמנת" },
-  { id: "blurred",    label: "ממוסגר",  desc: "מסגרת דקה ועיטורי פינה" },
+  { id: "minimalist", label: "מונוגרמה", desc: "מדליון אותיות על קו דק" },
+  { id: "elegant",    label: "בוטני",    desc: "ענפי זית ומפריד עדין" },
+  { id: "blurred",    label: "קשת",      desc: "מסגרת קשת על רקע חול" },
 ];
 
 // High-res QR for printing: 600×600, black on white, no margin

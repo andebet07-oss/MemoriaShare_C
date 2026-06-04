@@ -1,33 +1,55 @@
 import React from "react";
 
+/** Initials from the event name (strips the Hebrew "ו" connector). */
+function getInitials(name = "") {
+  const words = name.split(/\s+/).filter(Boolean).map(w => w.replace(/^ו/, "")).filter(Boolean);
+  if (words.length === 0) return "✢"; // ✢ fallback
+  if (words.length === 1) return words[0][0];
+  return `${words[0][0]} · ${words[words.length - 1][0]}`;
+}
+
 /**
- * Theme 1 — Minimal / Modern (light, airy, sans-serif)
- * Pure white, generous whitespace, a single hairline accent.
+ * Theme — Monogram (white, modern-luxe, initials medallion on a hairline)
  */
 export default function CardMinimalist({ eventName, eventDate, qrUrl, accentColor }) {
+  const initials = getInitials(eventName);
+
   return (
     <div style={{
       width: "450px", height: "636px",
       background: "#ffffff",
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
-      fontFamily: "'Heebo', sans-serif",
+      fontFamily: "'Suez One', serif",
       position: "relative", overflow: "hidden", boxSizing: "border-box",
-      padding: "0 46px",
+      padding: "0 48px",
     }}>
+      {/* Monogram medallion on a hairline */}
+      <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center", marginBottom: "30px" }}>
+        <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: "1px", background: "#e7e7e7" }} />
+        <div style={{
+          position: "relative", width: "66px", height: "66px", borderRadius: "50%",
+          background: "#fff", border: `1px solid ${accentColor}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <span dir="rtl" style={{ fontSize: "22px", color: accentColor, fontWeight: 400, lineHeight: 1 }}>
+            {initials}
+          </span>
+        </div>
+      </div>
+
       {/* Welcome eyebrow */}
       <p dir="rtl" style={{
-        fontSize: "15px", color: "#9a9a9a", fontWeight: 500,
-        letterSpacing: "0.5px", margin: 0,
+        fontSize: "14px", color: "#a7a7a7", fontWeight: 400,
+        fontFamily: "'Heebo', sans-serif", letterSpacing: "1.5px", margin: 0,
       }}>
         ברוכים הבאים לאירוע של
       </p>
 
       {/* Event name */}
       <h2 dir="rtl" style={{
-        fontSize: "40px", fontWeight: 800, color: "#1c1c1c",
-        letterSpacing: "-0.5px", textAlign: "center",
-        lineHeight: 1.15, margin: "14px 0 0",
+        fontSize: "40px", fontWeight: 400, color: "#1c1c1c",
+        textAlign: "center", lineHeight: 1.2, margin: "12px 0 0",
       }}>
         {eventName}
       </h2>
@@ -35,46 +57,44 @@ export default function CardMinimalist({ eventName, eventDate, qrUrl, accentColo
       {/* Date */}
       {eventDate && (
         <p style={{
-          marginTop: "12px", fontSize: "12px", letterSpacing: "5px",
-          color: "#c0c0c0", fontWeight: 600, margin: "12px 0 0",
+          marginTop: "14px", fontSize: "12px", letterSpacing: "5px",
+          color: "#bdbdbd", fontFamily: "'Heebo', sans-serif", fontWeight: 600, margin: "14px 0 0",
         }}>
           {eventDate}
         </p>
       )}
 
-      {/* Hairline accent */}
-      <div style={{ width: "40px", height: "2px", background: accentColor, opacity: 0.85, margin: "26px 0" }} />
-
       {/* QR */}
       <div style={{
+        marginTop: "28px",
         background: "#fff",
-        border: "1px solid #ececec",
-        borderRadius: "16px",
+        border: "1px solid #ededed",
+        borderRadius: "14px",
         padding: "16px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
       }}>
-        <img src={qrUrl} alt="QR" style={{ width: "156px", height: "156px", display: "block" }} />
+        <img src={qrUrl} alt="QR" style={{ width: "152px", height: "152px", display: "block" }} />
       </div>
 
       {/* Invitation */}
       <p dir="rtl" style={{
-        marginTop: "22px", fontSize: "16px", fontWeight: 600,
-        color: "#3a3a3a", textAlign: "center", margin: "22px 0 0",
+        marginTop: "24px", fontSize: "17px", fontWeight: 400,
+        color: "#333", textAlign: "center", fontFamily: "'Suez One', serif", margin: "24px 0 0",
       }}>
         סרקו ושתפו את התמונות שלכם
       </p>
       <p dir="rtl" style={{
-        marginTop: "5px", fontSize: "12px", color: "#aeaeae",
-        fontWeight: 400, margin: "5px 0 0",
+        marginTop: "6px", fontSize: "12px", color: "#b0b0b0",
+        fontFamily: "'Heebo', sans-serif", fontWeight: 400, margin: "6px 0 0",
       }}>
         ללא צורך באפליקציה · מצטרפים בסריקה אחת
       </p>
 
       {/* Brand footer */}
       <p style={{
-        position: "absolute", bottom: "26px",
+        position: "absolute", bottom: "28px",
         fontSize: "9px", fontFamily: "'Montserrat', sans-serif", fontWeight: 700,
-        letterSpacing: "4px", color: "#cfcfcf", textTransform: "uppercase", margin: 0,
+        letterSpacing: "4px", color: "#d0d0d0", textTransform: "uppercase", margin: 0,
       }}>
         MemoriaShare
       </p>
