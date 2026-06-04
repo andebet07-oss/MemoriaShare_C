@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus, Printer, ExternalLink, Users, Calendar } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
+import AdminFilterBar from './AdminFilterBar';
 
 export default function AdminEventsList({ type }) {
   const navigate = useNavigate();
   const isMagnet = type === 'magnet';
+  const [query, setQuery] = useState('');
 
   const { data: allEvents = [], isLoading, error } = useQuery({
     queryKey: ['admin-all-events'],
@@ -13,7 +16,13 @@ export default function AdminEventsList({ type }) {
     staleTime: 30_000,
   });
 
-  const events = allEvents.filter(e => e.event_type === type);
+  const typeEvents = allEvents.filter(e => e.event_type === type);
+  const q = query.trim().toLowerCase();
+  const events = q
+    ? typeEvents.filter(e =>
+        (e.name || '').toLowerCase().includes(q) ||
+        (e.unique_code || '').toLowerCase().includes(q))
+    : typeEvents;
 
   const formatDate = (d) => d
     ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date(d + 'T00:00:00'))
@@ -32,7 +41,7 @@ export default function AdminEventsList({ type }) {
             {isMagnet ? 'אירועי מגנט' : 'אירועי שיתוף'}
           </h2>
           {!isLoading && (
-            <p className="text-muted-foreground text-xs mt-0.5">{events.length} אירועים</p>
+            <p className="text-muted-foreground text-xs mt-0.5">{typeEvents.length} אירועים</p>
           )}
         </div>
         {isMagnet && (
@@ -47,6 +56,15 @@ export default function AdminEventsList({ type }) {
         )}
       </div>
 
+      {/* Search */}
+      {!isLoading && !error && typeEvents.length > 0 && (
+        <AdminFilterBar
+          search={query}
+          onSearch={setQuery}
+          placeholder="חיפוש לפי שם אירוע או קוד..."
+        />
+      )}
+
       {isLoading && (
         <div className="flex justify-center py-16">
           <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
@@ -57,7 +75,8 @@ export default function AdminEventsList({ type }) {
         <p className="text-red-400 text-sm py-4 text-center">שגיאה בטעינת האירועים.</p>
       )}
 
-      {!isLoading && !error && events.length === 0 && (
+      {/* No events at all */}
+      {!isLoading && !error && typeEvents.length === 0 && (
         <div className="text-center py-16">
           <p className="text-muted-foreground text-sm">אין אירועים עדיין</p>
           {isMagnet && (
@@ -70,6 +89,11 @@ export default function AdminEventsList({ type }) {
             </button>
           )}
         </div>
+      )}
+
+      {/* Has events but none match the search */}
+      {!isLoading && !error && typeEvents.length > 0 && events.length === 0 && (
+        <p className="text-muted-foreground/50 text-sm py-12 text-center">אין אירועים תואמים</p>
       )}
 
       <div className="space-y-3">

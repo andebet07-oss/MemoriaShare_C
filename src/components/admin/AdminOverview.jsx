@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Image, Magnet, MessageSquare, Hash, Plus, Phone, CalendarDays, MapPin, Users } from 'lucide-react';
+import { Loader2, Image, Magnet, MessageSquare, Hash, Plus, Phone, CalendarDays, MapPin, Users, Printer, ExternalLink } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 
 const STATUS_HE = { new: 'חדש', contacted: 'יצרנו קשר', converted: 'הומר', closed: 'סגור' };
@@ -120,8 +120,16 @@ export default function AdminOverview() {
 
   const shareCount  = events.filter(e => e.event_type === 'share').length;
   const magnetCount = events.filter(e => e.event_type === 'magnet').length;
-  const newLeads    = leads.filter(l => l.status === 'new');
+  const newLeads       = leads.filter(l => l.status === 'new');
+  const contactedLeads = leads.filter(l => l.status === 'contacted');
   const recent      = events.slice(0, 8);
+
+  // Upcoming magnet events (today onward) — fast path to the print station
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcoming = events
+    .filter(e => e.event_type === 'magnet' && e.date && e.date >= todayStr)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 5);
 
   const isLoading = eventsLoading || leadsLoading;
 
@@ -166,6 +174,43 @@ export default function AdminOverview() {
         <KpiCard icon={Hash}          label="סה״כ אירועים"  value={events.length} color="lime"   onClick={() => navigate('/admin/events/magnet')} />
       </div>
 
+      {/* Upcoming magnet events — one tap to the print station */}
+      {upcoming.length > 0 && (
+        <div className="mb-6">
+          <p className="text-violet-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-3">אירועים קרובים</p>
+          <div className="space-y-2">
+            {upcoming.map(ev => (
+              <div key={ev.id} className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card border border-border">
+                <div className="min-w-0">
+                  <p className="font-playfair text-foreground text-lg truncate">{ev.name}</p>
+                  <p className="text-muted-foreground text-xs mt-0.5 flex items-center gap-1">
+                    <CalendarDays className="w-3 h-3" />
+                    {new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(ev.date + 'T00:00:00'))}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => navigate(`/admin/events/magnet/${ev.id}`)}
+                    aria-label="ניהול אירוע"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-foreground/60 hover:text-foreground transition-colors bg-secondary border border-border"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => navigate(`/admin/events/magnet/${ev.id}/print`)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-white transition-all active:scale-95"
+                    style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    עמדת הדפסה
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* New leads — actionable cards */}
       {newLeads.length > 0 && (
         <div className="mb-6">
@@ -180,8 +225,22 @@ export default function AdminOverview() {
         </div>
       )}
 
-      {/* Status summary — only when all leads are handled */}
-      {leads.length > 0 && newLeads.length === 0 && (
+      {/* Leads in follow-up — stay visible so none fall through the cracks */}
+      {contactedLeads.length > 0 && (
+        <div className="mb-6">
+          <p className="text-violet-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-3">
+            במעקב · {contactedLeads.length}
+          </p>
+          <div className="space-y-2.5">
+            {contactedLeads.map(lead => (
+              <NewLeadCard key={lead.id} lead={lead} onCreateEvent={handleCreateEvent} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Status summary — always shown for a constant at-a-glance picture */}
+      {leads.length > 0 && (
         <div className="mb-6 rounded-2xl p-4 bg-card border border-border">
           <p className="text-violet-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-3">לידים לפי סטטוס</p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">

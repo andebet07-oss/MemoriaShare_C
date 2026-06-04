@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Layers, Pencil } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Layers, Pencil, ClipboardCheck } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import FramePngPreview from '@/components/admin/frames/FramePngPreview';
 import FrameTextEditor from '@/components/admin/frames/FrameTextEditor';
+import AdminFilterBar from '@/components/admin/AdminFilterBar';
 import { STYLE_LABELS, CATEGORY_LABELS } from '@/lib/framesMeta';
+
+const STATUS_HE = { approved: 'פעיל', draft: 'טיוטה', archived: 'ארכיון' };
 
 function StatusBadge({ status }) {
   const map = {
@@ -78,7 +82,10 @@ function FrameCard({ frame, isEditing, onEdit }) {
 }
 
 export default function FramesLibrary() {
+  const navigate = useNavigate();
   const [editingId, setEditingId] = useState(null);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const { data: frames = [], isLoading, error } = useQuery({
     queryKey: ['frames-library'],
@@ -90,20 +97,63 @@ export default function FramesLibrary() {
   const editingFrame = frames.find(f => f.frame_id === editingId) ?? null;
   const handleEdit = (id) => setEditingId(prev => prev === id ? null : id);
 
+  // Search + status filter (client-side)
+  const q = query.trim().toLowerCase();
+  const visibleFrames = frames.filter(f => {
+    if (statusFilter !== 'all' && f.status !== statusFilter) return false;
+    if (!q) return true;
+    return (
+      (f.display_name || '').toLowerCase().includes(q) ||
+      (f.frame_id || '').toLowerCase().includes(q)
+    );
+  });
+
+  const statusCounts = ['approved', 'draft', 'archived'].reduce((acc, s) => {
+    acc[s] = frames.filter(f => f.status === s).length;
+    return acc;
+  }, {});
+  const chips = [
+    { key: 'all', label: 'הכל', count: frames.length },
+    ...['approved', 'draft', 'archived']
+      .filter(s => statusCounts[s] > 0)
+      .map(s => ({ key: s, label: STATUS_HE[s], count: statusCounts[s] })),
+  ];
+
   return (
     <div className="min-h-full p-5 md:p-8" dir="rtl">
 
-      <div className="mb-6">
-        <p className="text-violet-400 text-[10px] font-bold tracking-[0.35em] uppercase mb-1.5">Admin · כלים</p>
-        <h1 className="font-playfair text-3xl text-foreground leading-tight">ספריית מסגרות</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {isLoading
-            ? 'טוען...'
-            : activeCount > 0
-              ? `${activeCount} מסגרת${activeCount === 1 ? '' : 'ות'} פעיל${activeCount === 1 ? 'ה' : 'ות'}`
-              : 'אין מסגרות פעילות'}
-        </p>
+      <div className="flex items-start justify-between gap-3 mb-6">
+        <div>
+          <p className="text-violet-400 text-[10px] font-bold tracking-[0.35em] uppercase mb-1.5">Admin · כלים</p>
+          <h1 className="font-playfair text-3xl text-foreground leading-tight">ספריית מסגרות</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isLoading
+              ? 'טוען...'
+              : activeCount > 0
+                ? `${activeCount} מסגרת${activeCount === 1 ? '' : 'ות'} פעיל${activeCount === 1 ? 'ה' : 'ות'}`
+                : 'אין מסגרות פעילות'}
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/admin/frames/moderation')}
+          className="flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-xl text-xs font-semibold text-violet-300 hover:text-violet-200 transition-colors"
+          style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}
+        >
+          <ClipboardCheck className="w-3.5 h-3.5" />
+          תור מודרציה
+        </button>
       </div>
+
+      {!isLoading && !error && frames.length > 0 && (
+        <AdminFilterBar
+          search={query}
+          onSearch={setQuery}
+          placeholder="חיפוש מסגרת לפי שם..."
+          chips={chips}
+          active={statusFilter}
+          onChip={setStatusFilter}
+        />
+      )}
 
       {isLoading && (
         <div className="flex items-center justify-center py-32">
@@ -127,9 +177,13 @@ export default function FramesLibrary() {
         </div>
       )}
 
-      {!isLoading && !error && frames.length > 0 && (
+      {!isLoading && !error && frames.length > 0 && visibleFrames.length === 0 && (
+        <p className="text-muted-foreground/50 text-sm py-12 text-center">אין מסגרות תואמות</p>
+      )}
+
+      {!isLoading && !error && visibleFrames.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {frames.map(frame => (
+          {visibleFrames.map(frame => (
             <FrameCard
               key={frame.frame_id}
               frame={frame}

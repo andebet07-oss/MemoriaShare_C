@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { CheckCircle2, XCircle, Clock, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, XCircle, Clock, AlertTriangle, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 import { FRAME_PACKS } from '@/components/magnet/framePacks';
 import { CATEGORY_LABELS, STYLE_LABELS } from '@/lib/framesMeta';
 import { evaluateRubric, PUBLISH_THRESHOLD } from '@/lib/framesRubric';
@@ -21,6 +22,7 @@ const STATUS_LABEL = {
 };
 
 export default function FramesModerationQueue() {
+  const navigate = useNavigate();
   const { meta, isLoading } = useFramesMeta();
   const invalidate = useInvalidateFramesMeta();
   const { toast } = useToast();
@@ -95,6 +97,13 @@ export default function FramesModerationQueue() {
 
       {/* Header */}
       <div className="mb-7">
+        <button
+          onClick={() => navigate('/admin/frames')}
+          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-3"
+        >
+          <ArrowRight className="w-3.5 h-3.5" />
+          לספרייה
+        </button>
         <p className="text-violet-400 text-[10px] font-bold tracking-[0.35em] uppercase mb-1.5">Admin · 02</p>
         <h1 className="font-playfair text-3xl text-foreground leading-tight">תור מודרציה</h1>
         <p className="text-sm text-muted-foreground mt-1">

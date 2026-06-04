@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, RefreshCw, Plus, Phone, CalendarDays, Users, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import memoriaService from '@/components/memoriaService';
+import AdminFilterBar from './AdminFilterBar';
 
 const STATUS_ORDER = ['new', 'contacted', 'converted', 'closed'];
 const STATUS_HE    = { new: 'חדש', contacted: 'יצרנו קשר', converted: 'הומר', closed: 'סגור' };
@@ -74,6 +75,8 @@ export default function LeadsPanel() {
   const [updatingId, setUpdatingId] = useState(null);
   const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState('all');
 
   const fetchLeads = async () => {
     setIsLoading(true);
@@ -123,6 +126,26 @@ export default function LeadsPanel() {
     return acc;
   }, {});
 
+  // Search + status filter (client-side; leads are fully loaded)
+  const q = query.trim().toLowerCase();
+  const visibleLeads = leads.filter(l => {
+    if (filter !== 'all' && l.status !== filter) return false;
+    if (!q) return true;
+    const { eventName, location } = parseDetails(l.details);
+    return (
+      eventName.toLowerCase().includes(q) ||
+      (l.full_name || '').toLowerCase().includes(q) ||
+      (l.phone || '').includes(q) ||
+      location.toLowerCase().includes(q)
+    );
+  });
+
+  // Filter chips: "all" + each status that has at least one lead
+  const chips = [
+    { key: 'all', label: 'הכל', count: leads.length },
+    ...STATUS_ORDER.filter(s => counts[s] > 0).map(s => ({ key: s, label: STATUS_HE[s], count: counts[s] })),
+  ];
+
   if (isLoading) return (
     <div className="flex justify-center py-16">
       <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
@@ -148,15 +171,17 @@ export default function LeadsPanel() {
         </button>
       </div>
 
-      {/* Status summary pills */}
-      <div className="flex gap-2 mb-5 flex-wrap">
-        {STATUS_ORDER.map(s => counts[s] > 0 && (
-          <span key={s} className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full"
-            style={{ background: STATUS_STYLE[s].bg, border: `1px solid ${STATUS_STYLE[s].border}`, color: STATUS_STYLE[s].text }}>
-            {counts[s]} {STATUS_HE[s]}
-          </span>
-        ))}
-      </div>
+      {/* Search + status filter */}
+      {leads.length > 0 && (
+        <AdminFilterBar
+          search={query}
+          onSearch={setQuery}
+          placeholder="חיפוש לפי שם אירוע, איש קשר או טלפון..."
+          chips={chips}
+          active={filter}
+          onChip={setFilter}
+        />
+      )}
 
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
@@ -167,9 +192,16 @@ export default function LeadsPanel() {
           </div>
           <p className="text-white/25 text-sm">אין לידים עדיין</p>
         </div>
+      ) : visibleLeads.length === 0 ? (
+        <div className="flex flex-col items-center py-16 gap-3">
+          <div className="w-12 h-12 rounded-full bg-white/[0.04] flex items-center justify-center">
+            <Users className="w-5 h-5 text-white/20" />
+          </div>
+          <p className="text-white/25 text-sm">אין לידים תואמים</p>
+        </div>
       ) : (
         <div className="space-y-2.5">
-          {leads.map(lead => {
+          {visibleLeads.map(lead => {
             const { eventName, location, guestCount } = parseDetails(lead.details);
             const formattedDate = lead.event_date
               ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -229,6 +261,19 @@ export default function LeadsPanel() {
                   </div>
                 </button>
 
+                {/* Quick status change — always visible, no expand needed */}
+                <div className="px-4 pb-3 -mt-1">
+                  {updatingId === lead.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white/40" />
+                  ) : (
+                    <StatusPills
+                      current={lead.status}
+                      onChange={s => handleStatusChange(lead.id, s)}
+                      disabled={updatingId === lead.id}
+                    />
+                  )}
+                </div>
+
                 {/* Expanded actions */}
                 {isExpanded && (
                   <div className="border-t px-4 py-3 flex flex-col gap-3" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
@@ -240,17 +285,6 @@ export default function LeadsPanel() {
                       <Phone className="w-3.5 h-3.5" />
                       <span dir="ltr">{formatPhone(lead.phone)}</span>
                     </a>
-
-                    {/* Status pills */}
-                    {updatingId === lead.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-white/40" />
-                    ) : (
-                      <StatusPills
-                        current={lead.status}
-                        onChange={s => handleStatusChange(lead.id, s)}
-                        disabled={updatingId === lead.id}
-                      />
-                    )}
 
                     {/* Create event CTA */}
                     {lead.status !== 'closed' && (
