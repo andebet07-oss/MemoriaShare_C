@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import EventGallery from "../pages/EventGallery";
 import PrintableShareCards from "../components/dashboard/PrintableShareCards";
@@ -316,6 +316,7 @@ function EventSettingsTab({ event, onEventUpdate }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { id: routeEventId } = useParams();
   const { user: currentUser, isLoadingAuth } = useAuth();
   const [event, setEvent] = useState(null);
   const [photos, setPhotos] = useState([]);
@@ -330,13 +331,14 @@ export default function Dashboard() {
     if (isLoadingAuth) return;
     window.scrollTo(0, 0);
     loadDashboardData();
-  }, [isLoadingAuth, currentUser]);
+  }, [isLoadingAuth, currentUser, routeEventId]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
     setPageError(null);
-    const urlParams = new URLSearchParams(window.location.search);
-    const eventId = urlParams.get('id');
+    // Event id comes from the route param (/host/events/:id). Fall back to the
+    // legacy ?id= query string for any old links.
+    const eventId = routeEventId || new URLSearchParams(window.location.search).get('id');
 
     if (eventId === 'demo') {
       const demoEvent = {
