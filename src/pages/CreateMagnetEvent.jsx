@@ -11,16 +11,14 @@ import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
 import { FRAME_PACKS, LABEL_H_RATIO } from "@/components/magnet/framePacks";
 import FramePngPreview from "@/components/admin/frames/FramePngPreview";
+import { formatEventDate } from "@/lib/formatEventDate";
 
 // Maps FRAME_CATEGORIES keys (underscore) to DB category values (hyphen where needed)
 const CAT_DB_KEY = { bar_mitzvah: 'bar-mitzvah' };
 
 // Polaroid-style magnet preview
 function MagnetPreview({ eventData = {}, overlayPreview = null, previewH, previewW }) {
-  const formattedDate = eventData.date
-    ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        .format(new Date(eventData.date + 'T00:00:00'))
-    : "02.25.2026";
+  const formattedDate = formatEventDate(eventData.date) || "12.06.2026";
 
   // Polaroid ratio: 3:4 (width:height = 0.75). 37.5/50 = 0.75 ✓
   const cardH = previewH || 'clamp(145px, 50dvh, 420px)';
@@ -303,7 +301,7 @@ function PngFrameThumbnail({ frame, isSelected, onSelect, eventName, eventDate }
         <FramePngPreview
           frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox, text_config: frame.text_config }}
           eventName={eventName || 'שרה ודוד'}
-          eventDate={eventDate || '12 ביוני 2026'}
+          eventDate={eventDate || '12.06.2026'}
           className="w-full h-full"
           style={{ width: '100%', height: '100%' }}
         />
@@ -737,9 +735,7 @@ export default function CreateMagnetEvent() {
                           frame={f}
                           isSelected={form.selectedFrameId === f.frame_id}
                           eventName={form.name?.trim() || undefined}
-                          eventDate={form.date
-                            ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date(form.date + 'T00:00:00'))
-                            : undefined}
+                          eventDate={formatEventDate(form.date) || undefined}
                           onSelect={(id) => {
                             handleChange('selectedFrameId', id);
                             handleChange('overlayFile', null);

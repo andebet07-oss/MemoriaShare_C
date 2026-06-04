@@ -103,6 +103,26 @@ export async function compositePngFrame(photoImg, frame, opts = {}) {
     }
   }
 
+  // ── Decoration layers (movable/resizable built-in artwork) ──────────────────
+  // text_config.decorations: [{ url, x, y, w }] where x,y = normalised CENTRE
+  // and w = normalised width (height derived from the asset's aspect ratio).
+  // Drawn under the text so names/dates always stay legible.
+  if (text_config?.decorations?.length) {
+    for (const d of text_config.decorations) {
+      if (!d?.url) continue;
+      try {
+        const deco = await loadImage(d.url);
+        const dw = Math.round((d.w ?? 0.15) * fw);
+        const dh = Math.round(dw * (deco.naturalHeight / deco.naturalWidth || 1));
+        const dx = Math.round((d.x ?? 0.5) * fw - dw / 2);
+        const dy = Math.round((d.y ?? 0.9) * fh - dh / 2);
+        ctx.drawImage(deco, dx, dy, dw, dh);
+      } catch (err) {
+        console.warn('[compositePngFrame] decoration load failed:', d.url, err?.message);
+      }
+    }
+  }
+
   // ── Text layers (event name, date, icon) ───────────────────────────────────
   // text_config schema:
   //   event_name: { font, size, weight, color, align, y, inline_icon?, inline_icon_color? }

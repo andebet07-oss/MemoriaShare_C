@@ -3,6 +3,7 @@ import { X, RotateCw, Zap, ZapOff, CameraOff, Loader2, Upload, Film } from 'luci
 import MagnetReview from './MagnetReview';
 import FrameStripText from './FrameStripText';
 import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
+import { formatEventDate } from '@/lib/formatEventDate';
 
 const VINTAGE_FILTER = 'sepia(0.35) contrast(0.88) brightness(1.08) saturate(1.15)';
 const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
@@ -276,14 +277,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   );
 
   // F11: normalize date safely (event.date may be string 'YYYY-MM-DD', ISO, or Date object)
-  const dateFmt = (() => {
-    if (!event?.date) return null;
-    const d = new Date(typeof event.date === 'string' && event.date.length === 10
-      ? event.date + 'T00:00:00'
-      : event.date);
-    if (isNaN(d.getTime())) return null;
-    return new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'long', year: 'numeric' }).format(d);
-  })();
+  const dateFmt = formatEventDate(event?.date) || null;
 
   const quotaId = 'magnet-camera-quota';
   const isDisabled = loading || (remainingPrints - capturedCountRef.current) <= 0;

@@ -43,8 +43,24 @@ export default function FrameStripText({ textConfig, eventName, dateFmt }) {
   const name  = eventName || 'Memoria';
   const parts = en?.inline_icon ? splitNames(name) : null;
 
+  const decorations = textConfig.decorations || [];
+
   return (
     <div ref={ref} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      {/* Decoration layers (built-in artwork) — drawn under the text */}
+      {decorations.map((d, i) => d?.url && (
+        <img key={d.id || i} src={d.url} alt="" aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left:  `${(d.x ?? 0.5) * 100}%`,
+            top:   `${(d.y ?? 0.9) * 100}%`,
+            width: `${(d.w ?? 0.15) * 100}%`,
+            height: 'auto',
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none',
+          }} />
+      ))}
+
       {/* Stacked icon (♡ above the name) */}
       {ic?.emoji && (
         <span style={{

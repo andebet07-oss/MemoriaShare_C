@@ -5,6 +5,7 @@ import { SVG_STICKERS } from './svgStickers';
 import { LABEL_H_RATIO } from './framePacks';
 import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
 import { compositePngFrame, canvasToJpegBlob } from '@/lib/compositePngFrame';
+import { formatEventDate } from '@/lib/formatEventDate';
 import memoriaService from '@/components/memoriaService';
 
 const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
@@ -197,11 +198,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
   }, [imageDataURL, event?.overlay_frame_url]); // eslint-disable-line
 
   const pack = useMemo(() => getStickerPack(event?.name || ''), [event?.name]);
-  const dateLabel = useMemo(() => {
-    if (!event?.date) return null;
-    return new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'long', year: 'numeric' })
-      .format(new Date(event.date + 'T00:00:00'));
-  }, [event?.date]);
+  const dateLabel = useMemo(() => formatEventDate(event?.date) || null, [event?.date]);
 
   const onPointerDown = useCallback((e, uid) => {
     e.preventDefault(); e.stopPropagation();

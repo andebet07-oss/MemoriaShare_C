@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Check, X, Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import FramePngPreview from './FramePngPreview';
-import ElementEditor   from './ElementEditor';
-import memoriaService  from '@/components/memoriaService';
+import FramePngPreview  from './FramePngPreview';
+import ElementEditor    from './ElementEditor';
+import DecorationEditor from './DecorationEditor';
+import memoriaService   from '@/components/memoriaService';
 
-const TABS = [
-  { key: 'icon',       label: 'אייקון'   },
+const BASE_TABS = [
   { key: 'event_name', label: 'שם אירוע' },
   { key: 'date',       label: 'תאריך'    },
+  { key: 'icon',       label: 'אייקון'   },
 ];
 
 const DEFAULT = {
@@ -21,11 +22,19 @@ export default function FrameTextEditor({ frame, onClose }) {
   const qc = useQueryClient();
 
   const [tab,    setTab]    = useState('event_name');
+  // Spread the full text_config first so top-level keys we don't edit here
+  // (preserve_strip, decorations) survive the save instead of being dropped.
   const [cfg,    setCfg]    = useState(() => ({
+    ...(frame.text_config ?? {}),
     icon:       { ...DEFAULT.icon,       ...(frame.text_config?.icon       ?? {}) },
     event_name: { ...DEFAULT.event_name, ...(frame.text_config?.event_name ?? {}) },
     date:       { ...DEFAULT.date,       ...(frame.text_config?.date       ?? {}) },
   }));
+
+  const hasDecorations = Array.isArray(cfg.decorations) && cfg.decorations.length > 0;
+  const TABS = hasDecorations
+    ? [...BASE_TABS, { key: 'decorations', label: 'קישוטים' }]
+    : BASE_TABS;
   const [saving, setSaving] = useState(false);
   const [err,    setErr]    = useState('');
 
@@ -89,8 +98,8 @@ export default function FrameTextEditor({ frame, onClose }) {
             style={{ background: 'linear-gradient(135deg, #2a2a35, #1e1e28)', maxWidth: 200 }}>
             <FramePngPreview
               frame={{ ...frame, text_config: cfg }}
-              eventName="חתונת שרה ודוד"
-              eventDate="12 ביוני 2026"
+              eventName="שרה ודוד"
+              eventDate="12.06.2026"
               className="w-full h-auto"
               style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.5))' }}
             />
@@ -123,11 +132,18 @@ export default function FrameTextEditor({ frame, onClose }) {
 
           {/* Element controls (scrollable) */}
           <div className="p-5 overflow-y-auto" style={{ maxHeight: 440 }}>
-            <ElementEditor
-              layer={tab}
-              cfg={cfg[tab]}
-              onChange={val => setCfg(prev => ({ ...prev, [tab]: val }))}
-            />
+            {tab === 'decorations' ? (
+              <DecorationEditor
+                decorations={cfg.decorations || []}
+                onChange={decs => setCfg(prev => ({ ...prev, decorations: decs }))}
+              />
+            ) : (
+              <ElementEditor
+                layer={tab}
+                cfg={cfg[tab]}
+                onChange={val => setCfg(prev => ({ ...prev, [tab]: val }))}
+              />
+            )}
           </div>
 
           {/* Footer */}

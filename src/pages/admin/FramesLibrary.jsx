@@ -42,7 +42,7 @@ function FrameCard({ frame, isEditing, onEdit }) {
         <FramePngPreview
           frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox, text_config: frame.text_config }}
           eventName="שרה ודוד"
-          eventDate="12 ביוני 2026"
+          eventDate="12.06.2026"
           className="relative z-10 w-[88%] h-auto"
           style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.55)) drop-shadow(0 2px 6px rgba(0,0,0,0.35))' }}
         />

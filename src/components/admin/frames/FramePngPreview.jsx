@@ -54,8 +54,8 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
         if (cancelled.current) return;
         const result = await compositePngFrame(sampleImg, frame, {
           maxWidth: 600, maxHeight: 900,
-          eventName: eventName ?? 'חתונת שרה ודוד',
-          eventDate: eventDate ?? '12 ביוני 2026',
+          eventName: eventName ?? 'שרה ודוד',
+          eventDate: eventDate ?? '12.06.2026',
         });
         if (!cancelled.current) setSrc(result.toDataURL('image/jpeg', 0.85));
       } catch (err) {
