@@ -312,7 +312,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
         </div>
       )}
 
-      {/* ── Header ── */}
+      {/* ── Header — navigation + status only (capture tools live at the bottom) ── */}
       <div className="absolute top-0 inset-x-0 z-40 flex items-center justify-between px-5 pt-12 pb-3">
         {/* F06: aria-label on all icon buttons */}
         <button onClick={onClose} aria-label="סגור מצלמה"
@@ -321,33 +321,25 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
           <X className="w-4 h-4 text-white" />
         </button>
 
-        {/* Quota badge — number-first, amber warning at ≤3, red pill when exhausted */}
+        {/* Quota chip — slim single line; amber at ≤3, red when exhausted */}
         <div id={quotaId}
-          className="flex flex-col items-center justify-center px-4 py-1.5 rounded-full"
+          className="flex items-center gap-1.5 h-9 px-3.5 rounded-full"
           style={{
             background: remainingPrints <= 0 ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.08)',
             border: `1px solid ${remainingPrints <= 0 ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.12)'}`,
             backdropFilter: 'blur(12px)',
           }}>
           {remainingPrints <= 0 ? (
-            <span className="text-red-400 text-[10px] font-bold leading-none">המכסה הסתיימה</span>
+            <span className="text-red-400 text-xs font-bold leading-none">המכסה הסתיימה</span>
           ) : (
             <>
-              <span className={`text-xl font-black leading-none tabular-nums ${remainingPrints <= 3 ? 'text-amber-400' : 'text-white'}`}>
+              <span className={`text-base font-black leading-none tabular-nums ${remainingPrints <= 3 ? 'text-amber-400' : 'text-white'}`}>
                 {remainingPrints}
               </span>
-              <span className="text-[9px] text-white/35 font-medium mt-0.5">נותרו</span>
+              <span className="text-[10px] text-white/45 font-medium leading-none">נותרו</span>
             </>
           )}
         </div>
-
-        {/* Vintage film filter toggle */}
-        <button onClick={() => setVintage(v => !v)}
-          aria-label={vintage ? 'בטל פילטר וינטאג׳' : 'הפעל פילטר וינטאג׳'} aria-pressed={vintage}
-          className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-          style={{ background: vintage ? 'rgba(124,134,225,0.15)' : 'rgba(255,255,255,0.07)', border: `1px solid ${vintage ? 'rgba(124,134,225,0.45)' : 'rgba(255,255,255,0.12)'}`, backdropFilter: 'blur(12px)' }}>
-          <Film className={`w-4 h-4 ${vintage ? 'text-indigo-300' : 'text-white/60'}`} />
-        </button>
       </div>
 
       {/* ── WYSIWYG viewfinder — shows the real assigned frame around the live feed ── */}
@@ -443,19 +435,32 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
       <canvas ref={canvasRef} className="hidden" />
 
       {/* ── Bottom controls ── */}
+      {/* 3-zone grid keeps the shutter dead-centre on screen while the effect
+          toggles (flash, filter) cluster on one side and flip on the other. */}
       {!camError && (
-        <div className="absolute bottom-0 inset-x-0 z-40 flex items-center justify-center gap-10"
+        <div className="absolute bottom-0 inset-x-0 z-40 grid grid-cols-[1fr_auto_1fr] items-center px-6"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 34px)' }}>
 
-          {/* Flash — F06 */}
-          <button onClick={toggleFlash}
-            aria-label={flash === 'on' ? 'כבה פלאש' : 'הפעל פלאש'} aria-pressed={flash === 'on'}
-            className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            style={{ background: flash === 'on' ? 'rgba(124,134,225,0.15)' : 'rgba(255,255,255,0.07)', border: `1.5px solid ${flash === 'on' ? 'rgba(124,134,225,0.5)' : 'rgba(255,255,255,0.13)'}`, backdropFilter: 'blur(16px)', boxShadow: flash === 'on' ? '0 0 18px rgba(124,134,225,0.25)' : '0 4px 14px rgba(0,0,0,0.4)' }}>
-            {flash === 'on' ? <Zap className="w-5 h-5 text-indigo-300" /> : <ZapOff className="w-5 h-5 text-white/60" />}
-          </button>
+          {/* Left zone — effect toggles */}
+          <div className="flex items-center justify-center gap-5">
+            {/* Flash — F06 */}
+            <button onClick={toggleFlash}
+              aria-label={flash === 'on' ? 'כבה פלאש' : 'הפעל פלאש'} aria-pressed={flash === 'on'}
+              className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              style={{ background: flash === 'on' ? 'rgba(124,134,225,0.15)' : 'rgba(255,255,255,0.07)', border: `1.5px solid ${flash === 'on' ? 'rgba(124,134,225,0.5)' : 'rgba(255,255,255,0.13)'}`, backdropFilter: 'blur(16px)', boxShadow: flash === 'on' ? '0 0 18px rgba(124,134,225,0.25)' : '0 4px 14px rgba(0,0,0,0.4)' }}>
+              {flash === 'on' ? <Zap className="w-5 h-5 text-indigo-300" /> : <ZapOff className="w-5 h-5 text-white/60" />}
+            </button>
 
-          {/* Shutter — F01, F02, F06, F09 */}
+            {/* Vintage film filter — grouped with the other capture controls */}
+            <button onClick={() => setVintage(v => !v)}
+              aria-label={vintage ? 'בטל פילטר וינטאג׳' : 'הפעל פילטר וינטאג׳'} aria-pressed={vintage}
+              className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              style={{ background: vintage ? 'rgba(124,134,225,0.15)' : 'rgba(255,255,255,0.07)', border: `1.5px solid ${vintage ? 'rgba(124,134,225,0.5)' : 'rgba(255,255,255,0.13)'}`, backdropFilter: 'blur(16px)', boxShadow: vintage ? '0 0 18px rgba(124,134,225,0.25)' : '0 4px 14px rgba(0,0,0,0.4)' }}>
+              <Film className={`w-5 h-5 ${vintage ? 'text-indigo-300' : 'text-white/60'}`} />
+            </button>
+          </div>
+
+          {/* Centre zone — shutter (F01, F02, F06, F09) */}
           <button
             onClick={handleCapture}
             aria-label="צלם תמונה"
@@ -468,12 +473,14 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
             {loading && <Loader2 className="absolute w-5 h-5 text-white/60 animate-spin" />}
           </button>
 
-          {/* Flip — F06 */}
-          <button onClick={() => setIsFront(f => !f)} aria-label="החלף מצלמה קדמית/אחורית"
-            className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.13)', backdropFilter: 'blur(16px)', boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}>
-            <RotateCw className="w-5 h-5 text-white/60" />
-          </button>
+          {/* Right zone — camera flip (F06) */}
+          <div className="flex items-center justify-center">
+            <button onClick={() => setIsFront(f => !f)} aria-label="החלף מצלמה קדמית/אחורית"
+              className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.13)', backdropFilter: 'blur(16px)', boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}>
+              <RotateCw className="w-5 h-5 text-white/60" />
+            </button>
+          </div>
         </div>
       )}
     </div>
