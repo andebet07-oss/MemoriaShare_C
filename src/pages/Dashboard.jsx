@@ -583,7 +583,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full bg-cool-950 text-white" dir="rtl">
+    <div className="dark min-h-[100dvh] w-full bg-cool-950 text-white" dir="rtl">
       <RealtimeNotification notifications={notifications} onDismiss={dismissNotification} />
 
       {/* Admin inspection banner — shown only when admin views another host's event */}
