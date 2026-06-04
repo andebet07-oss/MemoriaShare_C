@@ -1,93 +1,86 @@
 import React from "react";
 
 /**
- * Theme 2 — Elegant / Indigo
+ * Theme 2 — Classic (light ivory, elegant Hebrew serif)
+ * Warm off-white, Frank Ruhl Libre, a delicate dotted rule.
  */
 export default function CardElegant({ eventName, eventDate, qrUrl, accentColor }) {
-  const accent = accentColor;
-
   return (
     <div style={{
       width: "450px", height: "636px",
-      background: "#1e1e1e",
+      background: "#fffdf8",
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
-      fontFamily: "'Playfair Display', serif",
+      fontFamily: "'Frank Ruhl Libre', serif",
       position: "relative", overflow: "hidden", boxSizing: "border-box",
+      padding: "0 48px",
     }}>
-      {/* Decorative border — inset from edges, not affecting flow */}
-      <div style={{
-        position: "absolute", top: "16px", bottom: "16px",
-        left: "16px", right: "16px",
-        border: `1px solid ${accent}`, opacity: 0.55,
-        borderRadius: "2px", pointerEvents: "none",
-      }} />
-
-      {/* Corner ornaments */}
-      {[{ top: 8, left: 8 }, { top: 8, right: 8 }, { bottom: 8, left: 8 }, { bottom: 8, right: 8 }].map((pos, i) => (
-        <div key={i} style={{
-          position: "absolute", ...pos,
-          width: "16px", height: "16px",
-          border: `1px solid ${accent}`, opacity: 0.6,
-        }} />
-      ))}
-
-      {/* Brand */}
-      <p style={{
-        fontSize: "9px", letterSpacing: "6px",
-        color: accent, fontFamily: "Montserrat, sans-serif",
-        fontWeight: 600, textTransform: "uppercase", opacity: 0.65,
-        margin: 0,
+      {/* Welcome eyebrow */}
+      <p dir="rtl" style={{
+        fontSize: "15px", color: "#a99f8e", fontWeight: 400,
+        fontFamily: "'Heebo', sans-serif", letterSpacing: "1px", margin: 0,
       }}>
-        MemoriaShare
+        ברוכים הבאים לאירוע של
       </p>
-
-      {/* Ornamental rule */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "12px 0" }}>
-        <div style={{ width: "44px", height: "1px", background: accent, opacity: 0.35 }} />
-        <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: accent, opacity: 0.55 }} />
-        <div style={{ width: "44px", height: "1px", background: accent, opacity: 0.35 }} />
-      </div>
 
       {/* Event name */}
       <h2 dir="rtl" style={{
-        fontSize: "40px", fontWeight: 700,
-        color: "#fcfcfe", textAlign: "center",
-        padding: "0 48px", lineHeight: 1.2, margin: 0,
+        fontSize: "44px", fontWeight: 700, color: "#2c2620",
+        textAlign: "center", lineHeight: 1.2, margin: "14px 0 0",
       }}>
         {eventName}
       </h2>
 
+      {/* Ornamental dotted rule */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "20px 0" }}>
+        <div style={{ width: "50px", height: "1px", background: accentColor, opacity: 0.4 }} />
+        <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: accentColor, opacity: 0.6 }} />
+        <div style={{ width: "50px", height: "1px", background: accentColor, opacity: 0.4 }} />
+      </div>
+
       {/* Date */}
-      <p style={{
-        marginTop: "10px", fontSize: "12px",
-        color: accent, letterSpacing: "4px",
-        fontFamily: "Montserrat, sans-serif",
-        fontWeight: 500, opacity: 0.75, margin: "10px 0 0",
-      }}>
-        {eventDate}
-      </p>
+      {eventDate && (
+        <p style={{
+          fontSize: "13px", color: "#b3a690", letterSpacing: "4px",
+          fontFamily: "'Heebo', sans-serif", fontWeight: 500, margin: 0,
+        }}>
+          {eventDate}
+        </p>
+      )}
 
       {/* QR */}
       <div style={{
-        marginTop: "28px",
+        marginTop: "26px",
         background: "#fff",
-        padding: "12px",
-        borderRadius: "4px",
-        border: `2px solid ${accent}`,
-        boxShadow: `0 0 28px ${accent}1A`,
+        border: "1px solid #ece5d8",
+        borderRadius: "10px",
+        padding: "16px",
+        boxShadow: "0 10px 30px rgba(120,100,60,0.08)",
       }}>
-        <img src={qrUrl} alt="QR" style={{ width: "148px", height: "148px", display: "block" }} />
+        <img src={qrUrl} alt="QR" style={{ width: "152px", height: "152px", display: "block" }} />
       </div>
 
-      {/* CTA — directly below QR */}
+      {/* Invitation */}
       <p dir="rtl" style={{
-        marginTop: "14px", fontSize: "13px",
-        color: "#b4b4b4", textAlign: "center",
-        fontFamily: "Montserrat, sans-serif", fontWeight: 400, letterSpacing: "1px",
-        margin: "14px 0 0",
+        marginTop: "22px", fontSize: "17px", color: "#4a4238",
+        textAlign: "center", lineHeight: 1.4, margin: "22px 0 0",
       }}>
-        סרקו ושתפו את הרגעים שלכם
+        הצטרפו אלינו לתיעוד הרגעים
+      </p>
+      <p dir="rtl" style={{
+        marginTop: "4px", fontSize: "12px", color: "#b3a690",
+        fontFamily: "'Heebo', sans-serif", fontWeight: 400, margin: "4px 0 0",
+      }}>
+        סרקו את הקוד ושתפו את התמונות שלכם
+      </p>
+
+      {/* Brand footer */}
+      <p style={{
+        position: "absolute", bottom: "26px",
+        fontSize: "9px", fontFamily: "'Montserrat', sans-serif", fontWeight: 700,
+        letterSpacing: "4px", color: "#d8cdb8", textTransform: "uppercase", margin: 0,
+      }}>
+        MemoriaShare
       </p>
     </div>
   );

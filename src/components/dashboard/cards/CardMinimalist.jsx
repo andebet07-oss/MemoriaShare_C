@@ -1,82 +1,83 @@
 import React from "react";
 
-const MemoriaLogo = ({ color = "#111" }) => (
-  <span style={{
-    fontSize: "10px", fontFamily: "Montserrat, sans-serif", fontWeight: 700,
-    letterSpacing: "4px", color, textTransform: "uppercase", opacity: 0.45,
-  }}>
-    MemoriaShare
-  </span>
-);
-
 /**
- * Theme 1 — Minimalist / Modern
+ * Theme 1 — Minimal / Modern (light, airy, sans-serif)
+ * Pure white, generous whitespace, a single hairline accent.
  */
 export default function CardMinimalist({ eventName, eventDate, qrUrl, accentColor }) {
   return (
     <div style={{
       width: "450px", height: "636px",
-      background: "#FAFAFA",
+      background: "#ffffff",
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
-      fontFamily: "Montserrat, sans-serif",
+      fontFamily: "'Heebo', sans-serif",
       position: "relative", overflow: "hidden", boxSizing: "border-box",
-      gap: 0,
+      padding: "0 46px",
     }}>
-      {/* Top accent line */}
-      <div style={{ position: "absolute", top: 0, width: "100%", height: "4px", background: accentColor }} />
-
-      {/* Logo */}
-      <MemoriaLogo color="#111" />
-
-      {/* Thin rule */}
-      <div style={{ width: "32px", height: "1px", background: accentColor, margin: "14px 0" }} />
+      {/* Welcome eyebrow */}
+      <p dir="rtl" style={{
+        fontSize: "15px", color: "#9a9a9a", fontWeight: 500,
+        letterSpacing: "0.5px", margin: 0,
+      }}>
+        ברוכים הבאים לאירוע של
+      </p>
 
       {/* Event name */}
       <h2 dir="rtl" style={{
-        fontSize: "36px", fontWeight: 700, color: "#111",
+        fontSize: "40px", fontWeight: 800, color: "#1c1c1c",
         letterSpacing: "-0.5px", textAlign: "center",
-        padding: "0 40px", lineHeight: 1.15, margin: 0,
+        lineHeight: 1.15, margin: "14px 0 0",
       }}>
         {eventName}
       </h2>
 
       {/* Date */}
-      <p style={{
-        marginTop: "8px", fontSize: "12px", letterSpacing: "4px",
-        color: "#999", fontWeight: 500, textTransform: "uppercase", marginBottom: 0,
-      }}>
-        {eventDate}
-      </p>
+      {eventDate && (
+        <p style={{
+          marginTop: "12px", fontSize: "12px", letterSpacing: "5px",
+          color: "#c0c0c0", fontWeight: 600, margin: "12px 0 0",
+        }}>
+          {eventDate}
+        </p>
+      )}
+
+      {/* Hairline accent */}
+      <div style={{ width: "40px", height: "2px", background: accentColor, opacity: 0.85, margin: "26px 0" }} />
 
       {/* QR */}
       <div style={{
-        marginTop: "28px",
         background: "#fff",
-        border: `2px solid ${accentColor}`,
-        borderRadius: "12px",
-        padding: "14px",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.07)",
+        border: "1px solid #ececec",
+        borderRadius: "16px",
+        padding: "16px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
       }}>
-        <img src={qrUrl} alt="QR" style={{ width: "150px", height: "150px", display: "block" }} />
+        <img src={qrUrl} alt="QR" style={{ width: "156px", height: "156px", display: "block" }} />
       </div>
 
-      {/* CTA — tight below QR */}
+      {/* Invitation */}
       <p dir="rtl" style={{
-        marginTop: "14px", fontSize: "14px", fontWeight: 600,
-        color: "#444", textAlign: "center", marginBottom: 0,
+        marginTop: "22px", fontSize: "16px", fontWeight: 600,
+        color: "#3a3a3a", textAlign: "center", margin: "22px 0 0",
       }}>
-        סרקו ושתפו תמונות מהאירוע
+        סרקו ושתפו את התמונות שלכם
       </p>
-      <p style={{
-        fontSize: "10px", color: "#bbb", marginTop: "3px",
-        letterSpacing: "2px", textTransform: "uppercase",
+      <p dir="rtl" style={{
+        marginTop: "5px", fontSize: "12px", color: "#aeaeae",
+        fontWeight: 400, margin: "5px 0 0",
       }}>
-        No app required
+        ללא צורך באפליקציה · מצטרפים בסריקה אחת
       </p>
 
-      {/* Bottom accent line */}
-      <div style={{ position: "absolute", bottom: 0, width: "100%", height: "4px", background: accentColor }} />
+      {/* Brand footer */}
+      <p style={{
+        position: "absolute", bottom: "26px",
+        fontSize: "9px", fontFamily: "'Montserrat', sans-serif", fontWeight: 700,
+        letterSpacing: "4px", color: "#cfcfcf", textTransform: "uppercase", margin: 0,
+      }}>
+        MemoriaShare
+      </p>
     </div>
   );
 }

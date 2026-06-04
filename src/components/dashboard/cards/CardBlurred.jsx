@@ -1,113 +1,95 @@
 import React from "react";
 
 /**
- * Theme 3 — Event-Specific (Blurred cover image as background)
+ * Theme 3 — Bordered (light, framed, elegant serif)
+ * Soft off-white with a delicate inset border + corner ticks.
+ * (coverImage prop intentionally unused — kept light per design.)
  */
-export default function CardBlurred({ eventName, eventDate, qrUrl, accentColor, coverImage }) {
-  const hasCover = !!coverImage;
-
+export default function CardBlurred({ eventName, eventDate, qrUrl, accentColor }) {
   return (
     <div style={{
       width: "450px", height: "636px",
-      position: "relative", overflow: "hidden",
+      background: "#faf9f6",
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
-      fontFamily: "Montserrat, sans-serif", boxSizing: "border-box",
-      background: hasCover ? "transparent" : "#1a1a2e",
+      fontFamily: "'David Libre', serif",
+      position: "relative", overflow: "hidden", boxSizing: "border-box",
+      padding: "0 50px",
     }}>
-      {/* Blurred background */}
-      {hasCover && (
-        <>
-          <img src={coverImage} alt="" style={{
-            position: "absolute", inset: 0,
-            width: "100%", height: "100%",
-            objectFit: "cover",
-            filter: "blur(20px) brightness(0.4) saturate(1.2)",
-            transform: "scale(1.1)",
-            pointerEvents: "none",
-          }} />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.65) 100%)",
-          }} />
-        </>
-      )}
-
-      {/* Content — vertically centered as a block */}
+      {/* Delicate inset frame */}
       <div style={{
-        position: "relative", zIndex: 2,
-        display: "flex", flexDirection: "column", alignItems: "center",
-        gap: "0px", padding: "0 40px", textAlign: "center",
+        position: "absolute", top: "18px", bottom: "18px", left: "18px", right: "18px",
+        border: `1px solid ${accentColor}`, opacity: 0.28, borderRadius: "3px",
+        pointerEvents: "none",
+      }} />
+      {/* Corner ticks */}
+      {[{ top: 10, left: 10 }, { top: 10, right: 10 }, { bottom: 10, left: 10 }, { bottom: 10, right: 10 }].map((pos, i) => (
+        <div key={i} style={{
+          position: "absolute", ...pos, width: "14px", height: "14px",
+          border: `1px solid ${accentColor}`, opacity: 0.35,
+        }} />
+      ))}
+
+      {/* Welcome eyebrow */}
+      <p dir="rtl" style={{
+        fontSize: "15px", color: "#9c9c93", fontWeight: 400,
+        fontFamily: "'Heebo', sans-serif", letterSpacing: "1px", margin: 0,
       }}>
-        {/* Accent pill */}
-        <div style={{
-          display: "inline-block",
-          background: accentColor,
-          borderRadius: "100px",
-          padding: "4px 16px",
-          marginBottom: "16px",
-        }}>
-          <span style={{
-            fontSize: "9px", fontWeight: 700, letterSpacing: "3px",
-            color: "#fff", textTransform: "uppercase",
-          }}>
-            MemoriaShare
-          </span>
-        </div>
+        ברוכים הבאים לאירוע של
+      </p>
 
-        {/* Event name */}
-        <h2 dir="rtl" style={{
-          fontSize: "38px", fontWeight: 700,
-          color: "#FFFFFF", lineHeight: 1.2, margin: 0,
-          fontFamily: "'Playfair Display', serif",
-          textShadow: "0 2px 12px rgba(0,0,0,0.7)",
-        }}>
-          {eventName}
-        </h2>
+      {/* Event name */}
+      <h2 dir="rtl" style={{
+        fontSize: "42px", fontWeight: 700, color: "#28282a",
+        textAlign: "center", lineHeight: 1.2, margin: "14px 0 0",
+      }}>
+        {eventName}
+      </h2>
 
-        {/* Date */}
+      {/* Date */}
+      {eventDate && (
         <p style={{
-          marginTop: "8px", fontSize: "12px",
-          color: "rgba(255,255,255,0.65)",
-          letterSpacing: "4px", fontWeight: 500,
+          marginTop: "14px", fontSize: "13px", color: "#a8a89e", letterSpacing: "4px",
+          fontFamily: "'Heebo', sans-serif", fontWeight: 500, margin: "14px 0 0",
         }}>
           {eventDate}
         </p>
+      )}
 
-        {/* Frosted glass QR — sized to content only */}
-        <div style={{
-          marginTop: "24px",
-          background: "rgba(255,255,255,0.13)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          border: "1px solid rgba(255,255,255,0.28)",
-          borderRadius: "18px",
-          padding: "16px",
-          boxShadow: "0 10px 36px rgba(0,0,0,0.5)",
-          display: "inline-flex",
-        }}>
-          <div style={{ background: "#fff", borderRadius: "8px", padding: "8px" }}>
-            <img src={qrUrl} alt="QR" style={{ width: "148px", height: "148px", display: "block" }} />
-          </div>
-        </div>
-
-        {/* CTA — tight below glass card */}
-        <p dir="rtl" style={{
-          marginTop: "14px", fontSize: "13px",
-          color: "rgba(255,255,255,0.75)",
-          fontWeight: 500,
-          textShadow: "0 1px 4px rgba(0,0,0,0.5)",
-        }}>
-          סרקו ושתפו תמונות מהאירוע
-        </p>
+      {/* QR */}
+      <div style={{
+        marginTop: "26px",
+        background: "#fff",
+        border: "1px solid #e8e7e1",
+        borderRadius: "10px",
+        padding: "16px",
+        boxShadow: "0 10px 28px rgba(0,0,0,0.06)",
+      }}>
+        <img src={qrUrl} alt="QR" style={{ width: "150px", height: "150px", display: "block" }} />
       </div>
 
-      {/* Bottom gradient line */}
-      <div style={{
-        position: "absolute", bottom: 0, zIndex: 2,
-        width: "100%", height: "4px",
-        background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
-      }} />
+      {/* Invitation */}
+      <p dir="rtl" style={{
+        marginTop: "22px", fontSize: "17px", color: "#3f3f42",
+        textAlign: "center", lineHeight: 1.4, margin: "22px 0 0",
+      }}>
+        נשמח לחלוק עמכם את הזיכרונות
+      </p>
+      <p dir="rtl" style={{
+        marginTop: "4px", fontSize: "12px", color: "#a8a89e",
+        fontFamily: "'Heebo', sans-serif", fontWeight: 400, margin: "4px 0 0",
+      }}>
+        סרקו ושתפו — ניצור יחד אלבום אחד
+      </p>
+
+      {/* Brand footer */}
+      <p style={{
+        position: "absolute", bottom: "26px",
+        fontSize: "9px", fontFamily: "'Montserrat', sans-serif", fontWeight: 700,
+        letterSpacing: "4px", color: "#cdcdc4", textTransform: "uppercase", margin: 0,
+      }}>
+        MemoriaShare
+      </p>
     </div>
   );
 }
