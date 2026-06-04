@@ -280,7 +280,7 @@ function FramePreviewModal({ frame, eventData, onClose, onSelect, isSelected }) 
 }
 
 // PNG frame thumbnail — uses FramePngPreview composite
-function PngFrameThumbnail({ frame, isSelected, onSelect }) {
+function PngFrameThumbnail({ frame, isSelected, onSelect, eventName, eventDate }) {
   return (
     <button
       type="button"
@@ -301,7 +301,9 @@ function PngFrameThumbnail({ frame, isSelected, onSelect }) {
         background: '#111',
       }}>
         <FramePngPreview
-          frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox }}
+          frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox, text_config: frame.text_config }}
+          eventName={eventName || 'שרה ודוד'}
+          eventDate={eventDate || '12 ביוני 2026'}
           className="w-full h-full"
           style={{ width: '100%', height: '100%' }}
         />
@@ -333,7 +335,7 @@ function PngFrameThumbnail({ frame, isSelected, onSelect }) {
         maxWidth: THUMB_W, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         userSelect: 'none',
       }}>
-        {frame.frame_id.split('-').slice(1).join(' ')}
+        {frame.display_name || frame.frame_id.split('-').slice(1).join(' ')}
       </span>
     </button>
   );
@@ -734,6 +736,10 @@ export default function CreateMagnetEvent() {
                           key={f.frame_id}
                           frame={f}
                           isSelected={form.selectedFrameId === f.frame_id}
+                          eventName={form.name?.trim() || undefined}
+                          eventDate={form.date
+                            ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date(form.date + 'T00:00:00'))
+                            : undefined}
                           onSelect={(id) => {
                             handleChange('selectedFrameId', id);
                             handleChange('overlayFile', null);

@@ -40,7 +40,9 @@ function FrameCard({ frame, isEditing, onEdit }) {
           <div className="w-3/4 h-3/4 rounded-full bg-white/[0.03] blur-2xl" />
         </div>
         <FramePngPreview
-          frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox }}
+          frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox, text_config: frame.text_config }}
+          eventName="שרה ודוד"
+          eventDate="12 ביוני 2026"
           className="relative z-10 w-[88%] h-auto"
           style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.55)) drop-shadow(0 2px 6px rgba(0,0,0,0.35))' }}
         />
@@ -49,8 +51,8 @@ function FrameCard({ frame, isEditing, onEdit }) {
       {/* Info strip */}
       <div className="px-4 py-3 border-t border-white/[0.05] flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
-          <span className="text-[11px] font-semibold text-foreground/80 leading-tight break-all">
-            {frame.frame_id}
+          <span className="text-[13px] font-semibold text-foreground leading-tight">
+            {frame.display_name || frame.frame_id}
           </span>
           <StatusBadge status={frame.status} />
         </div>
@@ -135,13 +137,15 @@ export default function FramesLibrary() {
               onEdit={handleEdit}
             />
           ))}
-          {editingFrame && (
-            <FrameTextEditor
-              frame={editingFrame}
-              onClose={() => setEditingId(null)}
-            />
-          )}
         </div>
+      )}
+
+      {/* Edit modal — overlay, opens centered on click (not buried at page bottom) */}
+      {editingFrame && (
+        <FrameTextEditor
+          frame={editingFrame}
+          onClose={() => setEditingId(null)}
+        />
       )}
     </div>
   );
