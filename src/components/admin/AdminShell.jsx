@@ -1,7 +1,8 @@
+import { Suspense } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { LogOut } from 'lucide-react';
+import { LogOut, Loader2 } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 
 // Core workflow first: סקירה → לידים → מגנט → שיתוף → כלים → משתמשים
@@ -78,9 +79,12 @@ export default function AdminShell() {
         ))}
       </nav>
 
-      {/* Page content */}
+      {/* Page content — local Suspense keeps the tab bar visible while a
+          lazily-loaded tab chunk downloads (no full-screen flash). */}
       <div className="flex-1 overflow-y-auto">
-        <Outlet />
+        <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="w-6 h-6 text-violet-400/40 animate-spin" /></div>}>
+          <Outlet />
+        </Suspense>
       </div>
     </div>
   );

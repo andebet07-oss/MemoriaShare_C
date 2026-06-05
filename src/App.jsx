@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { LoadingState } from '@/components/ui/LoadingState'
 import GlobalErrorBoundary from '@/components/GlobalErrorBoundary'
@@ -15,30 +16,31 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useQuery } from '@tanstack/react-query';
 import memoriaService from '@/components/memoriaService';
 
-// Pages
-import Home           from '@/pages/Home';
-import Event          from '@/pages/Event';
-import EventGallery   from '@/pages/EventGallery';
-import EventSuccess   from '@/pages/EventSuccess';
-import CreateEvent    from '@/pages/CreateEvent';
-import Dashboard      from '@/pages/Dashboard';
-import MyEvents       from '@/pages/MyEvents';
-import MagnetLead     from '@/pages/MagnetLead';
-import MagnetGuestPage from '@/pages/MagnetGuestPage';
-import PrintStation   from '@/pages/PrintStation';
+// Pages — lazy-loaded so each route ships its own chunk instead of one
+// monolithic bundle every visitor must download up front.
+const Home            = lazy(() => import('@/pages/Home'));
+const Event           = lazy(() => import('@/pages/Event'));
+const EventGallery    = lazy(() => import('@/pages/EventGallery'));
+const EventSuccess    = lazy(() => import('@/pages/EventSuccess'));
+const CreateEvent     = lazy(() => import('@/pages/CreateEvent'));
+const Dashboard       = lazy(() => import('@/pages/Dashboard'));
+const MyEvents        = lazy(() => import('@/pages/MyEvents'));
+const MagnetLead      = lazy(() => import('@/pages/MagnetLead'));
+const MagnetGuestPage = lazy(() => import('@/pages/MagnetGuestPage'));
+const PrintStation    = lazy(() => import('@/pages/PrintStation'));
 
 // Admin pages
-import AdminDashboard       from '@/pages/AdminDashboard';
-import CreateMagnetEvent    from '@/pages/CreateMagnetEvent';
-import MagnetEventDashboard from '@/pages/MagnetEventDashboard';
-import AdminUsers           from '@/pages/AdminUsers';
-import FramesLibrary           from '@/pages/admin/FramesLibrary';
-import FramesModerationQueue  from '@/pages/admin/FramesModerationQueue';
+const AdminDashboard       = lazy(() => import('@/pages/AdminDashboard'));
+const CreateMagnetEvent    = lazy(() => import('@/pages/CreateMagnetEvent'));
+const MagnetEventDashboard = lazy(() => import('@/pages/MagnetEventDashboard'));
+const AdminUsers           = lazy(() => import('@/pages/AdminUsers'));
+const FramesLibrary        = lazy(() => import('@/pages/admin/FramesLibrary'));
+const FramesModerationQueue = lazy(() => import('@/pages/admin/FramesModerationQueue'));
 
 // Admin tab content
-import AdminOverview    from '@/components/admin/AdminOverview';
-import AdminEventsList  from '@/components/admin/AdminEventsList';
-import LeadsPanel       from '@/components/admin/LeadsPanel';
+const AdminOverview   = lazy(() => import('@/components/admin/AdminOverview'));
+const AdminEventsList = lazy(() => import('@/components/admin/AdminEventsList'));
+const LeadsPanel      = lazy(() => import('@/components/admin/LeadsPanel'));
 
 import __Layout from './Layout.jsx';
 
@@ -85,6 +87,7 @@ const AuthenticatedApp = () => {
   return (
     <>
       {user?.needsOnboarding && <HostOnboardingModal />}
+      <Suspense fallback={<LoadingState fullScreen />}>
       <Routes>
 
         {/* ── Public / Landing ── */}
@@ -129,6 +132,7 @@ const AuthenticatedApp = () => {
 
         <Route path="*" element={<PageNotFound />} />
       </Routes>
+      </Suspense>
     </>
   );
 };

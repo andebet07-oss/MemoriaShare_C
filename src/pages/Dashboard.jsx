@@ -3,7 +3,6 @@ import memoriaService from "@/components/memoriaService";
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import JSZip from 'jszip';
 
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -31,6 +30,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Link, useNavigate, useParams } from "react-router-dom";
+// JSZip is imported dynamically inside handleExport (see below) to keep it out
+// of the initial Dashboard bundle.
 import { createPageUrl } from "@/utils";
 import EventGallery from "../pages/EventGallery";
 import PrintableShareCards from "../components/dashboard/PrintableShareCards";
@@ -67,6 +68,9 @@ function ExportArchiveCard({ eventId, eventName }) {
         return;
       }
 
+      // Load JSZip on demand — keeps the ~100KB lib out of the page bundle
+      // until the host actually exports an archive.
+      const { default: JSZip } = await import('jszip');
       const zip = new JSZip();
       const CHUNK_SIZE = 5;
       let done = 0;
