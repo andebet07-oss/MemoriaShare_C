@@ -10,7 +10,18 @@ const STATUS_CONFIG = {
   rejected: { label: 'נדחה',    color: 'text-red-400',     bg: 'bg-red-500/15 border-red-500/30' },
 };
 
-export default function PrintJobCard({ job, overlayFrameUrl, onUpdate }) {
+/** Relative age of a job — "עכשיו" / "לפני X דק׳" / "לפני X שע׳". */
+function timeAgo(iso) {
+  if (!iso) return '';
+  const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (sec < 60) return 'עכשיו';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `לפני ${min} דק׳`;
+  const hr = Math.floor(min / 60);
+  return `לפני ${hr} שע׳`;
+}
+
+export default function PrintJobCard({ job, overlayFrameUrl, onUpdate, isNew = false }) {
   const [isActing, setIsActing] = useState(false);
   const [isReprinting, setIsReprinting] = useState(false);
   const [popupError, setPopupError] = useState(false);
@@ -55,26 +66,36 @@ export default function PrintJobCard({ job, overlayFrameUrl, onUpdate }) {
   const isSettled = job.status === 'ready' || job.status === 'rejected';
 
   return (
-    <div className={`bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex flex-col ${isSettled ? 'opacity-60' : ''}`} dir="rtl">
+    <div
+      className={`bg-white/5 border rounded-2xl overflow-hidden flex flex-col transition-all ${isSettled ? 'opacity-60' : ''} ${isNew ? 'border-yellow-400/70 ring-2 ring-yellow-400/40' : 'border-white/10'}`}
+      style={isNew ? { boxShadow: '0 0 22px rgba(250,204,21,0.25)' } : undefined}
+      dir="rtl"
+    >
       {/* Photo */}
       <div className="relative aspect-square bg-white/5">
         {thumbUrl
           ? <img src={thumbUrl} className="w-full h-full object-cover" alt="" />
           : <div className="w-full h-full flex items-center justify-center text-white/15 text-xs">אין תמונה</div>
         }
+        {/* "new" pulse badge */}
+        {isNew && (
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-yellow-400 text-[10px] font-black text-black animate-pulse">
+            חדש
+          </div>
+        )}
         {/* Status badge */}
         <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full border text-[10px] font-bold ${cfg.bg} ${cfg.color}`}>
           {cfg.label}
         </div>
       </div>
 
-      {/* Info */}
+      {/* Info — guest name prominent + relative age */}
       <div className="px-3 py-2 flex-1">
-        <p className="text-white/60 text-xs truncate">
-          {guestName || `אורח`}
+        <p className="text-white/85 text-sm font-semibold truncate">
+          {guestName || 'אורח'}
         </p>
-        <p className="text-white/30 text-[10px]">
-          {new Date(job.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+        <p className="text-white/35 text-[10px] mt-0.5">
+          {timeAgo(job.created_at)} · {new Date(job.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
         </p>
         {popupError && <p className="text-orange-400 text-[10px] mt-1">אפשרו חלונות קופצים להדפסה</p>}
       </div>
