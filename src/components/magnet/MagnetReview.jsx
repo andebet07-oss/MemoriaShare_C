@@ -411,8 +411,8 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-5 px-8" style={{ background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(14px)' }}>
           <Champagne />
           <p className="text-white font-black text-2xl tracking-wide">נשלח!</p>
-          <p className="text-white/55 text-sm text-center leading-relaxed">התמונה שלך בתור ההדפסה<br/>המגנט יהיה מוכן בקרוב</p>
-          <div className="px-5 py-2 rounded-full text-xs font-semibold" style={{ background: 'rgba(124,134,225,0.12)', color: '#8c97e6', border: '1px solid rgba(124,134,225,0.28)' }}>סוגרים תוך שנייה...</div>
+          <p className="text-white/55 text-sm text-center leading-relaxed">התמונה שלך בתור ההדפסה 🎉<br/>אספו בעמדת המגנטים כשתהיה מוכנה</p>
+          <div className="px-5 py-2 rounded-full text-xs font-semibold text-center" style={{ background: 'rgba(124,134,225,0.12)', color: '#8c97e6', border: '1px solid rgba(124,134,225,0.28)' }}>נעדכן אתכם כאן כשהמגנט מוכן ✨</div>
         </div>
       )}
 

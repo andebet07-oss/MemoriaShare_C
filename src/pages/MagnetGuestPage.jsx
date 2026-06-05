@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, List, Loader2 } from 'lucide-react';
+import { Camera, List, Loader2, Sparkles, Magnet, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import memoriaService from '@/components/memoriaService';
@@ -98,27 +98,61 @@ export default function MagnetGuestPage({ event }) {
 
       <div className="fixed inset-x-0 bottom-0 z-10 px-6 pb-10 max-w-md mx-auto w-full">
 
+        {/* First-time 3-step guide — sets expectations before the first capture */}
+        {printJobs.length === 0 && (
+          <div className="flex items-center justify-center gap-1.5 mb-7">
+            {[
+              { Icon: Camera,   label: 'מצלמים' },
+              { Icon: Sparkles, label: 'מעצבים' },
+              { Icon: Magnet,   label: 'אוספים מגנט' },
+            ].map((s, i, arr) => (
+              <div key={s.label} className="flex items-center gap-1.5">
+                <div className="flex flex-col items-center gap-1.5">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center bg-white/8 border border-white/15 backdrop-blur-md">
+                    <s.Icon className="w-[18px] h-[18px] text-white/85" />
+                  </div>
+                  <span className="text-white/55 text-[11px] font-medium">{s.label}</span>
+                </div>
+                {i < arr.length - 1 && <span className="text-white/25 text-sm mb-4">‹</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Event header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-1">{event.name}</h1>
-          <p className={`text-sm font-semibold ${remainingPrints === 0 ? 'text-red-400' : 'text-white/70'}`}>
+        <div className="text-center mb-6">
+          <p className="text-white/45 text-xs font-medium tracking-wide mb-1.5">ברוכים הבאים לאירוע של</p>
+          <h1 className="text-3xl font-bold text-white mb-3 leading-tight">{event.name}</h1>
+          <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border ${
+            remainingPrints === 0
+              ? 'bg-red-500/15 border-red-500/30 text-red-300'
+              : 'bg-white/8 border-white/15 text-white/80'
+          }`}>
             {remainingPrints === 0 ? 'מכסת ההדפסות הסתיימה' : `נותרו לך ${remainingPrints} הדפסות`}
-          </p>
+          </span>
         </div>
 
-        {/* Status chips */}
-        {printJobs.length > 0 && (
-          <div className="flex gap-2 justify-center mb-6">
-            {pendingCount > 0 && (
-              <span className="px-3 py-1 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 text-xs font-semibold">
-                {pendingCount} ממתינים
-              </span>
-            )}
-            {readyCount > 0 && (
-              <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
-                {readyCount} מוכנים לאיסוף!
-              </span>
-            )}
+        {/* Ready-for-pickup banner — the payoff moment */}
+        {readyCount > 0 && (
+          <div className="mb-4 rounded-2xl px-4 py-3 flex items-center gap-3 bg-emerald-500/15 border border-emerald-500/40">
+            <div className="w-9 h-9 rounded-full bg-emerald-500/25 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-emerald-300" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-emerald-200 font-bold text-sm leading-tight">
+                {readyCount === 1 ? 'המגנט שלך מוכן לאיסוף!' : `${readyCount} מגנטים מוכנים לאיסוף!`}
+              </p>
+              <p className="text-emerald-300/70 text-xs mt-0.5">גשו לעמדת המגנטים לאיסוף</p>
+            </div>
+          </div>
+        )}
+
+        {/* Pending chip */}
+        {pendingCount > 0 && (
+          <div className="flex justify-center mb-5">
+            <span className="px-3 py-1 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 text-xs font-semibold">
+              {pendingCount} בתהליך הדפסה...
+            </span>
           </div>
         )}
 
