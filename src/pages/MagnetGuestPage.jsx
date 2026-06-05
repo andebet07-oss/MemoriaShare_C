@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import memoriaService from '@/components/memoriaService';
 import MagnetCamera from '@/components/magnet/MagnetCamera';
 import PrintStatusModal from '@/components/magnet/PrintStatusModal';
+import { reportError } from '@/lib/sentry';
 
 export default function MagnetGuestPage({ event }) {
   const { user, isLoadingAuth } = useAuth();
@@ -61,8 +62,8 @@ export default function MagnetGuestPage({ event }) {
     try {
       const jobs = await memoriaService.printJobs.getByUser(event.id, user.id);
       setPrintJobs(jobs);
-    } catch {
-      // non-fatal
+    } catch (err) {
+      reportError('MagnetGuestPage.fetchPrintJobs', err, { eventId: event.id });
     } finally {
       setIsLoadingJobs(false);
     }

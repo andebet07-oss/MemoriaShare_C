@@ -18,3 +18,22 @@ export function initSentry() {
     Sentry.captureException(event.reason ?? new Error("Unhandled promise rejection"));
   });
 }
+
+/**
+ * Report a handled error: logs to the console and forwards to Sentry with a
+ * context tag. Use this inside catch blocks instead of swallowing errors
+ * silently (`catch { // non-fatal }`) so production failures are visible.
+ *
+ * @param {string} context - where it happened, e.g. "MagnetReview.submit"
+ * @param {unknown} err    - the caught error
+ * @param {object} [extra] - optional extra data to attach
+ */
+export function reportError(context, err, extra = {}) {
+  console.error(`[${context}]`, err);
+  try {
+    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+      tags: { context },
+      extra,
+    });
+  } catch { /* Sentry not initialised (dev) — console.error already ran */ }
+}

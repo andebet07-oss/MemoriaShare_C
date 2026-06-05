@@ -6,6 +6,7 @@ import { LABEL_H_RATIO } from './framePacks';
 import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
 import { compositePngFrame, canvasToJpegBlob } from '@/lib/compositePngFrame';
 import { formatEventDate } from '@/lib/formatEventDate';
+import { reportError } from '@/lib/sentry';
 import memoriaService from '@/components/memoriaService';
 
 const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
@@ -286,7 +287,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       setModal('success');
       setTimeout(() => { setModal(null); onPrintJobCreated(); }, 2800);
     } catch (err) {
-      console.error('[MagnetReview] submit failed:', err);
+      reportError('MagnetReview.submit', err, { eventId: event?.id });
       if (photo?.id) memoriaService.photos.delete(photo.id).catch(() => {});
       setModal('error');
       setTimeout(() => setModal(null), 3000);

@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { LoadingState } from '@/components/ui/LoadingState'
 import GlobalErrorBoundary from '@/components/GlobalErrorBoundary'
+import OfflineBanner from '@/components/OfflineBanner'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
@@ -69,6 +70,11 @@ function MagnetGuestEntry() {
       <p className="text-white/30 text-sm">אירוע לא נמצא</p>
     </div>
   );
+  // Guard: only magnet events belong here. A share-event code lands on the
+  // share gallery instead of wrongly opening the magnet print UI.
+  if (event.event_type && event.event_type !== 'magnet') {
+    return <Navigate to={`/event/${code}`} replace />;
+  }
   return <MagnetGuestPage event={event} />;
 }
 
@@ -142,6 +148,7 @@ function App() {
     <GlobalErrorBoundary>
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
+          <OfflineBanner />
           <Router>
             <NavigationTracker />
             <AuthenticatedApp />

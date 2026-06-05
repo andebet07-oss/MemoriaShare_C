@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Loader2, RefreshCw, CheckCheck, Search, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import memoriaService from '@/components/memoriaService';
+import { reportError } from '@/lib/sentry';
 import PrintJobCard from './PrintJobCard';
 
 export default function PrintQueue({ event }) {
@@ -56,8 +57,8 @@ export default function PrintQueue({ event }) {
     try {
       const data = await memoriaService.printJobs.getByEvent(event.id);
       setJobs(data);
-    } catch {
-      // non-fatal
+    } catch (err) {
+      reportError('PrintQueue.fetchJobs', err, { eventId: event.id });
     } finally {
       setIsLoading(false);
     }
@@ -115,8 +116,8 @@ export default function PrintQueue({ event }) {
     try {
       await Promise.all(printing.map(job => memoriaService.printJobs.updateStatus(job.id, 'ready')));
       fetchJobs();
-    } catch {
-      // non-fatal
+    } catch (err) {
+      reportError('PrintQueue.markAllReady', err, { eventId: event.id });
     } finally {
       setIsBulkMarking(false);
     }
