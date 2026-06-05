@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus, Printer, ExternalLink, Users, Calendar } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import AdminFilterBar from './AdminFilterBar';
+import { RowsSkeleton } from '@/components/ui/skeletons';
 
 export default function AdminEventsList({ type }) {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function AdminEventsList({ type }) {
     : '—';
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20">
+    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
 
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
@@ -65,11 +66,7 @@ export default function AdminEventsList({ type }) {
         />
       )}
 
-      {isLoading && (
-        <div className="flex justify-center py-16">
-          <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
-        </div>
-      )}
+      {isLoading && <RowsSkeleton rows={4} />}
 
       {error && (
         <p className="text-red-400 text-sm py-4 text-center">שגיאה בטעינת האירועים.</p>

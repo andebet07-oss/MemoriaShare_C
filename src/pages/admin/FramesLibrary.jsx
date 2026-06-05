@@ -6,6 +6,7 @@ import memoriaService from '@/components/memoriaService';
 import FramePngPreview from '@/components/admin/frames/FramePngPreview';
 import FrameTextEditor from '@/components/admin/frames/FrameTextEditor';
 import AdminFilterBar from '@/components/admin/AdminFilterBar';
+import { CardGridSkeleton } from '@/components/ui/skeletons';
 import { STYLE_LABELS, CATEGORY_LABELS } from '@/lib/framesMeta';
 
 const STATUS_HE = { approved: 'פעיל', draft: 'טיוטה', archived: 'ארכיון' };
@@ -120,7 +121,7 @@ export default function FramesLibrary() {
   ];
 
   return (
-    <div className="min-h-full p-5 md:p-8" dir="rtl">
+    <div className="min-h-full p-5 md:p-8 animate-in fade-in slide-in-from-bottom-2 duration-500" dir="rtl">
 
       <div className="flex items-start justify-between gap-3 mb-6">
         <div>
@@ -155,11 +156,7 @@ export default function FramesLibrary() {
         />
       )}
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-32">
-          <div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-400 rounded-full animate-spin" />
-        </div>
-      )}
+      {isLoading && <CardGridSkeleton count={8} />}
 
       {!isLoading && error && (
         <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">

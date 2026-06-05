@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Image, Magnet, MessageSquare, Hash, Plus, Phone, CalendarDays, MapPin, Users, Printer, ExternalLink } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
+import { Skeleton } from '@/components/ui/skeleton';
+import { KpiGridSkeleton, RowsSkeleton } from '@/components/ui/skeletons';
 
 const STATUS_HE = { new: 'חדש', contacted: 'יצרנו קשר', converted: 'הומר', closed: 'סגור' };
 const STATUS_COLORS = {
@@ -149,8 +151,11 @@ export default function AdminOverview() {
   };
 
   if (isLoading) return (
-    <div className="flex justify-center py-16">
-      <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20">
+      <Skeleton className="w-24 h-3 mb-4" />
+      <KpiGridSkeleton />
+      <Skeleton className="w-32 h-3 mb-3" />
+      <RowsSkeleton rows={3} />
     </div>
   );
 
@@ -161,7 +166,7 @@ export default function AdminOverview() {
   );
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20">
+    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
 
       {/* Section label */}
       <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-4"><bdi>01</bdi> · סקירה</p>

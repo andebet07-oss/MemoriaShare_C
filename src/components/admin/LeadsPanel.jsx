@@ -3,6 +3,8 @@ import { Loader2, RefreshCw, Plus, Phone, CalendarDays, Users, MapPin } from 'lu
 import { useNavigate } from 'react-router-dom';
 import memoriaService from '@/components/memoriaService';
 import AdminFilterBar from './AdminFilterBar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { RowsSkeleton } from '@/components/ui/skeletons';
 
 const STATUS_ORDER = ['new', 'contacted', 'converted', 'closed'];
 const STATUS_HE    = { new: 'חדש', contacted: 'יצרנו קשר', converted: 'הומר', closed: 'סגור' };
@@ -147,13 +149,15 @@ export default function LeadsPanel() {
   ];
 
   if (isLoading) return (
-    <div className="flex justify-center py-16">
-      <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
+    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20">
+      <Skeleton className="w-20 h-3 mb-2" />
+      <Skeleton className="w-24 h-7 mb-5" />
+      <RowsSkeleton rows={5} />
     </div>
   );
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20" dir="rtl">
+    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500" dir="rtl">
       {/* Header row */}
       <div className="flex items-center justify-between mb-5">
         <div>
