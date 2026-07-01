@@ -590,7 +590,7 @@ const memoriaService = {
       try {
         const { data, error } = await supabase
           .from('frames_meta')
-          .select('frame_id, status, image_url, hole_bbox, text_config')
+          .select('frame_id, status, image_url, hole_bbox, text_config, aspect')
           .eq('frame_id', frameId)
           .maybeSingle();
         if (error) throw error;
@@ -665,6 +665,39 @@ const memoriaService = {
         throw dbError;
       }
       return { image_url, row: data };
+    },
+
+    /**
+     * Re-upload a (re-punched) PNG for an EXISTING frame and patch its row,
+     * preserving status (unlike uploadLibraryPng which forces 'draft').
+     * Cache-busts image_url so the new transparency shows immediately.
+     * @param {string} frameId
+     * @param {File}   file   - punched PNG
+     * @param {string} style  - storage sub-folder (defaults photo_print)
+     * @param {object} extra  - extra frames_meta fields to patch (e.g. hole_bbox, aspect, display_name)
+     */
+    updateImage: async (frameId, file, style = 'photo_print', extra = {}) => {
+      const storagePath = `overlays/library/${style}/${frameId}.png`;
+      const { error: upErr } = await supabase.storage
+        .from('overlays')
+        .upload(storagePath, file, { upsert: true, contentType: 'image/png' });
+      if (upErr) {
+        console.error('MemoriaService [frameMeta.updateImage]: Upload failed', upErr);
+        throw upErr;
+      }
+      const { data: urlData } = supabase.storage.from('overlays').getPublicUrl(storagePath);
+      const image_url = `${urlData.publicUrl}?v=${Date.now()}`;
+      const { data, error } = await supabase
+        .from('frames_meta')
+        .update({ image_url, ...extra, updated_at: new Date().toISOString() })
+        .eq('frame_id', frameId)
+        .select()
+        .single();
+      if (error) {
+        console.error('MemoriaService [frameMeta.updateImage]: DB update failed', frameId, error);
+        throw error;
+      }
+      return data;
     },
 
     /** Fetch all PNG-type frames (image_url IS NOT NULL) for the admin library PNG tab. */

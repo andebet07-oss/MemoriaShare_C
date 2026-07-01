@@ -30,10 +30,12 @@ export default function CropEditor({ job, event, onUpdate, onClose }) {
         const [f, img] = await Promise.all([resolveEventFrame(event), loadImageEl(job.raw_photo_url)]);
         if (cancelled) return;
         setFrame(f); setRawImg(img);
+        // Default the crop aspect to the assigned frame's aspect (landscape frames → 4:3).
+        const frameAspect = f?.aspect === 'landscape' ? '4:3' : '3:4';
         let initial = job.crop_config;
         if (!initial) {
           const { boxes } = await detectFaces(img);
-          initial = computeAutoCrop({ boxes, aspect: '3:4' });
+          initial = computeAutoCrop({ boxes, aspect: frameAspect });
         }
         if (!cancelled) setCfg(initial);
       } catch {

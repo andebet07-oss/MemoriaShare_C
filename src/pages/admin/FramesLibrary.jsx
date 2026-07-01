@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Pencil, ClipboardCheck } from 'lucide-react';
+import { Layers, Pencil, ClipboardCheck, Crop, Plus } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import FramePngPreview from '@/components/admin/frames/FramePngPreview';
 import FrameTextEditor from '@/components/admin/frames/FrameTextEditor';
+import FrameUploadDialog from '@/components/admin/frames/FrameUploadDialog';
 import AdminFilterBar from '@/components/admin/AdminFilterBar';
 import { CardGridSkeleton } from '@/components/ui/skeletons';
 import { STYLE_LABELS, CATEGORY_LABELS } from '@/lib/framesMeta';
@@ -26,7 +27,7 @@ function StatusBadge({ status }) {
   );
 }
 
-function FrameCard({ frame, isEditing, onEdit }) {
+function FrameCard({ frame, isEditing, onEdit, onEditHole }) {
   const categoryLabel = CATEGORY_LABELS[frame.category] ?? frame.category ?? '';
   const styleLabel    = STYLE_LABELS[frame.style]       ?? frame.style    ?? '';
 
@@ -66,17 +67,27 @@ function FrameCard({ frame, isEditing, onEdit }) {
           {styleLabel    && <><span className="opacity-30">·</span><span>{styleLabel}</span></>}
           {frame.aspect  && <><span className="opacity-30">·</span><span className="capitalize">{frame.aspect}</span></>}
         </div>
-        <button
-          onClick={() => onEdit(frame.frame_id)}
-          className="mt-1 flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-[0.97]"
-          style={{
-            background: isEditing ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.04)',
-            border: isEditing ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.07)',
-            color: isEditing ? '#c4b5fd' : 'rgba(255,255,255,0.4)',
-          }}>
-          <Pencil className="w-3 h-3" />
-          {isEditing ? 'עורך...' : 'עריכת טקסט'}
-        </button>
+        <div className="mt-1 flex gap-1.5">
+          <button
+            onClick={() => onEdit(frame.frame_id)}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-[0.97]"
+            style={{
+              background: isEditing ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.04)',
+              border: isEditing ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.07)',
+              color: isEditing ? '#c4b5fd' : 'rgba(255,255,255,0.4)',
+            }}>
+            <Pencil className="w-3 h-3" />
+            {isEditing ? 'עורך...' : 'טקסט'}
+          </button>
+          <button
+            onClick={() => onEditHole(frame.frame_id)}
+            title="הגדרת חלון התמונה"
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-white/40 hover:text-violet-200 transition-all active:scale-[0.97]"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <Crop className="w-3 h-3" />
+            חלון תמונה
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -85,6 +96,8 @@ function FrameCard({ frame, isEditing, onEdit }) {
 export default function FramesLibrary() {
   const navigate = useNavigate();
   const [editingId, setEditingId] = useState(null);
+  const [holeId, setHoleId] = useState(null);   // frame whose photo-window is being edited
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -96,6 +109,7 @@ export default function FramesLibrary() {
 
   const activeCount  = frames.filter(f => f.status === 'approved').length;
   const editingFrame = frames.find(f => f.frame_id === editingId) ?? null;
+  const holeFrame    = frames.find(f => f.frame_id === holeId) ?? null;
   const handleEdit = (id) => setEditingId(prev => prev === id ? null : id);
 
   // Search + status filter (client-side)
@@ -135,14 +149,24 @@ export default function FramesLibrary() {
                 : 'אין מסגרות פעילות'}
           </p>
         </div>
-        <button
-          onClick={() => navigate('/admin/frames/moderation')}
-          className="flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-xl text-xs font-semibold text-violet-300 hover:text-violet-200 transition-colors"
-          style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}
-        >
-          <ClipboardCheck className="w-3.5 h-3.5" />
-          תור מודרציה
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setUploadOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-[0.97]"
+            style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)' }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            מסגרת חדשה
+          </button>
+          <button
+            onClick={() => navigate('/admin/frames/moderation')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-violet-300 hover:text-violet-200 transition-colors"
+            style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}
+          >
+            <ClipboardCheck className="w-3.5 h-3.5" />
+            תור מודרציה
+          </button>
+        </div>
       </div>
 
       {!isLoading && !error && frames.length > 0 && (
@@ -186,17 +210,28 @@ export default function FramesLibrary() {
               frame={frame}
               isEditing={editingId === frame.frame_id}
               onEdit={handleEdit}
+              onEditHole={setHoleId}
             />
           ))}
         </div>
       )}
 
-      {/* Edit modal — overlay, opens centered on click (not buried at page bottom) */}
+      {/* Text editor modal */}
       {editingFrame && (
         <FrameTextEditor
           frame={editingFrame}
           onClose={() => setEditingId(null)}
         />
+      )}
+
+      {/* New-frame upload modal */}
+      {uploadOpen && (
+        <FrameUploadDialog onClose={() => setUploadOpen(false)} />
+      )}
+
+      {/* Photo-window (hole) editor modal for an existing frame */}
+      {holeFrame && (
+        <FrameUploadDialog frame={holeFrame} onClose={() => setHoleId(null)} />
       )}
     </div>
   );

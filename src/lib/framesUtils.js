@@ -61,7 +61,7 @@ export async function findApprovedFrameFromDB(frameId) {
 
     // PNG frame — return lightweight descriptor; no drawFrame needed
     if (row.image_url && row.hole_bbox) {
-      return { id: frameId, isPng: true, image_url: row.image_url, hole_bbox: row.hole_bbox, text_config: row.text_config ?? null };
+      return { id: frameId, isPng: true, image_url: row.image_url, hole_bbox: row.hole_bbox, text_config: row.text_config ?? null, aspect: row.aspect ?? 'portrait' };
     }
 
     // Procedural frame — resolve from local pack
