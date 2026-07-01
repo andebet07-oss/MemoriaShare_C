@@ -132,6 +132,10 @@ CREATE TABLE leads (
 );
 
 -- ── print_jobs ───────────────────────────────────────────────
+-- copies/face_count/crop_config/raw_photo_url added 20260701 for MagnetProStation.
+-- NOTE: enforce_print_quota() intentionally counts ROWS (not copies) — operator
+-- copy-multiplication changes only `copies`, never inserts extra rows, so the
+-- guest quota is unaffected. Do NOT change that trigger to multiply by copies.
 CREATE TABLE print_jobs (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id       UUID        NOT NULL REFERENCES events(id) ON DELETE CASCADE,
@@ -139,6 +143,10 @@ CREATE TABLE print_jobs (
   guest_user_id  UUID        REFERENCES auth.users(id) ON DELETE SET NULL,
   status         TEXT        NOT NULL DEFAULT 'pending'
                    CHECK (status IN ('pending', 'printing', 'ready', 'rejected')),
+  copies         INTEGER     NOT NULL DEFAULT 1 CHECK (copies BETWEEN 1 AND 20),
+  face_count     INTEGER,                       -- null = not yet analyzed
+  crop_config    JSONB,                         -- { aspect:'3:4'|'4:3', panX, panY, zoom }
+  raw_photo_url  TEXT,                          -- un-framed source for operator re-crop
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

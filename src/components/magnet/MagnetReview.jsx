@@ -281,8 +281,21 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       const blob = await canvasToJpegBlob(finalCanvas, 0.92);
       const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
       const { file_url, path } = await memoriaService.storage.upload(file, event.id);
+
+      // Also store the RAW un-framed capture so the operator's Pro Station can
+      // re-crop (face-centered) and re-apply the frame. Non-fatal: if the raw
+      // upload fails, we still submit the composited magnet (raw_photo_url stays null).
+      let raw_photo_url;
+      try {
+        const rawBlob = await (await fetch(imageDataURL)).blob();
+        const rawFile = new File([rawBlob], `raw-${Date.now()}.jpg`, { type: rawBlob.type || 'image/jpeg' });
+        raw_photo_url = (await memoriaService.storage.upload(rawFile, event.id)).file_url;
+      } catch (rawErr) {
+        reportError('MagnetReview.rawUpload', rawErr, { eventId: event?.id });
+      }
+
       photo = await memoriaService.photos.create({ event_id: event.id, file_url, path, created_by: userId, is_approved: true, is_hidden: false, filter_applied: 'none' });
-      await memoriaService.printJobs.create({ event_id: event.id, photo_id: photo.id, guest_user_id: userId });
+      await memoriaService.printJobs.create({ event_id: event.id, photo_id: photo.id, guest_user_id: userId, raw_photo_url });
       if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
       setModal('success');
       setTimeout(() => { setModal(null); onPrintJobCreated(); }, 2800);

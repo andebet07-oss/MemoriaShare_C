@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Loader2, ShieldOff, Magnet, Wifi } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import memoriaService from '@/components/memoriaService';
-import PrintQueue from '@/components/magnet/PrintQueue';
+import MagnetProStation from '@/components/magnet/MagnetProStation';
 
 export default function PrintStation() {
   const { eventId } = useParams();
@@ -79,7 +79,7 @@ export default function PrintStation() {
 
       {/* Queue */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <PrintQueue event={event} />
+        <MagnetProStation event={event} />
       </div>
     </div>
   );

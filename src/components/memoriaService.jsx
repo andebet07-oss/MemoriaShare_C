@@ -341,17 +341,47 @@ const memoriaService = {
   },
 
   printJobs: {
-    create: async ({ event_id, photo_id, guest_user_id }) => {
+    // copies/face_count/crop_config/raw_photo_url are optional — the guest submit
+    // path passes only the first three ids, so the DB defaults apply (copies=1,
+    // face_count=NULL). Undefined keys are stripped so we never override a default.
+    create: async ({ event_id, photo_id, guest_user_id, copies, face_count, crop_config, raw_photo_url }) => {
       try {
+        const row = { event_id, photo_id, guest_user_id };
+        if (copies !== undefined)        row.copies = copies;
+        if (face_count !== undefined)    row.face_count = face_count;
+        if (crop_config !== undefined)   row.crop_config = crop_config;
+        if (raw_photo_url !== undefined) row.raw_photo_url = raw_photo_url;
         const { data, error } = await supabase
           .from('print_jobs')
-          .insert({ event_id, photo_id, guest_user_id })
+          .insert(row)
           .select()
           .single();
         if (error) throw error;
         return data;
       } catch (error) {
         console.error('MemoriaService [printJobs.create]: Failed to create print job', error);
+        throw error;
+      }
+    },
+
+    // Generic admin patch — set copies / status / crop_config / face_count in one
+    // round-trip (operator changing copies while advancing status). Only defined
+    // keys are sent. Admin UPDATE RLS governs this.
+    update: async (id, patch = {}) => {
+      try {
+        const allowed = ['copies', 'status', 'crop_config', 'face_count'];
+        const row = { updated_at: new Date().toISOString() };
+        for (const k of allowed) if (patch[k] !== undefined) row[k] = patch[k];
+        const { data, error } = await supabase
+          .from('print_jobs')
+          .update(row)
+          .eq('id', id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('MemoriaService [printJobs.update]: Failed to update print job', id, error);
         throw error;
       }
     },
