@@ -1,4 +1,6 @@
 # מסמך אפיון מוצר (PRD) — MemoriaShare
+
+> **Superseded (2026-10-25):** MemoriaShare is being retired. Memoria is now a single product, MemoriaMagnet. This document is kept for historical reference only and no longer defines scope. See `docs/share-retirement-plan.md`.
 **גרסה:** 1.0  
 **תאריך:** אפריל 2026  
 **סטטוס:** פעיל בייצור
