@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Printer, CheckCircle2, X, Loader2, Minus, Plus, Users, Crop, Refrigerator } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import { printJob } from '@/lib/magnetPrint';
+import { HAS_REAL_FACE_ENGINE } from '@/hooks/useFaceCrop';
 
 const STATUS_CONFIG = {
   pending:  { label: 'ממתין',   color: 'text-yellow-400',  bg: 'bg-yellow-500/15 border-yellow-500/30' },
@@ -25,8 +26,8 @@ const clampCopies = (n) => Math.max(1, Math.min(20, Math.round(n) || 1));
 
 /**
  * ProJobCard — a print job in MagnetProStation. Adds copies stepper, face-count
- * chip, "backup copy for the hosts' fridge" toggle, and crop editing on top of
- * the classic print/ready/reject/reprint actions. Backup is an EPHEMERAL +1
+ * chip (hidden until a real face engine exists), "backup copy for the hosts'
+ * fridge" toggle, and crop editing on top of the classic print/ready/reject/reprint actions. Backup is an EPHEMERAL +1
  * applied only at print time (never persisted → never double-counts on re-render).
  */
 export default function ProJobCard({ job, event, isNew = false, isSelected = false, onUpdate, onEditCrop }) {
@@ -106,7 +107,7 @@ export default function ProJobCard({ job, event, isNew = false, isSelected = fal
           {cfg.label}
         </div>
         {/* Face-count chip */}
-        {job.face_count != null && (
+        {HAS_REAL_FACE_ENGINE && job.face_count != null && (
           <div className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 border border-white/15 text-[10px] font-bold text-white/90">
             <Users className="w-3 h-3" /> {job.face_count}
           </div>

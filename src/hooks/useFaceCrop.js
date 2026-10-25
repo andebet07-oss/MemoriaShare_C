@@ -18,6 +18,10 @@ import { compositePngFrame } from '@/lib/compositePngFrame';
 
 const FACE_ENGINE = 'sim'; // 'sim' | 'faceapi'
 
+// Gates face-count UI. Flip to true only once detectFaces() really calls a
+// detector — simulated counts must never be shown to the operator.
+export const HAS_REAL_FACE_ENGINE = FACE_ENGINE !== 'sim';
+
 // Load an <img> with anonymous CORS so the resulting canvas is never tainted.
 export function loadImageEl(src) {
   return new Promise((resolve, reject) => {
@@ -36,7 +40,7 @@ function canvasToImage(canvas) {
 /**
  * SIMULATED face detection. Deterministic per image (samples a downscaled copy
  * and hashes the pixels) so re-running yields a stable count/boxes — important
- * because auto-analysis persists the result and must not flip on every re-render.
+ * because the crop editor re-runs it and the auto-crop must not jump between opens.
  *
  * ── To swap in face-api.js later, replace ONLY this function body: ──
  *   import * as faceapi from 'face-api.js';

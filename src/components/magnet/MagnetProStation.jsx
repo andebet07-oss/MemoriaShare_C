@@ -2,16 +2,17 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Loader2, RefreshCw, CheckCheck, Search, X, Keyboard } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import { usePrintQueue } from '@/hooks/usePrintQueue';
-import { detectFaces, loadImageEl } from '@/hooks/useFaceCrop';
-import { printJob, getCompositedUrl } from '@/lib/magnetPrint';
+import { printJob } from '@/lib/magnetPrint';
 import ProJobCard from './ProJobCard';
 import CropEditor from './CropEditor';
 
 /**
  * MagnetProStation — the smart operator print station (replaces PrintQueue).
- * Adds AI face-detection → auto-copies, face-centered crop, and keyboard
- * fast-print, on top of the realtime queue. Thin orchestrator: queue state lives
- * in usePrintQueue, printing in magnetPrint, crop in useFaceCrop/CropEditor.
+ * Adds face-centered crop and keyboard fast-print on top of the realtime queue.
+ * Copies are operator-set only (DB default 1): there is deliberately no
+ * automatic copy multiplication — face detection is still simulated.
+ * Thin orchestrator: queue state lives in usePrintQueue, printing in
+ * magnetPrint, crop in useFaceCrop/CropEditor.
  */
 export default function MagnetProStation({ event }) {
   const {
@@ -23,29 +24,6 @@ export default function MagnetProStation({ event }) {
   const [cropEditorJobId, setCropEditorJobId] = useState(null);
   const [confirmBulk, setConfirmBulk] = useState(false);
   const [isBulkMarking, setIsBulkMarking] = useState(false);
-  const analyzingRef = useRef(new Set());
-
-  // ── Auto-multiplication: analyze faces once per job (face_count == null) ─────
-  useEffect(() => {
-    jobs.forEach((job) => {
-      // Only analyze active jobs — skip settled (ready/rejected) and already-done.
-      if (job.status === 'ready' || job.status === 'rejected') return;
-      if (job.face_count != null || analyzingRef.current.has(job.id)) return;
-      const url = job.raw_photo_url ?? getCompositedUrl(job);
-      if (!url) return; // photos join not hydrated yet — retry on next tick
-      analyzingRef.current.add(job.id);
-      (async () => {
-        try {
-          const img = await loadImageEl(url);
-          const { count } = await detectFaces(img);
-          const updated = await memoriaService.printJobs.update(job.id, { face_count: count, copies: Math.max(1, count) });
-          updateJob(updated);
-        } catch {
-          analyzingRef.current.delete(job.id); // allow retry
-        }
-      })();
-    });
-  }, [jobs, updateJob]);
 
   // ── Keyboard fast-print ─────────────────────────────────────────────────────
   const advance = useCallback(async (job) => {
