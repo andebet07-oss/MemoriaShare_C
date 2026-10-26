@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 
-export default function HeroSection({ onOpenChooser }) {
+export default function HeroSection({ onCreateEvent }) {
   const eventPhotos = [
     "/Left_PhoneMoucup_hero.jpeg",
     "/Center_PhoneMoucup_hero.jpeg",
@@ -137,7 +137,7 @@ export default function HeroSection({ onOpenChooser }) {
             style={{ animationDelay: '450ms' }}
           >
             <Button
-              onClick={onOpenChooser}
+              onClick={onCreateEvent}
               className="px-12 py-4 h-auto bg-cool-50 text-cool-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-indigo-soft rounded-md"
               style={{ letterSpacing: '0.05em' }}
             >

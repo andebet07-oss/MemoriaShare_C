@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Play, ArrowRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -9,25 +10,25 @@ import Testimonials from '../components/home/Testimonials';
 import FAQ from '../components/home/FAQ';
 import HowItWorks from '../components/home/HowItWorks';
 import FinalCTA from '../components/home/FinalCTA';
-import ProductChooser from '../components/home/ProductChooser';
 
 export default function Home() {
   const [showDemo, setShowDemo] = useState(false);
-  const [showChooser, setShowChooser] = useState(false);
+  const navigate = useNavigate();
 
-  const openChooser = () => setShowChooser(true);
+  // Single product: every "create event" CTA starts the MemoriaMagnet lead wizard.
+  const startMagnetLead = () => navigate('/magnet/lead');
 
   return (
     <div className="dark bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground min-h-screen">
       <div className="relative z-10">
-        <Header onOpenChooser={openChooser} />
+        <Header onCreateEvent={startMagnetLead} />
         <main>
-          <HeroSection onOpenDemo={() => setShowDemo(true)} onOpenChooser={openChooser} />
+          <HeroSection onOpenDemo={() => setShowDemo(true)} onCreateEvent={startMagnetLead} />
           <Features />
           <HowItWorks />
           <Testimonials />
           <FAQ />
-          <FinalCTA onOpenChooser={openChooser} onOpenDemo={() => setShowDemo(true)} />
+          <FinalCTA onCreateEvent={startMagnetLead} onOpenDemo={() => setShowDemo(true)} />
         </main>
         <footer className="py-8 border-t border-border">
           <div className="flex items-center justify-center gap-4 text-sm text-foreground/25">
@@ -37,9 +38,6 @@ export default function Home() {
           </div>
         </footer>
       </div>
-
-      {/* Product Chooser */}
-      <ProductChooser open={showChooser} onOpenChange={setShowChooser} />
 
       {/* Demo Modal */}
       {showDemo && (
@@ -59,7 +57,7 @@ export default function Home() {
                   </div>
                   <p className="text-foreground/60 text-lg mb-8 font-medium">וידאו הדגמה יתווסף בקרוב</p>
                   <Button
-                    onClick={() => { setShowDemo(false); setShowChooser(true); }}
+                    onClick={() => { setShowDemo(false); startMagnetLead(); }}
                     className="btn-primary px-8 py-6 rounded-full font-bold text-lg w-full sm:w-auto"
                   >
                     התחילו ליצור אירוע

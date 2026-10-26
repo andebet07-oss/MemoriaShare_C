@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 
-export default function FinalCTA({ onOpenChooser, onOpenDemo }) {
+export default function FinalCTA({ onCreateEvent, onOpenDemo }) {
   return (
     <section id="contact" className="py-24 md:py-36 border-t border-border" dir="rtl">
       <div className="container mx-auto px-6">
@@ -21,7 +21,7 @@ export default function FinalCTA({ onOpenChooser, onOpenDemo }) {
           <div className="h-px w-10 mx-auto my-8 bg-border" />
 
           <Button
-            onClick={onOpenChooser}
+            onClick={onCreateEvent}
             className="px-14 py-4 h-auto bg-cool-50 text-cool-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-indigo-soft rounded-md"
             style={{ letterSpacing: '0.05em' }}
           >

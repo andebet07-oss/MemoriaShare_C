@@ -7,8 +7,11 @@ import { LogIn, LogOut, LayoutDashboard, ShieldCheck, X, User } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-export default function Header({ onOpenChooser }) {
-  const { user, isAuthenticated } = useAuth();
+export default function Header({ onCreateEvent }) {
+  const { user, isAuthenticated: hasSession } = useAuth();
+  // Anonymous sessions (magnet guests, lead visitors) are not a sign-in: keep
+  // the login button so an admin can still sign in from the same device.
+  const isAuthenticated = hasSession && !user?.isAnonymous;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   React.useEffect(() => {
@@ -78,9 +81,9 @@ export default function Header({ onOpenChooser }) {
               </>
             )}
 
-            {/* CTA — opens product chooser. POV indigo on brand primary. */}
+            {/* CTA — starts the magnet lead wizard. POV indigo on brand primary. */}
             <button
-              onClick={onOpenChooser}
+              onClick={onCreateEvent}
               className="px-4 py-2 bg-primary text-primary-foreground font-semibold text-sm rounded-full hover:brightness-110 active:scale-[0.98] transition-all shadow-indigo-soft"
             >
               צרו אירוע
@@ -136,7 +139,7 @@ export default function Header({ onOpenChooser }) {
           <nav className="flex-1 flex flex-col px-6 space-y-1 overflow-y-auto">
             {/* Create Event CTA */}
             <button
-              onClick={() => { closeMenu(); onOpenChooser?.(); }}
+              onClick={() => { closeMenu(); onCreateEvent?.(); }}
               className="w-full text-right text-lg font-bold text-foreground py-3.5 px-2 rounded-lg bg-foreground/5 border border-border mb-2 flex items-center gap-3"
             >
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />

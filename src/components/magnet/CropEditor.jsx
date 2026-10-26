@@ -3,7 +3,7 @@ import { X, Loader2, Wand2, Check, ZoomIn } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import { formatEventDate } from '@/lib/formatEventDate';
 import { detectFaces, computeAutoCrop, applyCrop, composePreview, loadImageEl } from '@/hooks/useFaceCrop';
-import { resolveEventFrame } from '@/lib/magnetPrint';
+import { resolveEventFrame } from '@/lib/framesUtils';
 
 const clamp01 = (n) => Math.min(1, Math.max(0, n));
 

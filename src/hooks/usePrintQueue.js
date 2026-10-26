@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import memoriaService from '@/components/memoriaService';
 import { reportError } from '@/lib/sentry';
+import { stationError } from '@/lib/printStation';
 
 /**
  * usePrintQueue(eventId)
@@ -117,13 +118,15 @@ export function usePrintQueue(eventId) {
     setJobs(prev => prev.map(j => j.id === updated.id ? { ...j, ...updated } : j));
   }, []);
 
+  // allSettled: one failure must not hide which jobs did change. Re-fetch either
+  // way so the list matches the DB, and tell the operator about any failure.
   const markAllReady = useCallback(async (printingJobs) => {
-    try {
-      await Promise.all(printingJobs.map(job => memoriaService.printJobs.updateStatus(job.id, 'ready')));
-      fetchJobs();
-    } catch (err) {
-      reportError('usePrintQueue.markAllReady', err, { eventId });
-    }
+    const results = await Promise.allSettled(
+      printingJobs.map(job => memoriaService.printJobs.updateStatus(job.id, 'ready'))
+    );
+    const failed = results.filter(r => r.status === 'rejected');
+    if (failed.length) stationError('bulkFailed', failed[0].reason, { eventId, failed: failed.length });
+    fetchJobs();
   }, [eventId, fetchJobs]);
 
   // Search filter (by guest name) — applied to the sectioned lists only.

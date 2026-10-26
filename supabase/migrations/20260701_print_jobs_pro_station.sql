@@ -1,12 +1,12 @@
 -- ============================================================
 -- print_jobs — Pro Station columns (copies, face_count, crop, raw photo)
--- Applied to live DB: <PENDING>
+-- Applied to live DB: 2026-07-01 (per commit 49a87ad; columns confirmed on live 2026-10-25)
 -- ============================================================
 --
 -- Adds the columns the MagnetProStation operator UI needs:
 --   copies        — how many physical magnets to print for this ONE queue row.
---                   Auto-suggested from face detection (1 copy per person),
---                   operator-overridable. NEVER creates extra print_jobs rows.
+--                   Operator-set only (auto-suggestion from simulated face
+--                   detection removed 2026-10-25). NEVER creates extra print_jobs rows.
 --   face_count    — number of faces detected in the photo (null = not yet analyzed).
 --   crop_config   — operator's face-centered re-crop { aspect, panX, panY, zoom }.
 --   raw_photo_url — the un-framed camera capture, so the operator can re-crop and

@@ -482,6 +482,21 @@ const memoriaService = {
     },
 
     /**
+     * Upload a prospect's cover image from the public lead wizard.
+     * Storage RLS only accepts leads/{auth.uid()}/{file}, so a visitor without
+     * a session is signed in anonymously first.
+     */
+    uploadLeadCover: async (file) => {
+      let { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        const { data, error } = await supabase.auth.signInAnonymously();
+        if (error) throw error;
+        session = data.session;
+      }
+      return memoriaService.storage.upload(file, `leads/${session.user.id}`);
+    },
+
+    /**
      * Upload an overlay frame PNG for a Magnet event.
      * Path: overlays/{eventId}/frame.png (upsert — replaces if re-uploaded)
      */

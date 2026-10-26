@@ -97,7 +97,9 @@ const EventCard = React.memo(function EventCard({ event, onDelete, isAdmin = fal
 
 export default function MyEvents() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, navigateToLogin } = useAuth();
+  const { user, isAuthenticated: hasSession, navigateToLogin } = useAuth();
+  // Anonymous sessions (magnet guests, lead visitors) are not a host sign-in.
+  const isAuthenticated = hasSession && !user?.isAnonymous;
   const queryClient = useQueryClient();
   const [eventToDelete, setEventToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -112,7 +114,7 @@ export default function MyEvents() {
       if (user.role === 'admin') return memoriaService.events.list('-created_date');
       return memoriaService.events.listByUser(user.id, '-created_date');
     },
-    enabled: !!user,
+    enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

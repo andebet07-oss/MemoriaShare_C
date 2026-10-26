@@ -337,9 +337,10 @@ export default function MagnetLead() {
     const objectUrl = URL.createObjectURL(file);
     setLocalPreviewUrl(objectUrl);
     setIsUploading(true);
+    setErrors(prev => ({ ...prev, cover_image: null }));
     try {
       const compressed = await compressImage(file);
-      const { file_url } = await memoriaService.storage.upload(compressed);
+      const { file_url } = await memoriaService.storage.uploadLeadCover(compressed);
       handleInputChange('cover_image', file_url);
       URL.revokeObjectURL(objectUrl);
       setLocalPreviewUrl(null);
@@ -347,6 +348,7 @@ export default function MagnetLead() {
       console.error('[MagnetLead] Upload failed:', err);
       URL.revokeObjectURL(objectUrl);
       setLocalPreviewUrl(null);
+      setErrors(prev => ({ ...prev, cover_image: 'העלאת התמונה נכשלה — נסו שוב' }));
     }
     setIsUploading(false);
   };
@@ -525,6 +527,7 @@ export default function MagnetLead() {
                       </p>
                     </button>
                   </div>
+                  {errors.cover_image && <p className="text-destructive text-xs font-bold text-center">{errors.cover_image}</p>}
                 </div>
               )}
 

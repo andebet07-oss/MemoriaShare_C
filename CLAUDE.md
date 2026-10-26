@@ -2,6 +2,12 @@
 **Authority:** This file is the single source of truth for all AI-assisted development on this project.
 Read it in full before every task. Rules here override any default behavior.
 
+> **PRODUCT DECISION (2026-10-25) — overrides every dual-product rule below, `PRD.md` and `memory/`:**
+> Memoria is now a single product: **MemoriaMagnet**, a managed magnet-printing service at live events. MemoriaShare (self-service albums) is being retired. Do not preserve Share flows for their own sake. All engineering rules in this file still apply.
+> - Work on a feature branch, never directly on `main`.
+> - Any DB / RLS change: write the migration file + a short plan first, then wait for approval before applying it to the live database.
+> - Retirement plan & Magnet↔Share coupling map: `docs/share-retirement-plan.md`.
+
 ---
 
 ## Memory System (Load at Every Session Start)
@@ -23,7 +29,7 @@ Read it in full before every task. Rules here override any default behavior.
 
 - **Product:** MemoriaShare — real-time event photo sharing PWA
 - **PRD:** `PRD.md` (authoritative product spec)
-- **Schema:** `CLEAN_RESET_SCHEMA.sql` (authoritative DB schema + RLS)
+- **Schema:** `CLEAN_RESET_SCHEMA.sql` (DB schema + RLS). ⚠️ Live RLS has drifted from it (confirmed 2026-10-25): verify against live `pg_policies` before writing any RLS migration.
 - **Live URL:** `https://memoriashare.com`
 - **Deployment:** Vercel (auto-deploy from `main`)
 - **Backend:** Supabase project (URL in `.env.local`)
@@ -409,13 +415,11 @@ When operating in Plan Mode, limit planning output to concise bullet points and 
 * *Language Split:* ALL user-facing UI text must be in Hebrew (RTL). All code variables, logs, and internal documentation must be in English.
 * *Styling Paradigm:* Tailwind CSS. Native iOS aesthetic. Use backdrop-blur for floating elements and avoid solid blocks that cover camera views.
 
-## 3. Core Architecture: Dual-Product System
-* *DO NO HARM:* The platform runs two core products. You MUST isolate logic using conditional checks (e.g., event_type === 'share' || 'magnet') and NEVER break existing MemoriaShare flows when building MemoriaMagnet.
+## 3. Core Architecture: Single Product (MemoriaMagnet)
+* *Superseded 2026-10-25:* the dual-product rule ("never break Share flows") no longer applies. MemoriaShare is being retired; see `docs/share-retirement-plan.md`.
+* *DO NO HARM still applies to Magnet:* before removing Share code, confirm via the coupling map that no Magnet path depends on it (e.g. `/event/:code` → `MagnetGuestPage`, admin login in the Home header, the `photos` table).
 
-* *Product 1: MemoriaShare (Legacy)*
-  - Self-service logic. Guests autonomously create events and upload photos to digital albums.
-
-* *Product 2: MemoriaMagnet (New Premium Service)*
+* *MemoriaMagnet (the product)*
   - Managed service logic. Admin creates events.
-  - Guests have a print quota, a "Send to Print" action (instead of upload), and real-time status tracking.
+  - Guests have a print quota, a "Send to Print" action, and real-time status tracking.
   - Requires a secure Operator Print Station dashboard for the admin.

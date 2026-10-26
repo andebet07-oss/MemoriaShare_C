@@ -3,7 +3,7 @@ import { Trash2, Loader2, Smile, X } from 'lucide-react';
 import { getStickerPack } from './stickerPacks';
 import { SVG_STICKERS } from './svgStickers';
 import { LABEL_H_RATIO } from './framePacks';
-import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
+import { resolveEventFrame } from '@/lib/framesUtils';
 import { compositePngFrame, canvasToJpegBlob } from '@/lib/compositePngFrame';
 import { formatEventDate } from '@/lib/formatEventDate';
 import { reportError } from '@/lib/sentry';
@@ -150,17 +150,18 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
   }, []);
 
   // Render photo + frame to a preview canvas so the user sees the actual frame layout.
-  // Frame approval is checked against the DB (falls back to local seed on DB error).
   useEffect(() => {
     let cancelled = false;
-    const frameId = event?.overlay_frame_url;
     const eventName = event?.name || '';
 
     async function render() {
-      const assigned = (frameId && !frameId.startsWith('http'))
-        ? await findApprovedFrameFromDB(frameId)
-        : null;
-      const eventFrame = assigned ?? getApprovedFramePack(eventName)[0];
+      let eventFrame;
+      try {
+        eventFrame = await resolveEventFrame(event);
+      } catch (err) {
+        reportError('MagnetReview.resolveEventFrame', err, { eventId: event?.id });
+        return;
+      }
       if (!eventFrame || cancelled) return;
 
       const img = new Image();
@@ -245,12 +246,9 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       canvas.height = totalH;
       const ctx = canvas.getContext('2d');
 
-      // Resolve frame: DB-authoritative check; fallback to local seed on DB error.
-      const frameId = event?.overlay_frame_url;
-      const assigned = (frameId && !frameId.startsWith('http'))
-        ? await findApprovedFrameFromDB(frameId)
-        : null;
-      const eventFrame = assigned ?? getApprovedFramePack(event?.name || '')[0];
+      // Same resolver as the preview and the print path. A custom frame that
+      // fails to load throws → error modal, rather than printing it frameless.
+      const eventFrame = await resolveEventFrame(event);
 
       let finalCanvas;
       if (eventFrame?.isPng) {
