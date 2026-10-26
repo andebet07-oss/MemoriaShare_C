@@ -1,8 +1,8 @@
 -- ============================================================
 -- Rollback for 20261025_print_pipeline_hardening.sql
 -- Restores every policy on events / photos / print_jobs / storage.objects to
--- the state captured by 20261025_snapshot.sql, then drops the helpers the
--- migration added. One transaction: any error leaves the DB unchanged.
+-- the state captured by 20261025_snapshot.sql, then drops the trigger and
+-- helpers the migration added. One transaction: any error leaves the DB unchanged.
 -- ============================================================
 
 BEGIN;
@@ -30,8 +30,13 @@ BEGIN
   END LOOP;
 END$$;
 
+DROP TRIGGER  IF EXISTS trg_photos_lock_urls ON public.photos;
+DROP FUNCTION IF EXISTS public.photos_lock_urls();
 DROP FUNCTION IF EXISTS public.can_queue_print_job(UUID, UUID);
 DROP FUNCTION IF EXISTS public.is_active_event_folder(TEXT);
+DROP FUNCTION IF EXISTS public.is_magnet_event(UUID);
+DROP FUNCTION IF EXISTS public.is_event_storage_url(TEXT, UUID);
+DROP FUNCTION IF EXISTS public.photos_public_base_url();
 
 -- Optional, normally NOT wanted: restore the simulated auto-copies the
 -- migration reset to 1 (re-enables over-printing of those 2 jobs).
