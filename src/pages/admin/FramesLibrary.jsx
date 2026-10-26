@@ -140,7 +140,7 @@ export default function FramesLibrary() {
       <div className="flex items-start justify-between gap-3 mb-6">
         <div>
           <p className="text-violet-400 text-[10px] font-bold tracking-[0.35em] uppercase mb-1.5">Admin · כלים</p>
-          <h1 className="font-playfair text-3xl text-foreground leading-tight">ספריית מסגרות</h1>
+          <h1 className="font-heebo font-semibold text-3xl text-foreground leading-tight">ספריית מסגרות</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isLoading
               ? 'טוען...'

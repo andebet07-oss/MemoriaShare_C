@@ -99,7 +99,7 @@ function InlineCalendar({ value, onChange }) {
         <button type="button" onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <span className="font-playfair text-foreground text-lg">{hebrewMonths[viewMonth]} {viewYear}</span>
+        <span className="font-heebo font-semibold text-foreground text-lg">{hebrewMonths[viewMonth]} {viewYear}</span>
         <button type="button" onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -471,7 +471,7 @@ export default function CreateMagnetEvent() {
             <Check className="w-7 h-7 text-indigo-400" />
           </div>
           <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-3">Magnet · מוכן</p>
-          <h3 className="font-playfair text-3xl text-foreground/90 mb-2">אירוע מגנט נוצר</h3>
+          <h3 className="font-heebo font-semibold text-3xl text-foreground/90 mb-2">אירוע מגנט נוצר</h3>
           <p className="text-muted-foreground text-sm mb-6">שתפו את הקישור או ה-QR עם האורחים</p>
 
           {/* QR code */}
@@ -569,7 +569,7 @@ export default function CreateMagnetEvent() {
               {currentStep === 1 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
                   <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-2"><bdi>01</bdi> · שם האירוע</p>
-                  <h2 className="font-playfair text-2xl font-semibold tracking-tight mb-1 text-foreground">מה שם האירוע?</h2>
+                  <h2 className="font-heebo text-2xl font-semibold mb-1 text-foreground">מה שם האירוע?</h2>
                   <p className="text-sm text-muted-foreground mb-2">השם שיופיע על המגנט ובממשק האורחים</p>
                   <Input
                     value={form.name}
@@ -623,7 +623,7 @@ export default function CreateMagnetEvent() {
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
                     <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>02</bdi> · תאריך</p>
-                    <h2 className="font-playfair text-2xl font-semibold tracking-tight text-foreground">מתי האירוע?</h2>
+                    <h2 className="font-heebo text-2xl font-semibold text-foreground">מתי האירוע?</h2>
                     <p className="text-sm text-muted-foreground">תאריך האירוע שיופיע על המגנטים</p>
                   </div>
                   <InlineCalendar value={form.date} onChange={(d) => handleChange('date', d)} />
@@ -636,7 +636,7 @@ export default function CreateMagnetEvent() {
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
                     <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>03</bdi> · מכסה</p>
-                    <h2 className="font-playfair text-2xl font-semibold tracking-tight text-foreground">כמה הדפסות לאורח?</h2>
+                    <h2 className="font-heebo text-2xl font-semibold text-foreground">כמה הדפסות לאורח?</h2>
                     <p className="text-sm text-muted-foreground">כל אורח יוכל להדפיס עד המספר שתבחרו</p>
                   </div>
                   <div className="grid grid-cols-5 gap-2">
@@ -666,7 +666,7 @@ export default function CreateMagnetEvent() {
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
                     <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>04</bdi> · מסגרת</p>
-                    <h2 className="font-playfair text-2xl font-semibold tracking-tight text-foreground">בחרו מסגרת</h2>
+                    <h2 className="font-heebo text-2xl font-semibold text-foreground">בחרו מסגרת</h2>
                     <p className="text-sm text-muted-foreground">המסגרת תוטבע על כל מגנט באירוע — אופציונלי</p>
                   </div>
 

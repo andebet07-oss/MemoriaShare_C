@@ -109,16 +109,20 @@ Every dark page root MUST include the `dark` class. Without it, Tailwind semanti
 Gradients must use explicit cool anchors (`from-cool-950 via-cool-900 to-cool-950`), NOT `from-background via-cool-900 to-background`.
 
 ### Typography System
-- **Display serif:** Playfair Display — wizard headers, card titles, KPI numerals (`font-playfair`, 2xl–4xl)
+> **Rule (2026-10-26): Playfair only for Latin text. Hebrew headings use Heebo. No letter-spacing on Hebrew text.**
+> Playfair Display has no Hebrew glyphs: Hebrew set in it falls back to a system serif. Letter-spacing (`tracking-*`, including `tracking-tight`) and `uppercase` are for Latin text only.
+
+- **Display serif:** Playfair Display — Latin text only: Latin letters and digits, e.g. KPI numerals or a Latin wordmark (`font-playfair`, 2xl–4xl)
+- **Headings:** Heebo semibold/bold — every Hebrew heading: page titles, wizard step titles, card titles (`font-heebo font-semibold`)
 - **Body:** Heebo — all Hebrew UI copy (`font-heebo`)
-- **Editorial micro-label:** Montserrat — `tracking-[0.3em] uppercase text-[10px] font-bold`, `text-indigo-400` (Share) or `text-violet-400` (Magnet)
+- **Editorial micro-label:** `text-[10px] font-bold`, `text-indigo-400` (Share) or `text-violet-400` (Magnet). A Latin-only label may add Montserrat `tracking-[0.3em] uppercase`; a Hebrew label never does.
 
 Editorial label pattern (use at the top of every page/section header):
 ```jsx
-<p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-3">
+<p className="text-indigo-400 text-[10px] font-bold mb-3">
   <bdi>01</bdi> · ניהול
 </p>
-<h1 className="font-playfair text-3xl md:text-4xl text-foreground">שם הכותרת</h1>
+<h1 className="font-heebo font-semibold text-3xl md:text-4xl text-foreground">שם הכותרת</h1>
 ```
 
 ### Radial Glow Recipe
@@ -132,6 +136,7 @@ background: radial-gradient(circle at 30% 20%, rgba(124,134,225,0.06), transpare
 - Warm cream radial `rgba(247,240,228,0.03)` — retired
 - Silver-metallic buttons (old gold/cream `luxury-button`) — replaced with cool-neutral `#fcfcfe → #e8e8ec` + indigo shadow
 - Violet as primary accent on Share-side surfaces — reserved for Magnet sub-brand only
+- `font-playfair`, `tracking-*` or `uppercase` on Hebrew text — use Heebo, no letter-spacing (see Typography System)
 
 ---
 

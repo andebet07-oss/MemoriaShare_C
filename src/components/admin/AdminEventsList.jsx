@@ -38,7 +38,7 @@ export default function AdminEventsList({ type }) {
           <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1">
             <bdi>{isMagnet ? '03' : '02'}</bdi> · {isMagnet ? 'מגנט' : 'שיתוף'}
           </p>
-          <h2 className="font-playfair text-2xl text-foreground">
+          <h2 className="font-heebo font-semibold text-2xl text-foreground">
             {isMagnet ? 'אירועי מגנט' : 'אירועי שיתוף'}
           </h2>
           {!isLoading && (
@@ -113,7 +113,7 @@ export default function AdminEventsList({ type }) {
             <div className="p-4">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="min-w-0">
-                  <p className="font-playfair text-foreground text-lg leading-tight truncate">{ev.name}</p>
+                  <p className="font-heebo font-semibold text-foreground text-lg leading-tight truncate">{ev.name}</p>
                   <div className="flex items-center gap-3 mt-1 flex-wrap">
                     <span className="flex items-center gap-1 text-muted-foreground text-xs">
                       <Calendar className="w-3 h-3" />

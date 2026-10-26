@@ -40,6 +40,7 @@ The prior violet-heavy palette was retired. Aesthetic inspiration: POV.camera �
 - **Radial glow:** `radial-gradient(ellipse ..., rgba(124,134,225,0.06) 0%, transparent 70%)` — subtle indigo wash, NEVER warm cream (old `rgba(247,240,228,0.03)` is retired)
 
 ### Typography System
+> **Superseded 2026-10-26 (CLAUDE.md §0.6 Typography System):** Playfair only for Latin text, Hebrew headings use Heebo semibold, no letter-spacing or uppercase on Hebrew text. The Playfair and tracking guidance below applies to Latin text only.
 - **Display / serif:** `font-playfair` (Playfair Display) — page headers, dialog titles, Empty-state headlines, wizard step titles (2xl–4xl scale)
 - **Hebrew body / UI:** `font-heebo` (Heebo) — all paragraphs, form labels, buttons
 - **Editorial micro-labels:** Montserrat via `tracking-[0.3em] uppercase text-[10px] font-bold` — section numbering (`01 · ניהול`, `01 · שם האירוע`), tab chrome
@@ -91,7 +92,7 @@ Precedent: `UploadManager.jsx` pending-photos panel (`6643fd2`).
 
 
 ### Component Vocabulary (consistent across pages)
-- **Wizard step header pattern:** indigo/violet micro-label (`0N · 段名`) → Playfair 2xl title → muted-foreground subtitle
+- **Wizard step header pattern:** indigo/violet micro-label (`0N · 段名`) → Heebo semibold 2xl title (was Playfair; see the 2026-10-26 typography rule) → muted-foreground subtitle
 - **Editorial label:** `text-indigo-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-3`
 - **Primary CTA:** `bg-indigo-500 text-cool-950 hover:bg-indigo-400 font-semibold` (or `bg-cool-50 text-cool-950` for secondary-strong)
 - **Tab underline (active):** 2px border-bottom, color = indigo-500 (share) / violet-500 (admin)
