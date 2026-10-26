@@ -79,49 +79,91 @@ After completing a major feature or day's work:
 
 ## 0.6. Design System (approved 2026-10-26)
 
-One product, one look: **dark only, indigo only, Heebo for all UI.** Everything in this section is approved.
-The concrete type scale, token values, layout widths and shared components are still a draft (`docs/design-spec-draft.md`). They become rules here once the admin + guest redesign PR is approved.
-Audit: `docs/design-audit.md`. Out of scope: fonts and colours inside printed magnet designs, frames and stickers.
+One product, one look: **dark only, indigo only, Heebo for all UI.** Build screens from the shared components in `src/components/system/` and the `Button` set (`src/components/ui/button.jsx`). Don't restyle each page by hand.
+Audit behind it: `docs/design-audit.md`. Out of scope: fonts and colours inside printed magnet designs, frames and stickers. That covers the polaroid / frame previews, sticker fonts and colours, and frame text colour swatches.
 
-### Core Palette
+### Colour: semantic tokens only
 
-| Token | Hex | Tailwind anchor | Usage |
-|-------|-----|-----------------|-------|
-| Background | `#1e1e1e` | `cool-900` | Page shell body |
-| Background deepest | `#121214` | `cool-950` | Gradient bottom, modals |
-| Foreground / text | `#fcfcfe` | `cool-50` | Primary text |
-| Primary fill | `#5f69d3` | — | Primary button fills and selected chips (white text 4.6:1) |
-| Accent | `#7c86e1` | `indigo-500` | Links, section labels, active tab, focus rings, icons |
-| Muted | `#b4b4b4` | `muted-foreground` | Secondary text, date labels |
-| Border | `rgba(255,255,255,0.07)` | `border` | Hairlines on cards, inputs, tabs |
-| Card surface | `rgba(255,255,255,0.03)` | `card` | Panels, dashboards, list rows |
+| Token | Value | Use |
+|---|---|---|
+| `background` | `#1f1f1f` | page shells (admin, Print Station, guest, camera); `bg-glow` = one soft indigo radial |
+| `card` | `#262626` | cards, panels, list rows, sheets |
+| `secondary` | `#2b2b2b` | inputs, raised controls, neutral chips |
+| `border` | `#383838` | every hairline |
+| `foreground` / `muted-foreground` | `#fcfcfe` / `#8b8e92` | text / secondary text, captions |
+| `primary` | `#5f69d3` | fills: primary button, selected chip, tab badge, shutter (white text 4.6:1) |
+| `brand` | `#7c86e1` | accents: links, section labels, active tab, focus ring, icon tints, selected outline chips |
+| `destructive` | red | errors, destructive actions |
+| `status-pending` / `-printing` / `-ready` / `-rejected` | amber `#f5b544` / sky `#60a5fa` / emerald `#34d399` / red `#f87171` | statuses, via `<StatusBadge>` / `TONE` only |
 
-- **Indigo is the only accent.** The violet `#7c3aed` "Magnet sub-brand" is retired. Violet still on admin screens is legacy until the redesign PR replaces it.
-- **Colours come from semantic tokens** (`bg-background`, `bg-card`, `text-muted-foreground`, `border-border`, `bg-primary`…), never hex or `rgb()` in components.
-  - Exceptions: scrims and text over photos or the camera feed, and printed designs.
-- **Status colours** (pending / printing / ready / rejected) are defined once and reused everywhere.
-- **Guest CTA:** the camera CTA over the event photo is a white "on-image" button (white fill, dark text). It's the only white button.
+- **Indigo is the only accent.** The violet `#7c3aed` "Magnet sub-brand" is retired.
+- **Status colours** are defined once, in `src/components/system/statusStyles.js` (`PRINT_STATUS`, `LEAD_STATUS`, `TONE`). Other states map onto them:
+  - Lead stages: new → brand, contacted → pending, converted → ready, closed → muted.
+  - Frame states: approved → ready, in review → pending, archived → rejected, draft → muted.
+- **No hard-coded colours in components:** no hex, `rgb()`, `violet-*`, `gray-*`/`zinc-*`, `white/…` or `black/…`.
+  - Scrims and text over photos or the camera feed may use `foreground/…` and `background/…`.
+  - An inline style that needs a colour uses `hsl(var(--token))`.
+- **Guest CTA:** the camera CTA over the event photo is the white "on-image" button (`<Button variant="onImage">`). It's the only white button.
 
 ### Dark mode
 `<html class="dark">` in `index.html` is the only switch; the app is dark-only. Never add `dark` to a page root or style for light mode.
-Page shell gradients use explicit cool anchors (`from-cool-950 via-cool-900 to-cool-950`), NOT `from-background via-cool-900 to-background`.
+Page shell gradients (lead wizard, CreateMagnetEvent) use explicit cool anchors (`from-cool-950 via-cool-900 to-cool-950`), NOT `from-background via-cool-900 to-background`.
 
-### Typography
-- **Heebo for all UI, numbers included.** Use `tabular-nums` for KPIs and counts.
-- **Playfair and Montserrat are retired from UI.** Existing uses are legacy until the redesign PR removes them.
+### Typography: Heebo for all UI
+- **Heebo everywhere, numbers included.** Use `tabular-nums` for KPIs, counts and quantities. Playfair, Montserrat, Georgia and Inter are not used in UI.
 - **No letter-spacing** (`tracking-*`, including `tracking-tight`) **and no `uppercase` on Hebrew text.**
-- **UI labels are Hebrew, never English:** "ADMIN" → "ניהול", "Print Station · תחנת הפעלה" → "תחנת הדפסה", "Live" → "מחובר", "Powered by MemoriaMagnet" → "מופעל על ידי Memoria".
-- **One fixed scale** with six roles: page title, section title, card title, body, caption, section label. Values are in the draft.
+- **UI labels are Hebrew, never English.** Examples: "ניהול", "ניהול · כלים", "כלים · מודרציה", "מגנט · מוכן", "תחנת הדפסה", "מחובר", "מופעל על ידי Memoria".
+- **Nothing smaller than 12px.** The one exception is the lead wizard's phone mockup, which scales in `cqw`.
+
+| Role | Classes | px |
+|---|---|---|
+| Page title | `text-2xl md:text-3xl font-semibold` | 24 / 30 |
+| Section title | `text-lg font-semibold` | 18 |
+| Card title | `text-base font-semibold` | 16 |
+| Body | `text-sm` (guest-facing copy may use `text-base`) | 14 |
+| Caption | `text-xs text-muted-foreground` | 12 |
+| Section label | `text-xs font-semibold text-brand` (`<SectionLabel>`) | 12 |
+| KPI number | `text-3xl font-semibold tabular-nums` (`<StatTile>`) | 30 |
+
+**Print Station** is read on a tablet at a distance, so it uses the same roles one step up:
+- body `text-base`
+- card title `text-lg`
+- section title `text-xl`
+- KPI `text-4xl`
+- status badge `text-sm`
+
+Its minimum text size is 14px.
 
 ### Layout
-- One page-header pattern (label + title + optional action).
-- One card style, one tab style, and one button set (primary / secondary / ghost / destructive).
-- Consistent page padding and gaps, mobile-first, RTL.
-- **The site header and mobile drawer keep their current design.**
-- **Print Station stays readable at a distance on a tablet.**
+- **Page:**
+  - The shell is `min-h-screen bg-background text-foreground`.
+  - Content uses `mx-auto w-full px-4 md:px-8 pt-6 md:pt-10 pb-16`.
+  - Widths: guest/public flows `max-w-md`, admin `max-w-5xl`, Print Station `max-w-7xl`.
+  - Mobile-first and RTL. Bottom-fixed bars pad with `env(safe-area-inset-bottom)`.
+- **Rhythm:** `gap-8` between sections, `gap-3` between cards in a list, `gap-2` inside a card. Sections become two columns on `lg` where the content allows.
+- **Header:** `<PageHeader label title subtitle action>` gives a section label, then the page title, then a muted subtitle. The action sits at the inline end and stacks under the title on mobile.
+- **Card:** `<Card>` is `rounded-2xl border border-border bg-card p-4 md:p-5`. `interactive` adds hover and press feedback. No shadows or gradients.
+- **Tabs:** `<TabNav>` uses underline tabs (`text-sm font-medium`, active `border-brand text-foreground`) and scrolls horizontally on mobile.
+- **Filter chips:** `rounded-full h-8 px-3 text-xs`, active `bg-brand/15 text-brand border-brand/30`.
+- **Buttons:** `<Button>` comes in four variants:
+  - primary (`bg-primary`): one per view;
+  - secondary (`bg-secondary` + border);
+  - ghost;
+  - destructive (tinted red).
+
+  `onImage` is for the guest CTA only.
+  Sizes are `sm` h-9, default h-11, `lg` h-14 (full-width hero CTAs) and `icon` / `icon-sm`. All buttons are `rounded-xl` and `font-semibold`.
+- **Radius:**
+  - controls and inputs: `rounded-xl`;
+  - cards: `rounded-2xl`;
+  - bottom sheets: `rounded-t-3xl`;
+  - pills and avatars: `rounded-full`.
+- **Inputs:** `h-11 rounded-xl bg-secondary border-border`, with 16px text on mobile so iOS doesn't zoom.
+- **Site header and mobile drawer:** keep their current design.
+- **Shared components (`src/components/system/`):** `PageHeader`, `SectionLabel`, `Card`, `StatTile`, `TabNav`, `StatusBadge`, `statusStyles`.
 
 ### Radial Glow Recipe
-Page hero glow uses indigo — **not** warm cream:
+Page hero glow uses indigo — **not** warm cream. Use `bg-glow`, or this recipe where a different shape is needed:
 ```css
 background: radial-gradient(circle at 30% 20%, rgba(124,134,225,0.06), transparent 60%);
 ```
@@ -131,7 +173,8 @@ background: radial-gradient(circle at 30% 20%, rgba(124,134,225,0.06), transpare
 - Violet or any second accent hue. A white button anywhere except the guest on-image CTA.
 - Hard-coded `#hex` / `rgb()` colours in components, e.g. `bg-[#0a0a0a]`, `bg-[#111]`. Exceptions: imagery scrims and printed designs.
 - Warm cream radial `rgba(247,240,228,0.03)` and silver-metallic buttons (retired).
-- `font-playfair` / `font-montserrat` in UI. Letter-spacing or `uppercase` on Hebrew. English UI labels.
+- `font-playfair` / `font-montserrat` / inline `fontFamily` in UI. Letter-spacing or `uppercase` on Hebrew. English UI labels. Text under 12px.
+- A one-off card, tab or button style where a shared component exists.
 
 ---
 
