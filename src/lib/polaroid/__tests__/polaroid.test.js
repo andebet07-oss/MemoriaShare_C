@@ -7,7 +7,7 @@ import {
 } from '@/lib/polaroid/templates';
 import { splitNames, joinNames, isHebrew, formatTemplateDate } from '@/lib/polaroid/text';
 import { layoutCaption } from '@/lib/polaroid/layout';
-import { photoSourceRect } from '@/lib/polaroid/renderPolaroid';
+import { photoSourceRect, eventRenderSpec, renderSnapshot, jobRenderSpec } from '@/lib/polaroid/renderPolaroid';
 
 // Deterministic stand-in for canvas metrics (per unit of font size).
 const measure = (text) => ({
@@ -257,5 +257,32 @@ describe('photoSourceRect', () => {
     expect(r.w).toBeCloseTo(800);
     expect(r.x + r.w).toBeCloseTo(1600);
     expect(r.y).toBe(0);
+  });
+});
+
+describe('render snapshots', () => {
+  const event = { name: 'נועה & איתי', date: '2026-12-15', template_id: 'C', template_options: {} };
+
+  it('round-trips the spec the guest saw', () => {
+    const seen = eventRenderSpec({ ...event, template_id: 'A', template_options: { heart: 'red' } });
+    const snapshot = JSON.parse(JSON.stringify(renderSnapshot(seen))); // as stored in jsonb
+    expect(snapshot).toEqual({ v: 1, templateId: 'A', options: { heart: 'red', url: false }, name: 'נועה & איתי', date: '2026-12-15' });
+    expect(jobRenderSpec({ render_snapshot: snapshot }, event)).toEqual(seen);
+  });
+
+  it('ignores later event changes when a snapshot exists', () => {
+    const snapshot = renderSnapshot(eventRenderSpec(event));
+    const changed = { ...event, name: 'Sarah & Daniel', template_id: 'G' };
+    expect(jobRenderSpec({ render_snapshot: snapshot }, changed)).toEqual(eventRenderSpec(event));
+  });
+
+  it('falls back to the event for jobs without a snapshot', () => {
+    expect(jobRenderSpec({ render_snapshot: null }, event)).toEqual(eventRenderSpec(event));
+    expect(jobRenderSpec({}, event)).toEqual(eventRenderSpec(event));
+  });
+
+  it('sanitises a malformed snapshot', () => {
+    const spec = jobRenderSpec({ render_snapshot: { templateId: 'Z', options: { heart: 'pink' }, name: 42, date: null } }, event);
+    expect(spec).toEqual({ templateId: 'A', options: { heart: 'taupe', url: false }, name: '', date: '' });
   });
 });

@@ -83,9 +83,11 @@ Frames were replaced by code-rendered polaroid templates (`src/lib/polaroid/`, `
 ☐ Admin: create a Magnet event, pick a template other than A (e.g. C) in the last step.
 ☐ Guest camera: the viewfinder shows that template around the live feed; rotating the phone switches portrait ↔ landscape.
 ☐ Review: the preview shows the template once. After submit, open `photos.file_url`: 900×1200 (or 1200×900), exactly one frame.
+☐ The new `print_jobs` row has `render_snapshot` = `{v, templateId, options, name, date}` as shown on the review screen (proves the live guest INSERT policy accepts the column).
 ☐ Station, no re-crop: print → the stored composite as is, one frame, on a 3×4 in page.
 ☐ Station, re-crop: print → one frame, crop applied.
 ☐ Admin: change the template / cover on an existing event → succeeds.
+☐ After that change, re-crop and print a job queued before it → still the template, names and date the guest saw.
 ☐ Network-block `/fonts/templates/` (DevTools request blocking), then submit → error screen, not a print in fallback fonts.
 
 ## E. Station failure handling

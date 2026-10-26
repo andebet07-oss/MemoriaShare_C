@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Trash2, Loader2, RotateCw } from 'lucide-react';
-import { eventRenderSpec, renderComposite, canvasToJpegBlob, loadImage } from '@/lib/polaroid/renderPolaroid';
+import { eventRenderSpec, renderSnapshot, renderComposite, canvasToJpegBlob, loadImage } from '@/lib/polaroid/renderPolaroid';
 import { reportError } from '@/lib/sentry';
 import memoriaService from '@/components/memoriaService';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { PaperPlane, Champagne } from './review/SendIllustrations';
  * the polaroid renderer), with retake and send. What is shown is what is sent.
  */
 export default function MagnetReview({ imageDataURL, orientation, event, userId, onRetake, onPrintJobCreated }) {
-  const compositeRef = useRef(null); // the print-resolution canvas being shown
+  const compositeRef = useRef(null); // { canvas, spec } — the print-resolution magnet being shown
   const [previewUrl, setPreviewUrl] = useState(null);
   const [renderFailed, setRenderFailed] = useState(false);
   const [renderAttempt, setRenderAttempt] = useState(0);
@@ -25,9 +25,10 @@ export default function MagnetReview({ imageDataURL, orientation, event, userId,
     (async () => {
       try {
         const photo = await loadImage(imageDataURL);
-        const canvas = await renderComposite({ ...eventRenderSpec(event), orientation, photo });
+        const spec = eventRenderSpec(event);
+        const canvas = await renderComposite({ ...spec, orientation, photo });
         if (cancelled) return;
-        compositeRef.current = canvas;
+        compositeRef.current = { canvas, spec };
         setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9));
       } catch (err) {
         reportError('MagnetReview.render', err, { eventId: event?.id });
@@ -43,7 +44,8 @@ export default function MagnetReview({ imageDataURL, orientation, event, userId,
     setModal('loading');
     let photo = null;
     try {
-      const blob = await canvasToJpegBlob(compositeRef.current, 0.92);
+      const { canvas, spec } = compositeRef.current;
+      const blob = await canvasToJpegBlob(canvas, 0.92);
       const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: 'image/jpeg' });
       const { file_url, path } = await memoriaService.storage.upload(file, event.id);
 
@@ -59,7 +61,11 @@ export default function MagnetReview({ imageDataURL, orientation, event, userId,
       }
 
       photo = await memoriaService.photos.create({ event_id: event.id, file_url, path, created_by: userId, is_approved: true, is_hidden: false, filter_applied: 'none' });
-      await memoriaService.printJobs.create({ event_id: event.id, photo_id: photo.id, guest_user_id: userId, raw_photo_url });
+      // The snapshot keeps an operator re-crop identical to what the guest saw here.
+      await memoriaService.printJobs.create({
+        event_id: event.id, photo_id: photo.id, guest_user_id: userId, raw_photo_url,
+        render_snapshot: renderSnapshot(spec),
+      });
       if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
       setModal('success');
       setTimeout(() => { setModal(null); onPrintJobCreated(); }, 2800);

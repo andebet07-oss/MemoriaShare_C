@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Loader2, Wand2, Check, ZoomIn } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import { detectFaces, computeAutoCrop } from '@/hooks/useFaceCrop';
-import { eventRenderSpec, renderComposite, loadImage } from '@/lib/polaroid/renderPolaroid';
+import { jobRenderSpec, renderComposite, loadImage } from '@/lib/polaroid/renderPolaroid';
 import { cropOrientation, imageOrientation, getCompositedUrl } from '@/lib/magnetPrint';
 import { Button } from '@/components/ui/button';
 
@@ -11,8 +11,9 @@ const PREVIEW_SCALE = 1.5; // px per design unit (450 × 600 preview)
 
 /**
  * CropEditor — modal for face-centred smart crop + manual pan/zoom of the RAW
- * photo, previewed live in the event's template (WYSIWYG: the same renderer
- * draws the print). Persists crop_config; printing re-renders raw + crop.
+ * photo, previewed live with the job's render snapshot — the template, names
+ * and date the guest saw (WYSIWYG: the same renderer draws the print).
+ * Persists crop_config; printing re-renders raw + crop.
  */
 export default function CropEditor({ job, event, onUpdate, onClose }) {
   const [rawImg, setRawImg] = useState(null);
@@ -49,11 +50,11 @@ export default function CropEditor({ job, event, onUpdate, onClose }) {
   useEffect(() => {
     if (!rawImg || !cfg) return;
     let cancelled = false;
-    renderComposite({ ...eventRenderSpec(event), orientation: cfg.orientation, photo: rawImg, crop: cfg }, PREVIEW_SCALE)
+    renderComposite({ ...jobRenderSpec(job, event), orientation: cfg.orientation, photo: rawImg, crop: cfg }, PREVIEW_SCALE)
       .then((canvas) => { if (!cancelled) setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9)); })
       .catch((err) => { console.warn('[CropEditor] preview failed:', err?.message); });
     return () => { cancelled = true; };
-  }, [cfg, rawImg, event]);
+  }, [cfg, rawImg, job, event]);
 
   const autoRecenter = useCallback(async () => {
     if (!rawImg) return;

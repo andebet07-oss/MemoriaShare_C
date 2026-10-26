@@ -150,6 +150,31 @@ export function eventRenderSpec(event) {
   };
 }
 
+/**
+ * What a print job stores as print_jobs.render_snapshot: the spec the guest's
+ * magnet was rendered with (template, options, names, date).
+ */
+export function renderSnapshot(spec) {
+  return { v: 1, templateId: spec.templateId, options: spec.options, name: spec.name, date: spec.date };
+}
+
+/**
+ * The render input for a print job: its snapshot — the magnet as the guest saw
+ * it, whatever changed on the event since — or, for jobs saved before
+ * snapshots existed, the event's current settings.
+ */
+export function jobRenderSpec(job, event) {
+  const s = job?.render_snapshot;
+  if (!s || typeof s !== 'object' || !s.templateId) return eventRenderSpec(event);
+  const templateId = eventTemplateId({ template_id: s.templateId });
+  return {
+    templateId,
+    options: resolveOptions(getTemplate(templateId), s.options),
+    name: typeof s.name === 'string' ? s.name : '',
+    date: typeof s.date === 'string' ? s.date : '',
+  };
+}
+
 async function render(spec, mode, scale) {
   const template = getTemplate(spec.templateId);
   const options = resolveOptions(template, spec.options);

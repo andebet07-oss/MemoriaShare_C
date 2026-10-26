@@ -344,13 +344,14 @@ const memoriaService = {
     // copies/face_count/crop_config/raw_photo_url are optional — the guest submit
     // path passes only the first three ids, so the DB defaults apply (copies=1,
     // face_count=NULL). Undefined keys are stripped so we never override a default.
-    create: async ({ event_id, photo_id, guest_user_id, copies, face_count, crop_config, raw_photo_url }) => {
+    create: async ({ event_id, photo_id, guest_user_id, copies, face_count, crop_config, raw_photo_url, render_snapshot }) => {
       try {
         const row = { event_id, photo_id, guest_user_id };
         if (copies !== undefined)        row.copies = copies;
         if (face_count !== undefined)    row.face_count = face_count;
         if (crop_config !== undefined)   row.crop_config = crop_config;
         if (raw_photo_url !== undefined) row.raw_photo_url = raw_photo_url;
+        if (render_snapshot !== undefined) row.render_snapshot = render_snapshot;
         const { data, error } = await supabase
           .from('print_jobs')
           .insert(row)
