@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export default function Header({ onOpenChooser }) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated: hasSession } = useAuth();
+  // Anonymous sessions (magnet guests, lead visitors) are not a sign-in: keep
+  // the login button so an admin can still sign in from the same device.
+  const isAuthenticated = hasSession && !user?.isAnonymous;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   React.useEffect(() => {
