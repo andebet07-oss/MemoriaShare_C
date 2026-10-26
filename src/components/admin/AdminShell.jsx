@@ -7,13 +7,12 @@ import memoriaService from '@/components/memoriaService';
 import TabNav from '@/components/system/TabNav';
 import { Button } from '@/components/ui/button';
 
-// Core workflow first: סקירה → לידים → מגנט → שיתוף → כלים → משתמשים
+// Core workflow first: סקירה → לידים → מגנט → כלים → משתמשים (Magnet-only; no Share events in admin)
 // מודרציה הוסרה מהניווט הראשי — נגישה דרך /admin/frames/moderation ישירות
 const TABS = [
   { to: '/admin',               label: 'סקירה',       end: true },
   { to: '/admin/leads',         label: 'לידים',        badge: true },
   { to: '/admin/events/magnet', label: 'אירועי מגנט'  },
-  { to: '/admin/events/share',  label: 'אירועי שיתוף' },
   { to: '/admin/frames',        label: 'כלים'          },
   { to: '/admin/users',         label: 'משתמשים'      },
 ];
