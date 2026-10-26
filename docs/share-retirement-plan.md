@@ -72,6 +72,28 @@ Every statement gets verified against the **live** schema first (`CLEAN_RESET_SC
 
 ---
 
+## 5. Stage 2 + 4 rebuild: private photo bucket with signed URLs (decided 2026-10-26)
+
+**Why:** the `photos` bucket is public, so anyone who has a photo URL can fetch it, whatever the table RLS says. This was the Codex review finding on PR #4. The Stage 1 migration hides the rows and the next follow-up closes the Storage list endpoint. This step removes the public URLs themselves.
+
+**Shape**
+- **Split storage by audience.**
+  - A private bucket for guest captures (composites, raw photos, derived thumbnails).
+  - A public bucket for assets every guest must load: covers, `overlays/`, frame library PNGs, lead covers if they stay public.
+- **Store paths, not URLs.** Today `photos.file_url`, `photos.file_urls` and `print_jobs.raw_photo_url` hold public URLs. Keep the storage path and mint signed URLs on read, through `memoriaService`, batched with `createSignedUrls`.
+- **Read access** (storage SELECT on the private bucket): the uploader (owner) and admins.
+- **Expiry:** signed URLs need a lifetime long enough for a print session (e.g. 1 h), refreshed as needed.
+
+**Touch points to rework**
+- Guest: `MagnetReview` (upload), `MagnetGuestPage` / `PrintStatusModal` (own thumbnails).
+- Station: `ProJobCard` thumbnails; `magnetPrint` (composite / raw load for print and crop, cross-origin canvas: verify CORS on signed URLs); `CropEditor`.
+- Admin: `MagnetEventDashboard` photo grid.
+- `api/resize-photo.ts`: it writes `file_urls` with `getPublicUrl`; it must store paths instead.
+- Stage 1 migration rules that assume public URLs: `photos_insert_url_guard`, `is_event_storage_url`, and the `raw_photo_url` check in `print_jobs_insert_guest`. They must validate paths instead.
+- Existing rows: a data migration from URL to path, plus copying or moving objects if the bucket changes.
+
+**Order:** close the Storage list endpoint first (small, Stage 1 follow-up). Then this rebuild, together with the Share deletions (§2–3), so the bucket split happens once.
+
 ## 4. Decisions needed from you
 
 1. **Existing Share events and photos:** (a) hard stop, where `/event/:code` for share events shows "האלבום אינו פעיל עוד"; (b) a read-only grace period so hosts can download a ZIP until a date; (c) export, then delete the rows and storage objects. This decides when 2b can run.

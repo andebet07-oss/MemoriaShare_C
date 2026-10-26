@@ -4,7 +4,7 @@
 --   §2 photos bucket INSERT (+ leads)   §6 events: create / magnet updates admin-only
 --   §3 photos bucket admin UPDATE       §7 data: reset simulated auto-copies
 --   §4 photos: admin read, magnet photos private
--- Applied to live DB: <PENDING>
+-- Applied to live DB: <PENDING>   (lives in supabase/pending/ until applied; see README there)
 -- ============================================================
 --
 -- Written against the LIVE policies (pg_policies, 2026-10-25), which differ

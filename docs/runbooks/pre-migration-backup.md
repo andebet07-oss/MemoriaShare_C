@@ -9,6 +9,8 @@ The branch's app code works against the current, unmigrated DB (see plan §3), s
 merge to `main` (Vercel deploys) → smoke test on production against the unmigrated DB → steps 1–5 below. (Pre-launch, the preview smoke test was skipped by decision on 2026-10-26.)
 The migration is never applied while production still runs pre-branch code.
 
+**Auto-deploy is off (2026-10-26):** the Supabase GitHub integration had *Deploy to production* enabled for `main`; it was switched off before the PR #4 merge. Unapplied migrations also live in `supabase/pending/`, which no integration reads.
+
 ## 1. In-database snapshot (required)
 1. SQL editor → run `supabase/rollback/20261025_snapshot.sql`.
 2. Check the final result. `policies` should equal the number of policies on events / photos / print_jobs / storage.objects, and `print_jobs_rows` should be `32`.
@@ -40,7 +42,7 @@ Storage files (photos, covers, frames) are in object storage, not in any DB dump
 Check https://status.supabase.com for the project's region (Database, Storage, Auth). Don't apply during an incident or maintenance window.
 
 ## 4. Apply
-SQL editor → run `supabase/migrations/20261025_print_pipeline_hardening.sql`.
+SQL editor → run `supabase/pending/20261025_print_pipeline_hardening.sql`. Afterwards, set its `Applied to live DB:` header and `git mv` it into `supabase/migrations/`.
 - The NOTICE lines must show `Pinned photos storage prefix: https://esjprtvfijyjjxpufjho.supabase.co/storage/v1/object/public/photos/ (existing photos outside it: 0)` and `auto-copies reset: 2 row(s)`. The migration aborts if the data's prefix isn't this project's.
 - If a guard fails, the migration aborts with a message and nothing is applied. Send me the message.
 

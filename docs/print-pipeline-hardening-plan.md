@@ -1,6 +1,6 @@
 # Print Pipeline Hardening Plan
 
-**Status (2026-10-26):** everything is on branch `claude/lucid-knuth-l1jm0g`. Nothing has been applied to the live DB and nothing is merged.
+**Status (2026-10-26):** merged to `main` via PR #4. The migration is **not applied**; it lives in `supabase/pending/` (out of reach of the Supabase GitHub integration, whose *Deploy to production* was found ON and switched off before the merge).
 
 | Item | State | Where |
 |---|---|---|
@@ -143,7 +143,8 @@ Order:
 Expected Q4: a single prefix `https://esjprtvfijyjjxpufjho.supabase.co/storage/v1/object/public/photos/`. The migration now aborts if the data's prefix isn't this project's.
 
 ## Follow-ups (not in this migration)
-- **Storage list API.** `storage_photos_select_public` still lets anyone list an event folder's file names, so Magnet photos remain enumerable through Storage even though the table is closed. Closing it needs a live check that the storage service still works when SELECT is limited to owner/admin, since it may read back the rows it inserts. QA §B has the probe.
+- **Storage list API: decided 2026-10-26, next follow-up migration** once uploads are verified live. `storage_photos_select_public` still lets anyone list an event folder's file names, so Magnet photos remain enumerable through Storage even though the table is closed. Closing it needs a live check that the storage service still works when SELECT is limited to owner/admin, since it may read back the rows it inserts. QA §B has the probe.
+- **Public `photos` bucket: decided 2026-10-26, part of the combined Stage 2 + 4 rebuild** (Codex review on PR #4). Anyone who has a URL can fetch the object. The bucket goes private, with signed URLs. Scope is in `docs/share-retirement-plan.md` §5.
 - **Quota.** The per-device quota can be bypassed by clearing site data (it's tied to the anonymous user). This is inherent to anonymous auth.
 - **Schema file.** Sync `CLEAN_RESET_SCHEMA.sql` with live after this lands.
 - **File size.** `MagnetProStation.jsx` is 209 lines (the limit is 200; it was 225 before Stage 0).
