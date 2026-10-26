@@ -34,7 +34,7 @@
 - **memoriaService:** `eventPermissions.*`, `profiles.getByEmail`, `photos.approve`, and the Share defaults in `events.create` (`privacy_mode`, `guest_tier`, `max_uploads_per_user`)
 
 ### Modify
-- **Home:** remove `ProductChooser`; every CTA goes to `/magnet/lead`. Rewrite the copy in `HeroSection` / `Features` / `HowItWorks` / `FAQ` / `FinalCTA` / `Testimonials` for Magnet (Hebrew; needs copy sign-off)
+- **Home:** ~~remove `ProductChooser`; every CTA goes to `/magnet/lead`~~ — done in Stage 1 (CTA commit on `claude/lucid-knuth-l1jm0g`). Rewrite the copy in `HeroSection` / `Features` / `HowItWorks` / `FAQ` / `FinalCTA` / `Testimonials` for Magnet (Hebrew; needs copy sign-off)
 - **Header:** drop "האירועים שלי"; keep login, logout and "ניהול"
 - **Admin:** remove the share tab (`AdminShell`), the share KPI and the `/host/events/:id` fallback link (`AdminOverview`), the `type` prop and share branches (`AdminEventsList`), and the `MyEvents` links (`AdminUsers`)
 - **AuthContext / App:** remove `needsOnboarding` + `HostOnboardingModal` mount

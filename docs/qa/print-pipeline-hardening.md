@@ -102,6 +102,13 @@ If this returns file names, anyone can still enumerate an event's files through 
 ☐ Offline, then upload → Hebrew error "העלאת התמונה נכשלה — נסו שוב".
 ☐ Submit the lead → the row appears in admin Leads with the cover URL.
 
+## F2. Home and anonymous sessions (`37f2f2a`, CTA commit)
+☐ Home: "צרו אירוע" in the header (desktop and mobile menu), the hero, the final CTA and the demo modal all go straight to `/magnet/lead`, with no chooser.
+☐ After uploading a lead cover (anonymous session), back on Home: the header shows "כניסה", not "האירועים שלי" or logout.
+☐ Same browser → `/host`: the sign-in screen, not an empty "האירועים שלי".
+☐ Same browser → `/host/events/create` → submit: "יש להתחבר לפני יצירת אירוע" (not a DB error).
+☐ Admin signs in from that same browser via "כניסה" → `/admin` works.
+
 ## G. Events and `getByCode`
 ☐ Google non-admin account: creating an event fails (expected: Share self-service is retired).
 ☐ Admin: create a Magnet event (including cover + custom frame) → succeeds.
