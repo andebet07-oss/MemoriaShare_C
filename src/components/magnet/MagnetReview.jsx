@@ -8,8 +8,8 @@ import { compositePngFrame, canvasToJpegBlob } from '@/lib/compositePngFrame';
 import { formatEventDate } from '@/lib/formatEventDate';
 import { reportError } from '@/lib/sentry';
 import memoriaService from '@/components/memoriaService';
+import { Button } from '@/components/ui/button';
 
-const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
 const EMOJI_SIZE = 52;
 
 function drawSticker(ctx, s, w, h, svgImg) {
@@ -308,7 +308,7 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden select-none" style={{ background: DARK_BG }} dir="rtl">
+    <div className="fixed inset-0 z-[9999] overflow-hidden select-none bg-background bg-glow" dir="rtl">
 
       {/* ── Polaroid + stickers ── */}
       <div
@@ -391,47 +391,47 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
 
       {/* ── Bottom bar ── */}
       <div
-        className="absolute inset-x-0 bottom-0 px-5"
-        style={{ paddingTop: '18px', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)', background: 'linear-gradient(to top, rgba(10,10,14,0.97) 65%, transparent)' }}
+        className="absolute inset-x-0 bottom-0 px-5 bg-gradient-to-t from-background from-60% to-transparent"
+        style={{ paddingTop: '18px', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}
       >
         <div className="flex items-center gap-3">
-        <button onClick={onRetake} disabled={isSubmitting} aria-label="צלם מחדש" className="w-12 h-12 rounded-full flex items-center justify-center disabled:opacity-40 active:scale-90 transition-transform" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
-          <Trash2 className="w-5 h-5 text-white/70" />
+        <button onClick={onRetake} disabled={isSubmitting} aria-label="צלם מחדש" className="w-12 h-12 rounded-full flex items-center justify-center bg-foreground/10 border border-foreground/15 backdrop-blur-md active:scale-90 transition-transform disabled:opacity-40">
+          <Trash2 className="w-5 h-5 text-foreground/70" />
         </button>
 
-        <button onClick={compositeAndSubmit} disabled={isSubmitting || modal !== null} className="flex-1 h-14 font-black text-base rounded-full disabled:opacity-50 active:scale-[0.97] transition-all flex items-center justify-center gap-2" style={{ background: isSubmitting ? 'rgba(124,134,225,0.45)' : 'linear-gradient(145deg,#8c97e6,#7c86e1)', color: '#ffffff', boxShadow: isSubmitting ? 'none' : '0 4px 28px rgba(124,134,225,0.35)' }}>
-          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#ffffff' }} /> : 'שלח להדפסה'}
-        </button>
+        <Button size="lg" className="flex-1" onClick={compositeAndSubmit} disabled={isSubmitting || modal !== null}>
+          {isSubmitting ? <Loader2 className="!size-5 animate-spin" /> : 'שלח להדפסה'}
+        </Button>
 
-        <button onClick={() => setShowPicker(true)} aria-label="הוסף מדבקה" className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-transform" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}>
-          <Smile className="w-5 h-5 text-white/70" />
+        <button onClick={() => setShowPicker(true)} aria-label="הוסף מדבקה" className="w-12 h-12 rounded-full flex items-center justify-center bg-foreground/10 border border-foreground/15 backdrop-blur-md active:scale-90 transition-transform">
+          <Smile className="w-5 h-5 text-foreground/70" />
         </button>
         </div>
       </div>
 
       {/* ── Loading modal ── */}
       {modal === 'loading' && (
-        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-6 px-8" style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(14px)' }}>
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-6 px-8 bg-background/80 backdrop-blur-lg">
           <PaperPlane />
-          <p className="text-white font-bold text-xl tracking-wide">שולחים להדפסה...</p>
-          <p className="text-white/40 text-sm text-center">התמונה שלך בדרך</p>
+          <p className="text-foreground font-semibold text-xl">שולחים להדפסה...</p>
+          <p className="text-muted-foreground text-sm text-center">התמונה שלך בדרך</p>
         </div>
       )}
 
       {/* ── Success modal ── */}
       {modal === 'success' && (
-        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-5 px-8" style={{ background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(14px)' }}>
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-5 px-8 bg-background/85 backdrop-blur-lg">
           <Champagne />
-          <p className="text-white font-black text-2xl tracking-wide">נשלח!</p>
-          <p className="text-white/55 text-sm text-center leading-relaxed">התמונה שלך בתור ההדפסה 🎉<br/>אספו בעמדת המגנטים כשתהיה מוכנה</p>
-          <div className="px-5 py-2 rounded-full text-xs font-semibold text-center" style={{ background: 'rgba(124,134,225,0.12)', color: '#8c97e6', border: '1px solid rgba(124,134,225,0.28)' }}>נעדכן אתכם כאן כשהמגנט מוכן ✨</div>
+          <p className="text-foreground font-semibold text-2xl">נשלח!</p>
+          <p className="text-muted-foreground text-sm text-center leading-relaxed">התמונה שלך בתור ההדפסה 🎉<br/>אספו בעמדת המגנטים כשתהיה מוכנה</p>
+          <div className="px-4 py-2 rounded-full text-xs font-semibold text-center bg-brand/15 text-brand border border-brand/30">נעדכן אתכם כאן כשהמגנט מוכן ✨</div>
         </div>
       )}
 
       {/* ── Error toast ── */}
       {modal === 'error' && (
         <div className="absolute inset-x-4 top-14 z-[100] flex justify-center">
-          <div className="px-5 py-3 rounded-2xl text-sm font-semibold text-white" style={{ background: 'rgba(239,68,68,0.22)', border: '1px solid rgba(239,68,68,0.38)', backdropFilter: 'blur(12px)' }}>
+          <div className="px-5 py-3 rounded-2xl text-sm font-semibold text-foreground bg-destructive/20 border border-destructive/40 backdrop-blur-md">
             שגיאה — נסו שוב
           </div>
         </div>
@@ -440,18 +440,18 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
       {/* ── Sticker picker ── */}
       {showPicker && (
         <div className="absolute inset-0 z-[200] flex items-end" dir="rtl">
-          <div className="absolute inset-0 bg-black/55" onClick={() => setShowPicker(false)} />
-          <div className="relative w-full rounded-t-3xl" style={{ background: 'rgba(18,10,32,0.97)', border: '1px solid rgba(255,255,255,0.07)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
-            <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4" style={{ background: 'rgba(255,255,255,0.18)' }} />
+          <div className="absolute inset-0 bg-background/60" onClick={() => setShowPicker(false)} />
+          <div className="relative w-full rounded-t-3xl bg-card border-t border-border" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
+            <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4 bg-foreground/20" />
             <div className="flex items-center justify-between px-5 mb-4">
-              <p className="text-white font-bold text-base">הוסיפו מדבקה</p>
-              <button onClick={() => setShowPicker(false)} className="w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                <X className="w-4 h-4 text-white/60" />
-              </button>
+              <p className="text-foreground font-semibold text-lg">הוסיפו מדבקה</p>
+              <Button variant="ghost" size="icon-sm" onClick={() => setShowPicker(false)} aria-label="סגור">
+                <X />
+              </Button>
             </div>
             <div className="grid grid-cols-4 gap-3 px-5 pb-2 max-h-52 overflow-y-auto">
               {pack.map(def => (
-                <button key={def.id} onClick={() => addSticker(def)} className="aspect-square rounded-xl flex items-center justify-center active:scale-90 transition-all p-2" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                <button key={def.id} onClick={() => addSticker(def)} className="aspect-square rounded-xl flex items-center justify-center active:scale-90 transition-all p-2 bg-secondary border border-border">
                   {def.type === 'svg' && (
                     <div style={{ width: 40, height: 40 }} dangerouslySetInnerHTML={{ __html: SVG_STICKERS[def.svgKey] || '' }} />
                   )}
