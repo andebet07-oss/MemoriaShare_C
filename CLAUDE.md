@@ -77,66 +77,86 @@ After completing a major feature or day's work:
 
 ---
 
-## 0.6. Brand Palette (Canonical — Locked 2026-04-17)
+## 0.6. Design System (proposed 2026-10-26 — pending approval; replaces "Brand Palette")
 
-**Authority:** This is the locked visual system for MemoriaShare. Any PR that introduces a conflicting hex value must be rejected or refactored. Full detail lives in `memory/long-term-memory.md §Design Language` — this block is the at-a-glance quick reference.
+One product, one look: **dark only, one accent (indigo), Heebo only.** Build screens from the shared components in `src/components/system/` and the `Button` set. Don't restyle each page by hand.
+Audit behind this spec: `docs/design-audit.md`. Out of scope: fonts and colours inside printed magnet designs, frames and stickers.
 
-### Core Palette
+### Dark mode
+`<html class="dark">` in `index.html` is the only switch. Never put `dark` on a page root or style for light mode.
 
-| Token | Hex | Tailwind anchor | Usage |
-|-------|-----|-----------------|-------|
-| Background | `#1e1e1e` | `cool-900` | Page shell body |
-| Background deepest | `#121214` | `cool-950` | Gradient bottom, modals |
-| Foreground / text | `#fcfcfe` | `cool-50` | Primary text, high-contrast CTAs |
-| Primary accent | `#7c86e1` | `indigo-500` | CTAs, focus rings, editorial labels (`text-indigo-400`) |
-| Muted | `#b4b4b4` | `muted-foreground` | Secondary text, date labels |
-| Border | `rgba(255,255,255,0.07)` | `border` | Hairlines on cards, inputs, tabs |
-| Card surface | `rgba(255,255,255,0.03)` | `card` | Panels, dashboards, list rows |
+### Colour — semantic tokens only
+| Token | Value | Use |
+|---|---|---|
+| `background` | `#121214` | page (optionally `bg-glow`: one soft indigo radial) |
+| `card` | `#1a1a1e` | cards, panels, list rows, sheets |
+| `secondary` | `#232328` | inputs, raised controls, neutral chips |
+| `border` | `#2c2c32` | every hairline |
+| `foreground` / `muted-foreground` | `#fcfcfe` / `#9b9ba4` | text / secondary text, captions |
+| `primary` | `#7c86e1` | **the only accent**: primary button, active tab, links, section labels, focus ring |
+| `destructive` | `#ef4444` | errors, destructive actions |
+| `status-pending` / `-printing` / `-ready` / `-rejected` | amber `#f5b544` / sky `#60a5fa` / emerald `#34d399` / red `#f87171` | print-job status, via `<StatusBadge>` only |
 
-**Sub-brand (reserved):** Violet `#7c3aed` / `violet-500` is exclusive to MemoriaMagnet admin & print UI (`AdminShell`, `CreateMagnetEvent`, `MagnetEventDashboard`, `PrintStation`, `MagnetReview`). The consumer Share product never uses violet as a primary accent.
+- **Status colours** are defined once, in `src/components/system/statusStyles.js`. Lead stages map onto them: new → primary, contacted → pending, converted → ready, closed → muted.
+- **No hard-coded colour in components:** no hex, `rgb()`, `violet-*`, `gray-*`/`zinc-*`, `white/…` or `black/…`.
+  - Exceptions: scrims and text over photos or the camera feed, which may use `foreground/…` and `background/…`, and printed designs.
+- **Violet `#7c3aed` (the old "Magnet sub-brand") is retired everywhere.**
 
-### Dark-Mode Activation (MANDATORY)
-Every dark page root MUST include the `dark` class. Without it, Tailwind semantic tokens (`bg-background`, `text-foreground`, `border-border`) resolve to **light-palette** values and produce the silvery-gradient bug documented 2026-04-16.
+### Typography — Heebo for all UI
+- Heebo is the body default, numbers included. Use `tabular-nums` for KPIs, counts and quantities.
+- Playfair, Montserrat, Georgia and Inter are not used in UI.
+- **No letter-spacing and no `uppercase`.** All labels are Hebrew ("ADMIN" → "ניהול").
+- Nothing smaller than 12px. The one exception is the lead wizard's phone mockup, which scales in `cqw`.
 
-```jsx
-// ✅ Correct page root
-<div className="dark min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground font-heebo">
+| Role | Classes | px |
+|---|---|---|
+| Page title | `text-2xl md:text-3xl font-semibold` | 24 / 30 |
+| Section title | `text-lg font-semibold` | 18 |
+| Card title | `text-base font-semibold` | 16 |
+| Body | `text-sm` (guest-facing copy may use `text-base`) | 14 |
+| Caption | `text-xs text-muted-foreground` | 12 |
+| Section label | `text-xs font-semibold text-primary` (`<SectionLabel>`) | 12 |
+| KPI number | `text-3xl font-semibold tabular-nums` (`<StatTile>`) | 30 |
 
-// ❌ Wrong — `dark` missing; semantic tokens resolve light
-<div className="min-h-screen bg-background text-foreground">
-```
+**Print Station (read on a tablet at a distance)** uses the same roles one step up:
+- body `text-base`
+- card title `text-lg`
+- section title `text-xl`
+- KPI `text-4xl`
+- status badge `text-sm`
 
-Gradients must use explicit cool anchors (`from-cool-950 via-cool-900 to-cool-950`), NOT `from-background via-cool-900 to-background`.
+Its minimum text size is 14px.
 
-### Typography System
-> **Rule (2026-10-26): Playfair only for Latin text. Hebrew headings use Heebo. No letter-spacing on Hebrew text.**
-> Playfair Display has no Hebrew glyphs: Hebrew set in it falls back to a system serif. Letter-spacing (`tracking-*`, including `tracking-tight`) and `uppercase` are for Latin text only.
+### Layout
+- **Page:**
+  - The shell is `min-h-screen bg-background text-foreground`.
+  - Content uses `mx-auto w-full px-4 md:px-8 pt-6 md:pt-10 pb-16` at one of three widths: guest/public flows `max-w-md`, admin `max-w-5xl`, Print Station `max-w-7xl`.
+  - Mobile-first and RTL. Bottom-fixed bars pad with `env(safe-area-inset-bottom)`.
+- **Rhythm:** `gap-8` between sections, `gap-3` between cards in a list, `gap-2` inside a card. Sections become two columns on `lg` where the content allows.
+- **Header:** `<PageHeader label title subtitle action>` gives a section label, then the page title, then a muted subtitle. The action sits at the inline end and stacks under the title on mobile.
+- **Card:** `<Card>` is `rounded-2xl border border-border bg-card p-4 md:p-5`. `interactive` adds hover and press feedback. No shadows or gradients.
+- **Tabs:** `<TabNav>` uses underline tabs (`text-sm font-medium`, active `border-primary text-foreground`) and scrolls horizontally on mobile. Filters use chips: `rounded-full h-8 px-3 text-xs`, active `bg-primary/15 text-primary border-primary/30`.
+- **Buttons:** `<Button>` comes in four variants:
+  - primary (`bg-primary`): one per view;
+  - secondary (`bg-secondary` + border);
+  - ghost;
+  - destructive (tinted red).
 
-- **Display serif:** Playfair Display — Latin text only: Latin letters and digits, e.g. KPI numerals or a Latin wordmark (`font-playfair`, 2xl–4xl)
-- **Headings:** Heebo semibold/bold — every Hebrew heading: page titles, wizard step titles, card titles (`font-heebo font-semibold`)
-- **Body:** Heebo — all Hebrew UI copy (`font-heebo`)
-- **Editorial micro-label:** `text-[10px] font-bold`, `text-indigo-400` (Share) or `text-violet-400` (Magnet). A Latin-only label may add Montserrat `tracking-[0.3em] uppercase`; a Hebrew label never does.
+  Sizes are `sm` h-9, default h-11 and `lg` h-14 (full-width hero CTAs). All buttons are `rounded-xl` and `font-semibold`.
+- **Radius:**
+  - controls and inputs: `rounded-xl` (12px);
+  - cards: `rounded-2xl` (16px);
+  - bottom sheets: `rounded-t-3xl`;
+  - pills and avatars: `rounded-full`.
+- **Inputs:** `h-11 rounded-xl bg-secondary border-border`, with 16px text on mobile so iOS doesn't zoom.
+- **Shared components (`src/components/system/`):** `PageHeader`, `SectionLabel`, `Card`, `StatTile`, `TabNav`, `StatusBadge`, `statusStyles`.
 
-Editorial label pattern (use at the top of every page/section header):
-```jsx
-<p className="text-indigo-400 text-[10px] font-bold mb-3">
-  <bdi>01</bdi> · ניהול
-</p>
-<h1 className="font-heebo font-semibold text-3xl md:text-4xl text-foreground">שם הכותרת</h1>
-```
-
-### Radial Glow Recipe
-Page hero glow uses indigo — **not** warm cream:
-```css
-background: radial-gradient(circle at 30% 20%, rgba(124,134,225,0.06), transparent 60%);
-```
-
-### Anti-Patterns (automatic reject)
-- Hardcoded `bg-[#0a0a0a]` / `bg-[#111]` / `bg-[#1a1a1a]` — use semantic tokens (`bg-background`, `bg-card`, `bg-secondary`)
-- Warm cream radial `rgba(247,240,228,0.03)` — retired
-- Silver-metallic buttons (old gold/cream `luxury-button`) — replaced with cool-neutral `#fcfcfe → #e8e8ec` + indigo shadow
-- Violet as primary accent on Share-side surfaces — reserved for Magnet sub-brand only
-- `font-playfair`, `tracking-*` or `uppercase` on Hebrew text — use Heebo, no letter-spacing (see Typography System)
+### Anti-patterns (automatic reject)
+- A `dark` class on a page, or any light-mode styling.
+- Hex, `rgb()`, `violet-*`, `white/…` or `black/…` colours in components, except scrims over imagery and printed designs.
+- `font-playfair`, `font-montserrat` or an inline `fontFamily` in UI. `tracking-*` or `uppercase`. Text under 12px.
+- A one-off card, tab or button style where a shared component exists.
+- A second accent colour, including violet, blue buttons or white CTAs.
 
 ---
 
