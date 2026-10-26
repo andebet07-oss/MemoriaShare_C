@@ -1,7 +1,9 @@
 # Polaroid templates: replace the magnet frame system
 
-**Status:** phase 1 (inventory and plan). Waiting for approval. No code has changed yet.
+**Status:** approved 2026-10-26 and implemented on this branch (phases 2–5). D1: the URL line is off by default — decide after a test print. D2–D8 as recommended.
 **Branch:** `claude/polaroid-templates` (from `main` 6915d1d).
+
+**Implementation notes** (choices the appendix left open): B's "&" sits 8 / 7 units from the names; the gap below the names is measured from the script's descender line, so script descenders never touch the date; D's rings sit beside the block on the reading-start side (right for Hebrew, left for Latin); long names always shrink to fit (no 50% floor).
 
 ---
 

@@ -5,6 +5,8 @@ updated: 2026-05-11T22:00Z
 
 # Project Memory — Active State
 
+> **2026-10-26 — supersedes every frame row below.** The PNG frame system (frames_meta, framePacks, framesUtils, compositePngFrame, the frames admin, `public/FRAMES*`, the overlay uploads) and the sticker feature were removed on branch `claude/polaroid-templates`. Magnets are now code-rendered polaroid templates: `src/lib/polaroid/` (renderer, templates A–G, print spec 3 × 4 in @ 300 DPI), picked per event (`events.template_id` / `template_options`) in CreateMagnetEvent and the event dashboard. Plan + decisions: `docs/polaroid-templates-plan.md`. Pending DB: `supabase/pending/20261026_polaroid_templates_add.sql` (before merge) and `…_drop.sql` (after deploy + hardening).
+
 ## Build Status
 - Branch: `main`
 - Last commit: `8c27742` (2026-05-05 22:15 +0300) — Polish polaroid frame: rounded corners + high-fidelity admin card.
