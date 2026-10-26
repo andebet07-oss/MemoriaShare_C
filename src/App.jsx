@@ -13,6 +13,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import HostOnboardingModal from '@/components/HostOnboardingModal';
 import GuestLayout from '@/components/GuestLayout';
 import RequireAdmin from '@/components/RequireAdmin';
+import CreateEventRedirect from '@/components/CreateEventRedirect';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useQuery } from '@tanstack/react-query';
 import memoriaService from '@/components/memoriaService';
@@ -23,7 +24,6 @@ const Home            = lazy(() => import('@/pages/Home'));
 const Event           = lazy(() => import('@/pages/Event'));
 const EventGallery    = lazy(() => import('@/pages/EventGallery'));
 const EventSuccess    = lazy(() => import('@/pages/EventSuccess'));
-const CreateEvent     = lazy(() => import('@/pages/CreateEvent'));
 const Dashboard       = lazy(() => import('@/pages/Dashboard'));
 const MyEvents        = lazy(() => import('@/pages/MyEvents'));
 const MagnetLead      = lazy(() => import('@/pages/MagnetLead'));
@@ -107,7 +107,7 @@ const AuthenticatedApp = () => {
 
         {/* ── Host routes (authenticated, standard layout) ── */}
         <Route path="/host" element={<LayoutWrapper currentPageName="MyEvents"><MyEvents /></LayoutWrapper>} />
-        <Route path="/host/events/create" element={<LayoutWrapper currentPageName="CreateEvent"><CreateEvent /></LayoutWrapper>} />
+        <Route path="/host/events/create" element={<CreateEventRedirect />} />
         <Route path="/host/events/:id" element={<LayoutWrapper currentPageName="Dashboard"><Dashboard /></LayoutWrapper>} />
         <Route path="/host/events/:id/success" element={<LayoutWrapper currentPageName="EventSuccess"><EventSuccess /></LayoutWrapper>} />
 
