@@ -115,8 +115,7 @@ const AuthenticatedApp = () => {
         {/* ── Admin: tabbed shell with nested routes ── */}
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>}>
           <Route index element={<AdminOverview />} />
-          <Route path="events/share"          element={<AdminEventsList type="share" />} />
-          <Route path="events/magnet"         element={<AdminEventsList type="magnet" />} />
+          <Route path="events/magnet"         element={<AdminEventsList />} />
           <Route path="events/magnet/create"  element={<CreateMagnetEvent />} />
           <Route path="events/magnet/:eventId" element={<MagnetEventDashboard />} />
           <Route path="leads"                 element={<LeadsPanel />} />

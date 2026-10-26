@@ -595,7 +595,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between px-4 py-2.5 text-xs font-semibold"
           style={{ background: 'rgba(124,58,237,0.15)', borderBottom: '1px solid rgba(124,58,237,0.3)' }}>
           <button
-            onClick={() => navigate('/admin/events/share')}
+            onClick={() => navigate('/admin')}
             className="flex items-center gap-1.5 text-violet-300 hover:text-violet-100 transition-colors"
           >
             <ShieldCheck className="w-3.5 h-3.5" />
