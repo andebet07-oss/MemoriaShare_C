@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { BatteryFull, Wifi, Signal, Camera, Loader2 } from 'lucide-react';
+import { Camera, Loader2 } from 'lucide-react';
 import { useElementSize } from '@/hooks/useElementSize';
+import { PhoneStatusBar, EmptyCoverHint } from '@/components/magnet/lead/PhoneScreenParts';
 
 /**
  * Phone size, resolved against the nearest size container (the preview area):
@@ -17,7 +18,6 @@ const PHONE_SIZE = {
 // Inner dimensions are `cqw` of the phone itself (it is an inline-size
 // container), so the mockup stays proportional at every size. Values match the
 // previous desktop rendering at a 225px-wide phone.
-const ICON = { signal: { width: '3.6cqw', height: '3.6cqw' }, battery: { width: '4.4cqw', height: '4.4cqw' } };
 
 const DEFAULT_TRANSFORM = { x: 0, y: 0, zoom: 1 };
 
@@ -27,11 +27,10 @@ const DEFAULT_TRANSFORM = { x: 0, y: 0, zoom: 1 };
  *   x, y  offset of the image centre, as a fraction of the screen width / height
  *   zoom  scale relative to "cover" (1 = image just covers the screen)
  */
-export default function LeadPhoneMockup({ coverImage, eventName, date, imageTransform, isDesignMode = false, isUploading = false, onImageTransformChange }) {
+export default function LeadPhoneMockup({ coverImage, eventName, date, imageTransform, isDesignMode = false, isUploading = false, showEmptyHint = false, onImageTransformChange }) {
   const formattedDate = date
-    ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        .format(new Date(date + 'T00:00:00'))
-    : '25.02.2026';
+    && new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      .format(new Date(date + 'T00:00:00'));
 
   const [imageError, setImageError] = useState(false);
   const [imgNaturalSize, setImgNaturalSize] = useState({ w: 0, h: 0 });
@@ -47,7 +46,6 @@ export default function LeadPhoneMockup({ coverImage, eventName, date, imageTran
     setImgNaturalSize({ w: 0, h: 0 });
   }, [coverImage]);
 
-  const displayImage = coverImage || '/mockup.jpg';
   const transform = imageTransform || DEFAULT_TRANSFORM;
   const ready = imgNaturalSize.w > 0 && screen.width > 0;
   // Image px → screen px scale at which the image just covers / just fits the screen.
@@ -103,7 +101,7 @@ export default function LeadPhoneMockup({ coverImage, eventName, date, imageTran
   // the frame is drawn on the inner element so its own radius / bezel resolve
   // in the phone's cqw too (a container's own styles use its ancestor's units).
   return (
-    <div className="relative shrink-0 mx-auto [container-type:inline-size]" style={PHONE_SIZE}>
+    <div className="relative shrink-0 mx-auto [container-type:inline-size] transition-[height] duration-300 ease-out motion-reduce:transition-none" style={PHONE_SIZE}>
       <div className="relative w-full h-full bg-cool-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] ring-1 ring-foreground/10 rounded-[14cqw] p-[3.2cqw]">
         {isDesignMode && (
           <div className="absolute inset-0 ring-2 ring-primary z-[70] pointer-events-none animate-pulse rounded-[14cqw]" />
@@ -123,22 +121,14 @@ export default function LeadPhoneMockup({ coverImage, eventName, date, imageTran
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Status Bar */}
-          <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between pointer-events-none opacity-90 h-[18cqw] px-[7.2cqw]">
-            <span className="font-bold text-white tracking-tight text-[length:4.8cqw]">9:41</span>
-            <div className="flex items-center gap-[1.8cqw]">
-              <Signal fill="white" className="text-white" style={ICON.signal} />
-              <Wifi className="text-white" style={ICON.signal} />
-              <BatteryFull fill="white" className="text-white" style={ICON.battery} />
-            </div>
-          </div>
+          <PhoneStatusBar />
 
-          {/* Background Image — with graceful fallback when /mockup.jpg is missing */}
-          {imageError ? (
+          {/* Cover image; an empty dark screen until one is chosen (or if it fails to load) */}
+          {!coverImage || imageError ? (
             <div className="absolute inset-0 bg-gradient-to-br from-cool-900 to-cool-950 z-0" />
           ) : (
             <img
-              src={displayImage}
+              src={coverImage}
               onError={() => setImageError(true)}
               onLoad={(e) => setImgNaturalSize({ w: e.target.naturalWidth, h: e.target.naturalHeight })}
               alt="Event Cover"
@@ -160,17 +150,19 @@ export default function LeadPhoneMockup({ coverImage, eventName, date, imageTran
           )}
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-10 pointer-events-none" />
+          {showEmptyHint && !coverImage && <EmptyCoverHint />}
 
           {/* Content */}
           <div
             className={`absolute bottom-0 left-0 right-0 z-20 flex flex-col items-center text-center pointer-events-none transition-opacity duration-300 p-[5.2cqw] pb-[7.2cqw] ${isDesignMode ? 'opacity-20' : 'opacity-100'}`}
             dir="rtl"
           >
-            <h1 className="text-white font-bold leading-tight mb-[0.9cqw] drop-shadow-2xl text-[length:8cqw]" style={{ fontFamily: "'Inter', sans-serif" }}>
-              {eventName || 'Sarah & Daniel'}
+            <h1 className="text-white font-bold leading-tight mb-[0.9cqw] drop-shadow-2xl text-[length:8cqw]">
+              {eventName || 'שרה & דניאל'}
             </h1>
-            <p className="text-white/70 font-medium tracking-[0.1em] drop-shadow-md text-[length:4.8cqw] mb-[6cqw]">
-              <bdi>{formattedDate}</bdi>
+            {/* Until a date is chosen: a neutral placeholder, not a sample date. Tracking is for the digits only. */}
+            <p className={`font-medium drop-shadow-md text-[length:4.8cqw] mb-[6cqw] ${formattedDate ? 'text-white/70 tracking-[0.1em]' : 'text-white/45'}`}>
+              {formattedDate ? <bdi>{formattedDate}</bdi> : 'תאריך האירוע'}
             </p>
 
             {/* CTA — only meaningful deviation from Share mockup */}
@@ -182,7 +174,7 @@ export default function LeadPhoneMockup({ coverImage, eventName, date, imageTran
 
           {isDesignMode && (
             <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
-              <p className="text-white/80 bg-black/60 rounded-full font-bold tracking-widest text-center text-[length:4cqw] px-[5.3cqw] py-[1.8cqw]">גרור • צבוט לזום</p>
+              <p className="text-white/80 bg-black/60 rounded-full font-bold text-center text-[length:4cqw] px-[5.3cqw] py-[1.8cqw]">גרור • צבוט לזום</p>
             </div>
           )}
 
@@ -193,7 +185,7 @@ export default function LeadPhoneMockup({ coverImage, eventName, date, imageTran
         {isUploading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 z-[80] rounded-[14cqw]">
             <Loader2 className="text-white animate-spin w-[14.2cqw] h-[14.2cqw] mb-[3.6cqw]" />
-            <p className="text-white font-bold tracking-widest text-[length:4.4cqw]">מעלה...</p>
+            <p className="text-white font-bold text-[length:4.4cqw]">מעלה...</p>
           </div>
         )}
       </div>

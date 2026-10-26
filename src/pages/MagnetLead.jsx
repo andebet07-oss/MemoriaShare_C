@@ -272,6 +272,7 @@ export default function MagnetLead() {
               imageTransform={imageTransform}
               isDesignMode={isDesignMode}
               isUploading={isUploading}
+              showEmptyHint={currentStep <= 2}
               onImageTransformChange={setImageTransform}
             />
           </div>
@@ -290,7 +291,7 @@ export default function MagnetLead() {
                   <Input
                     value={formData.event_name}
                     onChange={e => handleInputChange('event_name', e.target.value)}
-                    placeholder="למשל: Yael & Daniel"
+                    placeholder="למשל: יעל & דניאל"
                     style={{ fontSize: '16px' }}
                     className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                   />
@@ -306,7 +307,7 @@ export default function MagnetLead() {
                     <label htmlFor="add-photo" className="cursor-pointer group h-full">
                       <div className="bg-primary hover:brightness-110 text-primary-foreground transition-all rounded-xl py-2 px-2 text-center h-full flex flex-col justify-center items-center shadow-indigo-soft active:scale-95 border border-foreground/10">
                         {isUploading ? <Loader2 className="w-6 h-6 mb-1.5 animate-spin" /> : <ImageIcon className="w-6 h-6 mb-1.5" />}
-                        <p className="text-[10px] font-black uppercase tracking-widest leading-tight">{isUploading ? 'מעלה...' : 'העלאה'}</p>
+                        <p className="text-[10px] font-black leading-tight">{isUploading ? 'מעלה...' : 'העלאה'}</p>
                       </div>
                     </label>
                     <input type="file" id="add-photo" accept="image/*" onChange={handleFileChange} className="hidden" />
@@ -323,7 +324,7 @@ export default function MagnetLead() {
                       }`}
                     >
                       {isDesignMode ? <X className="w-6 h-6 mb-1.5" /> : <Pencil className="w-6 h-6 mb-1.5 text-muted-foreground" />}
-                      <p className={`text-[10px] font-black uppercase tracking-widest leading-tight ${isDesignMode ? 'text-white' : 'text-muted-foreground'}`}>
+                      <p className={`text-[10px] font-black leading-tight ${isDesignMode ? 'text-white' : 'text-muted-foreground'}`}>
                         {isDesignMode ? 'סיום' : 'עיצוב'}
                       </p>
                     </button>
