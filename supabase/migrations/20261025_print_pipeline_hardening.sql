@@ -34,11 +34,14 @@ END$$;
 
 -- ── Helpers ──────────────────────────────────────────────────
 
--- Our public storage prefix for the photos bucket, pinned from existing data:
--- every app upload builds file_url = VITE_SUPABASE_URL + this path. Aborts
--- unless exactly one prefix is in use, and prints the pinned value.
+-- Our public storage prefix for the photos bucket: every app upload builds
+-- file_url = VITE_SUPABASE_URL + this path. Pinned from existing data AND
+-- cross-checked against the project ref in .mcp.json; aborts unless exactly
+-- one prefix is in use and it is this project's. Prints the pinned value.
 DO $$
-DECLARE bases text[]; foreign_rows int;
+DECLARE
+  expected CONSTANT text := 'https://esjprtvfijyjjxpufjho.supabase.co/storage/v1/object/public/photos/';
+  bases text[]; foreign_rows int;
 BEGIN
   SELECT array_agg(DISTINCT b) INTO bases
   FROM (SELECT substring(file_url FROM '^(https://[^/]+/storage/v1/object/public/photos/)') AS b
@@ -46,6 +49,9 @@ BEGIN
   WHERE b IS NOT NULL;
   IF coalesce(array_length(bases, 1), 0) <> 1 THEN
     RAISE EXCEPTION 'Expected exactly one photos storage prefix in photos.file_url, found: %', bases;
+  END IF;
+  IF bases[1] <> expected THEN
+    RAISE EXCEPTION 'photos.file_url prefix % is not this project''s (%)', bases[1], expected;
   END IF;
 
   EXECUTE format(
