@@ -6,7 +6,7 @@ The Free plan has no restorable backups. Every live DB change follows this seque
 
 ## 0. Before any of this: app code ships first (zero breakage window)
 The branch's app code works against the current, unmigrated DB (see plan §3), so the order is:
-branch preview → smoke test → merge to `main` (Vercel deploys) → steps 1–5 below.
+merge to `main` (Vercel deploys) → smoke test on production against the unmigrated DB → steps 1–5 below. (Pre-launch, the preview smoke test was skipped by decision on 2026-10-26.)
 The migration is never applied while production still runs pre-branch code.
 
 ## 1. In-database snapshot (required)

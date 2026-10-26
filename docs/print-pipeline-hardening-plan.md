@@ -136,7 +136,7 @@ Helpers:
 No app code calls anything the migration creates. The merged code also works *after* the migration: every upload, insert and update it makes is allowed by the new rules (verified by the QA cases).
 
 Order:
-1. Smoke-test the Vercel preview of `claude/lucid-knuth-l1jm0g` → merge to `main` (production deploys).
+1. Merge to `main` (production deploys) → smoke-test on production against the unmigrated DB. Pre-launch, the preview step was skipped by decision on 2026-10-26.
 2. snapshot → `pg_dump` (required) → status.supabase.com clear → apply → RLS QA script → browser storage checks → one real guest submission on production (`raw_photo_url` stored) → rest of QA.
 3. Sync `CLEAN_RESET_SCHEMA.sql` from live, then write the Stage 1 summary and the Stage 2 (Share retirement) plan from the Q3 results.
 
