@@ -29,7 +29,7 @@ export default function AdminShell() {
   const newLeadsCount = leads.length;
 
   return (
-    <div className="dark min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground flex flex-col" dir="rtl">
 
       {/* Top accent line */}
       <div className="h-px w-full shrink-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.7) 50%, transparent)' }} />

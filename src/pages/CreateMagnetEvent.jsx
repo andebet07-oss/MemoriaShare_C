@@ -464,7 +464,7 @@ export default function CreateMagnetEvent() {
     const eventUrl = `${window.location.origin}/magnet/${success.event_code}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&format=png&color=0a0a0a&bgcolor=ffffff&data=${encodeURIComponent(eventUrl)}`;
     return (
-      <div className="dark fixed inset-0 bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 flex items-center justify-center" dir="rtl">
+      <div className="fixed inset-0 bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 flex items-center justify-center" dir="rtl">
         <div className="text-center px-6 max-w-sm w-full">
           {/* Check circle */}
           <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
@@ -524,7 +524,7 @@ export default function CreateMagnetEvent() {
   const previewW = 'clamp(109px, 37.5dvh, 315px)';
 
   return (
-    <div className="dark flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo" dir="rtl">
+    <div className="flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo" dir="rtl">
 
       {/* Frame preview modal */}
       {previewFrame && (

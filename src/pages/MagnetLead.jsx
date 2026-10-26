@@ -235,7 +235,7 @@ export default function MagnetLead() {
   // ── Success screen ──────────────────────────────────────────────────────────
   if (submitted) {
     return (
-      <div className="dark min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground flex items-center justify-center px-6 font-heebo" dir="rtl">
+      <div className="min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground flex items-center justify-center px-6 font-heebo" dir="rtl">
         <div className="max-w-sm w-full text-center">
           <div className="w-14 h-14 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-5">
             <Check className="w-7 h-7 text-indigo-400" />
@@ -258,7 +258,7 @@ export default function MagnetLead() {
   // ── Wizard ──────────────────────────────────────────────────────────────────
   return (
     <div
-      className="dark fixed inset-x-0 top-0 flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo"
+      className="fixed inset-x-0 top-0 flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo"
       style={keyboard.open ? { height: `${keyboard.height}px`, transform: `translateY(${keyboard.offsetTop}px)` } : undefined}
       dir="rtl"
     >

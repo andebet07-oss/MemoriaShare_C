@@ -19,7 +19,7 @@ export default function Home() {
   const startMagnetLead = () => navigate('/magnet/lead');
 
   return (
-    <div className="dark bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground min-h-screen">
+    <div className="bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground min-h-screen">
       <div className="relative z-10">
         <Header onCreateEvent={startMagnetLead} />
         <main>

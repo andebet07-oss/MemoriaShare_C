@@ -181,7 +181,7 @@ export default function MyEvents() {
 
   if (isLoading) {
     return (
-      <div className="dark min-h-screen bg-cool-950">
+      <div className="min-h-screen bg-cool-950">
         <LoadingState fullScreen />
       </div>
     );
@@ -189,7 +189,7 @@ export default function MyEvents() {
 
   if (!isAuthenticated || !user) {
     return (
-      <div className="dark min-h-screen flex flex-col items-center justify-center text-center bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground px-6" dir="rtl">
+      <div className="min-h-screen flex flex-col items-center justify-center text-center bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground px-6" dir="rtl">
         <h1 className="font-heebo font-extrabold text-4xl md:text-5xl leading-[1.1] text-foreground/90 mb-4">גישה למנהלים בלבד</h1>
         <p className="text-muted-foreground mb-8">עליך להתחבר כדי לראות את האירועים שלך.</p>
         <div className="flex gap-4">
@@ -206,7 +206,7 @@ export default function MyEvents() {
 
   return (
     <>
-      <div className="dark min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground" dir="rtl">
+      <div className="min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground" dir="rtl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
 
           {/* Header */}
@@ -337,7 +337,7 @@ export default function MyEvents() {
 
       {/* Delete confirmation dialog */}
       <Dialog open={!!eventToDelete} onOpenChange={() => setEventToDelete(null)}>
-        <DialogContent className="dark bg-cool-950/95 backdrop-blur-md border border-border text-foreground w-[90vw] max-w-md rounded-2xl" dir="rtl">
+        <DialogContent className="bg-cool-950/95 backdrop-blur-md border border-border text-foreground w-[90vw] max-w-md rounded-2xl" dir="rtl">
           <DialogHeader className="text-center">
             <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
             <DialogTitle className="font-playfair text-2xl text-foreground/90">מחיקת אירוע</DialogTitle>
