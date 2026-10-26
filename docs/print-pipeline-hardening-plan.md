@@ -8,6 +8,7 @@
 | D1: lead cover → `leads/{uid}/` | ✅ code + migration §2 | `e1127ae` |
 | 3: one frame resolver, frame printed once | ✅ code + 9 unit tests | `c8bced5` |
 | 4: station failures → toasts, no advance on failure, no double print | ✅ code + 7 unit tests | `38419c8` |
+| Header: anonymous ≠ signed in (D1 side effect) | ✅ code | `37f2f2a` |
 | 1: guest print_jobs INSERT | ✅ migration §1 | |
 | 2: photos bucket INSERT / admin UPDATE (D4) | ✅ migration §2–3 | |
 | New 1: event creation admin-only (+ Magnet events updatable only by admins — security-review follow-up) | ✅ migration §6 | |
@@ -17,7 +18,7 @@
 | D3: `ep.event_id = event_id` bug | ✅ Magnet side (§4); ⏳ Share side waits on Q1 | |
 | 5 / D2: `getByCode` columns | ⏳ waits on Q3 | |
 
-**Q1, Q2, Q3 results haven't arrived.** The last two messages said "results below", but nothing followed. The queries are in §0.
+**Q1–Q4 results still haven't arrived.** Three messages referenced them, but no inline text or attached file reached the session. The queries are in §0.
 
 ## 0. Live facts and queries
 **Live facts (2026-10-25):**
@@ -118,11 +119,26 @@ Helpers:
 - **Also from Q1:** confirm there are no other INSERT policies on `print_jobs` / `storage.objects` (the guards would abort anyway), and check the live events INSERT policy.
 - **5 / D2:** if Q3 shows no recent Share activity, `getByCode` returns Magnet fields only (`id, name, date, cover_image, overlay_frame_url, print_quota_per_device, event_type, is_active, unique_code`).
 
-## 3. Apply order (approved)
-snapshot → off-site `pg_dump` (required) → status.supabase.com clear → apply → RLS QA script → browser storage checks → one real guest submission end to end (`raw_photo_url` stored) → rest of QA → merge to `main`.
-Details: `docs/runbooks/pre-migration-backup.md`.
+## 3. Deployment order (approved 2026-10-26): code first, zero breakage window
+**Every app commit on this branch works against the current, unmigrated live DB:**
 
-**Coupling:** after applying, `main`'s old lead wizard can't upload covers (it targets `general/`). Run the E2E on the branch preview and merge soon after QA passes.
+| Commit | What it touches | Against the unmigrated DB |
+|---|---|---|
+| `15f9fbb` Stage 0 | station UI only | ✅ no DB change |
+| `e1127ae` D1 lead cover | anon sign-in + upload to `leads/{uid}/` | ✅ the live `storage_photos_insert_public` allows any folder except `overlays/`. Anonymous sign-in is already enabled (Magnet guests use it). |
+| `c8bced5` frame resolver | reads `frames_meta` (unchanged); loads the custom PNG from public storage | ✅ same queries as before. Custom-frame events now show and print their uploaded PNG (the intended fix). |
+| `38419c8` station toasts | same `print_jobs` updates as before | ✅ client-only error handling |
+| `37f2f2a` header | treats anonymous sessions as signed out | ✅ client-only |
+| docs / migration / rollback / QA | not executed by the build | ✅ nothing in the repo applies migrations: no CI workflows, build is `vite build`, no Supabase CLI config |
+
+No app code calls anything the migration creates. The merged code also works *after* the migration: every upload, insert and update it makes is allowed by the new rules (verified by the QA cases).
+
+Order:
+1. Smoke-test the Vercel preview of `claude/lucid-knuth-l1jm0g` → merge to `main` (production deploys).
+2. snapshot → `pg_dump` (required) → status.supabase.com clear → apply → RLS QA script → browser storage checks → one real guest submission on production (`raw_photo_url` stored) → rest of QA.
+3. Sync `CLEAN_RESET_SCHEMA.sql` from live, then write the Stage 1 summary and the Stage 2 (Share retirement) plan from the Q3 results.
+
+Expected Q4: a single prefix `https://esjprtvfijyjjxpufjho.supabase.co/storage/v1/object/public/photos/`. The migration now aborts if the data's prefix isn't this project's.
 
 ## Follow-ups (not in this migration)
 - **Storage list API.** `storage_photos_select_public` still lets anyone list an event folder's file names, so Magnet photos remain enumerable through Storage even though the table is closed. Closing it needs a live check that the storage service still works when SELECT is limited to owner/admin, since it may read back the rows it inserts. QA §B has the probe.

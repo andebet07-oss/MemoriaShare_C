@@ -1,8 +1,13 @@
 # Pre-Migration Backup & Apply (Free Plan)
 
-The Free plan has no restorable backups. Every live DB change follows this sequence; nothing is skipped. The example is `20261025_print_pipeline_hardening.sql`.
+The Free plan has no restorable backups. Every live DB change follows this sequence; nothing is skipped. Step 0 comes first. The example is `20261025_print_pipeline_hardening.sql`.
 
 > The pg_dump / CLI / dashboard steps are from memory and could not be checked against supabase.com from the sandbox. If a dashboard label differs, follow the dashboard.
+
+## 0. Before any of this: app code ships first (zero breakage window)
+The branch's app code works against the current, unmigrated DB (see plan §3), so the order is:
+branch preview → smoke test → merge to `main` (Vercel deploys) → steps 1–5 below.
+The migration is never applied while production still runs pre-branch code.
 
 ## 1. In-database snapshot (required)
 1. SQL editor → run `supabase/rollback/20261025_snapshot.sql`.
@@ -36,16 +41,14 @@ Check https://status.supabase.com for the project's region (Database, Storage, A
 
 ## 4. Apply
 SQL editor → run `supabase/migrations/20261025_print_pipeline_hardening.sql`.
-- The NOTICE lines must show the **pinned storage prefix** (your `https://<ref>.supabase.co/storage/v1/object/public/photos/`) and `auto-copies reset: 2 row(s)`.
+- The NOTICE lines must show `Pinned photos storage prefix: https://esjprtvfijyjjxpufjho.supabase.co/storage/v1/object/public/photos/ (existing photos outside it: 0)` and `auto-copies reset: 2 row(s)`. The migration aborts if the data's prefix isn't this project's.
 - If a guard fails, the migration aborts with a message and nothing is applied. Send me the message.
 
 ## 5. Verify
 1. `docs/qa/print-pipeline-rls-test.sql` → all lines `PASS` (it ends with an intentional error carrying the results).
 2. `docs/qa/print-pipeline-hardening.md` §B (storage, browser console).
-3. **One real guest submission end to end** on the branch build (§C): `raw_photo_url` must be stored, `copies = 1`, one magnet prints.
-4. Then the rest of the QA doc (§D–§G).
-
-**Code ↔ DB coupling:** between applying and merging, `main` still runs the old lead wizard, whose cover upload goes to `general/`. That upload will fail (silently; the lead still submits). Run step 5.3 on the branch's Vercel **preview** deployment, if Preview has the Supabase env vars, and merge to `main` as soon as QA passes.
+3. **One real guest submission end to end on production** (§C): `raw_photo_url` stored, `copies = 1`, one magnet prints.
+4. The rest of the QA doc (§D–§G).
 
 ## 6. Rollback (if needed)
 SQL editor → `supabase/rollback/20261025_restore_policies_snapshot.sql`.
