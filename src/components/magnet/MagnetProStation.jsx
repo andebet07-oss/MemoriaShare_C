@@ -4,6 +4,8 @@ import { usePrintQueue } from '@/hooks/usePrintQueue';
 import { printAndAdvance, setJobStatus } from '@/lib/printStation';
 import ProJobCard from './ProJobCard';
 import CropEditor from './CropEditor';
+import { Button } from '@/components/ui/button';
+import { TONE, PRINT_STATUS } from '@/components/system/statusStyles';
 
 /**
  * MagnetProStation — the smart operator print station (replaces PrintQueue).
@@ -74,13 +76,13 @@ export default function MagnetProStation({ event }) {
   };
 
   if (isLoading) return (
-    <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-white/30 animate-spin" /></div>
+    <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-muted-foreground animate-spin" /></div>
   );
 
   const cropJob = cropEditorJobId != null ? jobs.find(j => j.id === cropEditorJobId) : null;
 
   const renderGrid = (items) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
       {items.map(job => (
         <ProJobCard
           key={job.id}
@@ -95,110 +97,108 @@ export default function MagnetProStation({ event }) {
     </div>
   );
 
-  const StatPill = ({ label, count, dot }) => (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-      <span className={`w-2 h-2 rounded-full ${dot}`} />
-      <span className="text-white text-sm font-bold tabular-nums">{count}</span>
-      <span className="text-white/40 text-xs">{label}</span>
+  const StatPill = ({ status, count }) => (
+    <div className="flex items-center gap-2 h-11 px-4 rounded-xl bg-card border border-border">
+      <span className={`w-2.5 h-2.5 rounded-full ${TONE[PRINT_STATUS[status].tone].dot}`} />
+      <span className="text-xl font-semibold tabular-nums text-foreground">{count}</span>
+      <span className="text-sm text-muted-foreground">{{ pending: 'ממתינים', printing: 'בהדפסה', ready: 'מוכן', rejected: 'נדחו' }[status]}</span>
+    </div>
+  );
+
+  const SectionTitle = ({ status, children }) => (
+    <div className="flex items-center gap-2.5">
+      <span className={`w-2.5 h-2.5 rounded-full ${status ? TONE[PRINT_STATUS[status].tone].dot : 'bg-muted-foreground'}`} />
+      <h3 className="text-xl font-semibold text-foreground">{children}</h3>
     </div>
   );
 
   return (
-    <div>
+    <div className="flex flex-col gap-8">
       {/* Stats header */}
-      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          <StatPill label="ממתינים" count={stat.pending}  dot="bg-yellow-400" />
-          <StatPill label="בהדפסה"  count={stat.printing} dot="bg-blue-400" />
-          <StatPill label="מוכן"    count={stat.ready}    dot="bg-emerald-400" />
-          {stat.rejected > 0 && <StatPill label="נדחו" count={stat.rejected} dot="bg-white/30" />}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <StatPill status="pending"  count={stat.pending} />
+            <StatPill status="printing" count={stat.printing} />
+            <StatPill status="ready"    count={stat.ready} />
+            {stat.rejected > 0 && <StatPill status="rejected" count={stat.rejected} />}
+          </div>
+          <Button variant="secondary" size="icon" onClick={fetchJobs} aria-label="רענן">
+            <RefreshCw />
+          </Button>
         </div>
-        <button onClick={fetchJobs} aria-label="רענן" className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors shrink-0">
-          <RefreshCw className="w-4 h-4 text-white/40" />
-        </button>
-      </div>
 
-      {/* Keyboard legend */}
-      <div className="flex items-center gap-2 mb-4 text-white/35 text-[11px]">
-        <Keyboard className="w-3.5 h-3.5" />
-        <span>חיצים = ניווט · רווח/Enter = הדפס והתקדם · R = דחה · Esc = סגור עריכה</span>
-      </div>
-
-      {/* Search */}
-      {jobs.length > 0 && (
-        <div className="relative mb-6">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
-          <input
-            type="text" value={query} onChange={e => setQuery(e.target.value)}
-            placeholder="חיפוש לפי שם אורח..." dir="rtl"
-            className="w-full h-10 pr-9 pl-9 rounded-xl text-sm text-white placeholder-white/30 bg-white/5 border border-white/10 focus:border-white/25 focus:outline-none transition-colors"
-          />
-          {query && (
-            <button onClick={() => setQuery('')} aria-label="נקה" className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center hover:bg-white/10">
-              <X className="w-3.5 h-3.5 text-white/40" />
-            </button>
-          )}
+        {/* Keyboard legend */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Keyboard className="w-4 h-4 shrink-0" />
+          <span>חיצים = ניווט · רווח/Enter = הדפס והתקדם · R = דחה · Esc = סגור עריכה</span>
         </div>
-      )}
+
+        {/* Search */}
+        {jobs.length > 0 && (
+          <div className="relative">
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+            <input
+              type="text" value={query} onChange={e => setQuery(e.target.value)}
+              placeholder="חיפוש לפי שם אורח..." dir="rtl"
+              className="w-full h-12 pr-11 pl-11 rounded-xl text-base text-foreground placeholder:text-muted-foreground bg-secondary border border-border focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition-colors"
+            />
+            {query && (
+              <button onClick={() => setQuery('')} aria-label="נקה" className="absolute left-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-foreground/10 hover:text-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {jobs.length === 0 && (
-        <div className="text-center py-24 text-white/25">
-          <p className="text-lg">ממתין לבקשות הדפסה...</p>
-          <p className="text-sm mt-1">האורחים עוד לא שלחו צילומים</p>
+        <div className="text-center py-24 text-muted-foreground">
+          <p className="text-xl font-semibold text-foreground/70">ממתין לבקשות הדפסה...</p>
+          <p className="text-base mt-1">האורחים עוד לא שלחו צילומים</p>
         </div>
       )}
       {jobs.length > 0 && visible.length === 0 && (
-        <p className="text-center py-16 text-white/25 text-sm">אין אורח תואם לחיפוש</p>
+        <p className="text-center py-16 text-muted-foreground text-base">אין אורח תואם לחיפוש</p>
       )}
 
       {/* Pending */}
       {pending.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-2 h-2 rounded-full bg-yellow-400" />
-            <h3 className="text-white/70 text-sm font-semibold">ממתינים להדפסה ({pending.length})</h3>
-          </div>
+        <section className="flex flex-col gap-4">
+          <SectionTitle status="pending">ממתינים להדפסה (<bdi className="tabular-nums">{pending.length}</bdi>)</SectionTitle>
           {renderGrid(pending)}
-        </div>
+        </section>
       )}
 
       {/* Printing + bulk mark ready */}
       {printing.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4 gap-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-400" />
-              <h3 className="text-white/70 text-sm font-semibold">בתהליך הדפסה ({printing.length})</h3>
-            </div>
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <SectionTitle status="printing">בתהליך הדפסה (<bdi className="tabular-nums">{printing.length}</bdi>)</SectionTitle>
             {confirmBulk ? (
               <div className="flex items-center gap-2">
-                <span className="text-white/60 text-xs">לסמן {printing.length} כמוכן?</span>
-                <button onClick={handleMarkAllReady} disabled={isBulkMarking}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50">
-                  {isBulkMarking ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3 h-3" />} אישור
-                </button>
-                <button onClick={() => setConfirmBulk(false)} className="px-3 py-1.5 text-white/50 hover:text-white text-xs font-semibold rounded-xl transition-colors">ביטול</button>
+                <span className="text-sm text-muted-foreground">לסמן <bdi className="tabular-nums">{printing.length}</bdi> כמוכן?</span>
+                <Button size="sm" onClick={handleMarkAllReady} disabled={isBulkMarking}>
+                  {isBulkMarking ? <Loader2 className="animate-spin" /> : <CheckCheck />} אישור
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setConfirmBulk(false)}>ביטול</Button>
               </div>
             ) : (
-              <button onClick={() => setConfirmBulk(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-xl transition-colors">
-                <CheckCheck className="w-3 h-3" /> סמן הכל כמוכן
-              </button>
+              <Button variant="secondary" size="sm" onClick={() => setConfirmBulk(true)}>
+                <CheckCheck /> סמן הכל כמוכן
+              </Button>
             )}
           </div>
           {renderGrid(printing)}
-        </div>
+        </section>
       )}
 
       {/* Settled */}
       {settled.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-2 h-2 rounded-full bg-white/30" />
-            <h3 className="text-white/70 text-sm font-semibold">הושלמו / נדחו ({settled.length})</h3>
-          </div>
+        <section className="flex flex-col gap-4">
+          <SectionTitle>הושלמו / נדחו (<bdi className="tabular-nums">{settled.length}</bdi>)</SectionTitle>
           {renderGrid(settled)}
-        </div>
+        </section>
       )}
 
       {cropJob && (
