@@ -106,7 +106,8 @@ If this returns file names, anyone can still enumerate an event's files through 
 ☐ Home: "צרו אירוע" in the header (desktop and mobile menu), the hero, the final CTA and the demo modal all go straight to `/magnet/lead`, with no chooser.
 ☐ After uploading a lead cover (anonymous session), back on Home: the header shows "כניסה", not "האירועים שלי" or logout.
 ☐ Same browser → `/host`: the sign-in screen, not an empty "האירועים שלי".
-☐ Same browser → `/host/events/create` → submit: "יש להתחבר לפני יצירת אירוע" (not a DB error).
+☐ `/host/events/create` and `/CreateEvent`: signed-out, anonymous and non-admin Google users land on `/magnet/lead`; an admin lands on `/admin/events/magnet/create`. A spinner may show while the role loads, but an admin never lands on the lead wizard.
+☐ MyEvents (non-admin Google user) → "אירוע חדש" → `/magnet/lead`. As admin → the magnet event wizard.
 ☐ Admin signs in from that same browser via "כניסה" → `/admin` works.
 
 ## G. Events and `getByCode`

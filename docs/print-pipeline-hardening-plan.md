@@ -129,6 +129,8 @@ Helpers:
 | `c8bced5` frame resolver | reads `frames_meta` (unchanged); loads the custom PNG from public storage | ✅ same queries as before. Custom-frame events now show and print their uploaded PNG (the intended fix). |
 | `38419c8` station toasts | same `print_jobs` updates as before | ✅ client-only error handling |
 | `37f2f2a` header | treats anonymous sessions as signed out | ✅ client-only |
+| `3c645a4` CTAs / anon | chooser removed, Home CTAs → `/magnet/lead`; MyEvents/CreateEvent treat anonymous as signed out | ✅ client-only routing |
+| `a20b042` create redirect | `/host/events/create` → admin wizard or lead wizard by role | ✅ client-only routing. Before the migration, Share hosts also lose the self-service wizard (intended). |
 | docs / migration / rollback / QA | not executed by the build | ✅ nothing in the repo applies migrations: no CI workflows, build is `vite build`, no Supabase CLI config |
 
 No app code calls anything the migration creates. The merged code also works *after* the migration: every upload, insert and update it makes is allowed by the new rules (verified by the QA cases).

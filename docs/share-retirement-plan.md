@@ -23,6 +23,7 @@
 ### Routes (`src/App.jsx`)
 - `/event/:code`, `/event/:code/gallery` → `<Navigate to="/magnet/:code">` (keeps old QR codes working)
 - `/host`, `/host/events/*`, `/MyEvents`, `/CreateEvent`, `/EventSuccess` → `/`
+  - *Partly done in Stage 1 (`a20b042`):* `/host/events/create` (and `/CreateEvent`) now redirects by role, to the admin magnet wizard or to `/magnet/lead`. `src/pages/CreateEvent.jsx` is unreferenced; delete it in Phase 1.
 - Remove `/admin/events/share`
 - `MagnetGuestEntry`: a non-magnet code shows "אירוע לא נמצא" instead of bouncing to `/event/:code` (otherwise it loops with the redirect above)
 
