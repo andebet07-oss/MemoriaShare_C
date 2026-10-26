@@ -77,8 +77,15 @@
     --popover: 0 0% 14%;
     --popover-foreground: 240 50% 99%;
 
-    --primary: 235 64% 68%;            /* #7c86e1 — POV ACCENT */
+    --primary: 235 57% 60%;            /* #5f69d3 — fills: primary buttons, selected chips (white text 4.6:1) */
     --primary-foreground: 240 50% 99%; /* white text on indigo */
+    --brand: 235 64% 68%;              /* #7c86e1 — accents: links, labels, active tab, focus, icons */
+
+    /* Status — print jobs (lead stages map onto these), defined once */
+    --status-pending: 38 90% 61%;      /* #f5b544 amber */
+    --status-printing: 213 94% 68%;    /* #60a5fa sky */
+    --status-ready: 160 64% 52%;       /* #34d399 emerald */
+    --status-rejected: 0 91% 71%;      /* #f87171 red */
 
     --secondary: 0 0% 17%;             /* #2b2b2b — raised surface */
     --secondary-foreground: 0 0% 80%;

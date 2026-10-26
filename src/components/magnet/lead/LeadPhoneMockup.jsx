@@ -104,7 +104,7 @@ export default function LeadPhoneMockup({ coverImage, eventName, date, imageTran
     <div className="relative shrink-0 mx-auto [container-type:inline-size] transition-[height] duration-300 ease-out motion-reduce:transition-none" style={PHONE_SIZE}>
       <div className="relative w-full h-full bg-cool-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] ring-1 ring-foreground/10 rounded-[14cqw] p-[3.2cqw]">
         {isDesignMode && (
-          <div className="absolute inset-0 ring-2 ring-primary z-[70] pointer-events-none animate-pulse rounded-[14cqw]" />
+          <div className="absolute inset-0 ring-2 ring-brand z-[70] pointer-events-none animate-pulse rounded-[14cqw]" />
         )}
 
         {/* Dynamic Island */}

@@ -107,7 +107,7 @@ export default function Header({ onCreateEvent }) {
 
           <div className="flex items-center justify-between p-6 border-b border-border">
             <img src="/LOGO.png" alt="MemoriaShare" className="h-8 w-auto object-contain" />
-            <button onClick={closeMenu} aria-label="סגור תפריט" className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/40 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+            <button onClick={closeMenu} aria-label="סגור תפריט" className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/40 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
               <X className="w-6 h-6" />
             </button>
           </div>
@@ -133,7 +133,7 @@ export default function Header({ onCreateEvent }) {
               onClick={() => { closeMenu(); onCreateEvent?.(); }}
               className="w-full text-right text-lg font-bold text-foreground py-3.5 px-2 rounded-lg bg-foreground/5 border border-border mb-2 flex items-center gap-3"
             >
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
               צרו אירוע
             </button>
 

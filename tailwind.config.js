@@ -64,6 +64,13 @@ module.exports = {
         border: 'hsl(var(--border))',
         input:  'hsl(var(--input))',
         ring:   'hsl(var(--ring))',
+        brand: 'hsl(var(--brand))',
+        status: {
+          pending:  'hsl(var(--status-pending))',
+          printing: 'hsl(var(--status-printing))',
+          ready:    'hsl(var(--status-ready))',
+          rejected: 'hsl(var(--status-rejected))',
+        },
 
         // ── POV brand indigo — periwinkle, cool, editorial-tech ──
         // Anchor: indigo-500 = #7c86e1 (POV accent)
@@ -136,6 +143,8 @@ module.exports = {
 
       // ─── Backgrounds ──────────────────────────────────────────────
       backgroundImage: {
+        // The one page glow (CLAUDE.md §0.6): a soft indigo wash behind hero content.
+        glow: 'radial-gradient(circle at 50% 30%, hsl(var(--brand) / 0.14), transparent 60%)',
         'gradient-radial':   'radial-gradient(var(--tw-gradient-stops))',
         // Vignette
         'vignette':          'radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.72) 100%)',

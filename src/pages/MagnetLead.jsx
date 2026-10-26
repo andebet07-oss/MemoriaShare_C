@@ -83,7 +83,7 @@ function InlineCalendar({ value, onChange }) {
               ${!day ? 'invisible pointer-events-none' : ''}
               ${day && isPast(day) ? 'text-foreground/20 pointer-events-none' : ''}
               ${day && isSel(day) ? 'bg-primary text-primary-foreground shadow-indigo-soft' : ''}
-              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-primary/40 text-foreground' : ''}
+              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-brand/40 text-foreground' : ''}
               ${day && !isPast(day) && !isSel(day) ? 'text-foreground/75 hover:bg-foreground/[0.08]' : ''}
             `}>
             <bdi>{day || ''}</bdi>
@@ -237,8 +237,8 @@ export default function MagnetLead() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground flex items-center justify-center px-6 font-heebo" dir="rtl">
         <div className="max-w-sm w-full text-center">
-          <div className="w-14 h-14 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-5">
-            <Check className="w-7 h-7 text-indigo-400" />
+          <div className="w-14 h-14 rounded-full bg-primary/15 border border-brand/30 flex items-center justify-center mx-auto mb-5">
+            <Check className="w-7 h-7 text-brand" />
           </div>
           <h1 className={`${LEAD_HEADING_FONT} text-3xl text-foreground/90 mb-3`}>הבקשה התקבלה!</h1>
           <p className="text-muted-foreground text-sm leading-relaxed mb-8">
@@ -306,7 +306,7 @@ export default function MagnetLead() {
                     onChange={e => handleInputChange('event_name', e.target.value)}
                     placeholder="למשל: יעל & דניאל"
                     style={{ fontSize: '16px' }}
-                    className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
+                    className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                   />
                   {errors.event_name && <p className="text-destructive text-[10px] font-bold animate-pulse">{errors.event_name}</p>}
                 </div>
@@ -363,7 +363,7 @@ export default function MagnetLead() {
                       onChange={e => handleInputChange('location', e.target.value)}
                       placeholder="שם האולם / מיקום האירוע"
                       style={{ fontSize: '16px' }}
-                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
+                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                     />
                     {errors.location && <p className="text-destructive text-xs font-bold text-center">{errors.location}</p>}
                   </div>
@@ -384,7 +384,7 @@ export default function MagnetLead() {
                           onClick={() => handleInputChange('guest_count', opt)}
                           className={`h-11 rounded-xl font-bold text-sm transition-all active:scale-95 border ${
                             selected
-                              ? 'bg-transparent text-primary border-primary shadow-indigo-soft'
+                              ? 'bg-transparent text-brand border-brand shadow-indigo-soft'
                               : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground/80'
                           }`}
                         >
@@ -410,7 +410,7 @@ export default function MagnetLead() {
                       onChange={e => handleInputChange('full_name', e.target.value)}
                       placeholder="שם מלא"
                       style={{ fontSize: '16px' }}
-                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
+                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                     />
                     {errors.full_name && <p className="text-destructive text-[10px] mt-1 font-bold animate-pulse">{errors.full_name}</p>}
                   </div>
@@ -423,7 +423,7 @@ export default function MagnetLead() {
                       inputMode="tel"
                       dir="ltr"
                       style={{ fontSize: '16px' }}
-                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
+                      className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                     />
                     {errors.phone && <p className="text-destructive text-[10px] mt-1 font-bold animate-pulse">{errors.phone}</p>}
                   </div>
