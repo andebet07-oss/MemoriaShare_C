@@ -1,288 +1,54 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { Trash2, Loader2, Smile, X } from 'lucide-react';
-import { getStickerPack } from './stickerPacks';
-import { SVG_STICKERS } from './svgStickers';
-import { LABEL_H_RATIO } from './framePacks';
-import { resolveEventFrame } from '@/lib/framesUtils';
-import { compositePngFrame, canvasToJpegBlob } from '@/lib/compositePngFrame';
-import { formatEventDate } from '@/lib/formatEventDate';
+import { useState, useRef, useEffect } from 'react';
+import { Trash2, Loader2, RotateCw } from 'lucide-react';
+import { eventRenderSpec, renderComposite, canvasToJpegBlob, loadImage } from '@/lib/polaroid/renderPolaroid';
 import { reportError } from '@/lib/sentry';
 import memoriaService from '@/components/memoriaService';
 import { Button } from '@/components/ui/button';
+import { PaperPlane, Champagne } from './review/SendIllustrations';
 
-const EMOJI_SIZE = 52;
-
-function drawSticker(ctx, s, w, h, svgImg) {
-  const cx = s.x * w, cy = s.y * h;
-  ctx.save();
-
-  if (s.type === 'svg') {
-    if (svgImg) {
-      const size = Math.round(w * 0.18);
-      ctx.drawImage(svgImg, cx - size / 2, cy - size / 2, size, size);
-    }
-
-  } else if (s.type === 'script-text') {
-    const sz = Math.round(w * 0.065);
-    ctx.font = `${sz}px 'Great Vibes', 'Parisienne', cursive`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineWidth = sz * 0.16; ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.strokeText(s.content, cx, cy);
-    ctx.fillStyle = '#fff'; ctx.fillText(s.content, cx, cy);
-
-  } else if (s.type === 'retro-text') {
-    const sz = Math.round(w * 0.07);
-    ctx.font = `${sz}px 'Bebas Neue', 'Limelight', sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.letterSpacing = '0.12em';
-    ctx.lineWidth = sz * 0.18; ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.strokeText(s.content, cx, cy);
-    ctx.fillStyle = '#facc15'; ctx.fillText(s.content, cx, cy);
-
-  } else if (s.type === 'handwritten-text') {
-    const sz = Math.round(w * 0.06);
-    ctx.font = `700 ${sz}px 'Caveat', 'Patrick Hand', cursive`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineWidth = sz * 0.18; ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.strokeText(s.content, cx, cy);
-    ctx.fillStyle = '#fff'; ctx.fillText(s.content, cx, cy);
-
-  } else if (s.type === 'editorial-text') {
-    const sz = Math.round(w * 0.072);
-    ctx.font = `${sz}px 'Abril Fatface', 'Playfair Display', serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineWidth = sz * 0.15; ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.strokeText(s.content, cx, cy);
-    ctx.fillStyle = '#fff'; ctx.fillText(s.content, cx, cy);
-
-  } else if (s.type === 'emoji') {
-    ctx.font = `${Math.round(w * 0.13)}px serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(s.content, cx, cy);
-
-  } else if (s.type === 'badge') {
-    const fontSize = Math.round(w * 0.038);
-    ctx.font = `900 ${fontSize}px Heebo, sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const textW = ctx.measureText(s.content).width;
-    const padX = fontSize * 0.75, padY = fontSize * 0.42;
-    const bw = textW + padX * 2, bh = fontSize + padY * 2;
-    const r = bh / 2;
-    ctx.fillStyle = s.dark ? '#111111' : '#caff4a';
-    ctx.beginPath();
-    ctx.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, r);
-    ctx.fill();
-    ctx.fillStyle = s.dark ? '#ffffff' : '#111111';
-    ctx.fillText(s.content, cx, cy);
-
-  } else if (s.type === 'stamp') {
-    const fontSize = Math.round(w * 0.036);
-    ctx.font = `900 ${fontSize}px Heebo, sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const textW = ctx.measureText(s.content).width;
-    const padX = fontSize * 0.7, padY = fontSize * 0.4;
-    const bw = textW + padX * 2, bh = fontSize + padY * 2;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(cx - bw / 2, cy - bh / 2, bw, bh);
-    ctx.strokeStyle = '#111111';
-    ctx.lineWidth = Math.max(2, Math.round(fontSize * 0.1));
-    ctx.strokeRect(cx - bw / 2, cy - bh / 2, bw, bh);
-    ctx.fillStyle = '#111111';
-    ctx.fillText(s.content, cx, cy);
-
-  } else {
-    // text type
-    const sz = Math.round(w * 0.055);
-    ctx.font = `bold ${sz}px Heebo, sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineWidth = sz * 0.2; ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(0,0,0,0.88)'; ctx.strokeText(s.content, cx, cy);
-    ctx.fillStyle = '#fff'; ctx.fillText(s.content, cx, cy);
-  }
-
-  ctx.restore();
-}
-
-const PaperPlane = () => (
-  <svg width="68" height="68" viewBox="0 0 68 68" fill="none" className="animate-paper-fly">
-    <path d="M6 34L62 6L42 62L32 40L6 34Z" fill="#7c86e1" opacity="0.9"/>
-    <path d="M32 40L42 34L6 34" stroke="#5b6acc" strokeWidth="1.8" strokeLinejoin="round"/>
-    <path d="M32 40L42 62" stroke="#5b6acc" strokeWidth="1.4"/>
-  </svg>
-);
-
-const Champagne = () => (
-  <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
-    <path d="M26 6H42L48 30L34 40L20 30L26 6Z" fill="rgba(124,134,225,0.2)" stroke="#8c97e6" strokeWidth="1.5"/>
-    <path d="M34 40V58M26 58H42" stroke="#8c97e6" strokeWidth="2" strokeLinecap="round"/>
-    <circle cx="18" cy="16" r="2.5" fill="#8c97e6" opacity="0.65"/>
-    <circle cx="50" cy="12" r="2" fill="#8c97e6" opacity="0.5"/>
-    <circle cx="54" cy="26" r="1.5" fill="#8c97e6" opacity="0.55"/>
-    <circle cx="14" cy="28" r="2" fill="#8c97e6" opacity="0.4"/>
-    <path d="M22 9L18 5M46 11L50 7" stroke="#8c97e6" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-
-export default function MagnetReview({ imageDataURL, event, userId, onRetake, onPrintJobCreated }) {
-  const photoRef = useRef(null);
-  const [stickers, setStickers]       = useState([]);
-  const [showPicker, setShowPicker]   = useState(false);
-  const [draggingUid, setDraggingUid] = useState(null);
-  const dragOffset = useRef({ x: 0, y: 0 });
+/**
+ * MagnetReview — the guest's framed preview before sending to print.
+ * Shows the finished magnet exactly as it will be printed (the composite from
+ * the polaroid renderer), with retake and send. What is shown is what is sent.
+ */
+export default function MagnetReview({ imageDataURL, orientation, event, userId, onRetake, onPrintJobCreated }) {
+  const compositeRef = useRef(null); // the print-resolution canvas being shown
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [renderFailed, setRenderFailed] = useState(false);
+  const [renderAttempt, setRenderAttempt] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modal, setModal] = useState(null); // null | 'loading' | 'success' | 'error'
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [photoFrac, setPhotoFrac] = useState(0.856); // photoH / totalH; updated after frame render
 
-  const svgImgCache = useRef(new Map());
-
-  const ensureSvgImage = useCallback((svgKey) => {
-    if (svgImgCache.current.has(svgKey)) return Promise.resolve(svgImgCache.current.get(svgKey));
-    return new Promise((resolve, reject) => {
-      const svgStr = SVG_STICKERS[svgKey];
-      if (!svgStr) return reject(new Error('unknown svgKey: ' + svgKey));
-      const b64 = btoa(unescape(encodeURIComponent(svgStr)));
-      const img = new Image();
-      img.onload = () => { svgImgCache.current.set(svgKey, img); resolve(img); };
-      img.onerror = reject;
-      img.src = `data:image/svg+xml;base64,${b64}`;
-    });
-  }, []);
-
-  // Render photo + frame to a preview canvas so the user sees the actual frame layout.
   useEffect(() => {
     let cancelled = false;
-    const eventName = event?.name || '';
-
-    async function render() {
-      let eventFrame;
+    setRenderFailed(false);
+    (async () => {
       try {
-        eventFrame = await resolveEventFrame(event);
+        const photo = await loadImage(imageDataURL);
+        const canvas = await renderComposite({ ...eventRenderSpec(event), orientation, photo });
+        if (cancelled) return;
+        compositeRef.current = canvas;
+        setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9));
       } catch (err) {
-        reportError('MagnetReview.resolveEventFrame', err, { eventId: event?.id });
-        return;
+        reportError('MagnetReview.render', err, { eventId: event?.id });
+        if (!cancelled) setRenderFailed(true);
       }
-      if (!eventFrame || cancelled) return;
-
-      const img = new Image();
-      img.onerror = () => {};
-      img.src = imageDataURL;
-      await new Promise((res) => { img.onload = res; img.onerror = res; });
-      if (cancelled) return;
-
-      let canvas;
-      if (eventFrame.isPng) {
-        // PNG overlay pipeline — compositePngFrame handles sizing
-        canvas = await compositePngFrame(img, eventFrame, { eventName, eventDate: dateLabel });
-        setPhotoFrac(eventFrame.hole_bbox.h <= 1
-          ? eventFrame.hole_bbox.h
-          : eventFrame.hole_bbox.h / canvas.height);
-      } else {
-        // Procedural drawFrame pipeline
-        const photoW = img.naturalWidth;
-        const photoH = img.naturalHeight;
-        const labelH = Math.round(photoW * LABEL_H_RATIO);
-        const totalH = photoH + labelH;
-        canvas = document.createElement('canvas');
-        canvas.width = photoW; canvas.height = totalH;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, photoW, totalH);
-        ctx.drawImage(img, 0, 0);
-        eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
-        setPhotoFrac(photoH / totalH);
-      }
-      if (!cancelled) setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9));
-    }
-
-    render();
+    })();
     return () => { cancelled = true; };
-  }, [imageDataURL, event?.overlay_frame_url]); // eslint-disable-line
+  }, [imageDataURL, orientation, event, renderAttempt]);
 
-  const pack = useMemo(() => getStickerPack(event?.name || ''), [event?.name]);
-  const dateLabel = useMemo(() => formatEventDate(event?.date) || null, [event?.date]);
-
-  const onPointerDown = useCallback((e, uid) => {
-    e.preventDefault(); e.stopPropagation();
-    const rect = photoRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const s = stickers.find(s => s.uid === uid);
-    if (!s) return;
-    dragOffset.current = { x: e.clientX - rect.left - s.x * rect.width, y: e.clientY - rect.top - s.y * rect.height };
-    setDraggingUid(uid);
-  }, [stickers]);
-
-  const onPointerMove = useCallback((e) => {
-    if (!draggingUid) return;
-    e.preventDefault();
-    const rect = photoRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = Math.max(0.04, Math.min(0.96, (e.clientX - rect.left - dragOffset.current.x) / rect.width));
-    const y = Math.max(0.04, Math.min(0.96, (e.clientY - rect.top  - dragOffset.current.y) / rect.height));
-    setStickers(prev => prev.map(s => s.uid === draggingUid ? { ...s, x, y } : s));
-  }, [draggingUid]);
-
-  const addSticker = (def) => {
-    setStickers(prev => [...prev, { uid: `${def.id}-${Date.now()}`, type: def.type, content: def.content, svgKey: def.svgKey, dark: def.dark, x: 0.5, y: 0.38 }]);
-    setShowPicker(false);
-  };
-
-  const compositeAndSubmit = async () => {
+  const submit = async () => {
+    if (!compositeRef.current) return;
     setIsSubmitting(true);
     setModal('loading');
     let photo = null;
     try {
-      const img = new Image();
-      img.src = imageDataURL;
-      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
-
-      const photoW = img.naturalWidth;
-      const photoH = img.naturalHeight;
-      const labelH  = Math.round(photoW * LABEL_H_RATIO);
-      const totalH  = photoH + labelH;
-
-      const canvas = document.createElement('canvas');
-      canvas.width  = photoW;
-      canvas.height = totalH;
-      const ctx = canvas.getContext('2d');
-
-      // Same resolver as the preview and the print path. A custom frame that
-      // fails to load throws → error modal, rather than printing it frameless.
-      const eventFrame = await resolveEventFrame(event);
-
-      let finalCanvas;
-      if (eventFrame?.isPng) {
-        // PNG overlay pipeline — composite handles sizing, stickers drawn after
-        finalCanvas = await compositePngFrame(img, eventFrame, { eventName: event?.name, eventDate: dateLabel });
-        // Draw stickers into the hole area of the PNG canvas
-        const hb = eventFrame.hole_bbox;
-        const fw = finalCanvas.width, fh = finalCanvas.height;
-        const hw = hb.w <= 1 ? Math.round(hb.w * fw) : hb.w;
-        const hh = hb.h <= 1 ? Math.round(hb.h * fh) : hb.h;
-        const fCtx = finalCanvas.getContext('2d');
-        for (const s of stickers) {
-          const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
-          drawSticker(fCtx, s, fw, fh, svgImg);
-        }
-      } else {
-        // Procedural drawFrame pipeline
-        finalCanvas = canvas;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, photoW, totalH);
-        ctx.drawImage(img, 0, 0);
-        if (eventFrame) eventFrame.drawFrame(ctx, photoW, totalH, photoH, event);
-        for (const s of stickers) {
-          const svgImg = s.type === 'svg' ? await ensureSvgImage(s.svgKey).catch(() => null) : null;
-          drawSticker(ctx, s, photoW, totalH, svgImg);
-        }
-      }
-      const blob = await canvasToJpegBlob(finalCanvas, 0.92);
-      const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
+      const blob = await canvasToJpegBlob(compositeRef.current, 0.92);
+      const file = new File([blob], `magnet-${Date.now()}.jpg`, { type: 'image/jpeg' });
       const { file_url, path } = await memoriaService.storage.upload(file, event.id);
 
-      // Also store the RAW un-framed capture so the operator's Pro Station can
-      // re-crop (face-centered) and re-apply the frame. Non-fatal: if the raw
-      // upload fails, we still submit the composited magnet (raw_photo_url stays null).
+      // Also store the RAW full camera frame so the operator's crop editor can
+      // re-frame it. Non-fatal: without it the stored composite still prints.
       let raw_photo_url;
       try {
         const rawBlob = await (await fetch(imageDataURL)).blob();
@@ -310,83 +76,22 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
   return (
     <div className="fixed inset-0 z-[9999] overflow-hidden select-none bg-background bg-glow" dir="rtl">
 
-      {/* ── Polaroid + stickers ── */}
-      <div
-        className="absolute inset-0 flex items-center justify-center"
-        style={{ paddingBottom: '108px' }}
-        onPointerMove={onPointerMove}
-        onPointerUp={() => setDraggingUid(null)}
-        onPointerLeave={() => setDraggingUid(null)}
-      >
-        <div
-          style={{ width: 'min(74vw, 288px)', borderRadius: '6px', transform: 'rotate(-1deg)', boxShadow: '0 36px 80px rgba(0,0,0,0.72), 0 8px 20px rgba(0,0,0,0.5)', position: 'relative' }}
-        >
-          {/* Composite image: photo + frame + label (rendered to canvas in useEffect) */}
-          <img
-            src={previewUrl || imageDataURL}
-            alt="captured"
-            className="w-full block"
-            draggable={false}
-            style={{ borderRadius: '6px', display: 'block' }}
-          />
-
-          {/* Fallback label strip (visible only while previewUrl is computing) */}
-          {!previewUrl && (
-            <div className="py-3 px-4 flex flex-col items-center justify-center text-center bg-white" style={{ minHeight: '56px', borderBottomLeftRadius: '6px', borderBottomRightRadius: '6px' }}>
-              <p className="font-bold text-gray-900 text-sm leading-tight tracking-wide" style={{ fontFamily: "'Heebo','Assistant',sans-serif" }}>{event?.name || ''}</p>
-              {dateLabel && <p className="text-gray-400 text-[11px] mt-0.5 tracking-widest" style={{ fontFamily: 'Georgia,serif' }}>{dateLabel}</p>}
-            </div>
-          )}
-
-          {/* Sticker drag area — full magnet including white border */}
-          <div
-            ref={photoRef}
-            className="absolute inset-0"
-            style={{ touchAction: draggingUid ? 'none' : 'auto' }}
-          >
-            {stickers.map(s => (
-              <div
-                key={s.uid}
-                onPointerDown={e => onPointerDown(e, s.uid)}
-                className="absolute"
-                style={{ left: `${s.x * 100}%`, top: `${s.y * 100}%`, transform: 'translate(-50%,-50%)', touchAction: 'none', userSelect: 'none', zIndex: draggingUid === s.uid ? 60 : 50, cursor: draggingUid === s.uid ? 'grabbing' : 'grab', filter: draggingUid === s.uid ? 'drop-shadow(0 6px 18px rgba(0,0,0,0.6))' : 'drop-shadow(0 2px 6px rgba(0,0,0,0.45))', transition: draggingUid === s.uid ? 'none' : 'filter 0.15s' }}
-              >
-                {s.type === 'svg' && (
-                  <div style={{ width: EMOJI_SIZE, height: EMOJI_SIZE }} dangerouslySetInnerHTML={{ __html: SVG_STICKERS[s.svgKey] || '' }} />
-                )}
-                {s.type === 'script-text' && (
-                  <span className="block whitespace-nowrap" style={{ fontSize: '24px', lineHeight: 1.2, color: '#fff', fontFamily: "'Great Vibes','Parisienne',cursive", WebkitTextStroke: '1.5px rgba(0,0,0,0.7)', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>{s.content}</span>
-                )}
-                {s.type === 'retro-text' && (
-                  <span className="block whitespace-nowrap" style={{ fontSize: '26px', lineHeight: 1, color: '#facc15', fontFamily: "'Bebas Neue','Limelight',sans-serif", letterSpacing: '0.12em', WebkitTextStroke: '1.5px rgba(0,0,0,0.85)', textShadow: '0 2px 12px rgba(0,0,0,0.8)' }}>{s.content}</span>
-                )}
-                {s.type === 'handwritten-text' && (
-                  <span className="block whitespace-nowrap font-bold" style={{ fontSize: '22px', lineHeight: 1.2, color: '#fff', fontFamily: "'Caveat','Patrick Hand',cursive", WebkitTextStroke: '1.5px rgba(0,0,0,0.75)', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>{s.content}</span>
-                )}
-                {s.type === 'editorial-text' && (
-                  <span className="block whitespace-nowrap" style={{ fontSize: '24px', lineHeight: 1, color: '#fff', fontFamily: "'Abril Fatface','Playfair Display',serif", WebkitTextStroke: '1.5px rgba(0,0,0,0.8)', textShadow: '0 2px 12px rgba(0,0,0,0.8)' }}>{s.content}</span>
-                )}
-                {s.type === 'emoji' && (
-                  <span style={{ fontSize: EMOJI_SIZE, lineHeight: 1, display: 'block' }}>{s.content}</span>
-                )}
-                {s.type === 'text' && (
-                  <span className="font-black block whitespace-nowrap" style={{ fontSize: '22px', lineHeight: 1.2, color: '#fff', WebkitTextStroke: '2px rgba(0,0,0,0.88)', textShadow: '0 2px 10px rgba(0,0,0,0.8)', fontFamily: "'Heebo','Assistant',sans-serif" }}>{s.content}</span>
-                )}
-                {s.type === 'badge' && (
-                  <span style={{ display: 'inline-block', padding: '5px 14px', background: s.dark ? '#111' : '#caff4a', color: s.dark ? '#fff' : '#111', fontWeight: 900, fontSize: '14px', borderRadius: '999px', fontFamily: "'Heebo','Assistant',sans-serif", whiteSpace: 'nowrap', boxShadow: '0 2px 12px rgba(0,0,0,0.45)' }}>{s.content}</span>
-                )}
-                {s.type === 'stamp' && (
-                  <span style={{ display: 'inline-block', padding: '4px 12px', background: '#fff', color: '#111', fontWeight: 900, fontSize: '13px', border: '2.5px solid #111', fontFamily: "'Heebo','Assistant',sans-serif", whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.04em', boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>{s.content}</span>
-                )}
-                {draggingUid !== s.uid && (
-                  <button onPointerDown={e => { e.stopPropagation(); setStickers(p => p.filter(x => x.uid !== s.uid)); }} className="absolute -top-2.5 -right-2.5 w-5 h-5 rounded-full bg-black/80 border border-white/30 flex items-center justify-center z-10" style={{ touchAction: 'none' }}>
-                    <X className="w-2.5 h-2.5 text-white" />
-                  </button>
-                )}
-              </div>
-            ))}
+      {/* ── The finished magnet ── */}
+      <div className="absolute inset-x-0 top-0 flex items-center justify-center px-5 pt-14 landscape:pt-4"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
+        {previewUrl ? (
+          <img src={previewUrl} alt="המגנט שלך" draggable={false}
+            className="block max-w-full max-h-full w-auto h-auto shadow-2xl" />
+        ) : renderFailed ? (
+          <div className="flex flex-col items-center gap-4 text-center" role="alert">
+            <p className="text-foreground text-sm">לא הצלחנו להכין את המגנט. בדקו את החיבור ונסו שוב.</p>
+            <Button variant="secondary" onClick={() => setRenderAttempt(n => n + 1)}>
+              <RotateCw /> נסו שוב
+            </Button>
           </div>
-        </div>
+        ) : (
+          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" aria-label="מכינים את המגנט" />
+        )}
       </div>
 
       {/* ── Bottom bar ── */}
@@ -394,18 +99,14 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
         className="absolute inset-x-0 bottom-0 px-5 bg-gradient-to-t from-background from-60% to-transparent"
         style={{ paddingTop: '18px', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}
       >
-        <div className="flex items-center gap-3">
-        <button onClick={onRetake} disabled={isSubmitting} aria-label="צלם מחדש" className="w-12 h-12 rounded-full flex items-center justify-center bg-foreground/10 border border-foreground/15 backdrop-blur-md active:scale-90 transition-transform disabled:opacity-40">
-          <Trash2 className="w-5 h-5 text-foreground/70" />
-        </button>
-
-        <Button size="lg" className="flex-1" onClick={compositeAndSubmit} disabled={isSubmitting || modal !== null}>
-          {isSubmitting ? <Loader2 className="!size-5 animate-spin" /> : 'שלח להדפסה'}
-        </Button>
-
-        <button onClick={() => setShowPicker(true)} aria-label="הוסף מדבקה" className="w-12 h-12 rounded-full flex items-center justify-center bg-foreground/10 border border-foreground/15 backdrop-blur-md active:scale-90 transition-transform">
-          <Smile className="w-5 h-5 text-foreground/70" />
-        </button>
+        <div className="flex items-center gap-3 max-w-md mx-auto">
+          <button onClick={onRetake} disabled={isSubmitting} aria-label="צלם מחדש"
+            className="w-12 h-12 shrink-0 rounded-full flex items-center justify-center bg-foreground/10 border border-foreground/15 backdrop-blur-md active:scale-90 transition-transform disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60">
+            <Trash2 className="w-5 h-5 text-foreground/70" />
+          </button>
+          <Button size="lg" className="flex-1" onClick={submit} disabled={!previewUrl || isSubmitting || modal !== null}>
+            {isSubmitting ? <Loader2 className="!size-5 animate-spin" /> : 'שלח להדפסה'}
+          </Button>
         </div>
       </div>
 
@@ -430,62 +131,12 @@ export default function MagnetReview({ imageDataURL, event, userId, onRetake, on
 
       {/* ── Error toast ── */}
       {modal === 'error' && (
-        <div className="absolute inset-x-4 top-14 z-[100] flex justify-center">
+        <div className="absolute inset-x-4 top-14 z-[100] flex justify-center" role="alert">
           <div className="px-5 py-3 rounded-2xl text-sm font-semibold text-foreground bg-destructive/20 border border-destructive/40 backdrop-blur-md">
             שגיאה — נסו שוב
           </div>
         </div>
       )}
-
-      {/* ── Sticker picker ── */}
-      {showPicker && (
-        <div className="absolute inset-0 z-[200] flex items-end" dir="rtl">
-          <div className="absolute inset-0 bg-background/60" onClick={() => setShowPicker(false)} />
-          <div className="relative w-full rounded-t-3xl bg-card border-t border-border" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
-            <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4 bg-foreground/20" />
-            <div className="flex items-center justify-between px-5 mb-4">
-              <p className="text-foreground font-semibold text-lg">הוסיפו מדבקה</p>
-              <Button variant="ghost" size="icon-sm" onClick={() => setShowPicker(false)} aria-label="סגור">
-                <X />
-              </Button>
-            </div>
-            <div className="grid grid-cols-4 gap-3 px-5 pb-2 max-h-52 overflow-y-auto">
-              {pack.map(def => (
-                <button key={def.id} onClick={() => addSticker(def)} className="aspect-square rounded-xl flex items-center justify-center active:scale-90 transition-all p-2 bg-secondary border border-border">
-                  {def.type === 'svg' && (
-                    <div style={{ width: 40, height: 40 }} dangerouslySetInnerHTML={{ __html: SVG_STICKERS[def.svgKey] || '' }} />
-                  )}
-                  {def.type === 'script-text' && (
-                    <span className="text-center leading-tight" style={{ fontSize: '13px', color: '#fff', fontFamily: "'Great Vibes','Parisienne',cursive" }}>{def.content}</span>
-                  )}
-                  {def.type === 'retro-text' && (
-                    <span className="text-center leading-tight" style={{ fontSize: '13px', color: '#facc15', fontFamily: "'Bebas Neue','Limelight',sans-serif", letterSpacing: '0.08em' }}>{def.content}</span>
-                  )}
-                  {def.type === 'handwritten-text' && (
-                    <span className="font-bold text-center leading-tight" style={{ fontSize: '12px', color: '#fff', fontFamily: "'Caveat','Patrick Hand',cursive" }}>{def.content}</span>
-                  )}
-                  {def.type === 'editorial-text' && (
-                    <span className="text-center leading-tight" style={{ fontSize: '12px', color: '#fff', fontFamily: "'Abril Fatface','Playfair Display',serif" }}>{def.content}</span>
-                  )}
-                  {def.type === 'emoji' && (
-                    <span style={{ fontSize: '36px', lineHeight: 1 }}>{def.content}</span>
-                  )}
-                  {def.type === 'text' && (
-                    <span className="text-[10px] font-black text-center leading-tight" style={{ color: '#caff4a', fontFamily: "'Heebo','Assistant',sans-serif" }}>{def.content}</span>
-                  )}
-                  {def.type === 'badge' && (
-                    <span style={{ display: 'inline-block', padding: '3px 8px', background: def.dark ? '#111' : '#caff4a', color: def.dark ? '#fff' : '#111', fontWeight: 900, fontSize: '9px', borderRadius: '999px', fontFamily: "'Heebo',sans-serif", whiteSpace: 'nowrap', textAlign: 'center', lineHeight: 1.4 }}>{def.content}</span>
-                  )}
-                  {def.type === 'stamp' && (
-                    <span style={{ display: 'inline-block', padding: '2px 7px', background: '#fff', color: '#111', fontWeight: 900, fontSize: '9px', border: '1.5px solid #111', fontFamily: "'Heebo',sans-serif", whiteSpace: 'nowrap', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.4 }}>{def.content}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default function PrintStatusModal({ printJobs, onClose }) {
                 <div key={job.id} className="flex items-center gap-4 bg-secondary/60 border border-border rounded-2xl p-3">
                   <div className="w-14 h-14 rounded-xl overflow-hidden bg-secondary shrink-0">
                     {thumbUrl
-                      ? <img src={thumbUrl} className="w-full h-full object-cover" alt="" />
+                      ? <img src={thumbUrl} className="w-full h-full object-contain p-1" alt="" />
                       : <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">#{i + 1}</div>
                     }
                   </div>

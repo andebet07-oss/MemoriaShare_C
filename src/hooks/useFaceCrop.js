@@ -1,17 +1,11 @@
-import { compositePngFrame } from '@/lib/compositePngFrame';
-
 /**
- * useFaceCrop — the AI + crop engine for MagnetProStation.
+ * useFaceCrop — face detection + face-centred auto-crop for MagnetProStation.
  *
  * Face detection is SIMULATED for now behind a swappable interface (FACE_ENGINE);
- * the rest of the pipeline (auto-crop, manual pan/zoom, frame re-composite) is real
- * and unchanged when the real detector lands.
+ * the crop itself (cover, pan, zoom) is drawn by the polaroid renderer
+ * (photoSourceRect in src/lib/polaroid/renderPolaroid.js).
  *
- * The pure functions are exported at module scope so non-React helpers
- * (e.g. buildMagnetBlob) can reuse them; the useFaceCrop() hook returns the same
- * functions for convenience inside components.
- *
- * crop_config shape: { aspect:'3:4'|'4:3', panX, panY, zoom }
+ * crop_config shape: { orientation:'portrait'|'landscape', panX, panY, zoom }
  *   - panX/panY  normalised centre of the crop window in source-image coords (0..1)
  *   - zoom       ≥ 1, magnifies (shrinks the source rect around the centre)
  */
@@ -21,21 +15,6 @@ const FACE_ENGINE = 'sim'; // 'sim' | 'faceapi'
 // Gates face-count UI. Flip to true only once detectFaces() really calls a
 // detector — simulated counts must never be shown to the operator.
 export const HAS_REAL_FACE_ENGINE = FACE_ENGINE !== 'sim';
-
-// Load an <img> with anonymous CORS so the resulting canvas is never tainted.
-export function loadImageEl(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`image load failed: ${src}`));
-    img.src = src;
-  });
-}
-
-function canvasToImage(canvas) {
-  return loadImageEl(canvas.toDataURL('image/jpeg', 0.95));
-}
 
 /**
  * SIMULATED face detection. Deterministic per image (samples a downscaled copy
@@ -80,55 +59,18 @@ export async function detectFaces(img) {
 
 // Face-centered crop config: centre the window on the face centroid, no zoom,
 // so the maximum area is kept and no face is pushed out of frame.
-export function computeAutoCrop({ boxes, aspect }) {
-  if (!boxes?.length) return { aspect, panX: 0.5, panY: 0.5, zoom: 1 };
+export function computeAutoCrop({ boxes, orientation }) {
+  if (!boxes?.length) return { orientation, panX: 0.5, panY: 0.5, zoom: 1 };
   let sx = 0, sy = 0;
   for (const b of boxes) { sx += b.x + b.w / 2; sy += b.y + b.h / 2; }
   return {
-    aspect,
+    orientation,
     panX: Math.min(1, Math.max(0, sx / boxes.length)),
     panY: Math.min(1, Math.max(0, sy / boxes.length)),
     zoom: 1,
   };
 }
 
-// Source-pixel crop rectangle for a given config.
-export function cropRect(imgW, imgH, cfg) {
-  const ar = cfg?.aspect === '4:3' ? 4 / 3 : 3 / 4;
-  let baseW, baseH;
-  if (imgW / imgH > ar) { baseH = imgH; baseW = imgH * ar; }
-  else { baseW = imgW; baseH = imgW / ar; }
-  const z = Math.max(1, cfg?.zoom || 1);
-  const w = baseW / z, h = baseH / z;
-  let x = (cfg?.panX ?? 0.5) * imgW - w / 2;
-  let y = (cfg?.panY ?? 0.5) * imgH - h / 2;
-  x = Math.max(0, Math.min(imgW - w, x));
-  y = Math.max(0, Math.min(imgH - h, y));
-  return { x, y, w, h };
-}
-
-// Draw the cropped region into a fixed-resolution canvas of the chosen aspect.
-export function applyCrop(img, cfg) {
-  const iw = img.naturalWidth || img.width;
-  const ih = img.naturalHeight || img.height;
-  const { x, y, w, h } = cropRect(iw, ih, cfg);
-  const outW = cfg?.aspect === '4:3' ? 1600 : 1200;
-  const outH = cfg?.aspect === '4:3' ? 1200 : 1600;
-  const canvas = document.createElement('canvas');
-  canvas.width = outW; canvas.height = outH;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, outW, outH);
-  ctx.drawImage(img, x, y, w, h, 0, 0, outW, outH);
-  return canvas;
-}
-
-// Cropped photo → framed magnet canvas (WYSIWYG). `maxWidth` keeps previews light.
-export async function composePreview(croppedCanvas, frame, opts = {}) {
-  const photoImg = await canvasToImage(croppedCanvas);
-  return compositePngFrame(photoImg, frame, opts);
-}
-
 export function useFaceCrop() {
-  return { detectFaces, computeAutoCrop, cropRect, applyCrop, composePreview, loadImageEl };
+  return { detectFaces, computeAutoCrop };
 }

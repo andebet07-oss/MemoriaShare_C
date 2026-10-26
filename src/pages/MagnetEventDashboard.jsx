@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/system/PageHeader';
 import SectionLabel from '@/components/system/SectionLabel';
 import Card from '@/components/system/Card';
+import EventTemplateCard from '@/components/magnet/templates/EventTemplateCard';
 
 function InfoRow({ icon: Icon, label, value, ltr = false }) {
   return (
@@ -122,6 +123,8 @@ export default function MagnetEventDashboard() {
             <InfoRow icon={Users}    label="הדפסות לאורח" value={event.print_quota_per_device ? `${event.print_quota_per_device} הדפסות` : null} />
           </Card>
 
+          <EventTemplateCard event={event} />
+
           {/* Cover image */}
           <Card className="flex flex-col gap-3">
             <SectionLabel as="h2">תמונת רקע לדף הנחיתה</SectionLabel>
@@ -180,7 +183,7 @@ export default function MagnetEventDashboard() {
             <div className="grid grid-cols-3 gap-2">
               {photos.slice(0, 18).map(ph => (
                 <div key={ph.id} className="aspect-square rounded-xl overflow-hidden bg-secondary">
-                  <img src={ph.file_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  <img src={ph.file_urls?.thumbnail ?? ph.file_url} alt="" className="w-full h-full object-contain p-1.5" loading="lazy" />
                 </div>
               ))}
             </div>

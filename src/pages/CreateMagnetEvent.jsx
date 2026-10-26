@@ -1,120 +1,16 @@
 import React, { useState } from "react";
-import {
-  Loader2, ArrowLeft, Home, Check,
-  ChevronLeft, ChevronRight,
-  Copy, Monitor
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { Loader2, ArrowLeft, Home } from "lucide-react";
+import { useLocation, Link } from "react-router-dom";
 import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
-import { formatEventDate } from "@/lib/formatEventDate";
+import { DEFAULT_TEMPLATE_ID, getTemplate, resolveOptions } from "@/lib/polaroid/templates";
+import PolaroidPreview from "@/components/magnet/templates/PolaroidPreview";
+import EventCreatedScreen from "@/components/magnet/create/EventCreatedScreen";
+import { NameStep, DateStep, QuotaStep, TemplateStep } from "@/components/magnet/create/WizardSteps";
 
-// Polaroid-style magnet preview
-function MagnetPreview({ eventData = {}, previewH, previewW }) {
-  const formattedDate = formatEventDate(eventData.date) || "12.06.2026";
-
-  // Polaroid ratio: 3:4 (width:height = 0.75). 37.5/50 = 0.75 ✓
-  const cardH = previewH || 'clamp(145px, 50dvh, 420px)';
-  const cardW = previewW || 'clamp(109px, 37.5dvh, 315px)';
-
-  return (
-    <div className="relative flex items-center justify-center h-full w-full">
-      {/* Polaroid frame */}
-      <div
-        className="relative bg-white shadow-[0_20px_50px_rgba(0,0,0,0.7)] flex flex-col"
-        style={{
-          width: cardW,
-          height: cardH,
-          padding: '6px 6px 0 6px',
-          borderRadius: '2px',
-          transition: 'width 0.5s ease-out, height 0.5s ease-out',
-        }}
-      >
-        {/* Photo area */}
-        <div className="relative flex-1 bg-zinc-900 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-cool-900/60 to-cool-950" />
-        </div>
-        {/* Polaroid label strip */}
-        <div className="flex-none flex flex-col items-center justify-center py-1.5 gap-0.5">
-          <span className="text-black text-[9px] font-bold leading-none truncate w-full text-center">
-            {eventData.name || "שם האירוע"}
-          </span>
-          <span className="text-black/40 text-[7px]">{formattedDate}</span>
-        </div>
-      </div>
-      {/* Magnet label */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-        <span className="text-brand/60 text-xs font-semibold">מגנט</span>
-      </div>
-    </div>
-  );
-}
-
-// Compact inline calendar — indigo accent
-function InlineCalendar({ value, onChange }) {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const selected = value ? new Date(value + 'T00:00:00') : null;
-  const [viewYear, setViewYear] = useState(selected ? selected.getFullYear() : today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(selected ? selected.getMonth() : today.getMonth());
-
-  const hebrewDays = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
-  const hebrewMonths = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-
-  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
-  const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
-  const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
-
-  const cells = [];
-  for (let i = 0; i < firstDay; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  const isPast = (d) => new Date(viewYear, viewMonth, d) < today;
-  const isSel = (d) => selected && selected.getFullYear() === viewYear && selected.getMonth() === viewMonth && selected.getDate() === d;
-  const isToday = (d) => today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === d;
-
-  const handleDay = (d) => {
-    if (!d || isPast(d)) return;
-    onChange(`${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-  };
-
-  return (
-    <div className="bg-card border border-border rounded-2xl p-4 w-full" dir="ltr">
-      <div className="flex items-center justify-between mb-3">
-        <button type="button" onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <span className="font-heebo font-semibold text-foreground text-lg">{hebrewMonths[viewMonth]} {viewYear}</span>
-        <button type="button" onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-      <div className="grid grid-cols-7 mb-1">
-        {hebrewDays.map(d => <div key={d} className="text-center text-muted-foreground/60 text-xs font-bold py-1">{d}</div>)}
-      </div>
-      <div className="grid grid-cols-7">
-        {cells.map((day, i) => (
-          <button key={i} type="button" onClick={() => handleDay(day)}
-            className={`h-9 w-full flex items-center justify-center text-base font-medium rounded-full transition-colors
-              ${!day ? 'invisible pointer-events-none' : ''}
-              ${day && isPast(day) ? 'text-muted-foreground/40 pointer-events-none' : ''}
-              ${day && isSel(day) ? 'bg-primary text-primary-foreground shadow-indigo-soft' : ''}
-              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-primary/40 text-foreground' : ''}
-              ${day && !isPast(day) && !isSel(day) ? 'text-foreground/80 hover:bg-accent' : ''}
-            `}>
-            {day || ''}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+const TOTAL_STEPS = 4;
 
 export default function CreateMagnetEvent() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
@@ -122,12 +18,11 @@ export default function CreateMagnetEvent() {
   const fromLead = location.state?.fromLead ?? null;
 
   const [currentStep, setCurrentStep] = useState(fromLead?.eventName ? 2 : 1);
-  const totalSteps = 3;
-
   const [form, setForm] = useState({
     name: fromLead?.eventName ?? '',
     date: fromLead?.eventDate ?? '',
     print_quota_per_device: 5,
+    template: { templateId: DEFAULT_TEMPLATE_ID, options: resolveOptions(getTemplate(DEFAULT_TEMPLATE_ID)) },
     coverImageFile: null,    // new File selected by admin in this wizard
     coverImageUrl: fromLead?.coverImageUrl ?? '',  // pre-existing URL from lead submission
   });
@@ -136,7 +31,6 @@ export default function CreateMagnetEvent() {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(null);
 
-  const quotaOptions = [1, 3, 5, 10, 20];
   const todayStr = new Date().toISOString().split('T')[0];
 
   const handleChange = (field, value) => {
@@ -161,7 +55,7 @@ export default function CreateMagnetEvent() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => { if (validateStep(currentStep)) setCurrentStep(p => Math.min(p + 1, totalSteps)); };
+  const handleNext = () => { if (validateStep(currentStep)) setCurrentStep(p => Math.min(p + 1, TOTAL_STEPS)); };
   const handleBack = () => { setCurrentStep(p => Math.max(p - 1, 1)); setErrors({}); };
 
   const handleSubmit = async () => {
@@ -178,6 +72,8 @@ export default function CreateMagnetEvent() {
         created_by: user.id,
         event_type: 'magnet',
         print_quota_per_device: form.print_quota_per_device,
+        template_id: form.template.templateId,
+        template_options: form.template.options,
         guest_tier: 0,
         max_uploads_per_user: 999,
         auto_publish_guest_photos: false,
@@ -201,67 +97,18 @@ export default function CreateMagnetEvent() {
     }
   };
 
-  if (success) {
-    const eventUrl = `${window.location.origin}/magnet/${success.event_code}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&format=png&color=0a0a0a&bgcolor=ffffff&data=${encodeURIComponent(eventUrl)}`;
-    return (
-      <div className="fixed inset-0 bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 flex items-center justify-center" dir="rtl">
-        <div className="text-center px-6 max-w-sm w-full">
-          {/* Check circle */}
-          <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
-            <Check className="w-7 h-7 text-brand" />
-          </div>
-          <p className="text-brand text-xs font-semibold mb-3">מגנט · מוכן</p>
-          <h3 className="font-heebo font-semibold text-3xl text-foreground/90 mb-2">אירוע מגנט נוצר</h3>
-          <p className="text-muted-foreground text-sm mb-6">שתפו את הקישור או ה-QR עם האורחים</p>
+  if (success) return <EventCreatedScreen success={success} />;
 
-          {/* QR code */}
-          <div className="mx-auto w-fit bg-foreground rounded-2xl p-3 mb-5 shadow-2xl">
-            <img src={qrUrl} alt="QR" width={160} height={160} className="block rounded-lg" />
-          </div>
+  const progressPercentage = currentStep / TOTAL_STEPS * 100;
 
-          {/* Event URL copy row */}
-          <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-3 mb-6">
-            <span className="text-foreground/75 text-xs truncate flex-1 text-right" dir="ltr">
-              {eventUrl}
-            </span>
-            <button
-              onClick={() => navigator.clipboard?.writeText(eventUrl)}
-              className="shrink-0 p-1.5 rounded-lg hover:bg-accent transition-colors"
-              title="העתק קישור"
-            >
-              <Copy className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-            </button>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => navigate(`/PrintStation/${success.event_id}`)}
-              className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-xl transition-colors"
-            >
-              <Monitor className="w-4 h-4" />
-              פתח Print Station
-            </button>
-            <button
-              onClick={() => navigate('/AdminDashboard')}
-              className="w-full px-5 py-3 bg-card border border-border text-muted-foreground text-sm rounded-xl hover:bg-accent transition-colors"
-            >
-              חזרה לדשבורד
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const progressPercentage = currentStep / totalSteps * 100;
-
-  // On the calendar step (step 2), hide the preview entirely.
-  const isCalendarStep = currentStep === 2;
-  const hideTopPreview = isCalendarStep;
-  const previewH = 'clamp(145px, 50dvh, 420px)';
-  const previewW = 'clamp(109px, 37.5dvh, 315px)';
+  // The calendar and template steps take the full screen (the template step
+  // has its own previews); the others show the live magnet on top.
+  const isFullScreenStep = currentStep === 2 || currentStep === 4;
+  const previewSpec = {
+    ...form.template,
+    name: form.name.trim() || 'שרה & דניאל',
+    date: form.date,
+  };
 
   return (
     <div className="flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo" dir="rtl">
@@ -274,119 +121,27 @@ export default function CreateMagnetEvent() {
 
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
 
-        {/* Preview area — hidden on the calendar step to give it the full screen */}
-        {!hideTopPreview && (
+        {/* Live magnet preview — the real template with the names and date */}
+        {!isFullScreenStep && (
           <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto flex items-center justify-center relative z-0 shrink-0 border-b border-border lg:border-none overflow-hidden py-2">
             <div className="absolute inset-0 bg-gradient-to-b from-cool-900 to-cool-950" />
             <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,134,225,0.06) 0%, transparent 70%)' }} />
-            <div className="relative z-10 w-full flex items-center justify-center h-full">
-              <MagnetPreview eventData={form} previewH={previewH} previewW={previewW} />
-            </div>
+            <PolaroidPreview spec={previewSpec} orientation="portrait" label="תצוגה מקדימה של המגנט"
+              className="z-10 w-[clamp(109px,37.5dvh,315px)]" />
           </div>
         )}
 
         {/* Form area */}
         <div className="flex-1 z-10 flex flex-col relative min-h-0 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
-          <div className={`flex-1 px-4 flex flex-col items-center ${isCalendarStep ? 'overflow-y-auto justify-start pt-6' : 'overflow-hidden justify-center'}`}>
+          <div className={`flex-1 px-4 flex flex-col items-center ${isFullScreenStep ? 'overflow-y-auto justify-start pt-6' : 'overflow-hidden justify-center'}`}>
             <div className="w-full max-w-sm mx-auto flex flex-col justify-center items-center">
-
-              {/* Step 1 — Name */}
               {currentStep === 1 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
-                  <p className="text-brand text-xs font-semibold mb-2"><bdi>01</bdi> · שם האירוע</p>
-                  <h2 className="font-heebo text-2xl font-semibold mb-1 text-foreground">מה שם האירוע?</h2>
-                  <p className="text-sm text-muted-foreground mb-2">השם שיופיע על המגנט ובממשק האורחים</p>
-                  <Input
-                    value={form.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
-                    placeholder="למשל: Yael & Daniel"
-                    style={{ fontSize: '16px' }}
-                    className="bg-card border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-muted-foreground/60 w-full"
-                  />
-                  {errors.name && <p className="text-destructive text-xs mt-2 font-semibold animate-pulse">{errors.name}</p>}
-
-                  {/* Optional cover photo */}
-                  <div className="mt-4 w-full">
-                    <p className="text-muted-foreground text-xs font-semibold mb-2">תמונת רקע לדף הנחיתה (אופציונלי)</p>
-                    <label className="cursor-pointer block">
-                      <input
-                        type="file" accept="image/*" className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          handleChange('coverImageFile', file);
-                          setCoverImagePreview(URL.createObjectURL(file));
-                        }}
-                      />
-                      {coverImagePreview ? (
-                        <div className="relative w-full h-28 rounded-xl overflow-hidden border border-primary/40">
-                          <img src={coverImagePreview} className="w-full h-full object-cover" alt="cover" />
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                            <span className="text-foreground text-xs font-semibold">לחץ להחלפה</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-20 rounded-xl border border-dashed border-primary/30 bg-primary/5 flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
-                          <span className="text-brand/80 text-xs">+ העלה תמונת רקע</span>
-                        </div>
-                      )}
-                    </label>
-                  </div>
-                </div>
+                <NameStep form={form} errors={errors} onChange={handleChange} coverPreview={coverImagePreview}
+                  onCoverFile={(file) => { handleChange('coverImageFile', file); setCoverImagePreview(URL.createObjectURL(file)); }} />
               )}
-
-              {/* Step 2 — Date */}
-              {currentStep === 2 && fromLead && (
-                <div className="animate-in fade-in duration-300 w-full mb-2">
-                  <div className="flex items-center justify-between px-3 py-2 bg-primary/10 border border-primary/25 rounded-xl">
-                    <span className="text-brand text-xs font-semibold truncate">{fromLead.eventName}</span>
-                    <span className="text-brand/70 text-xs shrink-0 mr-2">מליד · {fromLead.contactName}</span>
-                  </div>
-                </div>
-              )}
-              {currentStep === 2 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
-                  <div className="text-center space-y-1">
-                    <p className="text-brand text-xs font-semibold mb-1"><bdi>02</bdi> · תאריך</p>
-                    <h2 className="font-heebo text-2xl font-semibold text-foreground">מתי האירוע?</h2>
-                    <p className="text-sm text-muted-foreground">תאריך האירוע שיופיע על המגנטים</p>
-                  </div>
-                  <InlineCalendar value={form.date} onChange={(d) => handleChange('date', d)} />
-                  {errors.date && <p className="text-destructive text-sm font-semibold text-center animate-pulse">{errors.date}</p>}
-                </div>
-              )}
-
-              {/* Step 3 — Print quota */}
-              {currentStep === 3 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
-                  <div className="text-center space-y-1">
-                    <p className="text-brand text-xs font-semibold mb-1"><bdi>03</bdi> · מכסה</p>
-                    <h2 className="font-heebo text-2xl font-semibold text-foreground">כמה הדפסות לאורח?</h2>
-                    <p className="text-sm text-muted-foreground">כל אורח יוכל להדפיס עד המספר שתבחרו</p>
-                  </div>
-                  <div className="grid grid-cols-5 gap-2">
-                    {quotaOptions.map((n) => (
-                      <button
-                        key={n} type="button"
-                        onClick={() => handleChange('print_quota_per_device', n)}
-                        className={`h-12 rounded-xl font-bold text-base transition-all active:scale-95 ${
-                          form.print_quota_per_device === n
-                            ? 'bg-primary text-primary-foreground shadow-indigo-soft border border-foreground/20'
-                            : 'bg-card text-muted-foreground border border-border hover:border-foreground/20'
-                        }`}
-                      ><bdi>{n}</bdi></button>
-                    ))}
-                  </div>
-                  <div className="bg-gradient-to-r from-cool-900 to-cool-950 rounded-xl p-3 flex items-center gap-3 border border-border">
-                    <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand shrink-0 border border-brand/20">
-                      <Check size={16} strokeWidth={3} />
-                    </div>
-                    <p className="text-foreground font-semibold text-sm"><bdi className="tabular-nums">{form.print_quota_per_device}</bdi> הדפסות לכל אורח</p>
-                  </div>
-                  {errors.submit && <p className="text-destructive text-sm text-center">{errors.submit}</p>}
-                </div>
-              )}
-
+              {currentStep === 2 && <DateStep form={form} errors={errors} onChange={handleChange} fromLead={fromLead} />}
+              {currentStep === 3 && <QuotaStep form={form} onChange={handleChange} />}
+              {currentStep === 4 && <TemplateStep form={form} onChange={handleChange} error={errors.submit} />}
             </div>
           </div>
 
@@ -395,12 +150,12 @@ export default function CreateMagnetEvent() {
             style={{ paddingTop: '0.25rem', paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
             <div className="w-full max-w-sm mx-auto flex gap-3 items-center">
               {currentStep === 1 ? (
-                <Link to="/AdminDashboard"
+                <Link to="/AdminDashboard" aria-label="חזרה לניהול"
                   className="w-11 h-11 bg-card text-muted-foreground rounded-xl flex items-center justify-center transition-all active:scale-90 border border-border shrink-0 hover:text-foreground">
                   <Home className="w-4 h-4" />
                 </Link>
               ) : (
-                <button type="button" onClick={handleBack}
+                <button type="button" onClick={handleBack} aria-label="חזרה"
                   className="w-11 h-11 bg-card text-foreground rounded-xl flex items-center justify-center transition-all active:scale-90 border border-border shrink-0">
                   <ArrowLeft className="w-5 h-5 rotate-180" />
                 </button>
@@ -408,7 +163,7 @@ export default function CreateMagnetEvent() {
 
               <button
                 type="button"
-                onClick={currentStep === totalSteps ? handleSubmit : handleNext}
+                onClick={currentStep === TOTAL_STEPS ? handleSubmit : handleNext}
                 disabled={isLoading}
                 className={`text-base font-semibold rounded-xl flex-1 h-12 transition-all duration-300 active:scale-95 flex items-center justify-center relative ${
                   isCurrentStepValid() || isLoading
@@ -418,7 +173,7 @@ export default function CreateMagnetEvent() {
               >
                 {isLoading
                   ? <Loader2 className="w-5 h-5 animate-spin" />
-                  : <span>{currentStep === totalSteps ? 'יצירת אירוע' : 'המשך'}</span>
+                  : <span>{currentStep === TOTAL_STEPS ? 'יצירת אירוע' : 'המשך'}</span>
                 }
               </button>
             </div>

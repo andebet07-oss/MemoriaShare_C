@@ -77,10 +77,10 @@ export default function ProJobCard({ job, event, isNew = false, isSelected = fal
       }`}
       dir="rtl"
     >
-      {/* Photo */}
+      {/* The finished magnet, whole (portrait or landscape) */}
       <div className="relative aspect-square bg-secondary">
         {thumbUrl
-          ? <img src={thumbUrl} className="w-full h-full object-cover" alt="" />
+          ? <img src={thumbUrl} className="w-full h-full object-contain p-3 drop-shadow-lg" alt="" />
           : <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">אין תמונה</div>
         }
         {isNew && (
