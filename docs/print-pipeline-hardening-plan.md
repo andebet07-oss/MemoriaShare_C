@@ -10,7 +10,7 @@
 | 4: station failures → toasts, no advance on failure, no double print | ✅ code + 7 unit tests | `38419c8` |
 | 1: guest print_jobs INSERT | ✅ migration §1 | |
 | 2: photos bucket INSERT / admin UPDATE (D4) | ✅ migration §2–3 | |
-| New 1: event creation admin-only | ✅ migration §6 | |
+| New 1: event creation admin-only (+ Magnet events updatable only by admins — security-review follow-up) | ✅ migration §6 | |
 | New 2: admin photo read → Magnet photos private | ✅ migration §4 | |
 | New 3: URLs only into our bucket's event folder | ✅ migration §1 + §5 | |
 | Copies reset (2 July jobs) | ✅ migration §7 | |
@@ -101,12 +101,12 @@ Helpers:
 | 3 | Bucket UPDATE (upsert): admin, `overlays/` and `covers/` only (D4). |
 | 4 | `photos_select_admin` (permissive) is created first, then RESTRICTIVE SELECT / UPDATE / DELETE: a Magnet photo is visible to and changeable by only its uploader and admins. Share photos are untouched. This also neutralises D3 for Magnet photos. |
 | 5 | RESTRICTIVE photos INSERT: `created_by = auth.uid()`; `file_url = {prefix}{path}`; `path` is a single file in `{event_id}/`; `file_urls` NULL. The resize webhook (service_role) fills `file_urls`. Trigger `trg_photos_lock_urls`: API roles can't change `file_url` / `file_urls` / `path` / `event_id` / `created_by` after insert. |
-| 6 | RESTRICTIVE events INSERT: admin only. |
+| 6 | RESTRICTIVE events INSERT: admin only. RESTRICTIVE events UPDATE: only admins can update a Magnet row or produce one, which closes the Share→Magnet flip and editor-grant changes to a Magnet frame or quota. |
 | 7 | Reset `copies` to 1 for queued jobs whose copies equal the simulated face count. |
 | Guards | Abort if any other permissive INSERT path into print_jobs or the photos bucket survives, or if one isn't limited to `authenticated`. |
 
 **Local validation** (Postgres 16 stand-in with worst-case live policies, including the D3 bug):
-- RLS QA: 44/44 pass.
+- RLS QA: 49/49 pass.
 - storage: 17/17 pass.
 - Re-running the migration is a no-op.
 - A stray policy makes it abort.

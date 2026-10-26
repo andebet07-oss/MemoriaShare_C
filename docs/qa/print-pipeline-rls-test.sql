@@ -83,6 +83,8 @@ BEGIN
 
   -- guest_c holds an editor grant on a DIFFERENT (share) event — the D3 probe
   INSERT INTO event_permissions (event_id, user_id, role, granted_by) VALUES (es, gc, 'editor', host);
+  -- host (non-admin) holds an editor grant on the magnet event — the events UPDATE probe
+  INSERT INTO event_permissions (event_id, user_id, role, granted_by) VALUES (em, host, 'editor', admin);
 END$$;
 
 -- ── Cases ────────────────────────────────────────────────────
@@ -178,6 +180,18 @@ BEGIN
   PERFORM pg_temp.qa_try('events | guest A: create event', 'denied', 'authenticated', ga, format(ev, 'qa-x2-' || left(md5(random()::text), 6), ga));
   PERFORM pg_temp.qa_try('events | Google user (non-admin): create event', 'denied', 'authenticated', host, format(ev, 'qa-x3-' || left(md5(random()::text), 6), host));
   PERFORM pg_temp.qa_try('events | admin: create event', 'allowed', 'authenticated', admin, format(ev, 'qa-x4-' || left(md5(random()::text), 6), admin));
+
+  -- ── events UPDATE (magnet rows admin-only) ──
+  PERFORM pg_temp.qa_try('events | host: turn own share event into magnet', 'denied', 'authenticated', host,
+    format('UPDATE events SET event_type = ''magnet'' WHERE id = %L', es));
+  PERFORM pg_temp.qa_try('events | [regression] host: rename own share event', 'allowed', 'authenticated', host,
+    format('UPDATE events SET name = ''QA renamed'' WHERE id = %L', es));
+  PERFORM pg_temp.qa_try('events | host (editor grant): change magnet frame URL', 'denied', 'authenticated', host,
+    format('UPDATE events SET overlay_frame_url = ''https://evil.example/f.png'' WHERE id = %L', em));
+  PERFORM pg_temp.qa_try('events | host (editor grant): raise magnet quota', 'denied', 'authenticated', host,
+    format('UPDATE events SET print_quota_per_device = 999 WHERE id = %L', em));
+  PERFORM pg_temp.qa_try('events | admin: update magnet event', 'allowed', 'authenticated', admin,
+    format('UPDATE events SET print_quota_per_device = 10 WHERE id = %L', em));
 END$$;
 
 -- ── Report + rollback (intentional error) ─────────────────────

@@ -10,17 +10,17 @@ Roles:
 Run after the migration is applied, against code from branch `claude/lucid-knuth-l1jm0g` (its Vercel preview, or `main` after merge). ☐ = to check.
 
 ## A. RLS: print_jobs, photos, events (SQL editor)
-☐ Run `docs/qa/print-pipeline-rls-test.sql`. It ends with an intentional error whose message is the results table, and it rolls back its own fixtures. **All 44 lines must read `PASS`.**
+☐ Run `docs/qa/print-pipeline-rls-test.sql`. It ends with an intentional error whose message is the results table, and it rolls back its own fixtures. **All 49 lines must read `PASS`.**
 
 Coverage:
 - **print_jobs:** guest insert rules (copies / status / crop / face_count / other guest / other event / inactive event / Share event / quota); `raw_photo_url` (own event folder ok; external host or another event's folder denied); admin operator updates.
 - **photos SELECT:** a Magnet photo is invisible to anon, to other guests and to an editor of *another* event (the D3 probe); visible to its uploader and to admin, even when hidden or unapproved.
 - **photos INSERT:** `file_url` must be our bucket's `{event_id}/{file}` and equal to the public URL of `path`; no pre-filled `file_urls`; no rows in another user's name.
 - **photos UPDATE/DELETE:** nobody repoints a URL (`PHOTO_URL_IMMUTABLE`); the D3 editor can't change or delete a Magnet photo.
-- **events INSERT:** admin only.
+- **events INSERT:** admin only. **events UPDATE:** only admins can update a Magnet event or turn an event into one (a Share host can't flip `event_type`, and an editor grant on a Magnet event can't change its frame or quota).
 - `[regression]` lines confirm the Share behaviour we didn't intend to change.
 
-Local validation (Postgres 16 stand-in; consolidated photos policies *including* the D3 bug, any Google user allowed to create events): 44/44 pass. Before the migration, the same stand-in let anon read a Magnet photo and let an editor of another event repoint one to an external URL.
+Local validation (Postgres 16 stand-in; consolidated photos policies *including* the D3 bug, any Google user allowed to create events, live-style `events_update_owner`): 49/49 pass. Before the migration, the same stand-in let anon read a Magnet photo, let an editor of another event repoint one to an external URL, and let a non-admin flip a Share event to Magnet.
 
 ## B. `photos` bucket (browser console on the live site)
 Paste once per tab. Take the project URL and anon key from Dashboard → Project Settings → API.

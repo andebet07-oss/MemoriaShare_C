@@ -1,7 +1,7 @@
 -- ============================================================
 -- Print pipeline hardening
 --   §1 guest print_jobs INSERT          §5 photos: URL integrity (insert guard + lock)
---   §2 photos bucket INSERT (+ leads)   §6 events: creation is admin-only
+--   §2 photos bucket INSERT (+ leads)   §6 events: create / magnet updates admin-only
 --   §3 photos bucket admin UPDATE       §7 data: reset simulated auto-copies
 --   §4 photos: admin read, magnet photos private
 -- Applied to live DB: <PENDING>
@@ -292,6 +292,17 @@ CREATE POLICY "events_insert_admin_only"
   ON events AS RESTRICTIVE FOR INSERT
   TO public
   WITH CHECK ((select public.is_admin()));
+
+-- Same gate on UPDATE: otherwise an owner / co-host / editor allowed by the
+-- live events_update_owner could turn a Share event into a magnet event, or
+-- change a magnet event's frame, quota or owner. USING blocks non-admins from
+-- touching magnet rows; WITH CHECK blocks producing one.
+DROP POLICY IF EXISTS "events_update_magnet_admin_only" ON events;
+CREATE POLICY "events_update_magnet_admin_only"
+  ON events AS RESTRICTIVE FOR UPDATE
+  TO public
+  USING      (event_type <> 'magnet' OR (select public.is_admin()))
+  WITH CHECK (event_type <> 'magnet' OR (select public.is_admin()));
 
 -- ── 7. Data: reset simulated auto-copies ─────────────────────
 -- The removed station auto-analysis wrote copies = simulated face count.
