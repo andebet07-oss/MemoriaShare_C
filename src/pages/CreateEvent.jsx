@@ -424,7 +424,7 @@ export default function App() {
 
   return (
     // הוספת 100dvh קריטית כדי למנוע את קפיצות ה-Scrollbar בדפדפן הנייד. overflow-hidden נועל את המסך.
-    <div className="dark flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo" dir="rtl">
+    <div className="flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo" dir="rtl">
 
       {/* Progress Bar — fills from right in RTL via inline-start block flow */}
       <ProgressBar value={currentStep} max={totalSteps} className="shrink-0 z-50" ariaLabel="התקדמות יצירת אירוע" />

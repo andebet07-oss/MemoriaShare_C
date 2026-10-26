@@ -40,7 +40,7 @@ The prior violet-heavy palette was retired. Aesthetic inspiration: POV.camera �
 - **Radial glow:** `radial-gradient(ellipse ..., rgba(124,134,225,0.06) 0%, transparent 70%)` — subtle indigo wash, NEVER warm cream (old `rgba(247,240,228,0.03)` is retired)
 
 ### Typography System
-> **Superseded 2026-10-26 (CLAUDE.md §0.6 Typography System):** Playfair only for Latin text, Hebrew headings use Heebo semibold, no letter-spacing or uppercase on Hebrew text. The Playfair and tracking guidance below applies to Latin text only.
+> **Superseded 2026-10-26 (CLAUDE.md §0.6 Design System):** Heebo for all UI (numbers included), Playfair and Montserrat retired from UI, no letter-spacing or uppercase on Hebrew, Hebrew-only labels, one indigo (fills `#5f69d3`, accents `#7c86e1`), violet sub-brand retired. The guidance below is historical.
 - **Display / serif:** `font-playfair` (Playfair Display) — page headers, dialog titles, Empty-state headlines, wizard step titles (2xl–4xl scale)
 - **Hebrew body / UI:** `font-heebo` (Heebo) — all paragraphs, form labels, buttons
 - **Editorial micro-labels:** Montserrat via `tracking-[0.3em] uppercase text-[10px] font-bold` — section numbering (`01 · ניהול`, `01 · שם האירוע`), tab chrome

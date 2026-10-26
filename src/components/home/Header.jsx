@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase } from '@/lib/supabase';
-import { LogIn, LogOut, LayoutDashboard, ShieldCheck, X, User } from "lucide-react";
+import { LogIn, LogOut, ShieldCheck, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -66,19 +65,11 @@ export default function Header({ onCreateEvent }) {
             <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">פיצ'רים</a>
             <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">המלצות</a>
             <a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">שאלות נפוצות</a>
-            {isAuthenticated && (
-              <>
-                <Link to={createPageUrl("MyEvents")} className="text-foreground/50 hover:text-foreground transition-colors flex items-center gap-2">
-                  <LayoutDashboard className="w-4 h-4" />
-                  האירועים שלי
-                </Link>
-                {user?.role === 'admin' && (
-                  <Link to="/admin" className="text-indigo-300 hover:text-indigo-200 transition-colors flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4" />
-                    ניהול
-                  </Link>
-                )}
-              </>
+            {isAuthenticated && user?.role === 'admin' && (
+              <Link to="/admin" className="text-indigo-300 hover:text-indigo-200 transition-colors flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4" />
+                ניהול
+              </Link>
             )}
 
             {/* CTA — starts the magnet lead wizard. POV indigo on brand primary. */}
@@ -150,21 +141,11 @@ export default function Header({ onCreateEvent }) {
             <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 flex items-center gap-4 border-b border-border">המלצות</a>
             <a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 flex items-center gap-4 border-b border-border">שאלות נפוצות</a>
 
-            {isAuthenticated && (
-              <>
-                <Link to={createPageUrl("MyEvents")} onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 border-b border-border">
-                  <LayoutDashboard className="w-5 h-5 shrink-0" />
-                  האירועים שלי
-                </Link>
-                {user?.role === 'admin' && (
-                  <>
-                    <Link to="/admin" onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-indigo-300 hover:text-indigo-200 transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 border-b border-border">
-                      <ShieldCheck className="w-5 h-5 shrink-0" />
-                      ניהול
-                    </Link>
-                  </>
-                )}
-              </>
+            {isAuthenticated && user?.role === 'admin' && (
+              <Link to="/admin" onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-indigo-300 hover:text-indigo-200 transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 border-b border-border">
+                <ShieldCheck className="w-5 h-5 shrink-0" />
+                ניהול
+              </Link>
             )}
           </nav>
 
