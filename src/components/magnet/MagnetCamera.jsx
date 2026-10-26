@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { X, RotateCw, Zap, ZapOff, CameraOff, Loader2, Upload, Film } from 'lucide-react';
 import MagnetReview from './MagnetReview';
 import FrameStripText from './FrameStripText';
-import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
+import { resolveEventFrame } from '@/lib/framesUtils';
 import { formatEventDate } from '@/lib/formatEventDate';
+import { reportError } from '@/lib/sentry';
 
 const VINTAGE_FILTER = 'sepia(0.35) contrast(0.88) brightness(1.08) saturate(1.15)';
 const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
@@ -59,21 +60,18 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
   // F07: clear all pending timeouts on unmount
   useEffect(() => () => timeoutsRef.current.forEach(clearTimeout), []);
 
-  // Resolve the event's assigned frame (PNG or procedural) for WYSIWYG viewfinder.
-  // Falls back to local seed on DB error, or null if no frame assigned.
+  // Resolve the event's frame (custom upload, library or fallback) for the
+  // WYSIWYG viewfinder — the same resolver the composite and print path use.
   useEffect(() => {
     let cancelled = false;
-    async function loadFrame() {
-      const frameId = event?.overlay_frame_url;
-      const assigned = (frameId && !frameId.startsWith('http'))
-        ? await findApprovedFrameFromDB(frameId)
-        : null;
-      const resolved = assigned ?? getApprovedFramePack(event?.name || '')[0] ?? null;
-      if (!cancelled) setEventFrame(resolved);
-    }
-    loadFrame();
+    resolveEventFrame(event)
+      .then((frame) => { if (!cancelled) setEventFrame(frame); })
+      .catch((err) => {
+        reportError('MagnetCamera.resolveEventFrame', err, { eventId: event?.id });
+        if (!cancelled) setEventFrame(null);
+      });
     return () => { cancelled = true; };
-  }, [event?.overlay_frame_url, event?.name]);
+  }, [event?.overlay_frame_url, event?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // UX-03: reset synchronous counter once parent's fetchPrintJobs() catches up
   useEffect(() => { capturedCountRef.current = 0; }, [remainingPrints]);

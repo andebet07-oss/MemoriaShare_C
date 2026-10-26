@@ -1,4 +1,4 @@
-import { findApprovedFrameFromDB, getApprovedFramePack } from '@/lib/framesUtils';
+import { resolveEventFrame } from '@/lib/framesUtils';
 import { loadImageEl, applyCrop, composePreview } from '@/hooks/useFaceCrop';
 import { canvasToJpegBlob } from '@/lib/compositePngFrame';
 import { formatEventDate } from '@/lib/formatEventDate';
@@ -7,15 +7,6 @@ import { applyOverlayFrame, printCompositedBlob } from '@/functions/applyOverlay
 /** The stored composited magnet URL for a job (medium/original fallback chain). */
 export function getCompositedUrl(job) {
   return job?.photos?.file_urls?.original ?? job?.photos?.file_url ?? null;
-}
-
-/** Resolve the event's frame descriptor (DB-authoritative, seed fallback). */
-export async function resolveEventFrame(event) {
-  const frameId = event?.overlay_frame_url;
-  const assigned = (frameId && !frameId.startsWith('http'))
-    ? await findApprovedFrameFromDB(frameId)
-    : null;
-  return assigned ?? getApprovedFramePack(event?.name || '')[0] ?? null;
 }
 
 /**
@@ -39,11 +30,13 @@ export async function buildCroppedMagnetBlob({ job, event, frame }) {
 
 /**
  * Print `copies` physical magnets for one queue row. Uses the re-cropped
- * composite when available, else the guest's stored composite. Does NOT change
+ * composite when available, else the guest's stored composite. Either way the
+ * frame is applied exactly once: the stored composite already has it baked in
+ * (MagnetReview), so no overlay is drawn on top of it here. Does NOT change
  * status — the caller advances the job separately. Throws 'POPUP_BLOCKED'.
  */
 export async function printJob({ job, event, copies = 1 }) {
   const blob = await buildCroppedMagnetBlob({ job, event });
   if (blob) await printCompositedBlob(blob, copies);
-  else await applyOverlayFrame(getCompositedUrl(job), event?.overlay_frame_url, copies);
+  else await applyOverlayFrame(getCompositedUrl(job), null, copies);
 }

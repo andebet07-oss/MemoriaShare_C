@@ -10,6 +10,8 @@
 import { ALL_FRAMES, getFramePack } from '@/components/magnet/framePacks';
 import { FRAMES_META } from '@/lib/framesMeta';
 import memoriaService from '@/components/memoriaService';
+import { loadImage as loadFrameImage } from '@/lib/compositePngFrame';
+import { detectHoleBbox } from '@/lib/detectHoleBbox';
 
 export function isFrameApproved(frameId) {
   return (FRAMES_META[frameId]?.status ?? 'approved') === 'approved';
@@ -70,4 +72,56 @@ export async function findApprovedFrameFromDB(frameId) {
     // DB unavailable — fall back to local seed (procedural only)
     return findApprovedFrame(frameId);
   }
+}
+
+const FULL_CANVAS = { x: 0, y: 0, w: 1, h: 1 };
+
+/**
+ * PNG descriptor for an admin-uploaded custom frame (overlay_frame_url is a
+ * URL). The photo window is the PNG's transparent hole; a PNG without one is a
+ * full-canvas overlay drawn over the photo. No text_config: the uploaded design
+ * is used exactly as drawn.
+ */
+async function customFrameDescriptor(url) {
+  const img = await loadFrameImage(url);
+  let hole = null;
+  try {
+    hole = (await detectHoleBbox(img)).bbox;
+  } catch (err) {
+    console.warn('[framesUtils] hole detection failed — using full canvas:', err?.message);
+  }
+  return {
+    id: 'custom',
+    isPng: true,
+    image_url: url,
+    hole_bbox: hole ?? FULL_CANVAS,
+    text_config: null,
+    aspect: img.naturalWidth > img.naturalHeight ? 'landscape' : 'portrait',
+  };
+}
+
+const RESOLVED_FRAMES = new Map();
+
+/**
+ * The single "event → frame" resolver. The guest camera, the review composite,
+ * the operator crop editor and the print path all use it, so the frame the
+ * guest sees is the one that gets printed.
+ *   overlay_frame_url = http(s) URL    → uploaded custom PNG
+ *   overlay_frame_url = frames_meta id → approved library frame
+ *   otherwise                          → name-based pack fallback (may be null)
+ * Cached per event frame; a failed resolution is not cached (retry next call).
+ */
+export function resolveEventFrame(event) {
+  const ref = event?.overlay_frame_url || '';
+  const key = `${ref}|${event?.name || ''}`;
+  if (!RESOLVED_FRAMES.has(key)) {
+    const pending = (async () => {
+      if (/^https?:\/\//i.test(ref)) return customFrameDescriptor(ref);
+      const assigned = ref ? await findApprovedFrameFromDB(ref) : null;
+      return assigned ?? getApprovedFramePack(event?.name || '')[0] ?? null;
+    })();
+    RESOLVED_FRAMES.set(key, pending);
+    pending.catch(() => RESOLVED_FRAMES.delete(key));
+  }
+  return RESOLVED_FRAMES.get(key);
 }

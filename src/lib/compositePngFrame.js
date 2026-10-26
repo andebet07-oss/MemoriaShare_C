@@ -14,7 +14,9 @@
 
 const PNG_CACHE = new Map();
 
-function loadImage(src) {
+// Exported so frame resolution reuses the same cached, CORS-safe load
+// (alpha-hole detection on a custom frame).
+export function loadImage(src) {
   if (PNG_CACHE.has(src)) return PNG_CACHE.get(src);
   const p = new Promise((resolve, reject) => {
     const img = new Image();
