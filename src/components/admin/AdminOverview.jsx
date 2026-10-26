@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Image, Magnet, MessageSquare, Hash, CalendarDays, Printer, ExternalLink } from 'lucide-react';
+import { Magnet, MessageSquare, CalendarDays, Printer, ExternalLink } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { KpiGridSkeleton, RowsSkeleton } from '@/components/ui/skeletons';
@@ -39,16 +39,16 @@ export default function AdminOverview() {
     staleTime: 30_000,
   });
 
-  const shareCount  = events.filter(e => e.event_type === 'share').length;
-  const magnetCount = events.filter(e => e.event_type === 'magnet').length;
+  // Magnet-only admin: Share events are not shown anywhere in the admin UI.
+  const magnetEvents   = events.filter(e => e.event_type === 'magnet');
   const newLeads       = leads.filter(l => l.status === 'new');
   const contactedLeads = leads.filter(l => l.status === 'contacted');
-  const recent      = events.slice(0, 8);
+  const recent         = magnetEvents.slice(0, 8);
 
   // Upcoming magnet events (today onward) — fast path to the print station
   const todayStr = new Date().toISOString().slice(0, 10);
-  const upcoming = events
-    .filter(e => e.event_type === 'magnet' && e.date && e.date >= todayStr)
+  const upcoming = magnetEvents
+    .filter(e => e.date && e.date >= todayStr)
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 5);
 
@@ -72,7 +72,7 @@ export default function AdminOverview() {
   if (isLoading) return (
     <div className={PAGE}>
       <Skeleton className="w-24 h-3 mb-4" />
-      <KpiGridSkeleton />
+      <KpiGridSkeleton count={2} />
       <Skeleton className="w-32 h-3 mb-3" />
       <RowsSkeleton rows={3} />
     </div>
@@ -88,11 +88,9 @@ export default function AdminOverview() {
     <div className={`${PAGE} animate-in fade-in slide-in-from-bottom-2 duration-500`}>
       <PageHeader label="ניהול" title="סקירה" />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-        <StatTile icon={Image}         label="אירועי שיתוף" value={shareCount}      onClick={() => navigate('/admin/events/share')} />
-        <StatTile icon={Magnet}        label="אירועי מגנט"  value={magnetCount}     onClick={() => navigate('/admin/events/magnet')} />
-        <StatTile icon={MessageSquare} label="לידים חדשים"  value={newLeads.length} sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
-        <StatTile icon={Hash}          label="סה״כ אירועים" value={events.length}   onClick={() => navigate('/admin/events/magnet')} />
+      <div className="grid grid-cols-2 gap-3 mb-8">
+        <StatTile icon={Magnet}        label="אירועי מגנט" value={magnetEvents.length} onClick={() => navigate('/admin/events/magnet')} />
+        <StatTile icon={MessageSquare} label="לידים חדשים" value={newLeads.length} sub={`${leads.length} סה״כ`} onClick={() => navigate('/admin/leads')} />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
@@ -157,16 +155,13 @@ export default function AdminOverview() {
                 as="button"
                 interactive
                 key={ev.id}
-                onClick={() => navigate(ev.event_type === 'magnet' ? `/admin/events/magnet/${ev.id}` : `/host/events/${ev.id}`)}
+                onClick={() => navigate(`/admin/events/magnet/${ev.id}`)}
                 className="w-full flex items-center justify-between gap-3 py-3 md:py-4"
               >
                 <div className="min-w-0">
                   <p className="text-base font-semibold text-foreground truncate">{ev.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{ev.date ? formatDate(ev.date) : '—'}</p>
                 </div>
-                <span className="shrink-0 h-7 px-2.5 rounded-full border border-border bg-secondary text-xs font-semibold text-muted-foreground flex items-center">
-                  {ev.event_type === 'magnet' ? 'מגנט' : 'שיתוף'}
-                </span>
               </Card>
             ))}
           </Section>

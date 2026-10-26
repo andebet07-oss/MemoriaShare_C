@@ -6,10 +6,10 @@ import { Skeleton } from '@/components/ui/skeleton';
  */
 
 /** 2×2 KPI cards (AdminOverview). */
-export function KpiGridSkeleton() {
+export function KpiGridSkeleton({ count = 4 }) {
   return (
     <div className="grid grid-cols-2 gap-3 mb-6">
-      {Array.from({ length: 4 }).map((_, i) => (
+      {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="p-4 rounded-2xl bg-card border border-border">
           <Skeleton className="w-8 h-8 rounded-xl mb-3" />
           <Skeleton className="w-12 h-7 mb-2" />
