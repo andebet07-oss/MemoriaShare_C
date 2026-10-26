@@ -389,7 +389,8 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (!user?.id) {
+    // An anonymous session (magnet guest / lead visitor) is not a host sign-in.
+    if (!user?.id || user.isAnonymous) {
       alert('יש להתחבר לפני יצירת אירוע');
       return;
     }
