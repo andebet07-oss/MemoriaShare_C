@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Loader2, Home, ArrowLeft, Check, ChevronLeft, ChevronRight,
@@ -130,6 +130,7 @@ export default function MagnetLead() {
   // Relative to the phone screen (see LeadPhoneMockup), so it survives phone resizes.
   const [imageTransform, setImageTransform] = useState({ x: 0, y: 0, zoom: 1 });
   const keyboard = useKeyboardViewport();
+  const contentRef = useRef(null);
 
   // The wizard is a fixed, exactly-one-screen layout: stop the document behind
   // it from scrolling (iOS rubber-band / toolbar collapse).
@@ -138,6 +139,18 @@ export default function MagnetLead() {
     els.forEach((el) => el.classList.add('overflow-hidden', 'overscroll-none'));
     return () => els.forEach((el) => el.classList.remove('overflow-hidden', 'overscroll-none'));
   }, []);
+
+  // While the keyboard is open the content may not fit (the date step's calendar
+  // + location): it becomes scrollable and the focused field is scrolled into view.
+  useEffect(() => {
+    const box = contentRef.current;
+    if (!box) return;
+    if (!keyboard.open) { box.scrollTop = 0; return; }
+    const field = document.activeElement;
+    if (!box.contains(field)) return;
+    const overflow = field.getBoundingClientRect().bottom - box.getBoundingClientRect().bottom;
+    if (overflow > 0) box.scrollTop += overflow + 12;
+  }, [keyboard.open, keyboard.height]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -281,7 +294,7 @@ export default function MagnetLead() {
         {/* Form area */}
         <div className={`${isDateStep ? 'flex-1' : 'flex-none lg:flex-1'} bg-background lg:rounded-none z-10 flex flex-col relative min-h-0 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]`}>
 
-          <div className={`overflow-hidden px-4 flex flex-col items-center ${isDateStep ? 'flex-1 justify-start pt-4' : 'py-3 lg:flex-1 lg:justify-center'}`}>
+          <div ref={contentRef} className={`${keyboard.open ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'} px-4 flex flex-col items-center ${isDateStep ? 'flex-1 justify-start pt-4 pb-3' : 'py-3 lg:flex-1 lg:justify-center'}`}>
             <div className="w-full max-w-sm mx-auto flex flex-col justify-center items-center">
 
               {/* Step 1 — שם האירוע */}
