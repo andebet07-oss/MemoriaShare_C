@@ -154,7 +154,7 @@ ALTER TABLE public.events
   - A `{ heart: 'taupe'|'red'|'charcoal', url: true|false }`
   - B `{ amp: 'gold'|'red'|'taupe' }`
   - D `{ icon: 'gold'|'taupe'|'charcoal' }`
-- **RLS:** no new policy. Updates on magnet events are already admin-only (`events_update_magnet_admin_only`, hardening §6), and guests read events through the existing SELECT policy.
+- **RLS:** no new policy. Guests read events through the existing SELECT policy. Once the hardening migration is applied, updates on magnet events are admin-only (`events_update_magnet_admin_only`, hardening §6), which covers the new columns.
 
 ### 4.2 `20261026_polaroid_templates_drop.sql` — contract
 
@@ -262,7 +262,7 @@ Loaded by the renderer only on the camera, review, picker and station screens, n
    - remove the stickers;
    - write the two pending migrations and the storage listing.
 
-   After this the app builds, and magnets render with a temporary plain fallback until phase 3 lands. The phases stay in separate commits, but the PR ships them together.
+   Each phase is its own commit; the PR ships them together.
 2. **Phase 3:** `src/lib/polaroid/*` with unit tests for the pure layout (`splitNames`, direction, date, fit, scale and window maths), plus the fonts.
 3. **Phase 4:** camera, review, station, crop editor, print, picker, create-event and dashboard.
 4. **Phase 5:** run in Chromium (Playwright, mocked Supabase, fake camera):
