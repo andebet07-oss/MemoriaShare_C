@@ -38,20 +38,3 @@ export function RowsSkeleton({ rows = 4 }) {
     </div>
   );
 }
-
-/** Responsive card grid (frames library). */
-export function CardGridSkeleton({ count = 8 }) {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-2xl bg-card border border-border overflow-hidden">
-          <Skeleton className="w-full rounded-none" style={{ aspectRatio: '776 / 1031' }} />
-          <div className="p-3">
-            <Skeleton className="w-2/3 h-4 mb-2" />
-            <Skeleton className="w-1/2 h-3" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}

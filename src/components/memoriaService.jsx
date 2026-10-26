@@ -496,36 +496,6 @@ const memoriaService = {
       return memoriaService.storage.upload(file, `leads/${session.user.id}`);
     },
 
-    /**
-     * Upload an overlay frame PNG for a Magnet event.
-     * Path: overlays/{eventId}/frame.png (upsert — replaces if re-uploaded)
-     */
-    uploadOverlay: async (file, eventId) => {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const path = `overlays/${eventId}/frame.png`;
-      const jwt = _getJwt();
-
-      const response = await fetch(`${supabaseUrl}/storage/v1/object/photos/${path}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${jwt}`,
-          'apikey': supabaseAnonKey,
-          'Content-Type': file.type || 'image/png',
-          'x-upsert': 'true',
-        },
-        body: file,
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Overlay upload failed (${response.status}): ${errText}`);
-      }
-
-      const publicUrl = `${supabaseUrl}/storage/v1/object/public/photos/${path}`;
-      return { file_url: publicUrl, path };
-    },
-
     uploadCoverImage: async (file, eventId) => {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

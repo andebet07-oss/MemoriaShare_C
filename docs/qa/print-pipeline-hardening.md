@@ -54,7 +54,7 @@ async function tryUpload(path, upsert = false) {
 | lead visitor | `tryUpload(\`leads/${uid}/qa.jpg\`)` | ☐ ALLOWED |
 | lead visitor | `tryUpload(\`leads/${crypto.randomUUID()}/qa.jpg\`)` | ☐ DENIED |
 | admin (`/admin`) | `tryUpload('covers/<ACTIVE_EVENT_ID>/qa.jpg')`, then again with `upsert = true` | ☐ ALLOWED, ☐ ALLOWED (new UPDATE policy) |
-| admin | `tryUpload('overlays/<ACTIVE_EVENT_ID>/qa.png', true)` | ☐ ALLOWED |
+| admin | `tryUpload('overlays/<ACTIVE_EVENT_ID>/qa.png', true)` | ☐ ALLOWED (☐ DENIED once `20261026_polaroid_templates_drop.sql` is applied) |
 | admin | `tryUpload('general/qa.jpg')` | ☐ DENIED |
 
 Clean-up: delete the `qa*` objects in Dashboard → Storage → photos. The resize webhook may log a "no photos row" miss for test files in event folders; that's harmless.
@@ -78,16 +78,15 @@ If this returns file names, anyone can still enumerate an event's files through 
 ☐ Stepper +1, reload: still 2. Fast-print now prints 2 pages.
 ☐ The 2 July jobs show `copies = 1`.
 
-## D. Custom frame end to end
-☐ Admin: create a Magnet event with an uploaded PNG **with** a transparent hole.
-☐ Guest camera: the viewfinder shows that PNG with the live feed inside its hole, not the default polaroid.
-☐ Review: the preview shows the custom frame once. After submit, open `photos.file_url`: exactly one frame.
-☐ Station, no re-crop: print → one frame, no stretched overlay.
+## D. Magnet template end to end
+Frames were replaced by code-rendered polaroid templates (`src/lib/polaroid/`, `docs/polaroid-templates-plan.md`).
+☐ Admin: create a Magnet event, pick a template other than A (e.g. C) in the last step.
+☐ Guest camera: the viewfinder shows that template around the live feed; rotating the phone switches portrait ↔ landscape.
+☐ Review: the preview shows the template once. After submit, open `photos.file_url`: 900×1200 (or 1200×900), exactly one frame.
+☐ Station, no re-crop: print → the stored composite as is, one frame, on a 3×4 in page.
 ☐ Station, re-crop: print → one frame, crop applied.
-☐ Repeat with a PNG **without** transparency: the photo fills the canvas and the PNG sits on top, once.
-☐ Regression: a library frame (frames_meta id), and an event with no frame.
-☐ Admin: replace the custom frame / cover on an existing event (upsert) → succeeds.
-☐ Network-block the frame URL (DevTools request blocking), then submit → error screen, not a frameless print.
+☐ Admin: change the template / cover on an existing event → succeeds.
+☐ Network-block `/fonts/templates/` (DevTools request blocking), then submit → error screen, not a print in fallback fonts.
 
 ## E. Station failure handling
 ☐ DevTools → Network → Offline, then Space on a pending job → toast "ההדפסה נכשלה — הסטטוס לא שונה…", status stays `ממתין`.

@@ -186,8 +186,8 @@ BEGIN
     format('UPDATE events SET event_type = ''magnet'' WHERE id = %L', es));
   PERFORM pg_temp.qa_try('events | [regression] host: rename own share event', 'allowed', 'authenticated', host,
     format('UPDATE events SET name = ''QA renamed'' WHERE id = %L', es));
-  PERFORM pg_temp.qa_try('events | host (editor grant): change magnet frame URL', 'denied', 'authenticated', host,
-    format('UPDATE events SET overlay_frame_url = ''https://evil.example/f.png'' WHERE id = %L', em));
+  PERFORM pg_temp.qa_try('events | host (editor grant): rename magnet event', 'denied', 'authenticated', host,
+    format('UPDATE events SET name = ''QA renamed'' WHERE id = %L', em));
   PERFORM pg_temp.qa_try('events | host (editor grant): raise magnet quota', 'denied', 'authenticated', host,
     format('UPDATE events SET print_quota_per_device = 999 WHERE id = %L', em));
   PERFORM pg_temp.qa_try('events | admin: update magnet event', 'allowed', 'authenticated', admin,

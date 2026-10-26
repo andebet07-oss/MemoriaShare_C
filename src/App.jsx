@@ -35,8 +35,6 @@ const AdminDashboard       = lazy(() => import('@/pages/AdminDashboard'));
 const CreateMagnetEvent    = lazy(() => import('@/pages/CreateMagnetEvent'));
 const MagnetEventDashboard = lazy(() => import('@/pages/MagnetEventDashboard'));
 const AdminUsers           = lazy(() => import('@/pages/AdminUsers'));
-const FramesLibrary        = lazy(() => import('@/pages/admin/FramesLibrary'));
-const FramesModerationQueue = lazy(() => import('@/pages/admin/FramesModerationQueue'));
 
 // Admin tab content
 const AdminOverview   = lazy(() => import('@/components/admin/AdminOverview'));
@@ -121,8 +119,6 @@ const AuthenticatedApp = () => {
           <Route path="events/magnet"         element={<AdminEventsList type="magnet" />} />
           <Route path="events/magnet/create"  element={<CreateMagnetEvent />} />
           <Route path="events/magnet/:eventId" element={<MagnetEventDashboard />} />
-          <Route path="frames"                element={<FramesLibrary />} />
-          <Route path="frames/moderation"    element={<FramesModerationQueue />} />
           <Route path="leads"                 element={<LeadsPanel />} />
           <Route path="users"                 element={<AdminUsers />} />
         </Route>
