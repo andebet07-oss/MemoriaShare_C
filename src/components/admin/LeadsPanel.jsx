@@ -164,7 +164,7 @@ export default function LeadsPanel() {
           <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1">
             <bdi>04</bdi> · לידים
           </p>
-          <h2 className="font-playfair text-2xl text-foreground">לידים</h2>
+          <h2 className="font-heebo font-semibold text-2xl text-foreground">לידים</h2>
           <p className="text-muted-foreground text-xs mt-0.5">{leads.length} סה״כ</p>
         </div>
         <button
@@ -234,7 +234,7 @@ export default function LeadsPanel() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <span className="font-playfair text-foreground text-lg leading-snug truncate">
+                      <span className="font-heebo font-semibold text-foreground text-lg leading-snug truncate">
                         {eventName || '—'}
                       </span>
                       <StatusDot status={lead.status} />

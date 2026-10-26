@@ -62,7 +62,7 @@ function NewLeadCard({ lead, onCreateEvent }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-playfair text-foreground text-lg leading-snug truncate">
+          <p className="font-heebo font-semibold text-foreground text-lg leading-snug truncate">
             {eventName || lead.full_name}
           </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
@@ -187,7 +187,7 @@ export default function AdminOverview() {
             {upcoming.map(ev => (
               <div key={ev.id} className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card border border-border">
                 <div className="min-w-0">
-                  <p className="font-playfair text-foreground text-lg truncate">{ev.name}</p>
+                  <p className="font-heebo font-semibold text-foreground text-lg truncate">{ev.name}</p>
                   <p className="text-muted-foreground text-xs mt-0.5 flex items-center gap-1">
                     <CalendarDays className="w-3 h-3" />
                     {new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(ev.date + 'T00:00:00'))}
@@ -273,7 +273,7 @@ export default function AdminOverview() {
             className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-right transition-all active:scale-[0.98] bg-card border border-border hover:border-foreground/15"
           >
             <div className="min-w-0">
-              <p className="font-playfair text-foreground text-lg truncate">{ev.name}</p>
+              <p className="font-heebo font-semibold text-foreground text-lg truncate">{ev.name}</p>
               <p className="text-muted-foreground text-xs mt-0.5">
                 {ev.date ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(ev.date + 'T00:00:00')) : '—'}
               </p>

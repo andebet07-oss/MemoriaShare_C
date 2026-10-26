@@ -105,7 +105,7 @@ export default function FramesModerationQueue() {
           לספרייה
         </button>
         <p className="text-violet-400 text-[10px] font-bold tracking-[0.35em] uppercase mb-1.5">Admin · 02</p>
-        <h1 className="font-playfair text-3xl text-foreground leading-tight">תור מודרציה</h1>
+        <h1 className="font-heebo font-semibold text-3xl text-foreground leading-tight">תור מודרציה</h1>
         <p className="text-sm text-muted-foreground mt-1">
           סקירת מסגרות לפי רובריקת 7 קריטריונים · סף אישור {PUBLISH_THRESHOLD}/35 ללא כישלון חובה
         </p>
