@@ -8,6 +8,9 @@ import { useFramesMeta, useInvalidateFramesMeta } from '@/hooks/useFramesMeta';
 import RubricEditor from '@/components/admin/frames/RubricEditor';
 import memoriaService from '@/components/memoriaService';
 import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/system/PageHeader';
+import { TONE } from '@/components/system/statusStyles';
 
 // Flatten all frames with category
 const ALL_ENRICHED = Object.entries(FRAME_PACKS).flatMap(([cat, frames]) =>
@@ -15,10 +18,10 @@ const ALL_ENRICHED = Object.entries(FRAME_PACKS).flatMap(([cat, frames]) =>
 );
 
 const STATUS_LABEL = {
-  draft:      { label: 'טיוטה',   color: 'text-muted-foreground/50',    icon: Clock },
-  in_review:  { label: 'בסקירה',  color: 'text-amber-400',               icon: AlertTriangle },
-  approved:   { label: 'מאושר',   color: 'text-emerald-400',             icon: CheckCircle2 },
-  archived:   { label: 'ארכיון',  color: 'text-muted-foreground/30',     icon: XCircle },
+  draft:      { label: 'טיוטה',   tone: 'muted',    icon: Clock },
+  in_review:  { label: 'בסקירה',  tone: 'pending',  icon: AlertTriangle },
+  approved:   { label: 'מאושר',   tone: 'ready',    icon: CheckCircle2 },
+  archived:   { label: 'ארכיון',  tone: 'rejected', icon: XCircle },
 };
 
 export default function FramesModerationQueue() {
@@ -93,22 +96,20 @@ export default function FramesModerationQueue() {
   };
 
   return (
-    <div className="min-h-full p-6 md:p-8" dir="rtl">
+    <div className="max-w-5xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-16" dir="rtl">
 
       {/* Header */}
-      <div className="mb-7">
-        <button
-          onClick={() => navigate('/admin/frames')}
-          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-3"
-        >
-          <ArrowRight className="w-3.5 h-3.5" />
+      <div className="mb-6">
+        <Button variant="ghost" size="sm" className="-ms-3 mb-4" onClick={() => navigate('/admin/frames')}>
+          <ArrowRight />
           לספרייה
-        </button>
-        <p className="text-violet-400 text-[10px] font-bold tracking-[0.35em] uppercase mb-1.5">Admin · 02</p>
-        <h1 className="font-heebo font-semibold text-3xl text-foreground leading-tight">תור מודרציה</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          סקירת מסגרות לפי רובריקת 7 קריטריונים · סף אישור {PUBLISH_THRESHOLD}/35 ללא כישלון חובה
-        </p>
+        </Button>
+        <PageHeader
+          className="!mb-0"
+          label="כלים · מודרציה"
+          title="תור מודרציה"
+          subtitle={`סקירת מסגרות לפי רובריקת 7 קריטריונים · סף אישור ${PUBLISH_THRESHOLD}/35 ללא כישלון חובה`}
+        />
       </div>
 
       {/* Filter toggle */}
@@ -121,17 +122,13 @@ export default function FramesModerationQueue() {
             key={key}
             type="button"
             onClick={() => setFilter(key)}
-            className={[
-              'px-4 py-1.5 rounded-full text-xs font-bold transition-all',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500',
-              filter === key
-                ? 'bg-violet-600 text-white'
-                : 'bg-cool-800/60 text-muted-foreground hover:text-foreground border border-border',
-            ].join(' ')}
+            className={`flex items-center gap-1.5 h-8 px-3 rounded-full border text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 ${
+              filter === key ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
+            }`}
           >
             {label}
             {key === 'pending' && (
-              <span className="mr-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[9px] font-black">
+              <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-status-pending/20 text-status-pending text-xs font-semibold tabular-nums flex items-center justify-center">
                 {ALL_ENRICHED.filter(f => meta[f.id]?.status === 'draft' || meta[f.id]?.status === 'in_review').length}
               </span>
             )}
@@ -140,17 +137,17 @@ export default function FramesModerationQueue() {
       </div>
 
       {isLoading && (
-        <p className="text-sm text-muted-foreground/40">טוען...</p>
+        <p className="text-sm text-muted-foreground">טוען...</p>
       )}
 
       {!isLoading && queue.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <CheckCircle2 className="w-10 h-10 text-emerald-500/40 mb-3" />
+          <CheckCircle2 className="w-10 h-10 text-status-ready/60 mb-3" />
           <p className="text-sm text-muted-foreground">אין מסגרות הממתינות לסקירה</p>
         </div>
       )}
 
-      <div className="space-y-2 pb-12">
+      <div className="flex flex-col gap-3">
         {queue.map(f => {
           const m       = meta[f.id] ?? {};
           const rubric  = evaluateRubric(m.rubric_scores ?? {});
@@ -161,20 +158,18 @@ export default function FramesModerationQueue() {
           return (
             <div
               key={f.id}
-              className={`rounded-xl border transition-all ${
-                isOpen ? 'border-violet-500/40 bg-cool-900/60' : 'border-border bg-card'
-              }`}
+              className={`rounded-2xl border bg-card transition-colors ${isOpen ? 'border-brand/40' : 'border-border'}`}
             >
               {/* Row header */}
               <button
                 type="button"
                 onClick={() => setExpanded(isOpen ? null : f.id)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-right focus-visible:outline-none rounded-xl"
+                className="w-full flex items-center gap-3 px-4 md:px-5 py-4 text-right focus-visible:outline-none rounded-2xl"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-foreground font-heebo">{f.name}</span>
-                    <span className="text-[10px] text-muted-foreground/50">
+                    <span className="text-base font-semibold text-foreground">{f.name}</span>
+                    <span className="text-xs text-muted-foreground">
                       {CATEGORY_LABELS[f.category] ?? f.category} · {STYLE_LABELS[m.style] ?? '—'}
                     </span>
                   </div>
@@ -183,41 +178,36 @@ export default function FramesModerationQueue() {
                 <div className="flex items-center gap-3 shrink-0">
                   {/* Rubric score badge */}
                   {hasScores && (
-                    <span className={`text-xs font-bold tabular-nums ${rubric.canApprove ? 'text-emerald-400' : 'text-red-400/70'}`}>
+                    <span className={`text-sm font-semibold tabular-nums ${rubric.canApprove ? 'text-status-ready' : 'text-status-rejected'}`}>
                       {rubric.total}/35
                     </span>
                   )}
 
                   {/* Status badge */}
-                  <span className={`flex items-center gap-1 text-[10px] font-bold ${STATUS_LABEL[m.status]?.color ?? 'text-muted-foreground/40'}`}>
-                    <StatusIcon className="w-3 h-3" />
+                  <span className={`flex items-center gap-1.5 h-7 px-2.5 rounded-full border text-xs font-semibold ${TONE[STATUS_LABEL[m.status]?.tone ?? 'muted'].pill}`}>
+                    <StatusIcon className="w-3.5 h-3.5" />
                     {STATUS_LABEL[m.status]?.label ?? m.status}
                   </span>
 
-                  {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground/40" /> : <ChevronDown className="w-4 h-4 text-muted-foreground/40" />}
+                  {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                 </div>
               </button>
 
               {/* Expanded: rubric + status actions */}
               {isOpen && (
-                <div className="px-4 pb-4 border-t border-border/50 pt-4 space-y-4">
+                <div className="px-4 md:px-5 pb-5 border-t border-border pt-4 flex flex-col gap-4">
 
                   {/* Quick status buttons */}
                   <div className="flex gap-2 flex-wrap">
-                    {Object.entries(STATUS_LABEL).map(([key, { label, color }]) => (
+                    {Object.entries(STATUS_LABEL).map(([key, { label, tone }]) => (
                       <button
                         key={key}
                         type="button"
                         disabled={saving || m.status === key}
                         onClick={() => handleStatusChange(f.id, key)}
-                        className={[
-                          'px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border',
-                          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-violet-500',
-                          'disabled:opacity-30 disabled:cursor-not-allowed',
-                          m.status === key
-                            ? 'border-violet-500/50 bg-violet-500/10 text-violet-300'
-                            : 'border-border bg-transparent text-muted-foreground hover:text-foreground hover:border-violet-500/30',
-                        ].join(' ')}
+                        className={`h-8 px-3 rounded-full border text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 disabled:cursor-not-allowed ${
+                          m.status === key ? TONE[tone].pill : 'bg-secondary border-border text-muted-foreground hover:text-foreground disabled:opacity-40'
+                        }`}
                       >
                         {label}
                       </button>

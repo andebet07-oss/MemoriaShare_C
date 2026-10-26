@@ -79,20 +79,20 @@ export default function FrameUploadDialog({ frame = null, onClose }) {
       style={{ background: 'rgba(8,8,12,0.72)', backdropFilter: 'blur(6px)' }}
       onClick={() => !saving && onClose()} role="dialog" aria-modal="true">
       <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl"
-        style={{ background: 'linear-gradient(180deg,#1c1c24,#15151c)', border: '1px solid rgba(124,58,237,0.3)' }}
+        style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--brand) / 0.3)' }}
         onClick={(e) => e.stopPropagation()} dir="rtl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b shrink-0" style={{ borderColor: 'rgba(124,58,237,0.15)' }}>
+        <div className="flex items-center justify-between px-5 py-3.5 border-b shrink-0" style={{ borderColor: 'hsl(var(--brand) / 0.15)' }}>
           <div>
-            <p className="text-violet-400 text-[10px] font-bold tracking-[0.25em] uppercase">
+            <p className="text-brand text-xs font-bold">
               {editMode ? 'חלון תמונה' : 'מסגרת חדשה'}
             </p>
-            <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {editMode ? (frame.display_name || frame.frame_id) : 'העלאה והגדרת חלון מדויק'}
             </p>
           </div>
-          <button onClick={() => !saving && onClose()} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10" aria-label="סגור">
+          <button onClick={() => !saving && onClose()} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-foreground/10" aria-label="סגור">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
@@ -101,7 +101,7 @@ export default function FrameUploadDialog({ frame = null, onClose }) {
         <div className="p-5 overflow-y-auto flex flex-col gap-4">
           {/* File picker (new mode) */}
           {!editMode && (
-            <label className="flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-white/15 text-white/60 text-sm cursor-pointer hover:border-violet-400/40 hover:text-white/80 transition-colors">
+            <label className="flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-border text-muted-foreground text-sm cursor-pointer hover:border-brand/30 hover:text-foreground/80 transition-colors">
               <Upload className="w-4 h-4" />
               {imageSrc ? 'החלפת קובץ' : 'בחרו תמונת מסגרת (PNG/JPG)'}
               <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={onPickFile} />
@@ -117,23 +117,23 @@ export default function FrameUploadDialog({ frame = null, onClose }) {
           {imageSrc && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <label className="flex flex-col gap-1 sm:col-span-1">
-                <span className="text-[10px] text-muted-foreground/50">שם המסגרת</span>
+                <span className="text-xs text-muted-foreground">שם המסגרת</span>
                 <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="לדוגמה: לב קלאסי"
-                  className="text-sm text-white bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:border-violet-400/50 focus:outline-none" />
+                  className="text-sm text-foreground bg-secondary border border-border rounded-lg px-3 py-2 focus:border-brand focus:outline-none" />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-[10px] text-muted-foreground/50">קטגוריה</span>
+                <span className="text-xs text-muted-foreground">קטגוריה</span>
                 <select value={category} onChange={(e) => setCategory(e.target.value)}
-                  className="text-sm text-white bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:border-violet-400/50 focus:outline-none">
+                  className="text-sm text-foreground bg-secondary border border-border rounded-lg px-3 py-2 focus:border-brand focus:outline-none">
                   {CATEGORIES.map(c => <option key={c} value={c} className="bg-cool-900">{CATEGORY_LABELS[c] ?? c}</option>)}
                 </select>
               </label>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-muted-foreground/50">יחס</span>
+                <span className="text-xs text-muted-foreground">יחס</span>
                 <div className="flex gap-1.5">
                   {[['landscape', 'לרוחב'], ['portrait', 'לאורך']].map(([a, label]) => (
                     <button key={a} type="button" onClick={() => setAspect(a)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${aspect === a ? 'bg-violet-500/25 border-violet-400/40 text-violet-200' : 'bg-white/5 border-white/10 text-white/50 hover:text-white/80'}`}>
+                      className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${aspect === a ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-secondary border-border text-muted-foreground hover:text-foreground/80'}`}>
                       {label}
                     </button>
                   ))}
@@ -144,11 +144,11 @@ export default function FrameUploadDialog({ frame = null, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="px-5 pb-5 pt-3 border-t flex gap-2.5 items-center shrink-0" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
+        <div className="px-5 pb-5 pt-3 border-t flex gap-2.5 items-center shrink-0" style={{ borderColor: 'hsl(var(--brand) / 0.1)' }}>
           {err && <p className="text-red-400 text-xs flex-1">{err}</p>}
           <button onClick={save} disabled={saving || !imageSrc}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)' }}>
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-foreground transition-all active:scale-[0.98] disabled:opacity-50"
+            style={{ background: 'hsl(var(--primary))' }}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             {editMode ? 'שמור חלון' : 'הוסף מסגרת'}
           </button>

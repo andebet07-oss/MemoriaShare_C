@@ -70,19 +70,19 @@ export default function FrameTextEditor({ frame, onClose }) {
     >
       <div
         className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl"
-        style={{ background: 'linear-gradient(180deg, #1c1c24 0%, #15151c 100%)', border: '1px solid rgba(124,58,237,0.3)' }}
+        style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--brand) / 0.3)' }}
         onClick={(e) => e.stopPropagation()}
       >
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b shrink-0"
-        style={{ borderColor: 'rgba(124,58,237,0.15)' }}>
+        style={{ borderColor: 'hsl(var(--brand) / 0.15)' }}>
         <div className="flex flex-col">
-          <p className="text-violet-400 text-[10px] font-bold tracking-[0.25em] uppercase">עריכת עיצוב מסגרת</p>
-          <p className="text-[11px] text-muted-foreground/60 mt-0.5">{frame.display_name || frame.frame_id}</p>
+          <p className="text-brand text-xs font-bold">עריכת עיצוב מסגרת</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{frame.display_name || frame.frame_id}</p>
         </div>
         <button onClick={onClose}
-          className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors"
+          className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-foreground/10 transition-colors"
           aria-label="סגור">
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -92,10 +92,10 @@ export default function FrameTextEditor({ frame, onClose }) {
 
         {/* ── Preview panel ── */}
         <div className="p-5 border-b md:border-b-0 md:border-l flex flex-col items-center gap-3"
-          style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
-          <p className="text-[9px] text-muted-foreground/40 tracking-[0.25em] uppercase self-start">תצוגה מקדימה</p>
+          style={{ borderColor: 'hsl(var(--brand) / 0.1)' }}>
+          <p className="text-xs text-muted-foreground self-start">תצוגה מקדימה</p>
           <div className="w-full rounded-2xl overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #2a2a35, #1e1e28)', maxWidth: 200 }}>
+            style={{ background: 'hsl(var(--secondary))', maxWidth: 200 }}>
             <FramePngPreview
               frame={{ ...frame, text_config: cfg }}
               eventName="שרה ודוד"
@@ -104,7 +104,7 @@ export default function FrameTextEditor({ frame, onClose }) {
               style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.5))' }}
             />
           </div>
-          <p className="text-[9px] text-muted-foreground/25 text-center leading-relaxed">
+          <p className="text-xs text-muted-foreground text-center leading-relaxed">
             התצוגה מתעדכנת<br />לאחר כל שינוי
           </p>
         </div>
@@ -113,16 +113,16 @@ export default function FrameTextEditor({ frame, onClose }) {
         <div className="flex flex-col min-h-0">
 
           {/* Tab strip */}
-          <div className="flex border-b" style={{ borderColor: 'rgba(124,58,237,0.12)' }}>
+          <div className="flex border-b" style={{ borderColor: 'hsl(var(--brand) / 0.12)' }}>
             {TABS.map(t => {
               const active = tab === t.key;
               return (
                 <button key={t.key} onClick={() => setTab(t.key)}
                   className="flex-1 py-3 text-xs font-semibold transition-all"
                   style={{
-                    background:   active ? 'rgba(124,58,237,0.1)' : 'transparent',
-                    borderBottom: active ? '2px solid #7c3aed' : '2px solid transparent',
-                    color:        active ? '#c4b5fd' : 'rgba(255,255,255,0.35)',
+                    background:   active ? 'hsl(var(--brand) / 0.1)' : 'transparent',
+                    borderBottom: active ? '2px solid hsl(var(--brand))' : '2px solid transparent',
+                    color:        active ? 'hsl(var(--brand))' : 'hsl(var(--muted-foreground))',
                   }}>
                   {t.label}
                 </button>
@@ -148,11 +148,11 @@ export default function FrameTextEditor({ frame, onClose }) {
 
           {/* Footer */}
           <div className="px-5 pb-5 pt-3 border-t flex gap-2.5 items-center"
-            style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
+            style={{ borderColor: 'hsl(var(--brand) / 0.1)' }}>
             {err && <p className="text-red-400 text-xs flex-1">{err}</p>}
             <button onClick={save} disabled={saving}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)' }}>
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-foreground transition-all active:scale-[0.98] disabled:opacity-50"
+              style={{ background: 'hsl(var(--primary))' }}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
               שמור
             </button>

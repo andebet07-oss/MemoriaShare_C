@@ -40,7 +40,7 @@ export default function PositionPad({ x = 0.5, y = 0.85, onChange, iconMode = fa
 
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="text-[9px] text-muted-foreground/40 tracking-widest uppercase">
+      <p className="text-xs text-muted-foreground">
         {iconMode ? 'גרור לשינוי מיקום' : 'גרור לשינוי גובה'}
       </p>
       <div
@@ -63,7 +63,7 @@ export default function PositionPad({ x = 0.5, y = 0.85, onChange, iconMode = fa
 
         {/* Position dot */}
         <div
-          className="absolute w-4 h-4 rounded-full bg-violet-400 border-2 border-white shadow-lg pointer-events-none transition-none"
+          className="absolute w-4 h-4 rounded-full bg-brand border-2 border-foreground shadow-lg pointer-events-none transition-none"
           style={{
             left:      `${clamp(dotX, 0, 100)}%`,
             top:       `${clamp(dotY, 0, 100)}%`,

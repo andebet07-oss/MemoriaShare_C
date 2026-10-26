@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Printer, ExternalLink, Users, Calendar } from 'lucide-react';
+import { Plus, Printer, ExternalLink, Users, Calendar } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import AdminFilterBar from './AdminFilterBar';
 import { RowsSkeleton } from '@/components/ui/skeletons';
+import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/system/PageHeader';
+import Card from '@/components/system/Card';
 
 export default function AdminEventsList({ type }) {
   const navigate = useNavigate();
@@ -29,33 +32,21 @@ export default function AdminEventsList({ type }) {
     ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date(d + 'T00:00:00'))
     : '—';
 
-  return (
-    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+  const createButton = isMagnet && (
+    <Button onClick={() => navigate('/admin/events/magnet/create')}>
+      <Plus />
+      אירוע חדש
+    </Button>
+  );
 
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <p className="text-violet-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1">
-            <bdi>{isMagnet ? '03' : '02'}</bdi> · {isMagnet ? 'מגנט' : 'שיתוף'}
-          </p>
-          <h2 className="font-heebo font-semibold text-2xl text-foreground">
-            {isMagnet ? 'אירועי מגנט' : 'אירועי שיתוף'}
-          </h2>
-          {!isLoading && (
-            <p className="text-muted-foreground text-xs mt-0.5">{typeEvents.length} אירועים</p>
-          )}
-        </div>
-        {isMagnet && (
-          <button
-            onClick={() => navigate('/admin/events/magnet/create')}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-all active:scale-95 text-white shrink-0"
-            style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', boxShadow: '0 4px 16px rgba(124,58,237,0.35)' }}
-          >
-            <Plus className="w-4 h-4" />
-            אירוע חדש
-          </button>
-        )}
-      </div>
+  return (
+    <div className="max-w-5xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-16 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <PageHeader
+        label={<><bdi>{isMagnet ? '03' : '02'}</bdi> · {isMagnet ? 'מגנט' : 'שיתוף'}</>}
+        title={isMagnet ? 'אירועי מגנט' : 'אירועי שיתוף'}
+        subtitle={!isLoading ? <><bdi className="tabular-nums">{typeEvents.length}</bdi> אירועים</> : null}
+        action={createButton}
+      />
 
       {/* Search */}
       {!isLoading && !error && typeEvents.length > 0 && (
@@ -69,36 +60,29 @@ export default function AdminEventsList({ type }) {
       {isLoading && <RowsSkeleton rows={4} />}
 
       {error && (
-        <p className="text-red-400 text-sm py-4 text-center">שגיאה בטעינת האירועים.</p>
+        <p className="text-destructive text-sm py-4 text-center">שגיאה בטעינת האירועים.</p>
       )}
 
       {/* No events at all */}
       {!isLoading && !error && typeEvents.length === 0 && (
-        <div className="text-center py-16">
+        <div className="flex flex-col items-center text-center py-16 gap-4">
           <p className="text-muted-foreground text-sm">אין אירועים עדיין</p>
           {isMagnet && (
-            <button
-              onClick={() => navigate('/admin/events/magnet/create')}
-              className="mt-4 px-5 py-2.5 text-sm font-bold rounded-xl text-white"
-              style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)' }}
-            >
+            <Button onClick={() => navigate('/admin/events/magnet/create')}>
               + צור אירוע מגנט ראשון
-            </button>
+            </Button>
           )}
         </div>
       )}
 
       {/* Has events but none match the search */}
       {!isLoading && !error && typeEvents.length > 0 && events.length === 0 && (
-        <p className="text-muted-foreground/50 text-sm py-12 text-center">אין אירועים תואמים</p>
+        <p className="text-muted-foreground text-sm py-12 text-center">אין אירועים תואמים</p>
       )}
 
-      <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-2">
         {events.map(ev => (
-          <div
-            key={ev.id}
-            className="rounded-2xl overflow-hidden bg-card border border-border hover:border-foreground/15 transition-colors"
-          >
+          <Card key={ev.id} className="!p-0 overflow-hidden hover:border-foreground/20 transition-colors">
             {/* Cover image — share events only */}
             {!isMagnet && ev.cover_image && (
               <div className="relative w-full h-36 overflow-hidden">
@@ -106,29 +90,29 @@ export default function AdminEventsList({ type }) {
                   className="absolute inset-0 bg-cover bg-center"
                   style={{ backgroundImage: `url(${ev.cover_image})` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-cool-950/70 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
               </div>
             )}
 
-            <div className="p-4">
-              <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="p-4 md:p-5 flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-heebo font-semibold text-foreground text-lg leading-tight truncate">{ev.name}</p>
+                  <p className="text-base font-semibold text-foreground truncate">{ev.name}</p>
                   <div className="flex items-center gap-3 mt-1 flex-wrap">
-                    <span className="flex items-center gap-1 text-muted-foreground text-xs">
-                      <Calendar className="w-3 h-3" />
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar className="w-3.5 h-3.5" />
                       {formatDate(ev.date)}
                     </span>
                     {isMagnet && ev.print_quota_per_device && (
-                      <span className="flex items-center gap-1 text-muted-foreground text-xs">
-                        <Users className="w-3 h-3" />
-                        {ev.print_quota_per_device} הדפסות/אורח
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Users className="w-3.5 h-3.5" />
+                        <span><bdi className="tabular-nums">{ev.print_quota_per_device}</bdi> הדפסות/אורח</span>
                       </span>
                     )}
                   </div>
                 </div>
                 {ev.unique_code && (
-                  <span className="shrink-0 font-mono text-[10px] px-2 py-1 rounded-lg text-muted-foreground bg-secondary border border-border">
+                  <span dir="ltr" className="shrink-0 h-7 px-2.5 rounded-full border border-border bg-secondary text-xs font-semibold tabular-nums text-muted-foreground flex items-center">
                     #{ev.unique_code}
                   </span>
                 )}
@@ -136,26 +120,19 @@ export default function AdminEventsList({ type }) {
 
               {/* Action buttons */}
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => navigate(isMagnet ? `/admin/events/magnet/${ev.id}` : `/host/events/${ev.id}`)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-foreground/70 hover:text-foreground transition-colors bg-secondary border border-border hover:border-foreground/15"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
+                <Button variant="secondary" size="sm" onClick={() => navigate(isMagnet ? `/admin/events/magnet/${ev.id}` : `/host/events/${ev.id}`)}>
+                  <ExternalLink />
                   ניהול
-                </button>
+                </Button>
                 {isMagnet && (
-                  <button
-                    onClick={() => navigate(`/admin/events/magnet/${ev.id}/print`)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-violet-300 hover:text-violet-200 transition-colors"
-                    style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)' }}
-                  >
-                    <Printer className="w-3.5 h-3.5" />
+                  <Button size="sm" onClick={() => navigate(`/admin/events/magnet/${ev.id}/print`)}>
+                    <Printer />
                     עמדת הדפסה
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>

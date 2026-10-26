@@ -3,15 +3,19 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Printer, Copy, Check, ArrowRight, Users, Calendar, Hash, Lock, ImageIcon } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
+import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/system/PageHeader';
+import SectionLabel from '@/components/system/SectionLabel';
+import Card from '@/components/system/Card';
 
-function InfoRow({ icon: Icon, label, value, mono = false }) {
+function InfoRow({ icon: Icon, label, value, ltr = false }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2.5 border-b border-white/[0.06] last:border-0">
-      <span className="text-white/40 text-sm flex items-center gap-2">
-        <Icon className="w-3.5 h-3.5 shrink-0" />
+    <div className="flex items-center justify-between gap-3 py-3 border-b border-border last:border-0">
+      <span className="text-sm text-muted-foreground flex items-center gap-2">
+        <Icon className="w-4 h-4 shrink-0" />
         {label}
       </span>
-      <span className={`text-white/80 text-sm font-semibold ${mono ? 'font-mono tracking-wider' : ''}`}>{value || '—'}</span>
+      <span dir={ltr ? 'ltr' : undefined} className="text-sm font-semibold text-foreground tabular-nums">{value || '—'}</span>
     </div>
   );
 }
@@ -73,138 +77,120 @@ export default function MagnetEventDashboard() {
 
   if (isLoading) return (
     <div className="flex justify-center py-16">
-      <Loader2 className="w-5 h-5 text-white/30 animate-spin" />
+      <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
     </div>
   );
 
   if (error || !event) return (
-    <div className="text-center py-16">
-      <p className="text-white/30 text-sm">לא נמצא אירוע.</p>
-      <button onClick={() => navigate('/admin/events/magnet')} className="mt-4 text-violet-400 text-sm hover:underline">
+    <div className="flex flex-col items-center gap-4 text-center py-16">
+      <p className="text-muted-foreground text-sm">לא נמצא אירוע.</p>
+      <Button variant="ghost" size="sm" onClick={() => navigate('/admin/events/magnet')}>
         חזרה לרשימה
-      </button>
+      </Button>
     </div>
   );
 
   if (event.event_type !== 'magnet') return <Navigate to="/admin/events/magnet" replace />;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-5 pb-20" dir="rtl">
+    <div className="max-w-5xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-16" dir="rtl">
 
       {/* Back */}
-      <button
-        onClick={() => navigate('/admin/events/magnet')}
-        className="flex items-center gap-1.5 text-white/40 hover:text-white/70 text-sm mb-5 transition-colors"
-      >
-        <ArrowRight className="w-4 h-4" />
+      <Button variant="ghost" size="sm" className="-ms-3 mb-4" onClick={() => navigate('/admin/events/magnet')}>
+        <ArrowRight />
         אירועי מגנט
-      </button>
+      </Button>
 
-      {/* Event name + date */}
-      <div className="mb-6">
-        <h1 className="text-white font-extrabold text-2xl leading-tight">{event.name}</h1>
-        {formatDate(event.date) && (
-          <p className="text-white/40 text-sm mt-1">{formatDate(event.date)}</p>
-        )}
-      </div>
+      <PageHeader
+        title={event.name}
+        subtitle={formatDate(event.date)}
+        action={
+          <Button className="w-full md:w-auto" onClick={() => navigate(`/admin/events/magnet/${eventId}/print`)}>
+            <Printer />
+            פתח עמדת הדפסה
+          </Button>
+        }
+      />
 
-      {/* Print Station CTA */}
-      <button
-        onClick={() => navigate(`/admin/events/magnet/${eventId}/print`)}
-        className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-black text-base mb-6 transition-all active:scale-[0.98]"
-        style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', boxShadow: '0 4px 20px rgba(124,58,237,0.35)' }}
-      >
-        <Printer className="w-5 h-5 text-white" />
-        <span className="text-white">פתח עמדת הדפסה</span>
-      </button>
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+        <div className="flex flex-col gap-6">
+          {/* Event details */}
+          <Card className="!py-1">
+            <InfoRow icon={Calendar} label="תאריך"        value={formatDate(event.date)} />
+            <InfoRow icon={Hash}     label="קוד אירוע"    value={event.unique_code} ltr />
+            <InfoRow icon={Lock}     label="PIN"          value={event.pin_code}    ltr />
+            <InfoRow icon={Users}    label="הדפסות לאורח" value={event.print_quota_per_device ? `${event.print_quota_per_device} הדפסות` : null} />
+          </Card>
 
-      {/* Event details */}
-      <div className="rounded-2xl px-4 mb-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-        <InfoRow icon={Calendar} label="תאריך"        value={formatDate(event.date)} />
-        <InfoRow icon={Hash}     label="קוד אירוע"    value={event.unique_code} mono />
-        <InfoRow icon={Lock}     label="PIN"          value={event.pin_code}    mono />
-        <InfoRow icon={Users}    label="הדפסות לאורח" value={event.print_quota_per_device ? `${event.print_quota_per_device} הדפסות` : null} />
-      </div>
+          {/* Cover image */}
+          <Card className="flex flex-col gap-3">
+            <SectionLabel as="h2">תמונת רקע לדף הנחיתה</SectionLabel>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleCoverUpload}
+            />
+            <button
+              type="button"
+              onClick={() => coverInputRef.current?.click()}
+              disabled={isSavingCover}
+              className="relative w-full h-36 rounded-xl overflow-hidden border border-dashed border-border bg-secondary/50 hover:border-brand/50 transition-colors group"
+            >
+              {(coverPreview || event.cover_image) ? (
+                <>
+                  <img src={coverPreview || event.cover_image} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="text-foreground text-sm font-semibold">לחץ להחלפה</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-1.5 text-muted-foreground">
+                  <ImageIcon className="w-6 h-6" />
+                  <span className="text-xs">+ העלה תמונת רקע</span>
+                </div>
+              )}
+              {isSavingCover && (
+                <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-foreground animate-spin" />
+                </div>
+              )}
+            </button>
+          </Card>
+          {/* Guest link */}
+          <Card className="flex flex-col gap-3">
+            <SectionLabel as="h2">קישור לאורחים</SectionLabel>
+            <div className="flex items-center gap-2">
+              <p dir="ltr" className="flex-1 h-9 leading-9 text-xs text-muted-foreground truncate bg-secondary rounded-xl px-3 border border-border">
+                {guestLink}
+              </p>
+              <Button variant="secondary" size="icon-sm" onClick={handleCopy} aria-label="העתק קישור">
+                {copied ? <Check className="text-status-ready" /> : <Copy />}
+              </Button>
+            </div>
+          </Card>
 
-      {/* Cover image */}
-      <div className="rounded-2xl p-4 mb-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-        <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-3">תמונת רקע לדף הנחיתה</p>
-        <input
-          ref={coverInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleCoverUpload}
-        />
-        <button
-          type="button"
-          onClick={() => coverInputRef.current?.click()}
-          disabled={isSavingCover}
-          className="relative w-full h-32 rounded-xl overflow-hidden border border-dashed border-white/10 hover:border-primary/50 transition-colors group"
-          style={{ background: 'rgba(255,255,255,0.02)' }}
-        >
-          {(coverPreview || event.cover_image) ? (
-            <>
-              <img src={coverPreview || event.cover_image} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span className="text-white text-xs font-semibold">לחץ להחלפה</span>
-              </div>
-            </>
+        </div>
+
+        {/* Photo feed */}
+        <section className="flex flex-col gap-3">
+          <SectionLabel as="h2">תמונות שנשלחו (<bdi className="tabular-nums">{photos.length}</bdi>)</SectionLabel>
+          {photos.length > 0 ? (
+            <div className="grid grid-cols-3 gap-2">
+              {photos.slice(0, 18).map(ph => (
+                <div key={ph.id} className="aspect-square rounded-xl overflow-hidden bg-secondary">
+                  <img src={ph.file_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                </div>
+              ))}
+            </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-1.5 text-white/40">
-              <ImageIcon className="w-6 h-6" />
-              <span className="text-xs">+ העלה תמונת רקע</span>
-            </div>
+            <Card className="text-center py-10">
+              <p className="text-muted-foreground text-sm">אין תמונות עדיין</p>
+            </Card>
           )}
-          {isSavingCover && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-              <Loader2 className="w-5 h-5 text-white animate-spin" />
-            </div>
-          )}
-        </button>
+        </section>
       </div>
-
-      {/* Guest link */}
-      <div className="rounded-2xl p-4 mb-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-        <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-3">קישור לאורחים</p>
-        <div className="flex items-center gap-2">
-          <p className="flex-1 text-white/60 text-xs font-mono truncate bg-white/5 rounded-lg px-3 py-2 border border-white/10">
-            {guestLink}
-          </p>
-          <button
-            onClick={handleCopy}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all active:scale-90"
-            style={{ background: copied ? 'rgba(163,230,53,0.15)' : 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}
-          >
-            {copied
-              ? <Check className="w-4 h-4 text-lime-400" />
-              : <Copy className="w-4 h-4 text-white/50" />
-            }
-          </button>
-        </div>
-      </div>
-
-      {/* Photo feed */}
-      {photos.length > 0 && (
-        <div>
-          <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-3">
-            תמונות שנשלחו ({photos.length})
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            {photos.slice(0, 18).map(ph => (
-              <div key={ph.id} className="aspect-square rounded-xl overflow-hidden bg-white/5">
-                <img src={ph.file_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {photos.length === 0 && (
-        <div className="text-center py-10">
-          <p className="text-white/20 text-sm">אין תמונות עדיין</p>
-        </div>
-      )}
     </div>
   );
 }

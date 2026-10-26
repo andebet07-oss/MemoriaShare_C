@@ -71,7 +71,7 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
 
   if (error) {
     return (
-      <div className={`flex items-center justify-center bg-cool-800/60 text-muted-foreground/40 text-xs ${className}`} style={style}>
+      <div className={`flex items-center justify-center bg-secondary text-muted-foreground text-xs ${className}`} style={style}>
         תצוגה מקדימית לא זמינה
       </div>
     );
@@ -79,8 +79,8 @@ export default function FramePngPreview({ frame, eventName, eventDate, className
 
   if (!src) {
     return (
-      <div className={`flex items-center justify-center bg-cool-800/40 ${className}`} style={style}>
-        <div className="w-5 h-5 border-2 border-violet-500/30 border-t-violet-400 rounded-full animate-spin" />
+      <div className={`flex items-center justify-center bg-secondary ${className}`} style={style}>
+        <div className="w-5 h-5 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
       </div>
     );
   }

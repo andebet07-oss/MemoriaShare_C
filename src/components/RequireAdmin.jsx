@@ -24,8 +24,8 @@ export default function RequireAdmin({ children }) {
 
   if (stillLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[#0a0a0e]">
-        <div className="w-7 h-7 border-2 border-white/10 border-t-violet-500 rounded-full animate-spin" />
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="w-7 h-7 border-2 border-border border-t-brand rounded-full animate-spin" />
       </div>
     );
   }
