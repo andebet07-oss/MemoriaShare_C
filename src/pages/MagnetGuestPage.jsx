@@ -6,6 +6,8 @@ import memoriaService from '@/components/memoriaService';
 import MagnetCamera from '@/components/magnet/MagnetCamera';
 import PrintStatusModal from '@/components/magnet/PrintStatusModal';
 import { reportError } from '@/lib/sentry';
+import { Button } from '@/components/ui/button';
+import StatusBadge from '@/components/system/StatusBadge';
 
 export default function MagnetGuestPage({ event }) {
   const { user, isLoadingAuth } = useAuth();
@@ -75,8 +77,8 @@ export default function MagnetGuestPage({ event }) {
   };
 
   if (isLoadingAuth || isSigningIn) return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <Loader2 className="w-10 h-10 text-white/40 animate-spin" />
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Loader2 className="w-10 h-10 text-brand/50 animate-spin" />
     </div>
   );
 
@@ -86,35 +88,35 @@ export default function MagnetGuestPage({ event }) {
   const readyCount = printJobs.filter(j => j.status === 'ready').length;
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden font-heebo" dir="rtl">
+    <div className="min-h-screen bg-background relative overflow-hidden" dir="rtl">
 
-      {/* Background */}
+      {/* Background: the event cover under a bottom scrim, or the indigo glow */}
       <div className="fixed inset-0">
         {event.cover_image
           ? <img src={event.cover_image} alt="" className="w-full h-full object-cover opacity-50" />
-          : <div className="w-full h-full bg-gradient-to-br from-violet-950 to-black" />
+          : <div className="w-full h-full bg-glow" />
         }
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 px-6 pb-10 max-w-md mx-auto w-full">
+      <div className="fixed inset-x-0 bottom-0 z-10 px-4 max-w-md mx-auto w-full" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}>
 
         {/* First-time 3-step guide — sets expectations before the first capture */}
         {printJobs.length === 0 && (
-          <div className="flex items-center justify-center gap-1.5 mb-7">
+          <div className="flex items-center justify-center gap-2 mb-8">
             {[
               { Icon: Camera,   label: 'מצלמים' },
               { Icon: Sparkles, label: 'מעצבים' },
               { Icon: Magnet,   label: 'אוספים מגנט' },
             ].map((s, i, arr) => (
-              <div key={s.label} className="flex items-center gap-1.5">
+              <div key={s.label} className="flex items-center gap-2">
                 <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center bg-white/8 border border-white/15 backdrop-blur-md">
-                    <s.Icon className="w-[18px] h-[18px] text-white/85" />
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-foreground/10 border border-foreground/15 backdrop-blur-md">
+                    <s.Icon className="w-5 h-5 text-foreground/90" />
                   </div>
-                  <span className="text-white/55 text-[11px] font-medium">{s.label}</span>
+                  <span className="text-xs font-medium text-foreground/70">{s.label}</span>
                 </div>
-                {i < arr.length - 1 && <span className="text-white/25 text-sm mb-4">‹</span>}
+                {i < arr.length - 1 && <span className="text-foreground/30 text-sm mb-5">‹</span>}
               </div>
             ))}
           </div>
@@ -122,28 +124,26 @@ export default function MagnetGuestPage({ event }) {
 
         {/* Event header */}
         <div className="text-center mb-6">
-          <p className="text-white/45 text-xs font-medium tracking-wide mb-1.5">ברוכים הבאים לאירוע של</p>
-          <h1 className="text-3xl font-bold text-white mb-3 leading-tight">{event.name}</h1>
-          <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border ${
-            remainingPrints === 0
-              ? 'bg-red-500/15 border-red-500/30 text-red-300'
-              : 'bg-white/8 border-white/15 text-white/80'
-          }`}>
-            {remainingPrints === 0 ? 'מכסת ההדפסות הסתיימה' : `נותרו לך ${remainingPrints} הדפסות`}
-          </span>
+          <p className="text-sm text-foreground/60 mb-1">ברוכים הבאים לאירוע של</p>
+          <h1 className="text-3xl font-semibold text-foreground mb-3 leading-tight">{event.name}</h1>
+          {remainingPrints === 0
+            ? <StatusBadge status="rejected">מכסת ההדפסות הסתיימה</StatusBadge>
+            : <span className="inline-flex items-center h-7 px-3 rounded-full border border-foreground/15 bg-foreground/10 backdrop-blur text-xs font-semibold text-foreground/85">
+                <span>נותרו לך <bdi className="tabular-nums">{remainingPrints}</bdi> הדפסות</span>
+              </span>}
         </div>
 
         {/* Ready-for-pickup banner — the payoff moment */}
         {readyCount > 0 && (
-          <div className="mb-4 rounded-2xl px-4 py-3 flex items-center gap-3 bg-emerald-500/15 border border-emerald-500/40">
-            <div className="w-9 h-9 rounded-full bg-emerald-500/25 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-5 h-5 text-emerald-300" />
+          <div className="mb-4 rounded-2xl px-4 py-3 flex items-center gap-3 bg-status-ready/15 border border-status-ready/30 backdrop-blur">
+            <div className="w-10 h-10 rounded-full bg-status-ready/20 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-status-ready" />
             </div>
             <div className="min-w-0">
-              <p className="text-emerald-200 font-bold text-sm leading-tight">
+              <p className="text-base font-semibold text-foreground leading-tight">
                 {readyCount === 1 ? 'המגנט שלך מוכן לאיסוף!' : `${readyCount} מגנטים מוכנים לאיסוף!`}
               </p>
-              <p className="text-emerald-300/70 text-xs mt-0.5">גשו לעמדת המגנטים לאיסוף</p>
+              <p className="text-sm text-foreground/70 mt-0.5">גשו לעמדת המגנטים לאיסוף</p>
             </div>
           </div>
         )}
@@ -151,34 +151,25 @@ export default function MagnetGuestPage({ event }) {
         {/* Pending chip */}
         {pendingCount > 0 && (
           <div className="flex justify-center mb-5">
-            <span className="px-3 py-1 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 text-xs font-semibold">
-              {pendingCount} בתהליך הדפסה...
-            </span>
+            <StatusBadge status="pending">{pendingCount} בתהליך הדפסה...</StatusBadge>
           </div>
         )}
 
         {/* Camera CTA */}
-        <button
-          onClick={() => setShowCamera(true)}
-          disabled={remainingPrints === 0}
-          className="w-full py-5 bg-white disabled:bg-white/20 text-black disabled:text-white/30 font-black text-lg rounded-2xl shadow-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-3"
-        >
-          <Camera className="w-5 h-5" />
+        <Button variant="onImage" size="lg" className="w-full mb-3" onClick={() => setShowCamera(true)} disabled={remainingPrints === 0}>
+          <Camera className="!size-5" />
           {remainingPrints === 0 ? 'מכסה הסתיימה' : 'צלמו ושלחו להדפסה'}
-        </button>
+        </Button>
 
         {/* Status button */}
         {printJobs.length > 0 && (
-          <button
-            onClick={() => setShowStatus(true)}
-            className="w-full py-3.5 bg-white/6 border border-white/12 backdrop-blur-xl text-white font-semibold rounded-2xl flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
-          >
-            <List className="w-4 h-4" />
-            סטטוס ההדפסות שלי ({printJobs.length})
-          </button>
+          <Button variant="secondary" size="lg" className="w-full" onClick={() => setShowStatus(true)}>
+            <List />
+            <span>סטטוס ההדפסות שלי (<bdi className="tabular-nums">{printJobs.length}</bdi>)</span>
+          </Button>
         )}
 
-        <p className="text-white/20 text-[10px] text-center mt-4 tracking-widest uppercase">Powered by MemoriaMagnet</p>
+        <p className="text-xs text-foreground/30 text-center mt-4">מופעל על ידי Memoria</p>
       </div>
 
       {showCamera && (

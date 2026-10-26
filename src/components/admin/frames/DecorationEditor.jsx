@@ -38,7 +38,7 @@ function DecoPad({ deco, onChange }) {
     <div
       ref={ref}
       className="relative mx-auto rounded-lg select-none cursor-move overflow-hidden"
-      style={{ aspectRatio: '876 / 1266', width: 132, background: '#15151c', border: '1px solid rgba(255,255,255,0.1)' }}
+      style={{ aspectRatio: '876 / 1266', width: 132, background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}
       onMouseDown={e => down(e.clientX, e.clientY)}
       onMouseMove={e => move(e.clientX, e.clientY)}
       onMouseUp={up}
@@ -78,27 +78,27 @@ export default function DecorationEditor({ decorations = [], onChange }) {
   const update = (i, d) => onChange(decorations.map((x, idx) => (idx === i ? d : x)));
 
   if (!decorations.length) {
-    return <p className="text-xs text-muted-foreground/50 text-center py-6">למסגרת זו אין קישוטים מובנים.</p>;
+    return <p className="text-xs text-muted-foreground text-center py-6">למסגרת זו אין קישוטים מובנים.</p>;
   }
 
   return (
     <div className="flex flex-col gap-6">
       {decorations.map((d, i) => (
-        <div key={d.id || i} className="flex flex-col gap-3 pb-5 border-b border-white/[0.06] last:border-0 last:pb-0">
-          <p className="text-[11px] font-semibold text-violet-300/80">{LABELS[d.id] || d.id}</p>
+        <div key={d.id || i} className="flex flex-col gap-3 pb-5 border-b border-border last:border-0 last:pb-0">
+          <p className="text-xs font-semibold text-brand">{LABELS[d.id] || d.id}</p>
 
           <DecoPad deco={d} onChange={(nd) => update(i, nd)} />
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <p className="text-[9px] font-bold text-violet-400/70 tracking-[0.2em] uppercase">גודל</p>
-              <span className="text-[10px] text-muted-foreground/50 tabular-nums">{Math.round((d.w ?? 0.15) * 100)}%</span>
+              <p className="text-xs font-bold text-brand">גודל</p>
+              <span className="text-xs text-muted-foreground tabular-nums">{Math.round((d.w ?? 0.15) * 100)}%</span>
             </div>
             <input
               type="range" min={0.04} max={0.45} step={0.005}
               value={d.w ?? 0.15}
               onChange={e => update(i, { ...d, w: +e.target.value })}
-              className="w-full accent-violet-500"
+              className="w-full accent-brand"
             />
           </div>
         </div>

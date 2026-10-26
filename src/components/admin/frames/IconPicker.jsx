@@ -20,11 +20,11 @@ export default function IconPicker({ value, onChange }) {
           const active = cat === c;
           return (
             <button key={c} onClick={() => setCat(c)}
-              className="text-[10px] font-semibold px-2 py-1 rounded-lg transition-all"
+              className="text-xs font-semibold px-2 py-1 rounded-lg transition-all"
               style={{
-                background: active ? 'rgba(124,58,237,0.28)' : 'rgba(255,255,255,0.04)',
-                border: active ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.07)',
-                color: active ? '#c4b5fd' : 'rgba(255,255,255,0.4)',
+                background: active ? 'hsl(var(--brand) / 0.28)' : 'hsl(var(--secondary))',
+                border: active ? '1px solid hsl(var(--brand) / 0.4)' : '1px solid hsl(var(--border))',
+                color: active ? 'hsl(var(--brand))' : 'hsl(var(--muted-foreground))',
               }}>
               {c}
             </button>
@@ -36,11 +36,11 @@ export default function IconPicker({ value, onChange }) {
       <div className="flex flex-wrap gap-1.5">
         {/* None */}
         <button onClick={() => onChange('')}
-          className="w-9 h-9 rounded-xl text-[9px] font-semibold flex items-center justify-center transition-all"
+          className="w-9 h-9 rounded-xl text-xs font-semibold flex items-center justify-center transition-all"
           style={{
-            background: value === '' ? 'rgba(124,58,237,0.28)' : 'rgba(255,255,255,0.04)',
-            border: value === '' ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.07)',
-            color: 'rgba(255,255,255,0.35)',
+            background: value === '' ? 'hsl(var(--brand) / 0.28)' : 'hsl(var(--secondary))',
+            border: value === '' ? '1px solid hsl(var(--brand) / 0.4)' : '1px solid hsl(var(--border))',
+            color: 'hsl(var(--muted-foreground))',
           }}>
           ללא
         </button>
@@ -49,8 +49,8 @@ export default function IconPicker({ value, onChange }) {
           <button key={icon} onClick={() => onChange(icon)}
             className="w-9 h-9 rounded-xl text-xl flex items-center justify-center transition-all active:scale-90"
             style={{
-              background: value === icon ? 'rgba(124,58,237,0.28)' : 'rgba(255,255,255,0.04)',
-              border: value === icon ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.07)',
+              background: value === icon ? 'hsl(var(--brand) / 0.28)' : 'hsl(var(--secondary))',
+              border: value === icon ? '1px solid hsl(var(--brand) / 0.4)' : '1px solid hsl(var(--border))',
             }}>
             {icon}
           </button>

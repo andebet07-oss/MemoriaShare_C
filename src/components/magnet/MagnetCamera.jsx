@@ -5,9 +5,13 @@ import FrameStripText from './FrameStripText';
 import { resolveEventFrame } from '@/lib/framesUtils';
 import { formatEventDate } from '@/lib/formatEventDate';
 import { reportError } from '@/lib/sentry';
+import { Button } from '@/components/ui/button';
 
 const VINTAGE_FILTER = 'sepia(0.35) contrast(0.88) brightness(1.08) saturate(1.15)';
-const DARK_BG = 'radial-gradient(ellipse 120% 70% at 50% 25%, #1c0d3a 0%, #0a0a0e 55%)';
+// Round control over the camera view (floating, blurred); `on` tints it with the brand accent.
+const roundControl = (on = false) => `w-12 h-12 rounded-full flex items-center justify-center border-[1.5px] backdrop-blur-lg shadow-lg active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 ${
+  on ? 'bg-brand/15 border-brand/50' : 'bg-foreground/10 border-foreground/15'
+}`;
 const IN_APP_UA_RE = /Instagram|FBAN|FBAV|Line|Twitter/i;
 
 // Vintage filter pixel-loop fallback for browsers that don't support ctx.filter
@@ -253,24 +257,22 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
 
   // ── In-app browser fallback ────────────────────────────────────────────────────
   if (camFailed) return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-8 text-center" style={{ background: DARK_BG }} dir="rtl">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-8 text-center bg-background bg-glow" dir="rtl">
       <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
       <button onClick={onClose} aria-label="סגור"
-        className="absolute top-12 right-5 w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-        <X className="w-4 h-4 text-white" />
+        className="absolute top-12 right-5 w-10 h-10 rounded-full bg-foreground/10 border border-foreground/15 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60">
+        <X className="w-4 h-4 text-foreground" />
       </button>
-      <div className="w-20 h-20 rounded-3xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center mb-6">
-        <CameraOff className="w-9 h-9 text-violet-400" />
+      <div className="w-20 h-20 rounded-2xl bg-brand/15 border border-brand/25 flex items-center justify-center mb-6">
+        <CameraOff className="w-9 h-9 text-brand" />
       </div>
-      <h3 className="text-white font-black text-xl mb-2">נפתח בתוך אפליקציה</h3>
-      <p className="text-white/60 text-sm leading-relaxed mb-8 max-w-[260px]">
+      <h3 className="text-foreground font-semibold text-xl mb-2">נפתח בתוך אפליקציה</h3>
+      <p className="text-muted-foreground text-sm leading-relaxed mb-8 max-w-[260px]">
         הדפדפן הפנימי של אינסטגרם / פייסבוק לא תומך בגישה ישירה למצלמה.
       </p>
-      <button onClick={() => fileInputRef.current?.click()}
-        className="flex items-center gap-2 px-7 py-4 text-white font-black text-lg rounded-2xl active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
-        style={{ background: 'linear-gradient(145deg,#8c97e6,#7c86e1)', boxShadow: '0 0 28px rgba(124,134,225,0.4)' }}>
-        <Upload className="w-5 h-5" /> צלמו תמונה
-      </button>
+      <Button size="lg" onClick={() => fileInputRef.current?.click()}>
+        <Upload className="!size-5" /> צלמו תמונה
+      </Button>
     </div>
   );
 
@@ -282,7 +284,7 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
 
   // ── Main camera UI ─────────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden select-none" style={{ background: DARK_BG }} dir="rtl"
+    <div className="fixed inset-0 z-[9999] overflow-hidden select-none bg-background bg-glow" dir="rtl"
       role="dialog" aria-modal="true" aria-label="מצלמה לאירוע">
 
       {/* Flash overlays */}
@@ -294,18 +296,12 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
       {/* F16: role="alert" so screen readers announce camera errors immediately */}
       {camError && (
         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-50" role="alert">
-          <CameraOff className="w-10 h-10 text-red-400 mb-3" />
-          <p className="text-white text-sm leading-relaxed mb-5">{camError}</p>
+          <CameraOff className="w-10 h-10 text-status-rejected mb-3" />
+          <p className="text-foreground text-sm leading-relaxed mb-5">{camError}</p>
           {/* F10: "נסה שוב" lets user retry without full exit */}
           <div className="flex gap-3">
-            <button onClick={startCamera}
-              className="bg-white/10 text-white border border-white/20 px-5 py-2.5 rounded-full font-bold text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80">
-              נסה שוב
-            </button>
-            <button onClick={onClose}
-              className="bg-white text-black px-7 py-2.5 rounded-full font-bold text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80">
-              חזרה
-            </button>
+            <Button variant="secondary" onClick={startCamera}>נסה שוב</Button>
+            <Button onClick={onClose}>חזרה</Button>
           </div>
         </div>
       )}
@@ -314,27 +310,23 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
       <div className="absolute top-0 inset-x-0 z-40 flex items-center justify-between px-5 pt-12 pb-3">
         {/* F06: aria-label on all icon buttons */}
         <button onClick={onClose} aria-label="סגור מצלמה"
-          className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}>
-          <X className="w-4 h-4 text-white" />
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-foreground/10 border border-foreground/15 backdrop-blur-md active:scale-90 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60">
+          <X className="w-4 h-4 text-foreground" />
         </button>
 
         {/* Quota chip — slim single line; amber at ≤3, red when exhausted */}
         <div id={quotaId}
-          className="flex items-center gap-1.5 h-9 px-3.5 rounded-full"
-          style={{
-            background: remainingPrints <= 0 ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.08)',
-            border: `1px solid ${remainingPrints <= 0 ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.12)'}`,
-            backdropFilter: 'blur(12px)',
-          }}>
+          className={`flex items-center gap-1.5 h-10 px-3.5 rounded-full border backdrop-blur-md ${
+            remainingPrints <= 0 ? 'bg-status-rejected/15 border-status-rejected/30' : 'bg-foreground/10 border-foreground/15'
+          }`}>
           {remainingPrints <= 0 ? (
-            <span className="text-red-400 text-xs font-bold leading-none">המכסה הסתיימה</span>
+            <span className="text-status-rejected text-xs font-semibold leading-none">המכסה הסתיימה</span>
           ) : (
             <>
-              <span className={`text-base font-black leading-none tabular-nums ${remainingPrints <= 3 ? 'text-amber-400' : 'text-white'}`}>
+              <span className={`text-base font-semibold leading-none tabular-nums ${remainingPrints <= 3 ? 'text-status-pending' : 'text-foreground'}`}>
                 {remainingPrints}
               </span>
-              <span className="text-[10px] text-white/45 font-medium leading-none">נותרו</span>
+              <span className="text-xs text-foreground/60 font-medium leading-none">נותרו</span>
             </>
           )}
         </div>
@@ -444,17 +436,15 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
             {/* Flash — F06 */}
             <button onClick={toggleFlash}
               aria-label={flash === 'on' ? 'כבה פלאש' : 'הפעל פלאש'} aria-pressed={flash === 'on'}
-              className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-              style={{ background: flash === 'on' ? 'rgba(124,134,225,0.15)' : 'rgba(255,255,255,0.07)', border: `1.5px solid ${flash === 'on' ? 'rgba(124,134,225,0.5)' : 'rgba(255,255,255,0.13)'}`, backdropFilter: 'blur(16px)', boxShadow: flash === 'on' ? '0 0 18px rgba(124,134,225,0.25)' : '0 4px 14px rgba(0,0,0,0.4)' }}>
-              {flash === 'on' ? <Zap className="w-5 h-5 text-indigo-300" /> : <ZapOff className="w-5 h-5 text-white/60" />}
+              className={roundControl(flash === 'on')}>
+              {flash === 'on' ? <Zap className="w-5 h-5 text-brand" /> : <ZapOff className="w-5 h-5 text-foreground/70" />}
             </button>
 
             {/* Vintage film filter — grouped with the other capture controls */}
             <button onClick={() => setVintage(v => !v)}
               aria-label={vintage ? 'בטל פילטר וינטאג׳' : 'הפעל פילטר וינטאג׳'} aria-pressed={vintage}
-              className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-              style={{ background: vintage ? 'rgba(124,134,225,0.15)' : 'rgba(255,255,255,0.07)', border: `1.5px solid ${vintage ? 'rgba(124,134,225,0.5)' : 'rgba(255,255,255,0.13)'}`, backdropFilter: 'blur(16px)', boxShadow: vintage ? '0 0 18px rgba(124,134,225,0.25)' : '0 4px 14px rgba(0,0,0,0.4)' }}>
-              <Film className={`w-5 h-5 ${vintage ? 'text-indigo-300' : 'text-white/60'}`} />
+              className={roundControl(vintage)}>
+              <Film className={`w-5 h-5 ${vintage ? 'text-brand' : 'text-foreground/70'}`} />
             </button>
           </div>
 
@@ -464,19 +454,17 @@ export default function MagnetCamera({ event, userId, remainingPrints, onClose, 
             aria-label="צלם תמונה"
             aria-disabled={isDisabled}
             aria-describedby={quotaId}
-            className={`relative w-20 h-20 flex items-center justify-center active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-4 focus-visible:ring-offset-black ${isDisabled ? 'opacity-25' : ''}`}>
-            <div className="absolute inset-0 rounded-full" style={{ border: '3.5px solid rgba(255,255,255,0.7)', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }} />
-            <div className="w-[61px] h-[61px] rounded-full"
-              style={{ background: loading ? '#374151' : 'linear-gradient(145deg, #8c97e6, #7c86e1)', boxShadow: loading ? 'none' : '0 0 30px rgba(124,134,225,0.5), 0 3px 10px rgba(0,0,0,0.6), inset 0 1.5px 0 rgba(255,255,255,0.4)' }} />
-            {loading && <Loader2 className="absolute w-5 h-5 text-white/60 animate-spin" />}
+            className={`relative w-20 h-20 flex items-center justify-center active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-4 focus-visible:ring-offset-background ${isDisabled ? 'opacity-25' : ''}`}>
+            <div className="absolute inset-0 rounded-full border-[3.5px] border-foreground/70" />
+            <div className={`w-[61px] h-[61px] rounded-full ${loading ? 'bg-secondary' : 'bg-primary shadow-indigo-glow'}`} />
+            {loading && <Loader2 className="absolute w-5 h-5 text-foreground/70 animate-spin" />}
           </button>
 
           {/* Right zone — camera flip (F06) */}
           <div className="flex items-center justify-center">
             <button onClick={() => setIsFront(f => !f)} aria-label="החלף מצלמה קדמית/אחורית"
-              className="w-12 h-12 rounded-full flex items-center justify-center active:scale-90 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.13)', backdropFilter: 'blur(16px)', boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}>
-              <RotateCw className="w-5 h-5 text-white/60" />
+              className={roundControl()}>
+              <RotateCw className="w-5 h-5 text-foreground/70" />
             </button>
           </div>
         </div>

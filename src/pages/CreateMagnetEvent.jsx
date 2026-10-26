@@ -5,6 +5,7 @@ import {
   Upload, Copy, Monitor, X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import memoriaService from "@/components/memoriaService";
@@ -43,21 +44,21 @@ function MagnetPreview({ eventData = {}, overlayPreview = null, previewH, previe
             <img src={overlayPreview} alt="Overlay" className="absolute inset-0 w-full h-full object-cover" />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-cool-900/60 to-cool-950 flex items-center justify-center">
-              <span className="text-white/20 text-[7px] font-bold tracking-widest uppercase">overlay</span>
+              <span className="text-foreground/20 text-[7px] font-bold">מסגרת</span>
             </div>
           )}
         </div>
         {/* Polaroid label strip */}
         <div className="flex-none flex flex-col items-center justify-center py-1.5 gap-0.5">
-          <span className="text-black text-[9px] font-bold tracking-tight leading-none truncate w-full text-center">
+          <span className="text-black text-[9px] font-bold leading-none truncate w-full text-center">
             {eventData.name || "שם האירוע"}
           </span>
           <span className="text-black/40 text-[7px]">{formattedDate}</span>
         </div>
       </div>
-      {/* MAGNET label */}
+      {/* Magnet label */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-        <span className="text-indigo-400/50 text-[8px] font-black tracking-[0.2em] uppercase">Magnet</span>
+        <span className="text-brand/60 text-xs font-semibold">מגנט</span>
       </div>
     </div>
   );
@@ -169,54 +170,26 @@ function FrameThumbnail({ frame, isSelected, onSelect, eventData }) {
     <button
       type="button"
       onClick={() => onSelect(frame.id)}
-      className="flex flex-col items-center gap-1.5 shrink-0 active:scale-95"
-      style={{ outline: 'none', transition: 'transform 0.15s' }}
+      className="flex flex-col items-center gap-1.5 shrink-0 outline-none transition-transform active:scale-95"
     >
-      <div style={{
-        position: 'relative',
-        borderRadius: '5px',
-        border: isSelected ? '2px solid #7c86e1' : '1.5px solid rgba(255,255,255,0.09)',
-        boxShadow: isSelected
-          ? '0 0 16px -2px rgba(124,134,225,0.65), 0 4px 14px rgba(0,0,0,0.5)'
-          : '0 3px 10px rgba(0,0,0,0.5)',
-        transform: isSelected ? 'scale(1.04)' : 'scale(1)',
-        transition: 'border-color 0.15s, box-shadow 0.15s, transform 0.15s',
-        overflow: 'hidden',
-      }}>
+      <div className={`relative rounded-[5px] overflow-hidden transition-all ${
+        isSelected ? 'border-2 border-brand shadow-indigo-glow scale-[1.04]' : 'border-[1.5px] border-foreground/10 shadow-lg'
+      }`}>
         <canvas ref={cvs} width={THUMB_W} height={THUMB_TOTAL_H} style={{ display: 'block' }} />
         {isSelected && (
-          <div style={{
-            position: 'absolute', top: 4, right: 4,
-            width: 15, height: 15, borderRadius: '50%',
-            background: '#7c86e1',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          <div className="absolute top-1 right-1 w-[15px] h-[15px] rounded-full bg-brand flex items-center justify-center text-primary-foreground">
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-              <path d="M1.5 4L3 5.5L6.5 2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1.5 4L3 5.5L6.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         )}
         {frame.isNew && !isSelected && (
-          <div style={{
-            position: 'absolute', top: 4, right: 4,
-            padding: '1px 5px', borderRadius: '3px',
-            background: 'rgba(124,134,225,0.85)',
-            fontFamily: 'Heebo, sans-serif',
-            fontSize: '8px', fontWeight: 700,
-            color: '#fff', letterSpacing: '0.05em',
-            lineHeight: '14px',
-          }}>
+          <div className="absolute top-1 right-1 px-1.5 rounded bg-brand text-primary-foreground text-xs font-bold leading-4">
             חדש
           </div>
         )}
       </div>
-      <span style={{
-        fontFamily: 'Heebo, sans-serif', fontSize: '10px', whiteSpace: 'nowrap',
-        color: isSelected ? '#818cf8' : 'rgba(255,255,255,0.45)',
-        fontWeight: isSelected ? 700 : 400,
-        transition: 'color 0.15s',
-        userSelect: 'none',
-      }}>
+      <span className={`text-xs whitespace-nowrap select-none transition-colors ${isSelected ? 'text-brand font-semibold' : 'text-muted-foreground'}`}>
         {frame.name}
       </span>
     </button>
@@ -238,8 +211,7 @@ function FramePreviewModal({ frame, eventData, onClose, onSelect, isSelected }) 
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(6px)' }}
+      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-background/90 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -247,30 +219,21 @@ function FramePreviewModal({ frame, eventData, onClose, onSelect, isSelected }) 
         onClick={e => e.stopPropagation()}
       >
         {/* Frame name */}
-        <p className="text-white/60 text-xs tracking-widest uppercase">{frame.name}</p>
+        <p className="text-muted-foreground text-sm font-semibold">{frame.name}</p>
 
         {/* Large canvas preview */}
-        <div style={{ borderRadius: '6px', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
+        <div className="rounded-md overflow-hidden shadow-2xl">
           <canvas ref={cvs} width={MODAL_W} height={MODAL_TOTAL_H} style={{ display: 'block' }} />
         </div>
 
         {/* Actions */}
         <div className="flex gap-3 w-full">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 h-11 rounded-xl text-sm font-semibold text-white/50 border border-white/10 hover:border-white/20 transition-colors"
-          >
+          <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
             ביטול
-          </button>
-          <button
-            type="button"
-            onClick={() => { onSelect(frame.id); onClose(); }}
-            className="flex-1 h-11 rounded-xl text-sm font-bold text-white transition-colors"
-            style={{ background: isSelected ? 'rgba(124,134,225,0.4)' : '#7c86e1' }}
-          >
+          </Button>
+          <Button type="button" variant={isSelected ? 'secondary' : 'default'} className="flex-1" onClick={() => { onSelect(frame.id); onClose(); }}>
             {isSelected ? '✓ נבחרה' : 'בחר מסגרת'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -283,21 +246,11 @@ function PngFrameThumbnail({ frame, isSelected, onSelect, eventName, eventDate }
     <button
       type="button"
       onClick={() => onSelect(frame.frame_id)}
-      className="flex flex-col items-center gap-1.5 shrink-0 active:scale-95"
-      style={{ outline: 'none', transition: 'transform 0.15s' }}
+      className="flex flex-col items-center gap-1.5 shrink-0 outline-none transition-transform active:scale-95"
     >
-      <div style={{
-        position: 'relative',
-        width: THUMB_W,
-        height: THUMB_TOTAL_H,
-        borderRadius: '5px',
-        border: isSelected ? '2px solid #7c86e1' : '1.5px solid rgba(255,255,255,0.09)',
-        boxShadow: isSelected
-          ? '0 0 16px -2px rgba(124,134,225,0.65), 0 4px 14px rgba(0,0,0,0.5)'
-          : '0 3px 10px rgba(0,0,0,0.5)',
-        overflow: 'hidden',
-        background: '#111',
-      }}>
+      <div className={`relative bg-secondary rounded-[5px] overflow-hidden transition-all ${
+        isSelected ? 'border-2 border-brand shadow-indigo-glow scale-[1.04]' : 'border-[1.5px] border-foreground/10 shadow-lg'
+      }`} style={{ width: THUMB_W, height: THUMB_TOTAL_H }}>
         <FramePngPreview
           frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox, text_config: frame.text_config }}
           eventName={eventName || 'שרה ודוד'}
@@ -306,33 +259,15 @@ function PngFrameThumbnail({ frame, isSelected, onSelect, eventName, eventDate }
           style={{ width: '100%', height: '100%' }}
         />
         {isSelected && (
-          <div style={{
-            position: 'absolute', top: 4, right: 4,
-            width: 15, height: 15, borderRadius: '50%',
-            background: '#7c86e1',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          <div className="absolute top-1 right-1 w-[15px] h-[15px] rounded-full bg-brand flex items-center justify-center text-primary-foreground">
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-              <path d="M1.5 4L3 5.5L6.5 2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1.5 4L3 5.5L6.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         )}
-        <div style={{
-          position: 'absolute', top: 4, left: 4,
-          padding: '1px 4px', borderRadius: '3px',
-          background: 'rgba(99,102,241,0.8)',
-          fontFamily: 'Heebo, sans-serif',
-          fontSize: '7px', fontWeight: 700,
-          color: '#fff', letterSpacing: '0.04em', lineHeight: '13px',
-        }}>PNG</div>
+        <div className="absolute top-1 left-1 px-1 rounded bg-brand/90 text-primary-foreground text-xs font-bold leading-4">PNG</div>
       </div>
-      <span style={{
-        fontFamily: 'Heebo, sans-serif', fontSize: '10px',
-        color: isSelected ? '#818cf8' : 'rgba(255,255,255,0.45)',
-        fontWeight: isSelected ? 700 : 400,
-        maxWidth: THUMB_W, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        userSelect: 'none',
-      }}>
+      <span className={`text-xs truncate select-none ${isSelected ? 'text-brand font-semibold' : 'text-muted-foreground'}`} style={{ maxWidth: THUMB_W }}>
         {frame.display_name || frame.frame_id.split('-').slice(1).join(' ')}
       </span>
     </button>
@@ -468,20 +403,20 @@ export default function CreateMagnetEvent() {
         <div className="text-center px-6 max-w-sm w-full">
           {/* Check circle */}
           <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
-            <Check className="w-7 h-7 text-indigo-400" />
+            <Check className="w-7 h-7 text-brand" />
           </div>
-          <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-3">Magnet · מוכן</p>
+          <p className="text-brand text-xs font-semibold mb-3">מגנט · מוכן</p>
           <h3 className="font-heebo font-semibold text-3xl text-foreground/90 mb-2">אירוע מגנט נוצר</h3>
           <p className="text-muted-foreground text-sm mb-6">שתפו את הקישור או ה-QR עם האורחים</p>
 
           {/* QR code */}
-          <div className="mx-auto w-fit bg-white rounded-2xl p-3 mb-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+          <div className="mx-auto w-fit bg-foreground rounded-2xl p-3 mb-5 shadow-2xl">
             <img src={qrUrl} alt="QR" width={160} height={160} className="block rounded-lg" />
           </div>
 
           {/* Event URL copy row */}
           <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-3 mb-6">
-            <span className="text-foreground/75 text-xs font-mono truncate flex-1 text-right" dir="ltr">
+            <span className="text-foreground/75 text-xs truncate flex-1 text-right" dir="ltr">
               {eventUrl}
             </span>
             <button
@@ -543,7 +478,7 @@ export default function CreateMagnetEvent() {
 
       {/* Progress bar */}
       <div className="h-1 bg-border shrink-0 w-full z-50">
-        <div className="h-full bg-primary transition-all duration-500 shadow-[0_0_10px_rgba(124,134,225,0.45)]"
+        <div className="h-full bg-primary transition-all duration-500 shadow-[0_0_10px_hsl(var(--brand)/0.45)]"
           style={{ width: `${progressPercentage}%` }} />
       </div>
 
@@ -568,7 +503,7 @@ export default function CreateMagnetEvent() {
               {/* Step 1 — Name */}
               {currentStep === 1 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
-                  <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-2"><bdi>01</bdi> · שם האירוע</p>
+                  <p className="text-brand text-xs font-semibold mb-2"><bdi>01</bdi> · שם האירוע</p>
                   <h2 className="font-heebo text-2xl font-semibold mb-1 text-foreground">מה שם האירוע?</h2>
                   <p className="text-sm text-muted-foreground mb-2">השם שיופיע על המגנט ובממשק האורחים</p>
                   <Input
@@ -578,11 +513,11 @@ export default function CreateMagnetEvent() {
                     style={{ fontSize: '16px' }}
                     className="bg-card border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-muted-foreground/60 w-full"
                   />
-                  {errors.name && <p className="text-red-400 text-[10px] mt-2 font-bold animate-pulse">{errors.name}</p>}
+                  {errors.name && <p className="text-destructive text-xs mt-2 font-semibold animate-pulse">{errors.name}</p>}
 
                   {/* Optional cover photo */}
                   <div className="mt-4 w-full">
-                    <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.2em] uppercase mb-2">תמונת רקע לדף הנחיתה (אופציונלי)</p>
+                    <p className="text-muted-foreground text-xs font-semibold mb-2">תמונת רקע לדף הנחיתה (אופציונלי)</p>
                     <label className="cursor-pointer block">
                       <input
                         type="file" accept="image/*" className="hidden"
@@ -597,12 +532,12 @@ export default function CreateMagnetEvent() {
                         <div className="relative w-full h-28 rounded-xl overflow-hidden border border-primary/40">
                           <img src={coverImagePreview} className="w-full h-full object-cover" alt="cover" />
                           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                            <span className="text-white text-xs font-semibold">לחץ להחלפה</span>
+                            <span className="text-foreground text-xs font-semibold">לחץ להחלפה</span>
                           </div>
                         </div>
                       ) : (
                         <div className="w-full h-20 rounded-xl border border-dashed border-primary/30 bg-primary/5 flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
-                          <span className="text-indigo-400/70 text-xs">+ העלה תמונת רקע</span>
+                          <span className="text-brand/80 text-xs">+ העלה תמונת רקע</span>
                         </div>
                       )}
                     </label>
@@ -614,20 +549,20 @@ export default function CreateMagnetEvent() {
               {currentStep === 2 && fromLead && (
                 <div className="animate-in fade-in duration-300 w-full mb-2">
                   <div className="flex items-center justify-between px-3 py-2 bg-primary/10 border border-primary/25 rounded-xl">
-                    <span className="text-indigo-300 text-xs font-semibold truncate">{fromLead.eventName}</span>
-                    <span className="text-indigo-400/60 text-xs shrink-0 mr-2">מליד · {fromLead.contactName}</span>
+                    <span className="text-brand text-xs font-semibold truncate">{fromLead.eventName}</span>
+                    <span className="text-brand/70 text-xs shrink-0 mr-2">מליד · {fromLead.contactName}</span>
                   </div>
                 </div>
               )}
               {currentStep === 2 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
                   <div className="text-center space-y-1">
-                    <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>02</bdi> · תאריך</p>
+                    <p className="text-brand text-xs font-semibold mb-1"><bdi>02</bdi> · תאריך</p>
                     <h2 className="font-heebo text-2xl font-semibold text-foreground">מתי האירוע?</h2>
                     <p className="text-sm text-muted-foreground">תאריך האירוע שיופיע על המגנטים</p>
                   </div>
                   <InlineCalendar value={form.date} onChange={(d) => handleChange('date', d)} />
-                  {errors.date && <p className="text-red-400 text-sm font-bold text-center animate-pulse">{errors.date}</p>}
+                  {errors.date && <p className="text-destructive text-sm font-semibold text-center animate-pulse">{errors.date}</p>}
                 </div>
               )}
 
@@ -635,7 +570,7 @@ export default function CreateMagnetEvent() {
               {currentStep === 3 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
-                    <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>03</bdi> · מכסה</p>
+                    <p className="text-brand text-xs font-semibold mb-1"><bdi>03</bdi> · מכסה</p>
                     <h2 className="font-heebo text-2xl font-semibold text-foreground">כמה הדפסות לאורח?</h2>
                     <p className="text-sm text-muted-foreground">כל אורח יוכל להדפיס עד המספר שתבחרו</p>
                   </div>
@@ -646,17 +581,17 @@ export default function CreateMagnetEvent() {
                         onClick={() => handleChange('print_quota_per_device', n)}
                         className={`h-12 rounded-xl font-bold text-base transition-all active:scale-95 ${
                           form.print_quota_per_device === n
-                            ? 'bg-primary text-primary-foreground shadow-indigo-soft border border-white/20'
+                            ? 'bg-primary text-primary-foreground shadow-indigo-soft border border-foreground/20'
                             : 'bg-card text-muted-foreground border border-border hover:border-foreground/20'
                         }`}
                       ><bdi>{n}</bdi></button>
                     ))}
                   </div>
                   <div className="bg-gradient-to-r from-cool-900 to-cool-950 rounded-xl p-3 flex items-center gap-3 border border-border">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-indigo-400 shrink-0 border border-primary/20">
+                    <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand shrink-0 border border-brand/20">
                       <Check size={16} strokeWidth={3} />
                     </div>
-                    <p className="text-foreground font-semibold text-[13px]"><bdi>{form.print_quota_per_device}</bdi> הדפסות לכל אורח</p>
+                    <p className="text-foreground font-semibold text-sm"><bdi className="tabular-nums">{form.print_quota_per_device}</bdi> הדפסות לכל אורח</p>
                   </div>
                 </div>
               )}
@@ -665,7 +600,7 @@ export default function CreateMagnetEvent() {
               {currentStep === 4 && (
                 <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
                   <div className="text-center space-y-1">
-                    <p className="text-indigo-400 text-[10px] font-bold tracking-[0.3em] uppercase mb-1"><bdi>04</bdi> · מסגרת</p>
+                    <p className="text-brand text-xs font-semibold mb-1"><bdi>04</bdi> · מסגרת</p>
                     <h2 className="font-heebo text-2xl font-semibold text-foreground">בחרו מסגרת</h2>
                     <p className="text-sm text-muted-foreground">המסגרת תוטבע על כל מגנט באירוע — אופציונלי</p>
                   </div>
@@ -674,12 +609,9 @@ export default function CreateMagnetEvent() {
                   <button
                     type="button"
                     onClick={() => handleChange('selectedFrameId', null)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-sm"
-                    style={{
-                      background: form.selectedFrameId === null ? 'rgba(124,134,225,0.12)' : 'rgba(255,255,255,0.04)',
-                      border: form.selectedFrameId === null ? '1px solid rgba(124,134,225,0.45)' : '1px solid rgba(255,255,255,0.08)',
-                      color: form.selectedFrameId === null ? '#818cf8' : 'rgba(255,255,255,0.4)',
-                    }}
+                    className={`flex items-center gap-2 h-9 px-3 rounded-xl border transition-colors text-sm ${
+                      form.selectedFrameId === null ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
+                    }`}
                   >
                     {form.selectedFrameId === null && <Check className="w-3.5 h-3.5 shrink-0" />}
                     <span>ללא מסגרת</span>
@@ -695,21 +627,13 @@ export default function CreateMagnetEvent() {
                           key={cat.key}
                           type="button"
                           onClick={() => setActiveFrameTab(cat.key)}
-                          className="relative shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                          style={{
-                            background: isActive ? 'rgba(124,134,225,0.18)' : 'rgba(255,255,255,0.04)',
-                            border: isActive ? '1px solid rgba(124,134,225,0.45)' : '1px solid rgba(255,255,255,0.07)',
-                            color: isActive ? '#a5b4fc' : 'rgba(255,255,255,0.4)',
-                          }}
+                          className={`relative shrink-0 h-8 px-3 rounded-full border text-xs font-semibold transition-colors ${
+                            isActive ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
+                          }`}
                         >
                           {cat.label}
                           {hasNew && (
-                            <span style={{
-                              position: 'absolute', top: -4, right: -4,
-                              width: 7, height: 7, borderRadius: '50%',
-                              background: '#7c86e1',
-                              border: '1.5px solid #0a0a0a',
-                            }} />
+                            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-brand border-[1.5px] border-background" />
                           )}
                         </button>
                       );
@@ -748,7 +672,7 @@ export default function CreateMagnetEvent() {
 
                   {/* Custom PNG upload (advanced) */}
                   <div>
-                    <p className="text-[9px] font-semibold mb-2 tracking-widest uppercase text-muted-foreground/60">
+                    <p className="text-xs font-semibold mb-2 text-muted-foreground">
                       מותאם אישית
                     </p>
                     <label className="flex items-center gap-3 w-full bg-card border border-dashed border-border hover:border-primary/40 rounded-xl px-4 py-3 cursor-pointer transition-colors">
@@ -765,7 +689,7 @@ export default function CreateMagnetEvent() {
                     </label>
                   </div>
 
-                  {errors.submit && <p className="text-red-400 text-sm text-center">{errors.submit}</p>}
+                  {errors.submit && <p className="text-destructive text-sm text-center">{errors.submit}</p>}
                 </div>
               )}
 
@@ -794,7 +718,7 @@ export default function CreateMagnetEvent() {
                 disabled={isLoading}
                 className={`text-base font-semibold rounded-xl flex-1 h-12 transition-all duration-300 active:scale-95 flex items-center justify-center relative ${
                   isCurrentStepValid() || isLoading
-                    ? 'bg-primary text-primary-foreground shadow-indigo-soft border border-white/10'
+                    ? 'bg-primary text-primary-foreground shadow-indigo-soft border border-foreground/10'
                     : 'bg-card text-muted-foreground border border-border'
                 }`}
               >

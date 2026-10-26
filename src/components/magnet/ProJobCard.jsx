@@ -3,13 +3,8 @@ import { Printer, CheckCircle2, X, Loader2, Minus, Plus, Users, Crop, Refrigerat
 import memoriaService from '@/components/memoriaService';
 import { printAndAdvance, setJobStatus, stationError } from '@/lib/printStation';
 import { HAS_REAL_FACE_ENGINE } from '@/hooks/useFaceCrop';
-
-const STATUS_CONFIG = {
-  pending:  { label: 'ממתין',   color: 'text-yellow-400',  bg: 'bg-yellow-500/15 border-yellow-500/30' },
-  printing: { label: 'בהדפסה',  color: 'text-blue-400',    bg: 'bg-blue-500/15 border-blue-500/30' },
-  ready:    { label: 'מוכן',    color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/30' },
-  rejected: { label: 'נדחה',    color: 'text-red-400',     bg: 'bg-red-500/15 border-red-500/30' },
-};
+import { Button } from '@/components/ui/button';
+import StatusBadge from '@/components/system/StatusBadge';
 
 /** Relative age of a job — "עכשיו" / "לפני X דק׳" / "לפני X שע׳". */
 function timeAgo(iso) {
@@ -35,7 +30,6 @@ export default function ProJobCard({ job, event, isNew = false, isSelected = fal
   const [isReprinting, setIsReprinting] = useState(false);
   const [backup, setBackup] = useState(false);
 
-  const cfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.pending;
   const thumbUrl = job.photos?.file_urls?.thumbnail ?? job.photos?.file_url;
   const guestName = job.photos?.guest_name;
   const copies = job.copies ?? 1;
@@ -74,122 +68,106 @@ export default function ProJobCard({ job, event, isNew = false, isSelected = fal
     }
   };
 
+  // Print Station is read at a distance on a tablet: one size step up (CLAUDE.md §0.6).
   return (
     <div
-      className={`bg-white/5 border rounded-2xl overflow-hidden flex flex-col transition-all ${isSettled ? 'opacity-60' : ''} ${
-        isSelected ? 'border-violet-400 ring-2 ring-violet-400/50'
-        : isNew ? 'border-yellow-400/70 ring-2 ring-yellow-400/40' : 'border-white/10'
+      className={`bg-card border rounded-2xl overflow-hidden flex flex-col transition-colors ${isSettled ? 'opacity-60' : ''} ${
+        isSelected ? 'border-brand ring-2 ring-brand/40'
+        : isNew ? 'border-status-pending/70 ring-2 ring-status-pending/40' : 'border-border'
       }`}
-      style={isNew && !isSelected ? { boxShadow: '0 0 22px rgba(250,204,21,0.25)' } : undefined}
       dir="rtl"
     >
       {/* Photo */}
-      <div className="relative aspect-square bg-white/5">
+      <div className="relative aspect-square bg-secondary">
         {thumbUrl
           ? <img src={thumbUrl} className="w-full h-full object-cover" alt="" />
-          : <div className="w-full h-full flex items-center justify-center text-white/15 text-xs">אין תמונה</div>
+          : <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">אין תמונה</div>
         }
         {isNew && (
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-yellow-400 text-[10px] font-black text-black animate-pulse">
+          <div className="absolute top-2 left-2 h-8 px-3 flex items-center rounded-full bg-status-pending text-background text-sm font-bold animate-pulse">
             חדש
           </div>
         )}
-        <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full border text-[10px] font-bold ${cfg.bg} ${cfg.color}`}>
-          {cfg.label}
-        </div>
+        <StatusBadge status={job.status} className="absolute top-2 right-2 h-8 text-sm backdrop-blur" />
         {/* Face-count chip */}
         {HAS_REAL_FACE_ENGINE && job.face_count != null && (
-          <div className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 border border-white/15 text-[10px] font-bold text-white/90">
-            <Users className="w-3 h-3" /> {job.face_count}
+          <div className="absolute bottom-2 right-2 flex items-center gap-1 h-8 px-3 rounded-full bg-background/70 border border-border text-sm font-semibold text-foreground">
+            <Users className="w-4 h-4" /> <span className="tabular-nums">{job.face_count}</span>
           </div>
         )}
       </div>
 
       {/* Info */}
-      <div className="px-3 py-2 flex-1">
-        <p className="text-white/85 text-sm font-semibold truncate">{guestName || 'אורח'}</p>
-        <p className="text-white/35 text-[10px] mt-0.5">
+      <div className="px-4 pt-3 pb-2 flex-1">
+        <p className="text-lg font-semibold text-foreground truncate">{guestName || 'אורח'}</p>
+        <p className="text-sm text-muted-foreground mt-0.5 tabular-nums">
           {timeAgo(job.created_at)} · {new Date(job.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
 
       {/* Copies stepper + backup toggle (editable while not settled) */}
       {!isSettled && (
-        <div className="px-3 pb-2 space-y-2">
+        <div className="px-4 pb-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-white/45 text-[11px]">עותקים</span>
-            <div className="flex items-center gap-1.5">
-              <button onClick={() => changeCopies(-1)} disabled={copies <= 1} aria-label="פחות עותקים"
-                className="w-6 h-6 rounded-lg bg-white/8 hover:bg-white/15 border border-white/10 flex items-center justify-center disabled:opacity-30">
-                <Minus className="w-3 h-3 text-white/70" />
-              </button>
-              <span className="min-w-[1.5rem] text-center text-white font-bold tabular-nums text-sm">{copies}</span>
-              <button onClick={() => changeCopies(1)} disabled={copies >= 20} aria-label="עוד עותקים"
-                className="w-6 h-6 rounded-lg bg-white/8 hover:bg-white/15 border border-white/10 flex items-center justify-center disabled:opacity-30">
-                <Plus className="w-3 h-3 text-white/70" />
-              </button>
+            <span className="text-sm text-muted-foreground">עותקים</span>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="icon-sm" onClick={() => changeCopies(-1)} disabled={copies <= 1} aria-label="פחות עותקים">
+                <Minus />
+              </Button>
+              <span className="min-w-[1.75rem] text-center text-lg font-semibold tabular-nums text-foreground">{copies}</span>
+              <Button variant="secondary" size="icon-sm" onClick={() => changeCopies(1)} disabled={copies >= 20} aria-label="עוד עותקים">
+                <Plus />
+              </Button>
             </div>
           </div>
           <button onClick={() => setBackup(b => !b)}
-            className={`w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-semibold rounded-xl border transition-colors ${
-              backup ? 'bg-violet-500/25 border-violet-400/40 text-violet-200' : 'bg-white/5 border-white/10 text-white/40 hover:text-white/70'
+            className={`w-full h-10 flex items-center justify-center gap-1.5 text-sm font-semibold rounded-xl border transition-colors ${
+              backup ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
             }`}>
-            <Refrigerator className="w-3 h-3" />
+            <Refrigerator className="w-4 h-4" />
             עותק גיבוי למקרר {backup ? `(+1 → ${effectiveCopies})` : ''}
           </button>
-        </div>
-      )}
-
-      {/* Crop editor entry */}
-      {!isSettled && (
-        <div className="px-3 pb-2">
-          <button onClick={() => canCrop && onEditCrop?.(job)} disabled={!canCrop}
-            title={canCrop ? 'ערוך חיתוך' : 'אין תמונת מקור לחיתוך'}
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/45 hover:text-white/75 text-[11px] rounded-xl transition-colors disabled:opacity-30">
-            <Crop className="w-3 h-3" />
+          <Button variant="secondary" size="sm" className="w-full" onClick={() => canCrop && onEditCrop?.(job)} disabled={!canCrop}
+            title={canCrop ? 'ערוך חיתוך' : 'אין תמונת מקור לחיתוך'}>
+            <Crop />
             {job.crop_config ? 'ערוך חיתוך ✓' : 'חיתוך חכם'}
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Re-print for ready jobs — no status change, printer-jam recovery */}
       {job.status === 'ready' && (
-        <div className="px-3 pb-3">
-          <button onClick={() => doPrint()} disabled={isReprinting}
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/35 hover:text-white/60 text-xs rounded-xl transition-colors disabled:opacity-50">
-            {isReprinting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Printer className="w-3 h-3" />}
+        <div className="px-4 pb-4">
+          <Button variant="secondary" size="sm" className="w-full" onClick={() => doPrint()} disabled={isReprinting}>
+            {isReprinting ? <Loader2 className="animate-spin" /> : <Printer />}
             הדפס שוב
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Actions */}
       {!isSettled && (
-        <div className="px-3 pb-3 flex gap-2">
+        <div className="px-4 pb-4 flex gap-2">
           {job.status === 'pending' && (
-            <button onClick={() => doPrint({ advance: true })} disabled={isActing}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors">
-              {isActing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Printer className="w-3 h-3" />}
+            <Button className="flex-1 text-base" onClick={() => doPrint({ advance: true })} disabled={isActing}>
+              {isActing ? <Loader2 className="animate-spin" /> : <Printer />}
               הדפס {effectiveCopies > 1 ? `×${effectiveCopies}` : ''}
-            </button>
+            </Button>
           )}
           {job.status === 'printing' && (
             <>
-              <button onClick={() => changeStatus('ready')} disabled={isActing}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors">
-                {isActing ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+              <Button className="flex-1 text-base" onClick={() => changeStatus('ready')} disabled={isActing}>
+                {isActing ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
                 מוכן
-              </button>
-              <button onClick={() => doPrint()} disabled={isReprinting} title="הדפס שוב"
-                className="w-8 h-8 flex items-center justify-center bg-white/8 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/30 text-white/40 hover:text-blue-400 rounded-xl transition-colors shrink-0 disabled:opacity-50">
-                {isReprinting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Printer className="w-3 h-3" />}
-              </button>
+              </Button>
+              <Button variant="secondary" size="icon" onClick={() => doPrint()} disabled={isReprinting} title="הדפס שוב" aria-label="הדפס שוב">
+                {isReprinting ? <Loader2 className="animate-spin" /> : <Printer />}
+              </Button>
             </>
           )}
-          <button onClick={() => changeStatus('rejected')} disabled={isActing}
-            className="w-8 h-8 flex items-center justify-center bg-white/8 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-white/40 hover:text-red-400 rounded-xl transition-colors shrink-0">
-            <X className="w-3.5 h-3.5" />
-          </button>
+          <Button variant="destructive" size="icon" onClick={() => changeStatus('rejected')} disabled={isActing} aria-label="דחה">
+            <X />
+          </Button>
         </div>
       )}
     </div>

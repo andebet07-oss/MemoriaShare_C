@@ -35,7 +35,7 @@ const SIZES = [
 // ── Sub-components ───────────────────────────────────────────────────────────
 function Label({ children }) {
   return (
-    <p className="text-[9px] font-bold text-violet-400/70 tracking-[0.2em] uppercase mb-1.5">{children}</p>
+    <p className="text-xs font-bold text-brand mb-1.5">{children}</p>
   );
 }
 
@@ -44,9 +44,9 @@ function Pill({ active, onClick, children, style }) {
     <button onClick={onClick}
       className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
       style={{
-        background: active ? 'rgba(124,58,237,0.22)' : 'rgba(255,255,255,0.04)',
-        border:     active ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.06)',
-        color:      active ? '#c4b5fd' : 'rgba(255,255,255,0.35)',
+        background: active ? 'hsl(var(--brand) / 0.22)' : 'hsl(var(--secondary))',
+        border:     active ? '1px solid hsl(var(--brand) / 0.4)' : '1px solid hsl(var(--border))',
+        color:      active ? 'hsl(var(--brand))' : 'hsl(var(--muted-foreground))',
         ...style,
       }}>
       {children}
@@ -92,13 +92,13 @@ export default function ElementEditor({ layer, cfg, onChange }) {
                 onClick={() => { loadFont(f.value); set('font', f.value); }}
                 className="flex flex-col items-start px-3 py-2 rounded-xl transition-all text-right"
                 style={{
-                  background: active ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.04)',
-                  border:     active ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                  background: active ? 'hsl(var(--brand) / 0.18)' : 'hsl(var(--secondary))',
+                  border:     active ? '1px solid hsl(var(--brand) / 0.4)' : '1px solid hsl(var(--border))',
                 }}>
-                <span style={{ fontFamily: `'${f.value}', sans-serif`, fontSize: 15, color: active ? '#e8e4ff' : 'rgba(255,255,255,0.7)', direction: 'rtl' }}>
+                <span style={{ fontFamily: `'${f.value}', sans-serif`, fontSize: 15, color: active ? 'hsl(var(--foreground))' : 'hsl(var(--foreground) / 0.7)', direction: 'rtl' }}>
                   {f.sample}
                 </span>
-                <span className="text-[9px] mt-0.5" style={{ color: active ? '#a78bfa' : 'rgba(255,255,255,0.25)' }}>
+                <span className="text-xs mt-0.5" style={{ color: active ? 'hsl(var(--brand))' : 'hsl(var(--muted-foreground))' }}>
                   {f.note}
                 </span>
               </button>
@@ -136,8 +136,8 @@ export default function ElementEditor({ layer, cfg, onChange }) {
               className="w-7 h-7 rounded-full transition-all"
               style={{
                 background: c,
-                border:      cfg.color === c ? '2px solid #7c3aed' : '2px solid rgba(255,255,255,0.12)',
-                outline:     cfg.color === c ? '2px solid rgba(124,58,237,0.5)' : 'none',
+                border:      cfg.color === c ? '2px solid hsl(var(--brand))' : '2px solid hsl(var(--border))',
+                outline:     cfg.color === c ? '2px solid hsl(var(--brand) / 0.5)' : 'none',
                 outlineOffset: '2px',
                 boxShadow:   c === '#ffffff' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined,
               }} />
@@ -146,7 +146,7 @@ export default function ElementEditor({ layer, cfg, onChange }) {
             style={{ border: '1px dashed rgba(255,255,255,0.2)' }} title="צבע חופשי">
             <input type="color" value={cfg.color || '#333333'} onChange={e => set('color', e.target.value)}
               className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-            <span className="text-[10px] text-muted-foreground/50 pointer-events-none">+</span>
+            <span className="text-xs text-muted-foreground pointer-events-none">+</span>
           </label>
         </div>
       </div>

@@ -25,7 +25,7 @@ export default function RubricEditor({ initialScores = {}, onSave, onCancel, sav
 
   return (
     <div className="space-y-4" dir="rtl">
-      <p className="text-[10px] font-bold tracking-[0.25em] uppercase text-muted-foreground/60">רובריקת איכות (7 × 5 = 35)</p>
+      <p className="text-xs font-bold text-muted-foreground">רובריקת איכות (7 × 5 = 35)</p>
 
       {RUBRIC_CRITERIA.map(c => {
         const score = scores[c.key];
@@ -37,7 +37,7 @@ export default function RubricEditor({ initialScores = {}, onSave, onCancel, sav
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
                 {c.hardFail && (
-                  <span className="shrink-0 text-[8px] font-black tracking-widest uppercase text-amber-400/70 border border-amber-500/30 rounded px-1 py-0.5">
+                  <span className="shrink-0 text-xs font-semibold text-status-pending border border-status-pending/30 rounded px-1 py-0.5">
                     חובה
                   </span>
                 )}
@@ -49,7 +49,7 @@ export default function RubricEditor({ initialScores = {}, onSave, onCancel, sav
                 {score}/5
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground/50">{c.description}</p>
+            <p className="text-xs text-muted-foreground">{c.description}</p>
 
             {/* Score buttons 0-5 */}
             <div className="flex gap-1 mt-1">
@@ -60,13 +60,13 @@ export default function RubricEditor({ initialScores = {}, onSave, onCancel, sav
                   title={SCORE_LABELS[v]}
                   onClick={() => set(c.key, v)}
                   className={[
-                    'flex-1 h-7 rounded text-[11px] font-bold transition-all focus-visible:outline-none',
-                    'focus-visible:ring-1 focus-visible:ring-violet-500',
+                    'flex-1 h-7 rounded text-xs font-bold transition-all focus-visible:outline-none',
+                    'focus-visible:ring-1 focus-visible:ring-brand/50',
                     v === score
                       ? isHardFailTriggered
-                        ? 'bg-red-500 text-white'
-                        : v >= 4 ? 'bg-emerald-600 text-white' : 'bg-violet-600 text-white'
-                      : 'bg-cool-800/60 text-muted-foreground/50 hover:bg-cool-700',
+                        ? 'bg-red-500 text-foreground'
+                        : v >= 4 ? 'bg-status-ready text-background' : 'bg-primary text-foreground'
+                      : 'bg-cool-800/60 text-muted-foreground hover:bg-cool-700',
                   ].join(' ')}
                 >
                   {v}
@@ -93,19 +93,19 @@ export default function RubricEditor({ initialScores = {}, onSave, onCancel, sav
               {canApprove ? 'עובר — מוכן לאישור' : 'נכשל — לא ניתן לאישור'}
             </p>
             {!canApprove && reason && (
-              <p className="text-[10px] text-muted-foreground/60 mt-0.5">{reason}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{reason}</p>
             )}
           </div>
         </div>
-        <span className={`text-2xl font-black tabular-nums ${canApprove ? 'text-emerald-400' : 'text-red-400/70'}`}>
-          {total}<span className="text-sm font-normal text-muted-foreground/40">/35</span>
+        <span className={`text-2xl font-semibold tabular-nums ${canApprove ? 'text-emerald-400' : 'text-red-400/70'}`}>
+          {total}<span className="text-sm font-normal text-muted-foreground">/35</span>
         </span>
       </div>
 
       {hardFailCriteria.length > 0 && (
         <div className="flex items-start gap-2 rounded-lg px-3 py-2.5 bg-amber-500/5 border border-amber-500/20">
           <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-          <p className="text-[10px] text-amber-400/80">
+          <p className="text-xs text-status-pending">
             קריטריוני כישלון חובה שנכשלו: {hardFailCriteria.join(', ')}. חובה לציין ≥1 בכל קריטריון חובה לפני אישור.
           </p>
         </div>
@@ -115,7 +115,7 @@ export default function RubricEditor({ initialScores = {}, onSave, onCancel, sav
         <button
           onClick={() => onSave(scores, total, canApprove)}
           disabled={saving}
-          className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-colors"
+          className="flex-1 py-2.5 bg-primary hover:bg-primary/90 disabled:opacity-40 text-foreground text-xs font-bold rounded-lg transition-colors"
         >
           {saving ? 'שומר...' : 'שמור ניקוד'}
         </button>

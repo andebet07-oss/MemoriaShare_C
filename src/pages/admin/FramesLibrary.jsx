@@ -9,84 +9,67 @@ import FrameUploadDialog from '@/components/admin/frames/FrameUploadDialog';
 import AdminFilterBar from '@/components/admin/AdminFilterBar';
 import { CardGridSkeleton } from '@/components/ui/skeletons';
 import { STYLE_LABELS, CATEGORY_LABELS } from '@/lib/framesMeta';
+import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/system/PageHeader';
+import { TONE } from '@/components/system/statusStyles';
 
 const STATUS_HE = { approved: 'פעיל', draft: 'טיוטה', archived: 'ארכיון' };
 
-function StatusBadge({ status }) {
-  const map = {
-    approved: { cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', label: 'פעיל' },
-    draft:    { cls: 'bg-cool-700/40 text-cool-400 border-cool-600/30',          label: 'טיוטה' },
-    archived: { cls: 'bg-red-500/10 text-red-400 border-red-500/20',             label: 'ארכיון' },
-  };
-  const { cls, label } = map[status] ?? map.draft;
+// Frame lifecycle → the shared status tones (CLAUDE.md §0.6).
+const FRAME_TONE = { approved: 'ready', draft: 'muted', archived: 'rejected' };
+
+function FrameStatus({ status }) {
+  const tone = TONE[FRAME_TONE[status] ?? 'muted'];
   return (
-    <span className={`inline-flex items-center gap-1 text-[9px] font-bold tracking-[0.15em] uppercase px-2 py-0.5 rounded-full border ${cls}`}>
-      {status === 'approved' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />}
-      {label}
+    <span className={`inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full border text-xs font-semibold shrink-0 ${tone.pill}`}>
+      {status === 'approved' && <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />}
+      {STATUS_HE[status] ?? STATUS_HE.draft}
     </span>
   );
 }
+
+// Transparency checkerboard behind the PNG frame preview.
+const CHECKERBOARD = { background: 'repeating-conic-gradient(hsl(var(--secondary)) 0% 25%, hsl(var(--card)) 0% 50%) 0 0 / 16px 16px' };
 
 function FrameCard({ frame, isEditing, onEdit, onEditHole }) {
   const categoryLabel = CATEGORY_LABELS[frame.category] ?? frame.category ?? '';
   const styleLabel    = STYLE_LABELS[frame.style]       ?? frame.style    ?? '';
 
   return (
-    <div className="group relative bg-cool-900/40 border rounded-2xl overflow-hidden flex flex-col transition-all duration-200"
-      style={{ borderColor: isEditing ? 'rgba(124,58,237,0.5)' : 'rgba(255,255,255,0.06)' }}>
+    <div className={`group relative bg-card border rounded-2xl overflow-hidden flex flex-col transition-colors ${isEditing ? 'border-brand/50' : 'border-border'}`}>
 
       {/* Preview */}
-      <div className="relative flex items-center justify-center overflow-hidden"
-        style={{
-          aspectRatio: '776 / 1031',
-          background: `linear-gradient(135deg, #2a2a35 0%, #1e1e28 100%),
-            repeating-conic-gradient(#2e2e3a 0% 25%, #252530 0% 50%) 0 0 / 16px 16px`,
-        }}>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-3/4 h-3/4 rounded-full bg-white/[0.03] blur-2xl" />
-        </div>
+      <div className="relative flex items-center justify-center overflow-hidden" style={{ aspectRatio: '776 / 1031', ...CHECKERBOARD }}>
         <FramePngPreview
           frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox, text_config: frame.text_config }}
           eventName="שרה ודוד"
           eventDate="12.06.2026"
-          className="relative z-10 w-[88%] h-auto"
-          style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.55)) drop-shadow(0 2px 6px rgba(0,0,0,0.35))' }}
+          className="relative z-10 w-[88%] h-auto drop-shadow-2xl"
         />
       </div>
 
       {/* Info strip */}
-      <div className="px-4 py-3 border-t border-white/[0.05] flex flex-col gap-2">
+      <div className="p-4 border-t border-border flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
-          <span className="text-[13px] font-semibold text-foreground leading-tight">
+          <span className="text-base font-semibold text-foreground leading-tight">
             {frame.display_name || frame.frame_id}
           </span>
-          <StatusBadge status={frame.status} />
+          <FrameStatus status={frame.status} />
         </div>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground/50">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
           {categoryLabel && <span>{categoryLabel}</span>}
-          {styleLabel    && <><span className="opacity-30">·</span><span>{styleLabel}</span></>}
-          {frame.aspect  && <><span className="opacity-30">·</span><span className="capitalize">{frame.aspect}</span></>}
+          {styleLabel    && <><span className="opacity-40">·</span><span>{styleLabel}</span></>}
+          {frame.aspect  && <><span className="opacity-40">·</span><span className="capitalize">{frame.aspect}</span></>}
         </div>
-        <div className="mt-1 flex gap-1.5">
-          <button
-            onClick={() => onEdit(frame.frame_id)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-[0.97]"
-            style={{
-              background: isEditing ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.04)',
-              border: isEditing ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.07)',
-              color: isEditing ? '#c4b5fd' : 'rgba(255,255,255,0.4)',
-            }}>
-            <Pencil className="w-3 h-3" />
+        <div className="mt-1 flex gap-2">
+          <Button variant="secondary" size="sm" className={`flex-1 ${isEditing ? '!bg-brand/15 !border-brand/30 !text-brand' : ''}`} onClick={() => onEdit(frame.frame_id)}>
+            <Pencil />
             {isEditing ? 'עורך...' : 'טקסט'}
-          </button>
-          <button
-            onClick={() => onEditHole(frame.frame_id)}
-            title="הגדרת חלון התמונה"
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold text-white/40 hover:text-violet-200 transition-all active:scale-[0.97]"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <Crop className="w-3 h-3" />
+          </Button>
+          <Button variant="secondary" size="sm" className="flex-1" onClick={() => onEditHole(frame.frame_id)} title="הגדרת חלון התמונה">
+            <Crop />
             חלון תמונה
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -135,39 +118,29 @@ export default function FramesLibrary() {
   ];
 
   return (
-    <div className="min-h-full p-5 md:p-8 animate-in fade-in slide-in-from-bottom-2 duration-500" dir="rtl">
+    <div className="max-w-5xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-16 animate-in fade-in slide-in-from-bottom-2 duration-500" dir="rtl">
 
-      <div className="flex items-start justify-between gap-3 mb-6">
-        <div>
-          <p className="text-violet-400 text-[10px] font-bold tracking-[0.35em] uppercase mb-1.5">Admin · כלים</p>
-          <h1 className="font-heebo font-semibold text-3xl text-foreground leading-tight">ספריית מסגרות</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isLoading
-              ? 'טוען...'
-              : activeCount > 0
-                ? `${activeCount} מסגרת${activeCount === 1 ? '' : 'ות'} פעיל${activeCount === 1 ? 'ה' : 'ות'}`
-                : 'אין מסגרות פעילות'}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => setUploadOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-[0.97]"
-            style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)' }}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            מסגרת חדשה
-          </button>
-          <button
-            onClick={() => navigate('/admin/frames/moderation')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-violet-300 hover:text-violet-200 transition-colors"
-            style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}
-          >
-            <ClipboardCheck className="w-3.5 h-3.5" />
-            תור מודרציה
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        label="ניהול · כלים"
+        title="ספריית מסגרות"
+        subtitle={isLoading
+          ? 'טוען...'
+          : activeCount > 0
+            ? `${activeCount} מסגרת${activeCount === 1 ? '' : 'ות'} פעיל${activeCount === 1 ? 'ה' : 'ות'}`
+            : 'אין מסגרות פעילות'}
+        action={
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setUploadOpen(true)}>
+              <Plus />
+              מסגרת חדשה
+            </Button>
+            <Button variant="secondary" onClick={() => navigate('/admin/frames/moderation')}>
+              <ClipboardCheck />
+              תור מודרציה
+            </Button>
+          </div>
+        }
+      />
 
       {!isLoading && !error && frames.length > 0 && (
         <AdminFilterBar
@@ -183,23 +156,23 @@ export default function FramesLibrary() {
       {isLoading && <CardGridSkeleton count={8} />}
 
       {!isLoading && error && (
-        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
+        <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-xl p-4 text-center">
           שגיאה בטעינת המסגרות — נסה לרענן
         </div>
       )}
 
       {!isLoading && !error && frames.length === 0 && (
         <div className="flex flex-col items-center justify-center py-32 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-cool-800/60 border border-border flex items-center justify-center mb-4">
-            <Layers className="w-7 h-7 text-muted-foreground/30" />
+          <div className="w-16 h-16 rounded-2xl bg-secondary border border-border flex items-center justify-center mb-4">
+            <Layers className="w-7 h-7 text-muted-foreground" />
           </div>
           <p className="text-sm text-muted-foreground mb-1">ספריית המסגרות ריקה</p>
-          <p className="text-xs text-muted-foreground/40">מסגרות חדשות יתווספו כאן</p>
+          <p className="text-xs text-muted-foreground">מסגרות חדשות יתווספו כאן</p>
         </div>
       )}
 
       {!isLoading && !error && frames.length > 0 && visibleFrames.length === 0 && (
-        <p className="text-muted-foreground/50 text-sm py-12 text-center">אין מסגרות תואמות</p>
+        <p className="text-muted-foreground text-sm py-12 text-center">אין מסגרות תואמות</p>
       )}
 
       {!isLoading && !error && visibleFrames.length > 0 && (
