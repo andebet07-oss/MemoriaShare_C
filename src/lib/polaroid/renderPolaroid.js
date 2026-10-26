@@ -30,7 +30,7 @@ function measure(text, font) {
     const t = measureCtx.measureText(text);
     const hebrew = isHebrew(text);
     const ref = measureCtx.measureText(hebrew ? 'ה' : 'H');
-    const refDesc = measureCtx.measureText(hebrew ? 'ךןףץק' : 'gjpqyJ');
+    const refDesc = measureCtx.measureText(hebrew ? 'ךןףץק' : 'gjpqy');
     m = {
       width: t.width / REF_PX,
       ascent: t.actualBoundingBoxAscent / REF_PX,

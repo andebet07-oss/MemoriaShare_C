@@ -94,16 +94,27 @@ describe('templates', () => {
 });
 
 describe('layoutCaption', () => {
-  const NAMES = ['שרה & דניאל', 'אלכסנדרה & יהונתן', 'Sarah & Daniel', 'Alexandra & Jonathan'];
+  const XLONG_HE = 'אלכסנדרה-מרגריטה & יהונתן-אליעזר';
+  const XLONG_EN = 'Alexandra-Margaret & Jonathan-Elliot';
+  const NAMES = ['שרה & דניאל', 'אלכסנדרה & יהונתן', 'Sarah & Daniel', 'Alexandra & Jonathan', XLONG_HE, XLONG_EN];
+  const minScale = (id, o, name) => {
+    const n = TEMPLATES[id].names;
+    const script = isHebrew(name) && n.hebrew ? n.hebrew : n;
+    const i = o === 'landscape' ? 1 : 0;
+    return script.minSize[i] / script.size[i];
+  };
 
-  it('keeps all caption text inside the 4 mm safe area', () => {
+  it('keeps all caption text inside the 4 mm safe area and clear of the photo', () => {
     for (const id of TEMPLATE_IDS) for (const o of ['portrait', 'landscape']) for (const name of NAMES) {
       const { w: W, h: H } = DESIGN[o];
       const { ops } = lay(id, o, name);
       for (const op of textOps(ops)) {
         const [l, r] = extent(op);
+        const m = measure(op.text);
         expect(l).toBeGreaterThanOrEqual(SAFE_INSET - 1e-6);
         expect(r).toBeLessThanOrEqual(W - SAFE_INSET + 1e-6);
+        expect(op.y + m.descent * op.size).toBeLessThanOrEqual(H - SAFE_INSET + 1e-6);
+        expect(op.y - m.ascent * op.size).toBeGreaterThanOrEqual(WINDOW[o].y + WINDOW[o].h);
       }
       const date = ops.find(op => op.type === 'glyphs');
       expect(date.y).toBeLessThanOrEqual(H - SAFE_INSET + 1e-6);
@@ -111,10 +122,68 @@ describe('layoutCaption', () => {
     }
   });
 
-  it('shrinks long names to fit instead of clipping', () => {
-    const { fit } = lay('C', 'portrait', 'אלכסנדרה-מרגריטה & יהונתן-אברהם');
-    expect(fit).toBeLessThan(1);
+  it('shrinks names on one line no further than the template minimum', () => {
     expect(lay('A', 'portrait', 'שרה & דניאל').fit).toBe(1);
+    const medium = lay('C', 'portrait', 'אלכסנדרה & יהונתן');
+    expect(medium.lines).toBe(1);
+    expect(medium.fit).toBeLessThan(1);
+    for (const id of TEMPLATE_IDS) for (const o of ['portrait', 'landscape']) for (const name of NAMES) {
+      const r = lay(id, o, name);
+      if (r.lines === 1) expect(r.fit).toBeGreaterThanOrEqual(minScale(id, o, name) - 1e-9);
+    }
+  });
+
+  it('wraps longer names onto two lines with the separator leading the second name', () => {
+    const en = lay('A', 'portrait', XLONG_EN);
+    expect(en.lines).toBe(2);
+    const [first, second] = textOps(en.ops);
+    const heart = en.ops.find(o => o.icon === 'heart');
+    expect([first.text, second.text]).toEqual(['Alexandra-Margaret', 'Jonathan-Elliot']);
+    expect(second.y).toBeGreaterThan(first.y);
+    expect(heart.y).toBeGreaterThan(first.y);                 // on the second line
+    expect(heart.y + heart.h).toBeLessThanOrEqual(second.y + 1e-6);
+    expect(heart.x).toBeLessThan(second.x);                   // Latin: before the name
+    expect(first.size).toBeGreaterThanOrEqual(TEMPLATES.A.names.minSize[0]);
+
+    const he = lay('A', 'portrait', XLONG_HE.replace('&', ' & ').replace('מרגריטה', 'מרגריטה-שושנה'));
+    expect(he.lines).toBe(2);
+    const [heFirst, heSecond] = textOps(he.ops);
+    const heHeart = he.ops.find(o => o.icon === 'heart');
+    expect(heFirst.text).toBe('אלכסנדרה-מרגריטה-שושנה');
+    expect(heHeart.x).toBeGreaterThan(heSecond.x);            // Hebrew: reads first, on the right
+  });
+
+  it('keeps the "&" with the second name for joined templates', () => {
+    const g = lay('G', 'portrait', XLONG_HE);
+    expect(g.lines).toBe(2);
+    expect(textOps(g.ops).map(o => o.text)).toEqual(['אלכסנדרה-מרגריטה', '& יהונתן-אליעזר']);
+    const b = lay('B', 'portrait', XLONG_EN);
+    expect(b.lines).toBe(2);
+    expect(textOps(b.ops).map(o => o.text)).toEqual(['Alexandra-Margaret', '&', 'Jonathan-Elliot']);
+  });
+
+  it('moves D\'s rings beside the names when they wrap in portrait', () => {
+    const { ops, lines } = lay('D', 'portrait', XLONG_EN);
+    expect(lines).toBe(2);
+    const rings = ops.find(o => o.icon === 'rings');
+    const names = textOps(ops);
+    expect(rings.x + rings.w).toBeLessThanOrEqual(Math.min(...names.map(o => extent(o)[0])));
+    expect(rings.y).toBeGreaterThan(names[0].y - 30);         // not stacked above the block
+  });
+
+  it('breaks a long name without "&" at the most balanced space', () => {
+    const r = lay('C', 'portrait', 'בר המצווה של יונתן-אליעזר בן-דוד');
+    expect(r.lines).toBe(2);
+    expect(textOps(r.ops).map(o => o.text)).toEqual(['בר המצווה של', 'יונתן-אליעזר בן-דוד']);
+  });
+
+  it('shrinks an unbreakable name on one line instead of clipping it', () => {
+    const r = lay('C', 'portrait', 'אלכסנדרהמרגריטהיהונתןאליעזר');
+    expect(r.lines).toBe(1);
+    expect(r.fit).toBeLessThan(minScale('C', 'portrait', 'א'));
+    const [l, rr] = extent(textOps(r.ops)[0]);
+    expect(l).toBeGreaterThanOrEqual(SAFE_INSET - 1e-6);
+    expect(rr).toBeLessThanOrEqual(300 - SAFE_INSET + 1e-6);
   });
 
   it('reads Hebrew names right to left and Latin names left to right', () => {

@@ -2,6 +2,8 @@
  * templates.js — the polaroid magnet templates, as data.
  *
  * Sizes are in design units (see printSpec.js) as [portrait, landscape].
+ * names.minSize (~70% of the size) is the smallest the names shrink to on one
+ * line; longer names wrap onto two lines (see layout.js).
  * Colours here are printed-design colours, outside the UI token system.
  *
  * Name layouts:
@@ -25,7 +27,7 @@ export const TEMPLATES = {
     id: 'A',
     label: 'רך',
     names: {
-      layout: 'split', font: FONTS.bellefair, size: [31, 27], color: '#3B3936',
+      layout: 'split', font: FONTS.bellefair, size: [31, 27], minSize: [21.5, 19], color: '#3B3936',
       separator: { kind: 'icon', icon: 'heart', size: [12, 11], gap: [10, 9], color: { option: 'heart' } },
     },
     date: { font: FONTS.heebo300, size: [11, 10.5], color: '#8A857D', tracking: 0.2, gap: [4, 3] },
@@ -43,7 +45,7 @@ export const TEMPLATES = {
     id: 'B',
     label: 'קלאסי',
     names: {
-      layout: 'split', font: FONTS.bonaNova, size: [25, 22], color: '#2F2C28',
+      layout: 'split', font: FONTS.bonaNova, size: [25, 22], minSize: [17.5, 15.5], color: '#2F2C28',
       separator: { kind: 'glyph', text: '&', font: FONTS.greatVibes, size: [38, 33], gap: [8, 7], color: { option: 'amp' } },
     },
     date: {
@@ -59,7 +61,7 @@ export const TEMPLATES = {
     id: 'C',
     label: 'לב אדום',
     names: {
-      layout: 'split', font: FONTS.karantina, size: [42, 37], color: '#242424',
+      layout: 'split', font: FONTS.karantina, size: [42, 37], minSize: [29.5, 26], color: '#242424',
       separator: { kind: 'icon', icon: 'heart', size: [15, 13], gap: [10, 9], color: '#D0443C' },
     },
     date: { font: FONTS.heebo300, size: [11, 10.5], color: '#7A7A7A', tracking: 0.3, gap: [4, 3] },
@@ -69,7 +71,7 @@ export const TEMPLATES = {
   D: {
     id: 'D',
     label: 'טבעות',
-    names: { layout: 'joined', font: FONTS.bonaNova, size: [24, 22], color: '#2F2C28' },
+    names: { layout: 'joined', font: FONTS.bonaNova, size: [24, 22], minSize: [17, 15.5], color: '#2F2C28' },
     // Portrait: icon above the names. Landscape: icon beside the names+date block.
     icon: { icon: 'rings', w: 34, h: 22, color: { option: 'icon' }, gapAbove: [6, 5], gapBeside: 14 },
     date: { font: FONTS.heebo300, size: [10.5, 10], color: '#8C857A', tracking: 0.24, gap: [4, 3] },
@@ -85,7 +87,7 @@ export const TEMPLATES = {
     id: 'F',
     label: 'כתב יד',
     names: {
-      layout: 'split', font: FONTS.gveretLevin, size: [30, 27], color: '#2E2E2E',
+      layout: 'split', font: FONTS.gveretLevin, size: [30, 27], minSize: [21, 19], color: '#2E2E2E',
       separator: { kind: 'icon', icon: 'heart', size: [13, 12], gap: [9, 8], color: '#D0443C' },
     },
     date: { font: FONTS.heebo300, size: [11.5, 11], color: '#777777', tracking: 0.12, gap: [4, 3] },
@@ -98,8 +100,8 @@ export const TEMPLATES = {
     // Latin names in Great Vibes, Hebrew names in Gveret Levin.
     names: {
       layout: 'joined', color: '#2B2926',
-      font: FONTS.greatVibes, size: [40, 35],
-      hebrew: { font: FONTS.gveretLevin, size: [30, 27] },
+      font: FONTS.greatVibes, size: [40, 35], minSize: [28, 24.5],
+      hebrew: { font: FONTS.gveretLevin, size: [30, 27], minSize: [21, 19] },
     },
     date: { font: FONTS.heebo300, size: [10.5, 10], color: '#8C857A', tracking: 0.28, gap: [4, 3], separator: ' · ' },
     options: {},
