@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Loader2, RefreshCw, CheckCheck, Search, X, Keyboard } from 'lucide-react';
-import memoriaService from '@/components/memoriaService';
 import { usePrintQueue } from '@/hooks/usePrintQueue';
-import { printJob } from '@/lib/magnetPrint';
+import { printAndAdvance, setJobStatus } from '@/lib/printStation';
 import ProJobCard from './ProJobCard';
 import CropEditor from './CropEditor';
 
@@ -26,23 +25,19 @@ export default function MagnetProStation({ event }) {
   const [isBulkMarking, setIsBulkMarking] = useState(false);
 
   // ── Keyboard fast-print ─────────────────────────────────────────────────────
+  // Failures leave the status unchanged; printStation toasts the operator.
   const advance = useCallback(async (job) => {
     if (!job) return;
-    try {
-      if (job.status === 'pending') {
-        try { await printJob({ job, event, copies: job.copies ?? 1 }); }
-        catch (e) { if (e.message === 'POPUP_BLOCKED') return; }
-        updateJob(await memoriaService.printJobs.updateStatus(job.id, 'printing'));
-      } else if (job.status === 'printing') {
-        updateJob(await memoriaService.printJobs.updateStatus(job.id, 'ready'));
-      }
-    } catch { /* non-fatal */ }
+    const updated = job.status === 'pending'
+      ? await printAndAdvance({ job, event, copies: job.copies ?? 1 })
+      : job.status === 'printing' ? await setJobStatus(job, 'ready') : null;
+    if (updated) updateJob(updated);
   }, [event, updateJob]);
 
   const reject = useCallback(async (job) => {
     if (!job) return;
-    try { updateJob(await memoriaService.printJobs.updateStatus(job.id, 'rejected')); }
-    catch { /* non-fatal */ }
+    const updated = await setJobStatus(job, 'rejected');
+    if (updated) updateJob(updated);
   }, [updateJob]);
 
   // Latest nav data in a ref so the keydown listener stays mounted once.

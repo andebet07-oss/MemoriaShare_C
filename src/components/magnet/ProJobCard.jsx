@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Printer, CheckCircle2, X, Loader2, Minus, Plus, Users, Crop, Refrigerator } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
-import { printJob } from '@/lib/magnetPrint';
+import { printAndAdvance, setJobStatus, stationError } from '@/lib/printStation';
 import { HAS_REAL_FACE_ENGINE } from '@/hooks/useFaceCrop';
 
 const STATUS_CONFIG = {
@@ -33,7 +33,6 @@ const clampCopies = (n) => Math.max(1, Math.min(20, Math.round(n) || 1));
 export default function ProJobCard({ job, event, isNew = false, isSelected = false, onUpdate, onEditCrop }) {
   const [isActing, setIsActing] = useState(false);
   const [isReprinting, setIsReprinting] = useState(false);
-  const [popupError, setPopupError] = useState(false);
   const [backup, setBackup] = useState(false);
 
   const cfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.pending;
@@ -44,41 +43,33 @@ export default function ProJobCard({ job, event, isNew = false, isSelected = fal
   const canCrop = !!job.raw_photo_url;
   const isSettled = job.status === 'ready' || job.status === 'rejected';
 
-  const persist = async (patch) => {
+  const changeCopies = async (delta) => {
     try {
-      const updated = await memoriaService.printJobs.update(job.id, patch);
-      onUpdate?.(updated);
-    } catch { /* non-fatal — realtime will reconcile */ }
+      onUpdate?.(await memoriaService.printJobs.update(job.id, { copies: clampCopies(copies + delta) }));
+    } catch (err) {
+      stationError('copiesFailed', err, { jobId: job.id });
+    }
   };
 
-  const changeCopies = (delta) => persist({ copies: clampCopies(copies + delta) });
-
-  // Print (optionally advancing status). Prints effectiveCopies physical magnets.
-  const doPrint = async ({ advanceTo } = {}) => {
-    const setBusy = advanceTo ? setIsActing : setIsReprinting;
+  // Print effectiveCopies magnets; `advance` moves pending → printing. Failures
+  // leave the status unchanged (printStation toasts the operator).
+  const doPrint = async ({ advance = false } = {}) => {
+    const setBusy = advance ? setIsActing : setIsReprinting;
     setBusy(true);
-    setPopupError(false);
     try {
-      await printJob({ job, event, copies: effectiveCopies });
-    } catch (e) {
-      if (e.message === 'POPUP_BLOCKED') { setPopupError(true); setBusy(false); return; }
-    }
-    try {
-      if (advanceTo) {
-        const updated = await memoriaService.printJobs.updateStatus(job.id, advanceTo);
-        onUpdate?.(updated);
-      }
-    } catch { /* non-fatal */ } finally {
+      const updated = await printAndAdvance({ job, event, copies: effectiveCopies, advance });
+      if (updated) onUpdate?.(updated);
+    } finally {
       setBusy(false);
     }
   };
 
-  const advance = async (status) => {
+  const changeStatus = async (status) => {
     setIsActing(true);
     try {
-      const updated = await memoriaService.printJobs.updateStatus(job.id, status);
-      onUpdate?.(updated);
-    } catch { /* non-fatal */ } finally {
+      const updated = await setJobStatus(job, status);
+      if (updated) onUpdate?.(updated);
+    } finally {
       setIsActing(false);
     }
   };
@@ -120,7 +111,6 @@ export default function ProJobCard({ job, event, isNew = false, isSelected = fal
         <p className="text-white/35 text-[10px] mt-0.5">
           {timeAgo(job.created_at)} · {new Date(job.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
         </p>
-        {popupError && <p className="text-orange-400 text-[10px] mt-1">אפשרו חלונות קופצים להדפסה</p>}
       </div>
 
       {/* Copies stepper + backup toggle (editable while not settled) */}
@@ -177,7 +167,7 @@ export default function ProJobCard({ job, event, isNew = false, isSelected = fal
       {!isSettled && (
         <div className="px-3 pb-3 flex gap-2">
           {job.status === 'pending' && (
-            <button onClick={() => doPrint({ advanceTo: 'printing' })} disabled={isActing}
+            <button onClick={() => doPrint({ advance: true })} disabled={isActing}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors">
               {isActing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Printer className="w-3 h-3" />}
               הדפס {effectiveCopies > 1 ? `×${effectiveCopies}` : ''}
@@ -185,7 +175,7 @@ export default function ProJobCard({ job, event, isNew = false, isSelected = fal
           )}
           {job.status === 'printing' && (
             <>
-              <button onClick={() => advance('ready')} disabled={isActing}
+              <button onClick={() => changeStatus('ready')} disabled={isActing}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors">
                 {isActing ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
                 מוכן
@@ -196,7 +186,7 @@ export default function ProJobCard({ job, event, isNew = false, isSelected = fal
               </button>
             </>
           )}
-          <button onClick={() => advance('rejected')} disabled={isActing}
+          <button onClick={() => changeStatus('rejected')} disabled={isActing}
             className="w-8 h-8 flex items-center justify-center bg-white/8 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-white/40 hover:text-red-400 rounded-xl transition-colors shrink-0">
             <X className="w-3.5 h-3.5" />
           </button>
