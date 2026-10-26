@@ -5,21 +5,24 @@ Decisions already taken are marked ✅. Audit behind it: `docs/design-audit.md`.
 
 ## Colour: semantic tokens only
 
-| Token | Proposed value | Use |
-|---|---|---|
-| `background` | `#121214` | page (optionally `bg-glow`, one soft indigo radial) |
-| `card` | `#1a1a1e` | cards, panels, list rows, sheets |
-| `secondary` | `#232328` | inputs, raised controls, neutral chips |
-| `border` | `#2c2c32` | every hairline |
-| `foreground` / `muted-foreground` | `#fcfcfe` / `#9b9ba4` | text / secondary text, captions (6.8:1) |
-| `primary` | ✅ `#5f69d3` | fills: primary button, selected chip, tab badge (white text 4.6:1) |
-| `brand` | ✅ `#7c86e1` | accents: links, section labels, active tab, focus ring, icon tints |
-| `destructive` | `#ef4444` | errors, destructive actions |
-| `status-pending` / `-printing` / `-ready` / `-rejected` | amber `#f5b544` / sky `#60a5fa` / emerald `#34d399` / red `#f87171` | print-job status, via `<StatusBadge>` only |
+Surfaces keep the existing approved tokens; this PR adds `brand` and the status tokens and moves `primary` to the fill colour.
 
-- **Status colours:** defined once, in `src/components/system/statusStyles.js`. Lead stages map onto them: new → brand, contacted → pending, converted → ready, closed → muted.
+| Token | Value | Use |
+|---|---|---|
+| `background` | `#1f1f1f` (unchanged) | page shells (admin, Print Station, guest, camera); `bg-glow` = one soft indigo radial |
+| `card` | `#262626` (unchanged) | cards, panels, list rows, sheets |
+| `secondary` | `#2b2b2b` (unchanged) | inputs, raised controls, neutral chips |
+| `border` | `#383838` (unchanged) | every hairline |
+| `foreground` / `muted-foreground` | `#fcfcfe` / `#8b8e92` (unchanged) | text / secondary text, captions |
+| `primary` | ✅ `#5f69d3` | fills: primary button, selected chip, tab badge, shutter (white text 4.6:1) |
+| `brand` | ✅ `#7c86e1` | accents: links, section labels, active tab, focus ring, icon tints, selected outline chips |
+| `destructive` | unchanged | errors, destructive actions |
+| `status-pending` / `-printing` / `-ready` / `-rejected` | amber `#f5b544` / sky `#60a5fa` / emerald `#34d399` / red `#f87171` | print-job status, via `<StatusBadge>` / `TONE` only |
+
+- **Status colours:** defined once, in `src/components/system/statusStyles.js` (`PRINT_STATUS`, `LEAD_STATUS`, `TONE`). Lead stages map onto them: new → brand, contacted → pending, converted → ready, closed → muted. Frame lifecycle (moderation) maps the same way: approved → ready, in review → pending, archived → rejected, draft → muted.
 - **No hard-coded colours** in components: no hex, `rgb()`, `violet-*`, `gray-*`/`zinc-*`, `white/…` or `black/…`.
-  - Exceptions: scrims and text over photos or the camera feed may use `foreground/…` and `background/…`; printed designs are out of scope.
+  - Exceptions: scrims and text over photos or the camera feed may use `foreground/…` and `background/…`; printed designs are out of scope (the polaroid / frame previews in CreateMagnetEvent, MagnetCamera and MagnetReview, sticker fonts and colours, frame text colour swatches).
+  - Inline styles that need a colour use the token through `hsl(var(--token))` (e.g. the frame editors), never a literal.
 
 ## Typography: Heebo for all UI ✅
 - Numbers use Heebo with `tabular-nums` ✅.
