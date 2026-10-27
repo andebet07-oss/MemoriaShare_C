@@ -31,17 +31,18 @@ export default function HeroSection({ onCreateEvent }) {
             {' '}בלי אפליקציה, עם עמדת הדפסה וצוות שלנו.
           </p>
 
-          {/* The guest's flow, right to left: the event page, the camera, the magnet */}
+          {/* The guest's flow, right to left: the event page, the camera, the magnet.
+              Phones: the side phones tuck in behind the centre one, so the group fits the screen. */}
           <div
-            className="relative z-20 mb-16 flex min-h-[320px] items-end justify-center gap-3 delay-300 duration-700 animate-in fade-in fill-mode-both md:gap-8"
+            className="relative z-20 mb-16 flex min-h-[320px] items-end justify-center delay-300 duration-700 animate-in fade-in fill-mode-both md:gap-8"
           >
-            <PhoneFrame label="דף האירוע של האורח" className="z-10 -rotate-6 translate-y-5 opacity-80">
+            <PhoneFrame label="דף האירוע של האורח" className="z-10 -me-[min(7vw,30px)] -rotate-6 translate-y-5 opacity-80 md:me-0">
               <LandingScreen />
             </PhoneFrame>
             <PhoneFrame center label="המצלמה עם מסגרת המגנט" className="z-30 -translate-y-3">
               <CameraScreen />
             </PhoneFrame>
-            <PhoneFrame label="המגנט המוכן" className="z-10 rotate-6 translate-y-5 opacity-80">
+            <PhoneFrame label="המגנט המוכן" className="z-10 -ms-[min(7vw,30px)] rotate-6 translate-y-5 opacity-80 md:ms-0">
               <MagnetScreen />
             </PhoneFrame>
           </div>
