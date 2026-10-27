@@ -71,6 +71,15 @@ module.exports = {
           ready:    'hsl(var(--status-ready))',
           rejected: 'hsl(var(--status-rejected))',
         },
+        guest: {
+          bg:       'hsl(var(--guest-bg))',
+          raised:   'hsl(var(--guest-raised))',
+          ink:      'hsl(var(--guest-ink))',
+          line:     'hsl(var(--guest-line) / 0.08)',
+          printing: 'hsl(var(--guest-printing))',
+          ready:    'hsl(var(--guest-ready))',
+          rejected: 'hsl(var(--guest-rejected))',
+        },
 
         // ── POV brand indigo — periwinkle, cool, editorial-tech ──
         // Anchor: indigo-500 = #7c86e1 (POV accent)
@@ -150,6 +159,12 @@ module.exports = {
         'vignette':          'radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.72) 100%)',
         // Loading shimmer — white-alpha sweep
         'shimmer':           'linear-gradient(90deg, transparent 0%, rgba(252,252,254,0.04) 50%, transparent 100%)',
+        // Guest hero photo fades (eased stops, no hard edge), sized in px so the
+        // text they carry always sits on the same opacity, whatever its height.
+        // Up: a 96px lead over the photo, then the title block melting into the sheet.
+        // Down: a veil from the top edge to just under the wordmark.
+        'guest-fade-up':   'linear-gradient(to bottom, hsl(var(--guest-bg) / 0) 0, hsl(var(--guest-bg) / 0.2) 28px, hsl(var(--guest-bg) / 0.52) 56px, hsl(var(--guest-bg) / 0.78) 80px, hsl(var(--guest-bg) / 0.88) 96px, hsl(var(--guest-bg) / 0.94) 150px, hsl(var(--guest-bg)) 100%)',
+        'guest-fade-down': 'linear-gradient(to bottom, hsl(var(--guest-bg) / 0.74) 0, hsl(var(--guest-bg) / 0.7) calc(env(safe-area-inset-top, 0px) + 36px), hsl(var(--guest-bg) / 0.36) calc(env(safe-area-inset-top, 0px) + 68px), hsl(var(--guest-bg) / 0.1) calc(env(safe-area-inset-top, 0px) + 96px), hsl(var(--guest-bg) / 0) 100%)',
       },
 
       // ─── Animations ───────────────────────────────────────────────

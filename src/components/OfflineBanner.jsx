@@ -1,5 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { WifiOff } from 'lucide-react';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+
+// Screens that explain the offline state inline (the guest landing) hide the
+// global banner while they are on screen, so the guest never sees it twice.
+let inlineCount = 0;
+const listeners = new Set();
+const notify = () => listeners.forEach((l) => l());
+const subscribe = (l) => { listeners.add(l); return () => listeners.delete(l); };
+const isSuppressed = () => inlineCount > 0;
+
+/** Hide the global banner while `active` (the caller shows its own offline notice). */
+export function useInlineOfflineNotice(active) {
+  useEffect(() => {
+    if (!active) return undefined;
+    inlineCount += 1;
+    notify();
+    return () => { inlineCount -= 1; notify(); };
+  }, [active]);
+}
 
 /**
  * Global connectivity banner. Slides in from the top when the browser goes
@@ -7,22 +26,10 @@ import { WifiOff } from 'lucide-react';
  * things stopped responding, instead of facing a silently stuck UI.
  */
 export default function OfflineBanner() {
-  const [offline, setOffline] = useState(() =>
-    typeof navigator !== 'undefined' && navigator.onLine === false
-  );
+  const online = useOnlineStatus();
+  const suppressed = useSyncExternalStore(subscribe, isSuppressed, isSuppressed);
 
-  useEffect(() => {
-    const goOffline = () => setOffline(true);
-    const goOnline = () => setOffline(false);
-    window.addEventListener('offline', goOffline);
-    window.addEventListener('online', goOnline);
-    return () => {
-      window.removeEventListener('offline', goOffline);
-      window.removeEventListener('online', goOnline);
-    };
-  }, []);
-
-  if (!offline) return null;
+  if (online || suppressed) return null;
 
   return (
     <div
