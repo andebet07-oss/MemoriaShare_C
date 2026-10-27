@@ -24,7 +24,8 @@ export default function PhoneFrame({ center = false, className, label, children 
       <div
         className={cn(
           'relative rounded-[2.8rem] border border-foreground/20 bg-cool-950 shadow-card-dark',
-          center ? 'h-[348px] w-44 p-2.5 md:h-[512px] md:w-64' : 'h-[288px] w-36 p-2 md:h-[416px] md:w-52',
+          // One size at every width: on phones, HeroPhones scales the whole group.
+          center ? 'h-[512px] w-64 p-2.5' : 'h-[416px] w-52 p-2',
         )}
       >
         <div ref={ref} className="relative h-full w-full overflow-hidden rounded-[2.3rem] border border-foreground/10 bg-cool-950">

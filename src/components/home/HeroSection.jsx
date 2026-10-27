@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
-import PhoneFrame from './PhoneFrame';
-import { LandingScreen, CameraScreen, MagnetScreen } from './HeroScreens';
+import HeroPhones from './HeroPhones';
 
 export default function HeroSection({ onCreateEvent }) {
   return (
@@ -31,20 +30,7 @@ export default function HeroSection({ onCreateEvent }) {
             {' '}בלי אפליקציה, עם עמדת הדפסה וצוות שלנו.
           </p>
 
-          {/* The guest's flow, right to left: the event page, the camera, the magnet */}
-          <div
-            className="relative z-20 mb-16 flex min-h-[320px] items-end justify-center gap-3 delay-300 duration-700 animate-in fade-in fill-mode-both md:gap-8"
-          >
-            <PhoneFrame label="דף האירוע של האורח" className="z-10 -rotate-6 translate-y-5 opacity-80">
-              <LandingScreen />
-            </PhoneFrame>
-            <PhoneFrame center label="המצלמה עם מסגרת המגנט" className="z-30 -translate-y-3">
-              <CameraScreen />
-            </PhoneFrame>
-            <PhoneFrame label="המגנט המוכן" className="z-10 rotate-6 translate-y-5 opacity-80">
-              <MagnetScreen />
-            </PhoneFrame>
-          </div>
+          <HeroPhones />
 
           <div className="flex justify-center delay-500 duration-700 animate-in fade-in fill-mode-both">
             <Button size="lg" className="px-12" onClick={onCreateEvent}>שריינו תאריך</Button>
