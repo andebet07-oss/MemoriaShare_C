@@ -1,14 +1,6 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-/**
- * The one-screen guest layout: the event photo edge to edge on top (~60%),
- * then the solid sheet with the data and actions. The root is fixed to the
- * visible viewport, so nothing ever scrolls vertically.
- *
- * `title` sits over the bottom of the photo (it brings its own fade into the
- * sheet). `cover` null → a plain raised surface.
- */
 /** "MEMORIA", centred under the safe area (Latin, so it may be tracked). */
 export function Wordmark() {
   return (
@@ -21,6 +13,14 @@ export function Wordmark() {
   );
 }
 
+/**
+ * The one-screen guest layout: the event photo edge to edge on top (~60%),
+ * then the solid sheet with the data and actions. The root is fixed to the
+ * visible viewport, so nothing ever scrolls vertically.
+ *
+ * `title` sits over the bottom of the photo (it brings its own fade into the
+ * sheet). `cover` null → a plain raised surface.
+ */
 export default function GuestShell({ cover, title, children }) {
   const [shown, setShown] = useState(false);
 
