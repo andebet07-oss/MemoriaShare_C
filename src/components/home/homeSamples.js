@@ -1,21 +1,32 @@
 /**
- * homeSamples.js — the sample event behind the hero's phone mockups. The
- * photos are the hero's original images in /public, one per phone.
+ * homeSamples.js — the sample events behind the hero's three phone mockups,
+ * one couple per phone, each shaped like an events row. Photos are in /public.
  */
 
-/** One photo per phone, by screen position. */
-export const HERO_PHOTOS = {
-  left: '/Left_PhoneMoucup_hero.jpeg',     // dance floor → the finished magnet
-  center: '/Center_PhoneMoucup_hero.jpeg', // the couple → the camera
-  right: '/right_PhoneMoucup_hero.jpeg',   // beach → the guest landing (event cover)
-};
-
-/** The event behind the hero mockups, shaped like an events row. */
-export const SAMPLE_EVENT = {
-  name: 'שרה & דניאל',
-  date: '2026-06-18',
+/** Left: a finished magnet of the dance floor. */
+export const MAGNET_EVENT = {
+  name: 'עדן & רועי',
+  date: '2026-08-12',
   template_id: 'A',
   template_options: { heart: 'red' },
-  cover_image: HERO_PHOTOS.right,
+  photo: '/Left_PhoneMoucup_hero.jpeg',
+};
+
+/** Centre: the camera, the couple seen through the frame. */
+export const CAMERA_EVENT = {
+  name: 'נטלי & יואב',
+  date: '2026-09-03',
+  template_id: 'C',
+  template_options: {},
+  photo: '/Center_PhoneMoucup_hero.jpeg',
+};
+
+/** Right: the guest landing, with the couple as the event cover. */
+export const LANDING_EVENT = {
+  name: 'מאיה & איתי',
+  date: '2026-10-21',
+  template_id: 'A',
+  template_options: {},
+  cover_image: '/right_PhoneMoucup_hero.jpeg',
   print_quota_per_device: 5,
 };
