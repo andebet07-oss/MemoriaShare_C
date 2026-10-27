@@ -81,7 +81,7 @@ After completing a major feature or day's work:
 
 One product, one look: **dark only, indigo only, Heebo for all UI.** Everything in this section is approved.
 The concrete type scale, token values, layout widths and shared components are still a draft (`docs/design-spec-draft.md`). They become rules here once the admin + guest redesign PR is approved.
-Audit: `docs/design-audit.md`. Out of scope: fonts and colours inside printed magnet designs, frames and stickers.
+Audit: `docs/design-audit.md`. Out of scope: fonts and colours inside printed magnet designs (the polaroid templates in `src/lib/polaroid/`).
 
 ### Core Palette
 
@@ -373,9 +373,11 @@ src/
     resolvePhotoDeletion.js        ← Admin approve/deny deletion
   components/
     magnet/
-      MagnetCamera.jsx             ← Full-screen camera (camera mode → delegates to MagnetReview)
-      MagnetReview.jsx             ← Review screen: draggable stickers + canvas composite + send to print
-      stickerPacks.js              ← Sticker packs auto-selected by event name (wedding/bar-mitzvah/birthday/general)
+      MagnetCamera.jsx             ← Full-screen camera: live feed under the template overlay (→ MagnetReview)
+      MagnetReview.jsx             ← Review screen: the finished composite + retake + send to print
+      templates/TemplatePicker.jsx ← Template + options picker (CreateMagnetEvent, event dashboard)
+  lib/
+    polaroid/                      ← Magnet templates: printSpec, templates A–G, layout, fonts, renderPolaroid
   pages/
     Home.jsx                       ← Landing page
     CreateEvent.jsx                ← Event creation wizard

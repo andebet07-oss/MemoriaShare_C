@@ -13,7 +13,7 @@
 | Admin sign-in is the Google OAuth button in `src/components/home/Header.jsx` | `RequireAdmin` sends signed-out users to `/`, so `/admin` has no login of its own | Keep the header login and the "ניהול" link; drop only "האירועים שלי" |
 | `photos` table + `photos` bucket + `api/resize-photo.ts` | `print_jobs.photo_id` references `photos`; print cards read `photos.file_urls.thumbnail` | Keep. Only the Share-only columns/policies go (Phase 2) |
 | **No admin SELECT policy on `photos`**. Operators read photos only through `photos_select_public` | Tightening public read without adding an admin policy breaks PrintStation + MagnetEventDashboard | Phase 2 adds `photos_select_admin` *before* narrowing public read |
-| `memoriaService` `events` / `photos` / `printJobs` / `storage` / `frameMeta` / `leads` | Shared service layer | Keep; remove only the Share-only methods listed below |
+| `memoriaService` `events` / `photos` / `printJobs` / `storage` / `leads` | Shared service layer | Keep; remove only the Share-only methods listed below |
 | `supabase/functions/payplus-webhook` | Updates `leads.is_paid`, which is the Magnet sales funnel | Keep |
 
 ---
@@ -42,10 +42,10 @@
 - **Branding strings:** `LOGO.png` alt text, `public/manifest.json`, `index.html` title, `package.json` name
 
 ### Optional, separate commit: already-dead code (unreachable today, not Share-specific)
-`PrintQueue`, `PrintJobCard` (replaced by `MagnetProStation`), `CreateMagnetEventForm`, `functions/processImage`, `lib/frameRenderer`, `lib/logger`, `hooks/useIsAdmin`, `utils/photoUtils` (+ test), `ui/IphoneMockup`, `ui/PremiumButton`, `ui/TileGroup`, `ui/EmptyState`, `src/pages.config.js`
+`functions/processImage`, `lib/logger`, `hooks/useIsAdmin`, `utils/photoUtils` (+ test), `ui/IphoneMockup`, `ui/PremiumButton`, `ui/TileGroup`, `ui/EmptyState`, `src/pages.config.js`
 
 ### Verify
-`npm run lint`, `npm run build`, `npm test`; walk-through of `/`, `/magnet/lead`, `/magnet/:code` (camera → review → print status), `/event/:code` redirect, `/admin` (overview, magnet events, create, dashboard, print station, frames, leads, users).
+`npm run lint`, `npm run build`, `npm test`; walk-through of `/`, `/magnet/lead`, `/magnet/:code` (camera → review → print status), `/event/:code` redirect, `/admin` (overview, magnet events, create, dashboard, print station, leads, users).
 
 ---
 
@@ -79,7 +79,7 @@ Every statement gets verified against the **live** schema first (`CLEAN_RESET_SC
 **Shape**
 - **Split storage by audience.**
   - A private bucket for guest captures (composites, raw photos, derived thumbnails).
-  - A public bucket for assets every guest must load: covers, `overlays/`, frame library PNGs, lead covers if they stay public.
+  - A public bucket for assets every guest must load: covers, lead covers if they stay public. (Overlay frames are gone: templates are drawn in code.)
 - **Store paths, not URLs.** Today `photos.file_url`, `photos.file_urls` and `print_jobs.raw_photo_url` hold public URLs. Keep the storage path and mint signed URLs on read, through `memoriaService`, batched with `createSignedUrls`.
 - **Read access** (storage SELECT on the private bucket): the uploader (owner) and admins.
 - **Expiry:** signed URLs need a lifetime long enough for a print session (e.g. 1 h), refreshed as needed.

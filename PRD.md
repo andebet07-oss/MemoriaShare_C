@@ -349,7 +349,7 @@ MemoriaMagnet הוא שירות מנוהל (לא self-service): אדמין Memor
 | **פרסום הקישור** | בוקר האירוע | ✅ יכול להיות בזמן אמת (בהחלטת המארח) |
 | **כמות הדפסות** | ללא הגבלה | קווטה מוגדרת מראש (מגמישות לפי חבילה) |
 | **קובץ דיגיטלי** | יום למחרת האירוע | גלריה חיה בזמן אמת (אם המארח מאפשר MemoriaShare) |
-| **מדבקות על תמונה** | ✅ (feature בולט) | ✅ (מיושם) |
+| **מדבקות על תמונה** | ✅ (feature בולט) | ❌ הוסר (2026-10-26) — במקומו עיצובי פולרואיד קבועים לאירוע |
 | **עיצוב ממשק** | בסיסי | ✅ יתרון מוצהר — איכות גבוהה יותר |
 
 **הבידול העיקרי של Memoria:**
@@ -375,17 +375,17 @@ MemoriaMagnet הוא שירות מנוהל (לא self-service): אדמין Memor
 MagnetGuestPage (landing — הנחיות + כפתור פתיחת מצלמה)
      ↓
 MagnetCamera (full-screen camera mode)
-  [שלוש אפשרויות: כפתור flash | שאטר w-20 h-20 | היפוך מצלמה]
-  [V vintage mode (אופציונלי)]
+  [עינית WYSIWYG: הווידאו בחלון התמונה של תבנית האירוע, מתחת למסגרת]
+  [לאורך / לרוחב: לפי סיבוב הטלפון + כפתור החלפה]
+  [flash | vintage | שאטר | היפוך מצלמה]
      ↓
-handleCapture → canvas.toDataURL → setMode('review')
+handleCapture → פריים מצלמה מלא (raw) → setMode('review')
      ↓
 MagnetReview (full-screen review mode)
-  [תמונה מלאה + overlay של שם האירוע + תאריך]
-  [מדבקות גרירה (draggable emoji + text stickers)]
-  [Trash2 | "שלח להדפסה" | Smile sticker picker]
+  [המגנט המוגמר — composite ברזולוציית הדפסה]
+  [Trash2 | "שלח להדפסה"]
      ↓
-compositeAndSubmit: canvas composite → compressImage → upload → printJob
+submit: upload composite + raw → photos → print_jobs
      ↓
 onPrintJobCreated → remainingPrints-- → הודעת אישור
 ```
@@ -397,19 +397,22 @@ onPrintJobCreated → remainingPrints-- → הודעת אישור
 | `src/pages/MagnetLead.jsx` | Wizard לידים 4 שלבים (שם אירוע, תאריך, כמות אורחים, פרטי קשר) — שלב 4 מציג summary card |
 | `src/pages/MagnetGuestPage.jsx` | דף הנחיתה לאורח (QR → landing) |
 | `src/components/magnet/MagnetCamera.jsx` | מצלמה full-screen: camera mode + review delegation |
-| `src/components/magnet/MagnetReview.jsx` | מסך review: תמונה + מדבקות + שליחה להדפסה |
-| `src/components/magnet/stickerPacks.js` | חבילות מדבקות לפי סוג אירוע (חתונה/ב"מ/יום הולדת/כללי) |
+| `src/components/magnet/MagnetReview.jsx` | מסך review: המגנט המוגמר + צילום מחדש + שליחה להדפסה |
+| `src/lib/polaroid/` | מנוע התבניות: הגדרות A–G, פריסה, פונטים, renderComposite / renderOverlay |
+| `src/components/magnet/templates/TemplatePicker.jsx` | בחירת תבנית + אפשרויות (יצירת אירוע + דשבורד אירוע) |
 | `src/pages/PrintStation.jsx` | ממשק מפעיל — תור הדפסה בזמן אמת |
 | `src/pages/AdminDashboard.jsx` | CRM לידים + ניהול אירועים |
 | `src/pages/CreateMagnetEvent.jsx` | יצירת אירוע מגנט (צד אדמין) |
 
-### 8.6 מערכת המדבקות (Sticker System)
+### 8.6 תבניות המגנט (Polaroid Templates)
 
-- **stickerPacks.js:** auto-detect סוג אירוע מהשם (חתונה/ב"מ/יום הולדת/כללי)
-- **סוגי מדבקות:** `emoji` (single emoji char) | `text` (bold Hebrew/Latin עם stroke outline)
-- **גרירה:** pointer events — fractional (x,y) מ-0 עד 1 → mapped לפיקסלים של canvas בשליחה
-- **Compositing:** בעת שליחה בלבד — `drawOverlay()` (gradient + event name/date) + `drawSticker()` loop
-- **גודל:** emoji: 13% canvas width, text: 5.5% canvas width
+- **תבנית לכל אירוע:** `events.template_id` (A רך · B קלאסי · C לב אדום · D טבעות · F כתב יד · G מסולסל; ברירת מחדל A) + `events.template_options` (בחירות צבע / הצגת כתובת האתר).
+- **מנוע אחד:** `src/lib/polaroid/renderPolaroid.js` — אותה פונקציה מציירת את המסגרת מעל העינית (חלון שקוף) ואת המגנט המוגמר, כך שהעינית, מסך ה-review, עמדת ההדפסה וההדפסה זהים.
+- **הדפסה:** 3×4 אינץ' ב-300 DPI (900×1200 / 1200×900), מוגדר בערך אחד (`PRINT_SPEC`). טקסט לפחות 4 מ"מ מקו החיתוך.
+- **שמות ותאריך:** שם האירוע מתפצל על `&` לשני שמות; עברית RTL, לטינית LTR; שמות ארוכים מוקטנים להתאמה. תאריך DD.MM.YYYY.
+- **כיוון:** לפי אופן אחיזת הטלפון בצילום; המפעיל יכול לשנות בעורך החיתוך.
+- **מדבקות:** הוסרו (2026-10-26).
+- מסמך תכנון: `docs/polaroid-templates-plan.md`.
 
 ### 8.7 Quota — ניהול בזמן אמת
 

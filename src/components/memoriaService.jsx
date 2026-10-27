@@ -344,13 +344,14 @@ const memoriaService = {
     // copies/face_count/crop_config/raw_photo_url are optional — the guest submit
     // path passes only the first three ids, so the DB defaults apply (copies=1,
     // face_count=NULL). Undefined keys are stripped so we never override a default.
-    create: async ({ event_id, photo_id, guest_user_id, copies, face_count, crop_config, raw_photo_url }) => {
+    create: async ({ event_id, photo_id, guest_user_id, copies, face_count, crop_config, raw_photo_url, render_snapshot }) => {
       try {
         const row = { event_id, photo_id, guest_user_id };
         if (copies !== undefined)        row.copies = copies;
         if (face_count !== undefined)    row.face_count = face_count;
         if (crop_config !== undefined)   row.crop_config = crop_config;
         if (raw_photo_url !== undefined) row.raw_photo_url = raw_photo_url;
+        if (render_snapshot !== undefined) row.render_snapshot = render_snapshot;
         const { data, error } = await supabase
           .from('print_jobs')
           .insert(row)
@@ -496,36 +497,6 @@ const memoriaService = {
       return memoriaService.storage.upload(file, `leads/${session.user.id}`);
     },
 
-    /**
-     * Upload an overlay frame PNG for a Magnet event.
-     * Path: overlays/{eventId}/frame.png (upsert — replaces if re-uploaded)
-     */
-    uploadOverlay: async (file, eventId) => {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const path = `overlays/${eventId}/frame.png`;
-      const jwt = _getJwt();
-
-      const response = await fetch(`${supabaseUrl}/storage/v1/object/photos/${path}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${jwt}`,
-          'apikey': supabaseAnonKey,
-          'Content-Type': file.type || 'image/png',
-          'x-upsert': 'true',
-        },
-        body: file,
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Overlay upload failed (${response.status}): ${errText}`);
-      }
-
-      const publicUrl = `${supabaseUrl}/storage/v1/object/public/photos/${path}`;
-      return { file_url: publicUrl, path };
-    },
-
     uploadCoverImage: async (file, eventId) => {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -563,170 +534,6 @@ const memoriaService = {
         return data.signedUrl;
       } catch (error) {
         console.error('MemoriaService [storage.getSignedUrl]: Failed to get signed URL for', path, error);
-        throw error;
-      }
-    },
-  },
-
-  frameMeta: {
-    /** Fetch all rows — used by admin FramesLibrary. */
-    list: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('frames_meta')
-          .select('*');
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('MemoriaService [frameMeta.list]: Failed to fetch frames_meta', error);
-        throw error;
-      }
-    },
-
-    /** Update a single frame row; sets updated_at + updated_by automatically via DB trigger. */
-    update: async (frameId, updates) => {
-      try {
-        const { data, error } = await supabase
-          .from('frames_meta')
-          .update({ ...updates, updated_at: new Date().toISOString() })
-          .eq('frame_id', frameId)
-          .select()
-          .single();
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('MemoriaService [frameMeta.update]: Failed to update frame', frameId, error);
-        throw error;
-      }
-    },
-
-    /** Fetch a single row by frame_id — used for guest-path approved check. */
-    getById: async (frameId) => {
-      try {
-        const { data, error } = await supabase
-          .from('frames_meta')
-          .select('frame_id, status, image_url, hole_bbox, text_config, aspect')
-          .eq('frame_id', frameId)
-          .maybeSingle();
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('MemoriaService [frameMeta.getById]: Failed for', frameId, error);
-        throw error;
-      }
-    },
-
-    /** Upsert — used by moderation queue to promote draft frames. */
-    upsert: async (row) => {
-      try {
-        const { data, error } = await supabase
-          .from('frames_meta')
-          .upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: 'frame_id' })
-          .select()
-          .single();
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('MemoriaService [frameMeta.upsert]: Failed to upsert frame', row?.frame_id, error);
-        throw error;
-      }
-    },
-
-    /**
-     * Upload a PNG frame asset to the library bucket and insert/update the
-     * frames_meta row. Returns the public image_url.
-     *
-     * @param {File}   file      - PNG file with alpha channel
-     * @param {object} meta      - { slug, name, style, category, aspect, hole_bbox, quality_score? }
-     */
-    uploadLibraryPng: async (file, meta) => {
-      const { slug, name, style, category, aspect, hole_bbox, text_config = null, quality_score = 0 } = meta;
-      const storagePath = `overlays/library/${style}/${slug}.png`;
-
-      // Upload to storage (upsert so re-upload works)
-      const { error: uploadError } = await supabase.storage
-        .from('overlays')
-        .upload(storagePath, file, { upsert: true, contentType: 'image/png' });
-      if (uploadError) {
-        console.error('MemoriaService [frameMeta.uploadLibraryPng]: Upload failed', uploadError);
-        throw uploadError;
-      }
-
-      const { data: urlData } = supabase.storage.from('overlays').getPublicUrl(storagePath);
-      const image_url = urlData.publicUrl;
-
-      // Upsert frames_meta row
-      const { data, error: dbError } = await supabase
-        .from('frames_meta')
-        .upsert({
-          frame_id:      slug,
-          status:        'draft',
-          quality_score,
-          style:         style || 'minimal_luxury',
-          palette:       'ivory',
-          sort_weight:   0,
-          output_width_mm: 100,
-          image_url,
-          hole_bbox,
-          text_config,
-          aspect:        aspect || 'portrait',
-          category,
-          updated_at:    new Date().toISOString(),
-        }, { onConflict: 'frame_id' })
-        .select()
-        .single();
-      if (dbError) {
-        console.error('MemoriaService [frameMeta.uploadLibraryPng]: DB upsert failed', dbError);
-        throw dbError;
-      }
-      return { image_url, row: data };
-    },
-
-    /**
-     * Re-upload a (re-punched) PNG for an EXISTING frame and patch its row,
-     * preserving status (unlike uploadLibraryPng which forces 'draft').
-     * Cache-busts image_url so the new transparency shows immediately.
-     * @param {string} frameId
-     * @param {File}   file   - punched PNG
-     * @param {string} style  - storage sub-folder (defaults photo_print)
-     * @param {object} extra  - extra frames_meta fields to patch (e.g. hole_bbox, aspect, display_name)
-     */
-    updateImage: async (frameId, file, style = 'photo_print', extra = {}) => {
-      const storagePath = `overlays/library/${style}/${frameId}.png`;
-      const { error: upErr } = await supabase.storage
-        .from('overlays')
-        .upload(storagePath, file, { upsert: true, contentType: 'image/png' });
-      if (upErr) {
-        console.error('MemoriaService [frameMeta.updateImage]: Upload failed', upErr);
-        throw upErr;
-      }
-      const { data: urlData } = supabase.storage.from('overlays').getPublicUrl(storagePath);
-      const image_url = `${urlData.publicUrl}?v=${Date.now()}`;
-      const { data, error } = await supabase
-        .from('frames_meta')
-        .update({ image_url, ...extra, updated_at: new Date().toISOString() })
-        .eq('frame_id', frameId)
-        .select()
-        .single();
-      if (error) {
-        console.error('MemoriaService [frameMeta.updateImage]: DB update failed', frameId, error);
-        throw error;
-      }
-      return data;
-    },
-
-    /** Fetch all PNG-type frames (image_url IS NOT NULL) for the admin library PNG tab. */
-    listPngFrames: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('frames_meta')
-          .select('*')
-          .not('image_url', 'is', null)
-          .order('sort_weight', { ascending: false });
-        if (error) throw error;
-        return data ?? [];
-      } catch (error) {
-        console.error('MemoriaService [frameMeta.listPngFrames]: Failed', error);
         throw error;
       }
     },

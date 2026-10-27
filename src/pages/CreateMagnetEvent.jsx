@@ -1,290 +1,16 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  Loader2, ArrowLeft, Home, Check,
-  ChevronLeft, ChevronRight,
-  Upload, Copy, Monitor, X
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { Loader2, ArrowLeft, Home } from "lucide-react";
+import { useLocation, Link } from "react-router-dom";
 import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
-import { FRAME_PACKS, LABEL_H_RATIO } from "@/components/magnet/framePacks";
-import FramePngPreview from "@/components/admin/frames/FramePngPreview";
-import { formatEventDate } from "@/lib/formatEventDate";
+import { DEFAULT_TEMPLATE_ID, getTemplate, resolveOptions } from "@/lib/polaroid/templates";
+import PolaroidPreview from "@/components/magnet/templates/PolaroidPreview";
+import EventCreatedScreen from "@/components/magnet/create/EventCreatedScreen";
+import { NameStep, DateStep, QuotaStep, TemplateStep } from "@/components/magnet/create/WizardSteps";
 
-// Maps FRAME_CATEGORIES keys (underscore) to DB category values (hyphen where needed)
-const CAT_DB_KEY = { bar_mitzvah: 'bar-mitzvah' };
-
-// Polaroid-style magnet preview
-function MagnetPreview({ eventData = {}, overlayPreview = null, previewH, previewW }) {
-  const formattedDate = formatEventDate(eventData.date) || "12.06.2026";
-
-  // Polaroid ratio: 3:4 (width:height = 0.75). 37.5/50 = 0.75 ✓
-  const cardH = previewH || 'clamp(145px, 50dvh, 420px)';
-  const cardW = previewW || 'clamp(109px, 37.5dvh, 315px)';
-
-  return (
-    <div className="relative flex items-center justify-center h-full w-full">
-      {/* Polaroid frame */}
-      <div
-        className="relative bg-white shadow-[0_20px_50px_rgba(0,0,0,0.7)] flex flex-col"
-        style={{
-          width: cardW,
-          height: cardH,
-          padding: '6px 6px 0 6px',
-          borderRadius: '2px',
-          transition: 'width 0.5s ease-out, height 0.5s ease-out',
-        }}
-      >
-        {/* Photo area */}
-        <div className="relative flex-1 bg-zinc-900 overflow-hidden">
-          {overlayPreview ? (
-            <img src={overlayPreview} alt="Overlay" className="absolute inset-0 w-full h-full object-cover" />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-cool-900/60 to-cool-950 flex items-center justify-center">
-              <span className="text-foreground/20 text-[7px] font-bold">מסגרת</span>
-            </div>
-          )}
-        </div>
-        {/* Polaroid label strip */}
-        <div className="flex-none flex flex-col items-center justify-center py-1.5 gap-0.5">
-          <span className="text-black text-[9px] font-bold leading-none truncate w-full text-center">
-            {eventData.name || "שם האירוע"}
-          </span>
-          <span className="text-black/40 text-[7px]">{formattedDate}</span>
-        </div>
-      </div>
-      {/* Magnet label */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-        <span className="text-brand/60 text-xs font-semibold">מגנט</span>
-      </div>
-    </div>
-  );
-}
-
-// Compact inline calendar — indigo accent
-function InlineCalendar({ value, onChange }) {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const selected = value ? new Date(value + 'T00:00:00') : null;
-  const [viewYear, setViewYear] = useState(selected ? selected.getFullYear() : today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(selected ? selected.getMonth() : today.getMonth());
-
-  const hebrewDays = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
-  const hebrewMonths = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-
-  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
-  const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
-  const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
-
-  const cells = [];
-  for (let i = 0; i < firstDay; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  const isPast = (d) => new Date(viewYear, viewMonth, d) < today;
-  const isSel = (d) => selected && selected.getFullYear() === viewYear && selected.getMonth() === viewMonth && selected.getDate() === d;
-  const isToday = (d) => today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === d;
-
-  const handleDay = (d) => {
-    if (!d || isPast(d)) return;
-    onChange(`${viewYear}-${String(viewMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-  };
-
-  return (
-    <div className="bg-card border border-border rounded-2xl p-4 w-full" dir="ltr">
-      <div className="flex items-center justify-between mb-3">
-        <button type="button" onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <span className="font-heebo font-semibold text-foreground text-lg">{hebrewMonths[viewMonth]} {viewYear}</span>
-        <button type="button" onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-      <div className="grid grid-cols-7 mb-1">
-        {hebrewDays.map(d => <div key={d} className="text-center text-muted-foreground/60 text-xs font-bold py-1">{d}</div>)}
-      </div>
-      <div className="grid grid-cols-7">
-        {cells.map((day, i) => (
-          <button key={i} type="button" onClick={() => handleDay(day)}
-            className={`h-9 w-full flex items-center justify-center text-base font-medium rounded-full transition-colors
-              ${!day ? 'invisible pointer-events-none' : ''}
-              ${day && isPast(day) ? 'text-muted-foreground/40 pointer-events-none' : ''}
-              ${day && isSel(day) ? 'bg-primary text-primary-foreground shadow-indigo-soft' : ''}
-              ${day && isToday(day) && !isSel(day) ? 'ring-1 ring-primary/40 text-foreground' : ''}
-              ${day && !isPast(day) && !isSel(day) ? 'text-foreground/80 hover:bg-accent' : ''}
-            `}>
-            {day || ''}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Thumbnail dimensions
-const THUMB_W = 108;
-const THUMB_PHOTO_H = Math.round(THUMB_W * (4 / 3));    // 144px
-const THUMB_LABEL_H = Math.round(THUMB_W * LABEL_H_RATIO); // ~24px
-const THUMB_TOTAL_H = THUMB_PHOTO_H + THUMB_LABEL_H;    // ~168px
-
-// Extract first hex color from previewBg gradient string for the photo area
-function previewBgToPhotoColor(previewBg = '') {
-  const match = previewBg.match(/#[0-9a-fA-F]{6}/);
-  return match ? match[0] : '#1a1410';
-}
-
-// Draws a frame onto a given canvas element
-function drawOnCanvas(el, frame, eventData) {
-  if (!el) return;
-  const ctx = el.getContext('2d');
-  const w = el.width;
-  const pH = el.height - Math.round(w * LABEL_H_RATIO);
-  const tH = el.height;
-  const photoColor = previewBgToPhotoColor(frame.previewBg);
-  // Photo area: gradient from the frame's own palette
-  const grad = ctx.createLinearGradient(0, 0, w, pH);
-  grad.addColorStop(0, photoColor);
-  grad.addColorStop(1, '#0d0d0d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, w, tH);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, pH);
-  frame.drawFrame(ctx, w, tH, pH,
-    { name: eventData?.name || 'שם האירוע', date: eventData?.date || null });
-}
-
-// Canvas thumbnail — redraws after fonts are ready
-function FrameThumbnail({ frame, isSelected, onSelect, eventData }) {
-  const cvs = useRef(null);
-
-  useEffect(() => {
-    document.fonts.ready.then(() => drawOnCanvas(cvs.current, frame, eventData));
-  }, [frame, eventData?.name, eventData?.date]);
-
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(frame.id)}
-      className="flex flex-col items-center gap-1.5 shrink-0 outline-none transition-transform active:scale-95"
-    >
-      <div className={`relative rounded-[5px] overflow-hidden transition-all ${
-        isSelected ? 'border-2 border-brand shadow-indigo-glow scale-[1.04]' : 'border-[1.5px] border-foreground/10 shadow-lg'
-      }`}>
-        <canvas ref={cvs} width={THUMB_W} height={THUMB_TOTAL_H} style={{ display: 'block' }} />
-        {isSelected && (
-          <div className="absolute top-1 right-1 w-[15px] h-[15px] rounded-full bg-brand flex items-center justify-center text-primary-foreground">
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-              <path d="M1.5 4L3 5.5L6.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        )}
-        {frame.isNew && !isSelected && (
-          <div className="absolute top-1 right-1 px-1.5 rounded bg-brand text-primary-foreground text-xs font-bold leading-4">
-            חדש
-          </div>
-        )}
-      </div>
-      <span className={`text-xs whitespace-nowrap select-none transition-colors ${isSelected ? 'text-brand font-semibold' : 'text-muted-foreground'}`}>
-        {frame.name}
-      </span>
-    </button>
-  );
-}
-
-// Full-size frame preview modal
-const MODAL_W = 220;
-const MODAL_PHOTO_H = Math.round(MODAL_W * (4 / 3)); // 293px
-const MODAL_LABEL_H = Math.round(MODAL_W * LABEL_H_RATIO); // ~50px
-const MODAL_TOTAL_H = MODAL_PHOTO_H + MODAL_LABEL_H;
-
-function FramePreviewModal({ frame, eventData, onClose, onSelect, isSelected }) {
-  const cvs = useRef(null);
-
-  useEffect(() => {
-    document.fonts.ready.then(() => drawOnCanvas(cvs.current, frame, eventData));
-  }, [frame, eventData?.name, eventData?.date]);
-
-  return (
-    <div
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-background/90 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="flex flex-col items-center pb-8 pt-6 px-6 gap-5 w-full max-w-xs"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Frame name */}
-        <p className="text-muted-foreground text-sm font-semibold">{frame.name}</p>
-
-        {/* Large canvas preview */}
-        <div className="rounded-md overflow-hidden shadow-2xl">
-          <canvas ref={cvs} width={MODAL_W} height={MODAL_TOTAL_H} style={{ display: 'block' }} />
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3 w-full">
-          <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-            ביטול
-          </Button>
-          <Button type="button" variant={isSelected ? 'secondary' : 'default'} className="flex-1" onClick={() => { onSelect(frame.id); onClose(); }}>
-            {isSelected ? '✓ נבחרה' : 'בחר מסגרת'}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// PNG frame thumbnail — uses FramePngPreview composite
-function PngFrameThumbnail({ frame, isSelected, onSelect, eventName, eventDate }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(frame.frame_id)}
-      className="flex flex-col items-center gap-1.5 shrink-0 outline-none transition-transform active:scale-95"
-    >
-      <div className={`relative bg-secondary rounded-[5px] overflow-hidden transition-all ${
-        isSelected ? 'border-2 border-brand shadow-indigo-glow scale-[1.04]' : 'border-[1.5px] border-foreground/10 shadow-lg'
-      }`} style={{ width: THUMB_W, height: THUMB_TOTAL_H }}>
-        <FramePngPreview
-          frame={{ image_url: frame.image_url, hole_bbox: frame.hole_bbox, text_config: frame.text_config }}
-          eventName={eventName || 'שרה ודוד'}
-          eventDate={eventDate || '12.06.2026'}
-          className="w-full h-full"
-          style={{ width: '100%', height: '100%' }}
-        />
-        {isSelected && (
-          <div className="absolute top-1 right-1 w-[15px] h-[15px] rounded-full bg-brand flex items-center justify-center text-primary-foreground">
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-              <path d="M1.5 4L3 5.5L6.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        )}
-        <div className="absolute top-1 left-1 px-1 rounded bg-brand/90 text-primary-foreground text-xs font-bold leading-4">PNG</div>
-      </div>
-      <span className={`text-xs truncate select-none ${isSelected ? 'text-brand font-semibold' : 'text-muted-foreground'}`} style={{ maxWidth: THUMB_W }}>
-        {frame.display_name || frame.frame_id.split('-').slice(1).join(' ')}
-      </span>
-    </button>
-  );
-}
-
-const FRAME_CATEGORIES = [
-  { key: 'wedding',     label: 'חתונה' },
-  { key: 'bar_mitzvah', label: 'בר / בת מצווה' },
-  { key: 'brit',        label: 'ברית' },
-  { key: 'birthday',    label: 'יום הולדת' },
-  { key: 'corporate',   label: 'אירוע חברה' },
-  { key: 'general',     label: 'כללי' },
-];
+const TOTAL_STEPS = 4;
 
 export default function CreateMagnetEvent() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
@@ -292,44 +18,24 @@ export default function CreateMagnetEvent() {
   const fromLead = location.state?.fromLead ?? null;
 
   const [currentStep, setCurrentStep] = useState(fromLead?.eventName ? 2 : 1);
-  const totalSteps = 4;
-
   const [form, setForm] = useState({
     name: fromLead?.eventName ?? '',
     date: fromLead?.eventDate ?? '',
     print_quota_per_device: 5,
-    selectedFrameId: null,  // frame_id from framePacks, stored in overlay_frame_url
-    overlayFile: null,       // custom PNG upload (overrides selectedFrameId if set)
+    template: { templateId: DEFAULT_TEMPLATE_ID, options: resolveOptions(getTemplate(DEFAULT_TEMPLATE_ID)) },
     coverImageFile: null,    // new File selected by admin in this wizard
     coverImageUrl: fromLead?.coverImageUrl ?? '',  // pre-existing URL from lead submission
   });
-  const [overlayPreview, setOverlayPreview] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(null);
-  const [previewFrame, setPreviewFrame] = useState(null); // frame object shown in preview modal
-  const [activeFrameTab, setActiveFrameTab] = useState('wedding'); // selected category tab in step 4
 
-  const { data: pngFrames = [] } = useQuery({
-    queryKey: ['png-frames-picker'],
-    queryFn: () => memoriaService.frameMeta.listPngFrames(),
-    staleTime: 60_000,
-  });
-
-  const quotaOptions = [1, 3, 5, 10, 20];
   const todayStr = new Date().toISOString().split('T')[0];
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
-  };
-
-  const handleOverlayFile = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    handleChange('overlayFile', file);
-    setOverlayPreview(URL.createObjectURL(file));
   };
 
   const isCurrentStepValid = () => {
@@ -349,7 +55,7 @@ export default function CreateMagnetEvent() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => { if (validateStep(currentStep)) setCurrentStep(p => Math.min(p + 1, totalSteps)); };
+  const handleNext = () => { if (validateStep(currentStep)) setCurrentStep(p => Math.min(p + 1, TOTAL_STEPS)); };
   const handleBack = () => { setCurrentStep(p => Math.max(p - 1, 1)); setErrors({}); };
 
   const handleSubmit = async () => {
@@ -366,17 +72,13 @@ export default function CreateMagnetEvent() {
         created_by: user.id,
         event_type: 'magnet',
         print_quota_per_device: form.print_quota_per_device,
+        template_id: form.template.templateId,
+        template_options: form.template.options,
         guest_tier: 0,
         max_uploads_per_user: 999,
         auto_publish_guest_photos: false,
         is_active: true,
       });
-      if (form.overlayFile) {
-        const { file_url } = await memoriaService.storage.uploadOverlay(form.overlayFile, event.id);
-        await memoriaService.events.update(event.id, { overlay_frame_url: file_url });
-      } else if (form.selectedFrameId) {
-        await memoriaService.events.update(event.id, { overlay_frame_url: form.selectedFrameId });
-      }
       if (form.coverImageFile) {
         // Admin uploaded a new file in this wizard — upload it
         const { file_url } = await memoriaService.storage.uploadCoverImage(form.coverImageFile, event.id);
@@ -395,86 +97,21 @@ export default function CreateMagnetEvent() {
     }
   };
 
-  if (success) {
-    const eventUrl = `${window.location.origin}/magnet/${success.event_code}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&format=png&color=0a0a0a&bgcolor=ffffff&data=${encodeURIComponent(eventUrl)}`;
-    return (
-      <div className="fixed inset-0 bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 flex items-center justify-center" dir="rtl">
-        <div className="text-center px-6 max-w-sm w-full">
-          {/* Check circle */}
-          <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
-            <Check className="w-7 h-7 text-brand" />
-          </div>
-          <p className="text-brand text-xs font-semibold mb-3">מגנט · מוכן</p>
-          <h3 className="font-heebo font-semibold text-3xl text-foreground/90 mb-2">אירוע מגנט נוצר</h3>
-          <p className="text-muted-foreground text-sm mb-6">שתפו את הקישור או ה-QR עם האורחים</p>
+  if (success) return <EventCreatedScreen success={success} />;
 
-          {/* QR code */}
-          <div className="mx-auto w-fit bg-foreground rounded-2xl p-3 mb-5 shadow-2xl">
-            <img src={qrUrl} alt="QR" width={160} height={160} className="block rounded-lg" />
-          </div>
+  const progressPercentage = currentStep / TOTAL_STEPS * 100;
 
-          {/* Event URL copy row */}
-          <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-3 mb-6">
-            <span className="text-foreground/75 text-xs truncate flex-1 text-right" dir="ltr">
-              {eventUrl}
-            </span>
-            <button
-              onClick={() => navigator.clipboard?.writeText(eventUrl)}
-              className="shrink-0 p-1.5 rounded-lg hover:bg-accent transition-colors"
-              title="העתק קישור"
-            >
-              <Copy className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-            </button>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => navigate(`/PrintStation/${success.event_id}`)}
-              className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-xl transition-colors"
-            >
-              <Monitor className="w-4 h-4" />
-              פתח Print Station
-            </button>
-            <button
-              onClick={() => navigate('/AdminDashboard')}
-              className="w-full px-5 py-3 bg-card border border-border text-muted-foreground text-sm rounded-xl hover:bg-accent transition-colors"
-            >
-              חזרה לדשבורד
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const progressPercentage = currentStep / totalSteps * 100;
-
-  // On the calendar step (step 2), hide the preview entirely.
-  const isCalendarStep = currentStep === 2;
-  // On step 4, also hide the large top preview — frame picker is the focus
-  const hideTopPreview = isCalendarStep || currentStep === 4;
-  const previewH = 'clamp(145px, 50dvh, 420px)';
-  const previewW = 'clamp(109px, 37.5dvh, 315px)';
+  // The calendar and template steps take the full screen (the template step
+  // has its own previews); the others show the live magnet on top.
+  const isFullScreenStep = currentStep === 2 || currentStep === 4;
+  const previewSpec = {
+    ...form.template,
+    name: form.name.trim() || 'שרה & דניאל',
+    date: form.date,
+  };
 
   return (
     <div className="flex flex-col w-full h-[100dvh] bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground overflow-hidden font-heebo" dir="rtl">
-
-      {/* Frame preview modal */}
-      {previewFrame && (
-        <FramePreviewModal
-          frame={previewFrame}
-          eventData={form}
-          onClose={() => setPreviewFrame(null)}
-          isSelected={form.selectedFrameId === previewFrame.id}
-          onSelect={(id) => {
-            handleChange('selectedFrameId', id);
-            handleChange('overlayFile', null);
-            setOverlayPreview(null);
-          }}
-        />
-      )}
 
       {/* Progress bar */}
       <div className="h-1 bg-border shrink-0 w-full z-50">
@@ -484,215 +121,27 @@ export default function CreateMagnetEvent() {
 
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
 
-        {/* Preview area — hidden on calendar/frame steps to give full screen */}
-        {!hideTopPreview && (
+        {/* Live magnet preview — the real template with the names and date */}
+        {!isFullScreenStep && (
           <div className="flex-none w-full h-[56dvh] lg:flex-1 lg:h-auto flex items-center justify-center relative z-0 shrink-0 border-b border-border lg:border-none overflow-hidden py-2">
             <div className="absolute inset-0 bg-gradient-to-b from-cool-900 to-cool-950" />
             <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 55%, rgba(124,134,225,0.06) 0%, transparent 70%)' }} />
-            <div className="relative z-10 w-full flex items-center justify-center h-full">
-              <MagnetPreview eventData={form} overlayPreview={overlayPreview} previewH={previewH} previewW={previewW} />
-            </div>
+            <PolaroidPreview spec={previewSpec} orientation="portrait" label="תצוגה מקדימה של המגנט"
+              className="z-10 w-[clamp(109px,37.5dvh,315px)]" />
           </div>
         )}
 
         {/* Form area */}
         <div className="flex-1 z-10 flex flex-col relative min-h-0 shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
-          <div className={`flex-1 px-4 flex flex-col items-center ${isCalendarStep || currentStep === 4 ? 'overflow-y-auto justify-start pt-6' : 'overflow-hidden justify-center'}`}>
+          <div className={`flex-1 px-4 flex flex-col items-center ${isFullScreenStep ? 'overflow-y-auto justify-start pt-6' : 'overflow-hidden justify-center'}`}>
             <div className="w-full max-w-sm mx-auto flex flex-col justify-center items-center">
-
-              {/* Step 1 — Name */}
               {currentStep === 1 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 text-center space-y-2 w-full">
-                  <p className="text-brand text-xs font-semibold mb-2"><bdi>01</bdi> · שם האירוע</p>
-                  <h2 className="font-heebo text-2xl font-semibold mb-1 text-foreground">מה שם האירוע?</h2>
-                  <p className="text-sm text-muted-foreground mb-2">השם שיופיע על המגנט ובממשק האורחים</p>
-                  <Input
-                    value={form.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
-                    placeholder="למשל: Yael & Daniel"
-                    style={{ fontSize: '16px' }}
-                    className="bg-card border-border text-foreground h-10 text-center rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner placeholder:text-muted-foreground/60 w-full"
-                  />
-                  {errors.name && <p className="text-destructive text-xs mt-2 font-semibold animate-pulse">{errors.name}</p>}
-
-                  {/* Optional cover photo */}
-                  <div className="mt-4 w-full">
-                    <p className="text-muted-foreground text-xs font-semibold mb-2">תמונת רקע לדף הנחיתה (אופציונלי)</p>
-                    <label className="cursor-pointer block">
-                      <input
-                        type="file" accept="image/*" className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          handleChange('coverImageFile', file);
-                          setCoverImagePreview(URL.createObjectURL(file));
-                        }}
-                      />
-                      {coverImagePreview ? (
-                        <div className="relative w-full h-28 rounded-xl overflow-hidden border border-primary/40">
-                          <img src={coverImagePreview} className="w-full h-full object-cover" alt="cover" />
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                            <span className="text-foreground text-xs font-semibold">לחץ להחלפה</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-20 rounded-xl border border-dashed border-primary/30 bg-primary/5 flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors">
-                          <span className="text-brand/80 text-xs">+ העלה תמונת רקע</span>
-                        </div>
-                      )}
-                    </label>
-                  </div>
-                </div>
+                <NameStep form={form} errors={errors} onChange={handleChange} coverPreview={coverImagePreview}
+                  onCoverFile={(file) => { handleChange('coverImageFile', file); setCoverImagePreview(URL.createObjectURL(file)); }} />
               )}
-
-              {/* Step 2 — Date */}
-              {currentStep === 2 && fromLead && (
-                <div className="animate-in fade-in duration-300 w-full mb-2">
-                  <div className="flex items-center justify-between px-3 py-2 bg-primary/10 border border-primary/25 rounded-xl">
-                    <span className="text-brand text-xs font-semibold truncate">{fromLead.eventName}</span>
-                    <span className="text-brand/70 text-xs shrink-0 mr-2">מליד · {fromLead.contactName}</span>
-                  </div>
-                </div>
-              )}
-              {currentStep === 2 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-2">
-                  <div className="text-center space-y-1">
-                    <p className="text-brand text-xs font-semibold mb-1"><bdi>02</bdi> · תאריך</p>
-                    <h2 className="font-heebo text-2xl font-semibold text-foreground">מתי האירוע?</h2>
-                    <p className="text-sm text-muted-foreground">תאריך האירוע שיופיע על המגנטים</p>
-                  </div>
-                  <InlineCalendar value={form.date} onChange={(d) => handleChange('date', d)} />
-                  {errors.date && <p className="text-destructive text-sm font-semibold text-center animate-pulse">{errors.date}</p>}
-                </div>
-              )}
-
-              {/* Step 3 — Print quota */}
-              {currentStep === 3 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
-                  <div className="text-center space-y-1">
-                    <p className="text-brand text-xs font-semibold mb-1"><bdi>03</bdi> · מכסה</p>
-                    <h2 className="font-heebo text-2xl font-semibold text-foreground">כמה הדפסות לאורח?</h2>
-                    <p className="text-sm text-muted-foreground">כל אורח יוכל להדפיס עד המספר שתבחרו</p>
-                  </div>
-                  <div className="grid grid-cols-5 gap-2">
-                    {quotaOptions.map((n) => (
-                      <button
-                        key={n} type="button"
-                        onClick={() => handleChange('print_quota_per_device', n)}
-                        className={`h-12 rounded-xl font-bold text-base transition-all active:scale-95 ${
-                          form.print_quota_per_device === n
-                            ? 'bg-primary text-primary-foreground shadow-indigo-soft border border-foreground/20'
-                            : 'bg-card text-muted-foreground border border-border hover:border-foreground/20'
-                        }`}
-                      ><bdi>{n}</bdi></button>
-                    ))}
-                  </div>
-                  <div className="bg-gradient-to-r from-cool-900 to-cool-950 rounded-xl p-3 flex items-center gap-3 border border-border">
-                    <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand shrink-0 border border-brand/20">
-                      <Check size={16} strokeWidth={3} />
-                    </div>
-                    <p className="text-foreground font-semibold text-sm"><bdi className="tabular-nums">{form.print_quota_per_device}</bdi> הדפסות לכל אורח</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4 — Frame selection */}
-              {currentStep === 4 && (
-                <div className="animate-in fade-in slide-in-from-bottom-6 duration-300 w-full flex flex-col gap-3">
-                  <div className="text-center space-y-1">
-                    <p className="text-brand text-xs font-semibold mb-1"><bdi>04</bdi> · מסגרת</p>
-                    <h2 className="font-heebo text-2xl font-semibold text-foreground">בחרו מסגרת</h2>
-                    <p className="text-sm text-muted-foreground">המסגרת תוטבע על כל מגנט באירוע — אופציונלי</p>
-                  </div>
-
-                  {/* "None" option */}
-                  <button
-                    type="button"
-                    onClick={() => handleChange('selectedFrameId', null)}
-                    className={`flex items-center gap-2 h-9 px-3 rounded-xl border transition-colors text-sm ${
-                      form.selectedFrameId === null ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {form.selectedFrameId === null && <Check className="w-3.5 h-3.5 shrink-0" />}
-                    <span>ללא מסגרת</span>
-                  </button>
-
-                  {/* Category tabs */}
-                  <div className="flex gap-1 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                    {FRAME_CATEGORIES.map(cat => {
-                      const hasNew = (FRAME_PACKS[cat.key] || []).some(f => f.isNew);
-                      const isActive = activeFrameTab === cat.key;
-                      return (
-                        <button
-                          key={cat.key}
-                          type="button"
-                          onClick={() => setActiveFrameTab(cat.key)}
-                          className={`relative shrink-0 h-8 px-3 rounded-full border text-xs font-semibold transition-colors ${
-                            isActive ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          {cat.label}
-                          {hasNew && (
-                            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-brand border-[1.5px] border-background" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Frames for active tab — procedural + PNG */}
-                  <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }} dir="ltr">
-                    {FRAME_PACKS[activeFrameTab].map(frame => (
-                      <FrameThumbnail
-                        key={frame.id}
-                        frame={frame}
-                        isSelected={form.selectedFrameId === frame.id}
-                        onSelect={() => setPreviewFrame(frame)}
-                        eventData={form}
-                      />
-                    ))}
-                    {pngFrames
-                      .filter(f => f.status === 'approved' && f.category === (CAT_DB_KEY[activeFrameTab] ?? activeFrameTab))
-                      .map(f => (
-                        <PngFrameThumbnail
-                          key={f.frame_id}
-                          frame={f}
-                          isSelected={form.selectedFrameId === f.frame_id}
-                          eventName={form.name?.trim() || undefined}
-                          eventDate={formatEventDate(form.date) || undefined}
-                          onSelect={(id) => {
-                            handleChange('selectedFrameId', id);
-                            handleChange('overlayFile', null);
-                            setOverlayPreview(null);
-                          }}
-                        />
-                      ))
-                    }
-                  </div>
-
-                  {/* Custom PNG upload (advanced) */}
-                  <div>
-                    <p className="text-xs font-semibold mb-2 text-muted-foreground">
-                      מותאם אישית
-                    </p>
-                    <label className="flex items-center gap-3 w-full bg-card border border-dashed border-border hover:border-primary/40 rounded-xl px-4 py-3 cursor-pointer transition-colors">
-                      <Upload className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <span className="text-xs text-muted-foreground truncate">
-                        {form.overlayFile ? form.overlayFile.name : 'העלאת PNG מותאם...'}
-                      </span>
-                      {form.overlayFile && (
-                        <button type="button" className="mr-auto shrink-0" onClick={(e) => { e.preventDefault(); handleChange('overlayFile', null); setOverlayPreview(null); }}>
-                          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
-                        </button>
-                      )}
-                      <input type="file" accept="image/png" className="hidden" onChange={(e) => { handleOverlayFile(e); handleChange('selectedFrameId', null); }} />
-                    </label>
-                  </div>
-
-                  {errors.submit && <p className="text-destructive text-sm text-center">{errors.submit}</p>}
-                </div>
-              )}
-
+              {currentStep === 2 && <DateStep form={form} errors={errors} onChange={handleChange} fromLead={fromLead} />}
+              {currentStep === 3 && <QuotaStep form={form} onChange={handleChange} />}
+              {currentStep === 4 && <TemplateStep form={form} onChange={handleChange} error={errors.submit} />}
             </div>
           </div>
 
@@ -701,12 +150,12 @@ export default function CreateMagnetEvent() {
             style={{ paddingTop: '0.25rem', paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
             <div className="w-full max-w-sm mx-auto flex gap-3 items-center">
               {currentStep === 1 ? (
-                <Link to="/AdminDashboard"
+                <Link to="/AdminDashboard" aria-label="חזרה לניהול"
                   className="w-11 h-11 bg-card text-muted-foreground rounded-xl flex items-center justify-center transition-all active:scale-90 border border-border shrink-0 hover:text-foreground">
                   <Home className="w-4 h-4" />
                 </Link>
               ) : (
-                <button type="button" onClick={handleBack}
+                <button type="button" onClick={handleBack} aria-label="חזרה"
                   className="w-11 h-11 bg-card text-foreground rounded-xl flex items-center justify-center transition-all active:scale-90 border border-border shrink-0">
                   <ArrowLeft className="w-5 h-5 rotate-180" />
                 </button>
@@ -714,7 +163,7 @@ export default function CreateMagnetEvent() {
 
               <button
                 type="button"
-                onClick={currentStep === totalSteps ? handleSubmit : handleNext}
+                onClick={currentStep === TOTAL_STEPS ? handleSubmit : handleNext}
                 disabled={isLoading}
                 className={`text-base font-semibold rounded-xl flex-1 h-12 transition-all duration-300 active:scale-95 flex items-center justify-center relative ${
                   isCurrentStepValid() || isLoading
@@ -724,7 +173,7 @@ export default function CreateMagnetEvent() {
               >
                 {isLoading
                   ? <Loader2 className="w-5 h-5 animate-spin" />
-                  : <span>{currentStep === totalSteps ? 'יצירת אירוע' : 'המשך'}</span>
+                  : <span>{currentStep === TOTAL_STEPS ? 'יצירת אירוע' : 'המשך'}</span>
                 }
               </button>
             </div>
