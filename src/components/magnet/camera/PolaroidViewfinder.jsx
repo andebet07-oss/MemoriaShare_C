@@ -14,8 +14,11 @@ const pct = (n) => `${n * 100}%`;
  * The magnet is fitted inside the area left by the camera chrome (`inset`,
  * CSS px per side). The <video> element stays mounted across orientation
  * changes so the stream is never re-attached.
+ *
+ * `still` (an image URL) shows that image in place of the live feed — the
+ * home page's camera mockup.
  */
-export default function PolaroidViewfinder({ spec, orientation, inset, videoRef, isFront, filter, loading }) {
+export default function PolaroidViewfinder({ spec, orientation, inset, videoRef, isFront, filter, loading, still }) {
   const areaRef = useRef(null);
   const [area, setArea] = useState(null); // { w, h } of the free area
 
@@ -48,9 +51,13 @@ export default function PolaroidViewfinder({ spec, orientation, inset, videoRef,
               <Loader2 className="w-7 h-7 text-foreground/30 animate-spin" />
             </div>
           )}
-          <video ref={videoRef} autoPlay playsInline muted
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ transform: isFront ? 'scaleX(-1)' : 'none', filter }} />
+          {still ? (
+            <img src={still} alt="" draggable={false} className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <video ref={videoRef} autoPlay playsInline muted
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ transform: isFront ? 'scaleX(-1)' : 'none', filter }} />
+          )}
         </div>
         {overlayReady && (
           <img src={overlay.url} alt="" aria-hidden="true" draggable={false}
