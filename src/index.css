@@ -80,6 +80,17 @@
     --status-ready: 160 64% 52%;       /* #34d399 emerald */
     --status-rejected: 0 91% 71%;      /* #f87171 red */
 
+    /* Guest landing (MagnetGuestPage + status sheet): a deeper, warmer set for
+       the guest's own surface. Status hues here are muted and guest-facing:
+       pending + printing read as one "printing" state. */
+    --guest-bg: 240 3% 6%;             /* #0f0f10 — page + sheet */
+    --guest-raised: 240 4% 10%;        /* #18181a — cards, secondary button */
+    --guest-ink: 40 23% 95%;           /* #f5f3ef — text, primary button fill */
+    --guest-line: 40 23% 95%;          /* hairlines, used at 8% */
+    --guest-printing: 38 75% 63%;      /* #e7b45a muted amber */
+    --guest-ready: 146 47% 66%;        /* #7fd1a3 sage */
+    --guest-rejected: 2 60% 70%;       /* #e0857f muted red */
+
     --secondary: 0 0% 17%;             /* #2b2b2b — raised surface */
     --secondary-foreground: 0 0% 80%;
 

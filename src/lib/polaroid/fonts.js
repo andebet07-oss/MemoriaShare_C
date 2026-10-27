@@ -47,6 +47,11 @@ function loadFamily(family) {
   return loaded.get(family);
 }
 
+/** True when the font ships Hebrew glyphs (Great Vibes and Heebo 300 here are Latin only). */
+export function hasHebrewGlyphs(font) {
+  return FAMILIES[font?.family]?.files.some(([, range]) => range === HEBREW) ?? false;
+}
+
 /** Load the given font descriptors. Rejects if any file fails to load. */
 export function loadFonts(fonts) {
   const families = [...new Set(fonts.map(f => f.family))];

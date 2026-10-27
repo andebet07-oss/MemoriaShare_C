@@ -6,7 +6,7 @@ import OfflineBanner from '@/components/OfflineBanner'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
-import { BrowserRouter as Router, Route, Routes, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useParams, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -17,6 +17,8 @@ import CreateEventRedirect from '@/components/CreateEventRedirect';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useQuery } from '@tanstack/react-query';
 import memoriaService from '@/components/memoriaService';
+import GuestSkeleton from '@/components/magnet/guest/GuestSkeleton';
+import { GuestNotFound } from '@/components/magnet/guest/GuestMessage';
 
 // Pages — lazy-loaded so each route ships its own chunk instead of one
 // monolithic bundle every visitor must download up front.
@@ -58,16 +60,8 @@ function MagnetGuestEntry() {
     enabled: !!code,
   });
 
-  if (isLoading) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-cool-950">
-      <LoadingState />
-    </div>
-  );
-  if (!event) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-cool-950">
-      <p className="text-white/30 text-sm">אירוע לא נמצא</p>
-    </div>
-  );
+  if (isLoading) return <GuestSkeleton />;
+  if (!event) return <GuestNotFound />;
   // Guard: only magnet events belong here. A share-event code lands on the
   // share gallery instead of wrongly opening the magnet print UI.
   if (event.event_type && event.event_type !== 'magnet') {
@@ -76,11 +70,20 @@ function MagnetGuestEntry() {
   return <MagnetGuestPage event={event} />;
 }
 
+// A guest who scans the event QR lands on /magnet/:code: while the app boots,
+// show the landing's own skeleton there instead of a spinner.
+const GUEST_LANDING = /^\/magnet\/(?!lead\/?$)[^/]+\/?$/;
+
+function RouteLoading() {
+  const { pathname } = useLocation();
+  return GUEST_LANDING.test(pathname) ? <GuestSkeleton /> : <LoadingState fullScreen />;
+}
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
-    return <LoadingState fullScreen />;
+    return <RouteLoading />;
   }
 
   if (authError) {
@@ -91,7 +94,7 @@ const AuthenticatedApp = () => {
   return (
     <>
       {user?.needsOnboarding && <HostOnboardingModal />}
-      <Suspense fallback={<LoadingState fullScreen />}>
+      <Suspense fallback={<RouteLoading />}>
       <Routes>
 
         {/* ── Public / Landing ── */}
