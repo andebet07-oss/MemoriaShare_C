@@ -5,7 +5,7 @@ updated: 2026-05-11T22:00Z
 
 # Project Memory — Active State
 
-> **2026-10-26 — supersedes every frame row below.** The PNG frame system (frames_meta, framePacks, framesUtils, compositePngFrame, the frames admin, `public/FRAMES*`, the overlay uploads) and the sticker feature were removed on branch `claude/polaroid-templates`. Magnets are now code-rendered polaroid templates: `src/lib/polaroid/` (renderer, templates A–G, print spec 3 × 4 in @ 300 DPI), picked per event (`events.template_id` / `template_options`) in CreateMagnetEvent and the event dashboard. Plan + decisions: `docs/polaroid-templates-plan.md`. Pending DB: `supabase/pending/20261026_polaroid_templates_add.sql` (before merge) and `…_drop.sql` (after deploy + hardening).
+> **2026-10-26 — supersedes every frame row below.** The PNG frame system (frames_meta, framePacks, framesUtils, compositePngFrame, the frames admin, `public/FRAMES*`, the overlay uploads) and the sticker feature were removed on branch `claude/polaroid-templates`. Magnets are now code-rendered polaroid templates: `src/lib/polaroid/` (renderer, templates A–G, print spec 3 × 4 in @ 300 DPI), picked per event (`events.template_id` / `template_options`) in CreateMagnetEvent and the event dashboard. Plan + decisions: `docs/polaroid-templates-plan.md`. DB: `20261026_polaroid_templates_add.sql` and `20261025_print_pipeline_hardening.sql` applied 2026-10-27 (now in `supabase/migrations/`); `supabase/pending/20261026_polaroid_templates_drop.sql` waits until the old frame files are deleted from storage.
 
 ## Build Status
 - Branch: `main`

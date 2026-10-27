@@ -1,6 +1,6 @@
 # Pre-Migration Backup & Apply (Free Plan)
 
-The Free plan has no restorable backups. Every live DB change follows this sequence; nothing is skipped. Step 0 comes first. The example is `20261025_print_pipeline_hardening.sql`.
+The Free plan has no restorable backups. Every live DB change follows this sequence; nothing is skipped. Step 0 comes first. The example is `20261025_print_pipeline_hardening.sql` (applied 2026-10-27; it now lives in `supabase/migrations/`).
 
 > The pg_dump / CLI / dashboard steps are from memory and could not be checked against supabase.com from the sandbox. If a dashboard label differs, follow the dashboard.
 

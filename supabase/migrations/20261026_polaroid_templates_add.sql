@@ -1,7 +1,7 @@
 -- ============================================================
 -- Polaroid templates (1/2): template choice per event + render snapshot
 -- per print job — additive
--- Applied to live DB: <PENDING>   (lives in supabase/pending/ until applied; see README there)
+-- Applied to live DB: 2026-10-27, 09:13 UTC (remote migration 20261027091335 polaroid_templates_add)
 -- ============================================================
 --
 -- Replaces the frame reference (events.overlay_frame_url) with a code-rendered

@@ -30,9 +30,12 @@ RETURNS void LANGUAGE plpgsql AS $fn$
 DECLARE v_rows int; v_actual text;
 BEGIN
   BEGIN
-    EXECUTE format('SET LOCAL ROLE %I', p_role);
+    -- Claims carry the email like a real login (live events_insert_authenticated
+    -- requires auth.email()); read before switching role, which can't see auth.users.
     PERFORM set_config('request.jwt.claims',
-      json_build_object('sub', p_sub, 'role', p_role)::text, true);
+      json_build_object('sub', p_sub, 'role', p_role,
+                        'email', (SELECT email FROM auth.users WHERE id = p_sub))::text, true);
+    EXECUTE format('SET LOCAL ROLE %I', p_role);
     EXECUTE p_sql;
     GET DIAGNOSTICS v_rows = ROW_COUNT;
     IF v_rows = 0 THEN RAISE EXCEPTION 'no rows affected/returned (filtered by RLS)'; END IF;
@@ -59,8 +62,9 @@ DECLARE
   es uuid := (SELECT id FROM qa_ids WHERE k = 'ev_share');
   base text := public.photos_public_base_url();
 BEGIN
-  INSERT INTO auth.users (id, is_anonymous) VALUES
-    (admin, false), (host, false), (ga, true), (gb, true), (gc, true);
+  INSERT INTO auth.users (id, is_anonymous, email) VALUES
+    (admin, false, 'qa-admin@example.invalid'), (host, false, 'qa-host@example.invalid'),
+    (ga, true, NULL), (gb, true, NULL), (gc, true, NULL);
   INSERT INTO profiles (id, role) VALUES (admin, 'admin'), (host, 'user')
     ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role;
 
