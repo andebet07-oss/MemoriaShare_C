@@ -1,152 +1,57 @@
-import React from 'react';
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+import PhoneFrame from './PhoneFrame';
+import { LandingScreen, CameraScreen, MagnetScreen } from './HeroScreens';
 
 export default function HeroSection({ onCreateEvent }) {
-  const eventPhotos = [
-    "/Left_PhoneMoucup_hero.jpeg",
-    "/Center_PhoneMoucup_hero.jpeg",
-    "/right_PhoneMoucup_hero.jpeg",
-  ];
-
-  const MiniIPhone = ({ image, className = "", title = "Event Name", isCenter = false }) => (
-    <div className={`relative transform ${className}`} style={{ flexShrink: 0 }}>
-      <div className={`absolute -inset-10 blur-[60px] rounded-full -z-10 ${isCenter ? 'bg-foreground/15' : 'bg-foreground/[0.04]'}`} />
-      <div
-        className={`relative bg-cool-950 rounded-[2.8rem] shadow-card-dark border border-foreground/20 ${
-          isCenter
-            ? 'w-44 md:w-64 h-[348px] md:h-[512px]'
-            : 'w-36 md:w-52 h-[288px] md:h-[416px]'
-        }`}
-        style={{ padding: isCenter ? '10px' : '8px' }}
-      >
-        <div className="w-full h-full bg-black rounded-[2.3rem] overflow-hidden relative border border-foreground/10">
-          <img src={image} className="w-full h-full object-cover object-center opacity-90" alt="event" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10" />
-
-          <div className="absolute inset-0 z-20 flex flex-col justify-between pointer-events-none">
-            <div className="flex justify-between items-start px-3 pt-4">
-              <div className="text-center flex-1 px-2">
-                <p className="text-white text-[7px] md:text-[9px] font-semibold leading-tight drop-shadow-lg">{title}</p>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <div className="w-2 h-2 border border-white/60 rounded-sm backdrop-blur-sm" />
-                <div className="w-2 h-2 border border-white/60 rounded-sm backdrop-blur-sm" />
-                <div className="w-2 h-2 border border-white/60 rounded-sm backdrop-blur-sm" />
-              </div>
-            </div>
-
-            <div className="pb-4 px-3 space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="w-5 h-5 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
-                  <div className="text-indigo-400 text-[7px]">⚡</div>
-                </div>
-                <div className="flex gap-1 bg-black/30 backdrop-blur-md rounded-full px-2 py-0.5 border border-white/20">
-                  <span className="text-white/50 text-[6px] font-medium"><bdi>.5</bdi></span>
-                  <span className="text-white text-[6px] font-semibold"><bdi>1×</bdi></span>
-                  <span className="text-white/50 text-[6px] font-medium"><bdi>3</bdi></span>
-                </div>
-                <div className="w-5 h-5 bg-black/30 backdrop-blur-md rounded-md flex items-center justify-center border border-white/20">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
-                    <circle cx="12" cy="13" r="3"/>
-                  </svg>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div className="text-left">
-                  <p className="text-white text-[6px] md:text-[8px] font-bold leading-none drop-shadow-lg"><bdi>15</bdi> תמונות</p>
-                  <p className="text-white/50 text-[5px] md:text-[6px] drop-shadow-lg">נותרו</p>
-                </div>
-                <div className="w-11 h-11 md:w-14 md:h-14 rounded-full border-[2.5px] border-white/80 p-[3px] bg-transparent">
-                  <div className="w-full h-full bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
-                </div>
-                <div className="w-6 h-8 md:w-8 md:h-10 rounded-md overflow-hidden border border-white/40 bg-black/40 backdrop-blur-sm">
-                  <img src={image} className="w-full h-full object-cover" alt="last" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-20">
-      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden pb-20 pt-20">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-6">
         <div className="text-center" dir="rtl">
 
           {/* Wordmark */}
-          <div className="mb-8 flex flex-col items-center gap-3 animate-in fade-in duration-700">
-            <span className="font-playfair text-foreground/90 text-3xl md:text-4xl tracking-widest">Memoria</span>
+          <div className="mb-8 flex flex-col items-center gap-3 duration-700 animate-in fade-in">
+            <span dir="ltr" className="text-3xl font-semibold text-foreground/90 md:text-4xl">Memoria</span>
             <span className="block h-px w-10 bg-border" />
-            <span className="text-muted-foreground text-[10px] font-semibold tracking-[0.35em] uppercase">שיתוף תמונות חי באירועים</span>
+            <span className="text-sm text-muted-foreground">מגנטים מודפסים באירוע</span>
           </div>
 
-          {/* Headline */}
           <h1
-            className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700"
-            style={{ animationDelay: '100ms' }}
+            className="mb-6 text-[clamp(2.25rem,11.5vw,3rem)] font-extrabold leading-tight text-foreground delay-100 duration-700 animate-in fade-in slide-in-from-bottom-4 fill-mode-both md:text-7xl"
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
-              הזיכרונות שלכם,
-            </span>
+            הזיכרונות שלכם,
             <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground/85 to-foreground/55">
-              מכל הזוויות
-            </span>
+            <span className="text-foreground/70">מכל הזוויות</span>
           </h1>
 
-          {/* Subtitle — two clean sentences */}
           <p
-            className="text-base md:text-lg text-muted-foreground mb-14 max-w-lg mx-auto font-light leading-relaxed animate-in fade-in duration-700"
-            style={{ animationDelay: '200ms' }}
+            className="mx-auto mb-14 max-w-lg text-base font-light leading-relaxed text-muted-foreground delay-200 duration-700 animate-in fade-in fill-mode-both md:text-lg"
           >
-            כל אורח מצלם מהטלפון שלו.
+            האורחים מצלמים מהטלפון, ואנחנו מדפיסים להם מגנט מעוצב במקום.
             <br className="hidden sm:block" />
-            {' '}כל התמונות מתאחדות בגלריה חיה אחת — בזמן אמת, בלי אפליקציה.
+            {' '}בלי אפליקציה, עם עמדת הדפסה וצוות שלנו.
           </p>
 
-          {/* Three phones — spaced properly with gap, no translate-x overlap */}
+          {/* The guest's flow, right to left: the event page, the camera, the magnet */}
           <div
-            className="flex justify-center items-end gap-3 md:gap-8 mb-16 relative z-20 animate-in fade-in duration-700"
-            style={{ animationDelay: '300ms', minHeight: '320px' }}
+            className="relative z-20 mb-16 flex min-h-[320px] items-end justify-center gap-3 delay-300 duration-700 animate-in fade-in fill-mode-both md:gap-8"
           >
-            <MiniIPhone
-              image={eventPhotos[0]}
-              className="-rotate-6 translate-y-5 opacity-80 z-10"
-              title="ערב מסיבה"
-            />
-            <MiniIPhone
-              image={eventPhotos[1]}
-              className="z-30 -translate-y-3"
-              title="אווירת חתונה"
-              isCenter={true}
-            />
-            <MiniIPhone
-              image={eventPhotos[2]}
-              className="rotate-6 translate-y-5 opacity-80 z-10"
-              title="טקס קלאסי"
-            />
+            <PhoneFrame label="דף האירוע של האורח" className="z-10 -rotate-6 translate-y-5 opacity-80">
+              <LandingScreen />
+            </PhoneFrame>
+            <PhoneFrame center label="המצלמה עם מסגרת המגנט" className="z-30 -translate-y-3">
+              <CameraScreen />
+            </PhoneFrame>
+            <PhoneFrame label="המגנט המוכן" className="z-10 rotate-6 translate-y-5 opacity-80">
+              <MagnetScreen />
+            </PhoneFrame>
           </div>
 
-          {/* CTA */}
-          <div
-            className="flex justify-center animate-in fade-in duration-700"
-            style={{ animationDelay: '450ms' }}
-          >
-            <Button
-              onClick={onCreateEvent}
-              className="px-12 py-4 h-auto bg-cool-50 text-cool-950 font-semibold text-base hover:bg-foreground active:scale-[0.98] transition-all shadow-indigo-soft rounded-md"
-              style={{ letterSpacing: '0.05em' }}
-            >
-              צרו אירוע
-            </Button>
+          <div className="flex justify-center delay-500 duration-700 animate-in fade-in fill-mode-both">
+            <Button size="lg" className="px-12" onClick={onCreateEvent}>שריינו תאריך</Button>
           </div>
 
         </div>
       </div>
-    </div>
+    </section>
   );
 }
