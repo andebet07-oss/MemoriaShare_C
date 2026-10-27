@@ -6,6 +6,13 @@ import { LogIn, LogOut, ShieldCheck, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+// The home page's sections, in page order (ids in Features / HowItWorks / FAQ).
+const SECTIONS = [
+  { id: 'features', label: 'למה Memoria' },
+  { id: 'how-it-works', label: 'איך זה עובד' },
+  { id: 'faq', label: 'שאלות' },
+];
+
 export default function Header({ onCreateEvent }) {
   const { user, isAuthenticated: hasSession } = useAuth();
   // Anonymous sessions (magnet guests, lead visitors) are not a sign-in: keep
@@ -62,9 +69,9 @@ export default function Header({ onCreateEvent }) {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
-            <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">פיצ'רים</a>
-            <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">המלצות</a>
-            <a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">שאלות נפוצות</a>
+            {SECTIONS.map(({ id, label }) => (
+              <a key={id} href={`#${id}`} onClick={(e) => scrollToSection(e, id)} className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer">{label}</a>
+            ))}
             {isAuthenticated && user?.role === 'admin' && (
               <Link to="/admin" className="text-indigo-300 hover:text-indigo-200 transition-colors flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4" />
@@ -72,12 +79,12 @@ export default function Header({ onCreateEvent }) {
               </Link>
             )}
 
-            {/* CTA — starts the magnet lead wizard. POV indigo on brand primary. */}
+            {/* CTA — starts the magnet lead wizard. */}
             <button
               onClick={onCreateEvent}
               className="px-4 py-2 bg-primary text-primary-foreground font-semibold text-sm rounded-full hover:brightness-110 active:scale-[0.98] transition-all shadow-indigo-soft"
             >
-              צרו אירוע
+              שריינו תאריך
             </button>
 
             {isAuthenticated ? (
@@ -94,7 +101,7 @@ export default function Header({ onCreateEvent }) {
 
           {/* Logo */}
           <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <img src="/LOGO.png" alt="MemoriaShare" className="h-10 w-auto object-contain" />
+            <img src="/LOGO.png" alt="Memoria" className="h-10 w-auto object-contain" />
           </Link>
         </div>
       </header>
@@ -106,7 +113,7 @@ export default function Header({ onCreateEvent }) {
         <div className={`absolute top-0 right-0 w-[85%] max-w-sm h-full bg-background/95 backdrop-blur-xl border-l border-border flex flex-col shadow-card-dark transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`} dir="rtl">
 
           <div className="flex items-center justify-between p-6 border-b border-border">
-            <img src="/LOGO.png" alt="MemoriaShare" className="h-8 w-auto object-contain" />
+            <img src="/LOGO.png" alt="Memoria" className="h-8 w-auto object-contain" />
             <button onClick={closeMenu} aria-label="סגור תפריט" className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/40 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
               <X className="w-6 h-6" />
             </button>
@@ -128,18 +135,18 @@ export default function Header({ onCreateEvent }) {
           )}
 
           <nav className="flex-1 flex flex-col px-6 space-y-1 overflow-y-auto">
-            {/* Create Event CTA */}
+            {/* Booking CTA */}
             <button
               onClick={() => { closeMenu(); onCreateEvent?.(); }}
               className="w-full text-right text-lg font-bold text-foreground py-3.5 px-2 rounded-lg bg-foreground/5 border border-border mb-2 flex items-center gap-3"
             >
               <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
-              צרו אירוע
+              שריינו תאריך
             </button>
 
-            <a href="#features" onClick={(e) => scrollToSection(e, 'features')} className="text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 flex items-center gap-4 border-b border-border">פיצ'רים</a>
-            <a href="#testimonials" onClick={(e) => scrollToSection(e, 'testimonials')} className="text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 flex items-center gap-4 border-b border-border">המלצות</a>
-            <a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 flex items-center gap-4 border-b border-border">שאלות נפוצות</a>
+            {SECTIONS.map(({ id, label }) => (
+              <a key={id} href={`#${id}`} onClick={(e) => scrollToSection(e, id)} className="text-lg font-medium text-foreground/60 hover:text-foreground transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 flex items-center gap-4 border-b border-border">{label}</a>
+            ))}
 
             {isAuthenticated && user?.role === 'admin' && (
               <Link to="/admin" onClick={closeMenu} className="flex items-center gap-4 text-lg font-medium text-indigo-300 hover:text-indigo-200 transition-colors py-3.5 px-2 rounded-lg hover:bg-foreground/5 border-b border-border">

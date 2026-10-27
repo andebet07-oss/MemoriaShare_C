@@ -1,83 +1,56 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import SectionHeading from './SectionHeading';
 
-const faqItems = [
-  {
-    question: "מה זה Memoria ואיך זה עובד?",
-    answer: "Memoria היא פלטפורמה לשיתוף תמונות באירועים. אתם יוצרים אירוע ומקבלים קוד QR ייחודי. האורחים סורקים את הקוד, מצלמים ומעלים תמונות ישירות מהטלפון שלהם. כל התמונות מתרכזות באלבום דיגיטלי אחד, זמין לכם ולאורחים."
-  },
-  {
-    question: "האם האורחים צריכים להוריד אפליקציה?",
-    answer: "ממש לא. כל התהליך מתבצע דרך דפדפן האינטרנט בטלפון, ללא צורך בהתקנת אפליקציה. זה מה שהופך את Memoria לפשוטה ונגישה לכולם."
-  },
-  {
-    question: "מהי איכות התמונות שעולות לאלבום?",
-    answer: "התמונות נשמרות באיכות גבוהה. המערכת מבצעת אופטימיזציה קלה כדי להבטיח טעינה מהירה, אך שומרת על איכות מספקת להדפסה ולשיתוף ברשתות חברתיות."
-  },
-  {
-    question: "האם אני יכול לשלוט בפרטיות התמונות?",
-    answer: "בהחלט. יש לכם שליטה מלאה. בעת יצירת האירוע, תוכלו לבחור אם התמונות יוצגו מיידית, לאחר זמן מסוים, או רק לאחר אישור ידני שלכם. כמו כן, תוכלו להחליט אם הגלריה תהיה פרטית (רק לכם) או פתוחה לצפייה של כל האורחים."
-  },
-  {
-    question: "כמה עולה להשתמש בשירות?",
-    answer: "התמחור שלנו גמיש ומבוסס על כמות האורחים באירוע. תוכלו לראות את כל החבילות בעמוד יצירת האירוע. יש לנו חבילות שמתאימות לאירועים קטנים וגדולים כאחד."
-  },
-  {
-    question: "האם ניתן להוריד את כל התמונות בסיום האירוע?",
-    answer: "כן! בפאנל הניהול של האירוע, יש לכם אפשרות להוריד את כל התמונות המאושרות בקליק אחד, כקובץ ZIP מסודר."
-  },
-  {
-    question: "מה ההבדל בין אלבום דיגיטלי לשירות המגנטים?",
-    answer: "האלבום הדיגיטלי הוא שירות עצמאי — יוצרים אירוע, מקבלים QR, האורחים מצלמים ומעלים תמונות. שירות המגנטים הוא חוויה פרמיום מנוהלת: צוות שלנו מגיע עם עמדת הדפסה, והאורחים מקבלים מגנטים מודפסים במקום. תוכלו לבחור את מה שמתאים לכם כשתלחצו על 'צרו אירוע'."
-  }
+const FAQ_ITEMS = [
+  { q: 'איך זה עובד באירוע?', a: 'אנחנו מגיעים עם עמדת הדפסה וצוות. האורחים סורקים QR, מצלמים מהטלפון ושולחים להדפסה, והמגנט מחכה להם בעמדה.' },
+  { q: 'האורחים צריכים להוריד אפליקציה?', a: 'לא. הכל עובד בדפדפן של הטלפון, בלי הרשמה ובלי סיסמה.' },
+  { q: 'כמה מגנטים כל אורח מקבל?', a: 'אתם קובעים מראש מכסה לכל אורח, כך שכולם מקבלים.' },
+  { q: 'אפשר לבחור את עיצוב המגנט?', a: 'כן. בוחרים עיצוב מתוך המבחר שלנו, והשמות והתאריך שלכם מודפסים על כל מגנט.' },
+  { q: 'מה גודל המגנט?', a: '7.5 × 10 ס״מ, בגודל של תמונת פולרואיד.' },
+  { q: 'באילו אירועים זה מתאים?', a: 'חתונות, בר ובת מצווה, בריתות, ימי הולדת ואירועי חברה.' },
+  { q: 'כמה זה עולה?', a: 'המחיר תלוי במספר האורחים ובאורך האירוע. השאירו פרטים ונחזור אליכם עם הצעה.' },
 ];
 
 export default function FAQ() {
   const [openIdx, setOpenIdx] = useState(null);
 
   return (
-    <section id="faq" className="py-24 md:py-32 border-t border-border" dir="rtl">
+    <section id="faq" className="scroll-mt-20 border-t border-border py-24 md:py-32" dir="rtl">
       <div className="container mx-auto px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-[1fr_2fr] gap-12 md:gap-20 items-start">
+        <div className="mx-auto grid max-w-6xl items-start gap-12 md:grid-cols-[1fr_2fr] md:gap-20">
 
-          {/* Left header */}
-          <div className="md:sticky md:top-32 self-start">
-            <p className="text-indigo-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-6"><bdi>04</bdi> · שאלות</p>
-            <h2 className="font-playfair text-4xl md:text-5xl leading-[1.1] text-foreground/90">
-              כל מה
-              <br />
-              <span className="italic text-muted-foreground">שצריך לדעת.</span>
-            </h2>
-          </div>
+          <SectionHeading number="03" label="שאלות" title="מה שצריך לדעת." className="self-start md:sticky md:top-32" />
 
-          {/* Accordion — hairline dividers, no cards */}
           <div>
-            {faqItems.map((item, index) => (
-              <div
-                key={index}
-                className="border-b border-border last:border-b-0"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenIdx(openIdx === index ? null : index)}
-                  className="w-full text-right py-6 flex justify-between items-start gap-4 group"
-                >
-                  <span className="font-playfair text-foreground/90 text-lg leading-snug group-hover:text-foreground transition-colors text-right flex-1">
-                    {item.question}
-                  </span>
-                  <span
-                    className="text-muted-foreground text-xl leading-none shrink-0 mt-0.5 transition-transform duration-300 select-none"
-                    style={{ transform: openIdx === index ? 'rotate(45deg)' : 'none' }}
-                  >
-                    +
-                  </span>
-                </button>
-                {openIdx === index && (
-                  <div className="pb-6 pr-0">
-                    <p className="text-muted-foreground text-base leading-relaxed">{item.answer}</p>
-                  </div>
-                )}
-              </div>
-            ))}
+            {FAQ_ITEMS.map((item, i) => {
+              const open = openIdx === i;
+              return (
+                <div key={item.q} className="border-b border-border last:border-b-0">
+                  <h3>
+                    <button
+                      type="button"
+                      id={`faq-q-${i}`}
+                      aria-expanded={open}
+                      aria-controls={`faq-a-${i}`}
+                      onClick={() => setOpenIdx(open ? null : i)}
+                      className="group flex w-full items-start justify-between gap-4 py-6 text-right"
+                    >
+                      <span className="flex-1 text-lg font-semibold leading-snug text-foreground/90 transition-colors group-hover:text-foreground">
+                        {item.q}
+                      </span>
+                      <Plus aria-hidden className={cn('mt-1 size-5 shrink-0 text-muted-foreground transition-transform duration-300', open && 'rotate-45')} />
+                    </button>
+                  </h3>
+                  {open && (
+                    <div id={`faq-a-${i}`} role="region" aria-labelledby={`faq-q-${i}`} className="pb-6">
+                      <p className="text-base font-light leading-relaxed text-muted-foreground">{item.a}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
         </div>
