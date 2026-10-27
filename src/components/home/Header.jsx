@@ -6,11 +6,10 @@ import { LogIn, LogOut, ShieldCheck, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-// The home page's sections, in page order (ids in Features / HowItWorks / Designs / FAQ).
+// The home page's sections, in page order (ids in Features / HowItWorks / FAQ).
 const SECTIONS = [
   { id: 'features', label: 'למה Memoria' },
   { id: 'how-it-works', label: 'איך זה עובד' },
-  { id: 'designs', label: 'עיצובים' },
   { id: 'faq', label: 'שאלות' },
 ];
 

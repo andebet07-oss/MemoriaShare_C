@@ -4,7 +4,6 @@ import Header from '@/components/home/Header';
 import HeroSection from '@/components/home/HeroSection';
 import Features from '@/components/home/Features';
 import HowItWorks from '@/components/home/HowItWorks';
-import Designs from '@/components/home/Designs';
 import FAQ from '@/components/home/FAQ';
 import FinalCTA from '@/components/home/FinalCTA';
 
@@ -27,7 +26,6 @@ export default function Home() {
           <HeroSection onCreateEvent={startMagnetLead} />
           <Features />
           <HowItWorks />
-          <Designs />
           <FAQ />
           <FinalCTA onCreateEvent={startMagnetLead} onHowItWorks={scrollToHowItWorks} />
         </main>

@@ -21,7 +21,7 @@ export default function FAQ() {
       <div className="container mx-auto px-6">
         <div className="mx-auto grid max-w-6xl items-start gap-12 md:grid-cols-[1fr_2fr] md:gap-20">
 
-          <SectionHeading number="04" label="שאלות" title="מה שצריך לדעת." className="self-start md:sticky md:top-32" />
+          <SectionHeading number="03" label="שאלות" title="מה שצריך לדעת." className="self-start md:sticky md:top-32" />
 
           <div>
             {FAQ_ITEMS.map((item, i) => {
