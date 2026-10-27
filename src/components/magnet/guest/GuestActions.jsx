@@ -5,14 +5,16 @@ import { SURFACE, ICON } from './guestStyles';
 const PRESS = 'transition-[transform,background-color] duration-200 ease-out active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100';
 
 /**
- * The sheet's actions, pinned to its bottom: the camera CTA (or, with the
- * quota used up, a calm explanation in its place) and, once the guest has
- * jobs, a square button for "ההדפסות שלי".
+ * The sheet's actions, pinned to its bottom: the camera CTA and, once the
+ * guest has jobs, a square button for "ההדפסות שלי".
+ * capture: 'open' → the CTA; 'used' → a calm explanation in its place;
+ * 'unknown' (the jobs failed to load) → no CTA until a retry succeeds.
  */
-export default function GuestActions({ canCapture, onCapture, onStatus }) {
+export default function GuestActions({ capture, onCapture, onStatus }) {
+  if (capture === 'unknown' && !onStatus) return null;
   return (
     <div className="mt-auto flex gap-2 pt-5">
-      {canCapture ? (
+      {capture === 'open' && (
         <button
           type="button"
           onClick={onCapture}
@@ -21,7 +23,8 @@ export default function GuestActions({ canCapture, onCapture, onStatus }) {
           <Camera {...ICON} className="size-5" />
           צלמו ושלחו להדפסה
         </button>
-      ) : (
+      )}
+      {capture === 'used' && (
         <div role="status" className={cn(SURFACE, 'flex h-[54px] min-w-0 flex-1 items-center gap-3 px-4')}>
           <CircleCheck {...ICON} className="size-5 shrink-0 text-guest-ink/70" />
           <p className="min-w-0 text-[13px] leading-[18px]">

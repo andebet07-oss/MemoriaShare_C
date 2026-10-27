@@ -35,18 +35,19 @@ function MagnetThumb({ job }) {
   );
 }
 
-/** A free print: a quiet empty slot that opens the camera. */
+const SLOT = 'flex h-[85px] w-16 items-center justify-center rounded-[2px] border border-guest-line bg-guest-raised text-guest-ink/55';
+
+/** A free print: a quiet empty slot that opens the camera (inert without `onClick`). */
 function EmptySlot({ onClick }) {
   return (
     <li className="flex shrink-0 snap-start flex-col items-center justify-end gap-1.5">
-      <button
-        type="button"
-        onClick={onClick}
-        aria-label="צילום חדש"
-        className="flex h-[85px] w-16 items-center justify-center rounded-[2px] border border-guest-line bg-guest-raised text-guest-ink/55 transition-colors duration-200 active:bg-guest-ink/10"
-      >
-        <Plus {...ICON} className="size-4" />
-      </button>
+      {onClick ? (
+        <button type="button" onClick={onClick} aria-label="צילום חדש" className={cn(SLOT, 'transition-colors duration-200 active:bg-guest-ink/10')}>
+          <Plus {...ICON} className="size-4" />
+        </button>
+      ) : (
+        <span aria-hidden className={SLOT}><Plus {...ICON} className="size-4" /></span>
+      )}
       <span aria-hidden className="h-4" />
     </li>
   );
