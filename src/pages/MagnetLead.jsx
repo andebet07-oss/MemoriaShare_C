@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Loader2, Home, ArrowLeft, Check, ChevronLeft, ChevronRight,
   ImageIcon, Pencil, X,
@@ -9,6 +9,7 @@ import memoriaService from '@/components/memoriaService';
 import LeadPhoneMockup from '@/components/magnet/lead/LeadPhoneMockup';
 import StepHeader, { LEAD_HEADING_FONT } from '@/components/magnet/lead/StepHeader';
 import { useKeyboardViewport } from '@/hooks/useKeyboardViewport';
+import { TEMPLATES } from '@/lib/polaroid/templates';
 
 // ─── Image compression (mirror CreateEvent) ──────────────────────────────────
 async function compressImage(file) {
@@ -109,15 +110,18 @@ const TOTAL_STEPS = 5;
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function MagnetLead() {
   const navigate = useNavigate();
+  // From the home page designer: { eventName, eventDate, templateId }.
+  const prefill = useLocation().state?.prefill ?? null;
+  const prefillTemplate = TEMPLATES[prefill?.templateId] ?? null;
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
   const [formData, setFormData] = useState({
-    event_name: '',
+    event_name: prefill?.eventName ?? '',
     cover_image: '',
-    event_date: '',
+    event_date: prefill?.eventDate ?? '',
     location: '',
     guest_count: '',
     full_name: '',
@@ -217,7 +221,7 @@ export default function MagnetLead() {
         full_name: formData.full_name.trim(),
         phone: formData.phone.replace(/-/g, '').trim(),
         event_date: formData.event_date,
-        details: `${formData.event_name} · ${formData.location} · ${formData.guest_count}${formData.cover_image ? ` · cover:${formData.cover_image}` : ''}`,
+        details: `${formData.event_name} · ${formData.location} · ${formData.guest_count}${formData.cover_image ? ` · cover:${formData.cover_image}` : ''}${prefillTemplate ? ` · template:${prefillTemplate.id}` : ''}`,
       });
       setSubmitted(true);
     } catch (err) {
@@ -309,6 +313,7 @@ export default function MagnetLead() {
                     className="bg-secondary border-border text-foreground h-10 text-center rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all shadow-inner placeholder:text-foreground/25 w-full"
                   />
                   {errors.event_name && <p className="text-destructive text-[10px] font-bold animate-pulse">{errors.event_name}</p>}
+                  {prefillTemplate && <p className="text-muted-foreground text-xs">העיצוב שבחרתם: {prefillTemplate.label}</p>}
                 </div>
               )}
 

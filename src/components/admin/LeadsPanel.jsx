@@ -10,20 +10,10 @@ import PageHeader from '@/components/system/PageHeader';
 import Card from '@/components/system/Card';
 import StatusBadge from '@/components/system/StatusBadge';
 import { LEAD_STATUS, TONE } from '@/components/system/statusStyles';
+import { parseLeadDetails, leadTemplateMeta } from '@/components/admin/overview/LeadCard';
 
 const STATUS_ORDER = ['new', 'contacted', 'converted', 'closed'];
 const STATUS_HE    = Object.fromEntries(STATUS_ORDER.map(s => [s, LEAD_STATUS[s].label]));
-
-function parseDetails(details = '') {
-  const parts = details.split(' · ');
-  const coverPart = parts.find(p => p.startsWith('cover:'));
-  return {
-    eventName:     parts[0]?.trim() || '',
-    location:      parts[1]?.trim() || '',
-    guestCount:    parts[2]?.trim() || '',
-    coverImageUrl: coverPart ? coverPart.replace('cover:', '') : '',
-  };
-}
 
 function formatPhone(phone = '') {
   if (phone.length === 10) return `${phone.slice(0, 3)}-${phone.slice(3, 6)}-${phone.slice(6)}`;
@@ -100,7 +90,7 @@ export default function LeadsPanel() {
   };
 
   const handleCreateEvent = (lead) => {
-    const { eventName, coverImageUrl } = parseDetails(lead.details);
+    const { eventName, coverImageUrl, templateId } = parseLeadDetails(lead.details);
     navigate('/admin/events/magnet/create', {
       state: {
         fromLead: {
@@ -109,6 +99,7 @@ export default function LeadsPanel() {
           eventDate:     lead.event_date || '',
           contactName:   lead.full_name || '',
           coverImageUrl: coverImageUrl || '',
+          templateId,
         },
       },
     });
@@ -125,7 +116,7 @@ export default function LeadsPanel() {
   const visibleLeads = leads.filter(l => {
     if (filter !== 'all' && l.status !== filter) return false;
     if (!q) return true;
-    const { eventName, location } = parseDetails(l.details);
+    const { eventName, location } = parseLeadDetails(l.details);
     return (
       eventName.toLowerCase().includes(q) ||
       (l.full_name || '').toLowerCase().includes(q) ||
@@ -184,7 +175,7 @@ export default function LeadsPanel() {
       ) : (
         <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
           {visibleLeads.map(lead => {
-            const { eventName, location, guestCount } = parseDetails(lead.details);
+            const { eventName, location, guestCount, templateId } = parseLeadDetails(lead.details);
             const formattedDate = lead.event_date
               ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'short', year: 'numeric' })
                   .format(new Date(lead.event_date + 'T00:00:00'))
@@ -194,6 +185,7 @@ export default function LeadsPanel() {
               formattedDate && { Icon: CalendarDays, text: formattedDate },
               location && { Icon: MapPin, text: location },
               guestCount && { Icon: Users, text: guestCount },
+              leadTemplateMeta(templateId),
             ].filter(Boolean);
 
             return (

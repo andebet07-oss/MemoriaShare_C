@@ -7,6 +7,8 @@ const PAGES_WITHOUT_HEADER = ["Home", "Event", "EventGallery", "EventSuccess", "
 // portalled overlays (drawer, dialogs) always resolve the dark tokens.
 export default function Layout({ children, currentPageName }) {
   const showHeader = !PAGES_WITHOUT_HEADER.includes(currentPageName);
+  // Pages without the shared header lay out their own header / main / footer.
+  const Main = showHeader ? 'main' : 'div';
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col" dir="rtl">
@@ -29,9 +31,9 @@ export default function Layout({ children, currentPageName }) {
       {showHeader && <Header />}
 
       {/* Main Content */}
-      <main className={`relative flex-1 flex flex-col ${showHeader ? 'pt-[72px]' : ''}`}>
+      <Main className={`relative flex-1 flex flex-col ${showHeader ? 'pt-[72px]' : ''}`}>
         {children}
-      </main>
+      </Main>
     </div>
   );
 }

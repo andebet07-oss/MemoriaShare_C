@@ -31,6 +31,9 @@ const MyEvents        = lazy(() => import('@/pages/MyEvents'));
 const MagnetLead      = lazy(() => import('@/pages/MagnetLead'));
 const MagnetGuestPage = lazy(() => import('@/pages/MagnetGuestPage'));
 const PrintStation    = lazy(() => import('@/pages/PrintStation'));
+const Accessibility   = lazy(() => import('@/pages/legal/Accessibility'));
+const Privacy         = lazy(() => import('@/pages/legal/Privacy'));
+const Terms           = lazy(() => import('@/pages/legal/Terms'));
 
 // Admin pages
 const AdminDashboard       = lazy(() => import('@/pages/AdminDashboard'));
@@ -99,6 +102,9 @@ const AuthenticatedApp = () => {
 
         {/* ── Public / Landing ── */}
         <Route path="/" element={<LayoutWrapper currentPageName="Home"><Home /></LayoutWrapper>} />
+        <Route path="/accessibility" element={<Accessibility />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
 
         {/* ── Guest routes (anonymous auth, GuestLayout) ── */}
         <Route path="/event/:code" element={<GuestLayout><Event /></GuestLayout>} />
@@ -133,6 +139,9 @@ const AuthenticatedApp = () => {
         <Route path="/MyEvents"            element={<Navigate to="/host" replace />} />
         <Route path="/CreateEvent"         element={<Navigate to="/host/events/create" replace />} />
         <Route path="/EventSuccess"        element={<Navigate to="/host" replace />} />
+        {/* The old static pages (vercel.json redirects them server-side too). */}
+        <Route path="/privacy.html"        element={<Navigate to="/privacy" replace />} />
+        <Route path="/terms.html"          element={<Navigate to="/terms" replace />} />
 
         <Route path="*" element={<PageNotFound />} />
       </Routes>

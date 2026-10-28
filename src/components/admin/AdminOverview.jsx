@@ -55,7 +55,7 @@ export default function AdminOverview() {
   const isLoading = eventsLoading || leadsLoading;
 
   const handleCreateEvent = (lead) => {
-    const { eventName, coverImageUrl } = parseLeadDetails(lead.details);
+    const { eventName, coverImageUrl, templateId } = parseLeadDetails(lead.details);
     navigate('/admin/events/magnet/create', {
       state: {
         fromLead: {
@@ -64,6 +64,7 @@ export default function AdminOverview() {
           eventDate:     lead.event_date || '',
           contactName:   lead.full_name || '',
           coverImageUrl: coverImageUrl || '',
+          templateId,
         },
       },
     });
