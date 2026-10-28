@@ -3,7 +3,7 @@ import { Loader2, ArrowLeft, Home } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
-import { DEFAULT_TEMPLATE_ID, getTemplate, resolveOptions } from "@/lib/polaroid/templates";
+import { getTemplate, resolveOptions } from "@/lib/polaroid/templates";
 import PolaroidPreview from "@/components/magnet/templates/PolaroidPreview";
 import EventCreatedScreen from "@/components/magnet/create/EventCreatedScreen";
 import { NameStep, DateStep, QuotaStep, TemplateStep } from "@/components/magnet/create/WizardSteps";
@@ -22,7 +22,8 @@ export default function CreateMagnetEvent() {
     name: fromLead?.eventName ?? '',
     date: fromLead?.eventDate ?? '',
     print_quota_per_device: 5,
-    template: { templateId: DEFAULT_TEMPLATE_ID, options: resolveOptions(getTemplate(DEFAULT_TEMPLATE_ID)) },
+    // The template the visitor picked on the home page, when the lead has one.
+    template: { templateId: getTemplate(fromLead?.templateId).id, options: resolveOptions(getTemplate(fromLead?.templateId)) },
     coverImageFile: null,    // new File selected by admin in this wizard
     coverImageUrl: fromLead?.coverImageUrl ?? '',  // pre-existing URL from lead submission
   });

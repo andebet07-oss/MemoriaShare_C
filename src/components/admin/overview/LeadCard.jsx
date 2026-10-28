@@ -1,21 +1,31 @@
-import { Plus, Phone, CalendarDays, MapPin, Users } from 'lucide-react';
+import { Plus, Phone, CalendarDays, MapPin, Users, Palette } from 'lucide-react';
+import { TEMPLATES } from '@/lib/polaroid/templates';
 import Card from '@/components/system/Card';
 import { Button } from '@/components/ui/button';
 
 export function parseLeadDetails(details = '') {
   const parts = details.split(' · ');
   const coverPart = parts.find(p => p.startsWith('cover:'));
+  // Set when the visitor came from the home page designer.
+  const templatePart = parts.find(p => p.startsWith('template:'));
+  const templateId = templatePart?.replace('template:', '').trim();
   return {
     eventName:     parts[0]?.trim() || '',
     location:      parts[1]?.trim() || '',
     guestCount:    parts[2]?.trim() || '',
     coverImageUrl: coverPart ? coverPart.replace('cover:', '') : '',
+    templateId:    TEMPLATES[templateId] ? templateId : '',
   };
+}
+
+/** The template the visitor picked, as a meta line ("עיצוב רך"), or null. */
+export function leadTemplateMeta(templateId) {
+  return templateId ? { Icon: Palette, text: `עיצוב ${TEMPLATES[templateId].label}` } : null;
 }
 
 /** Actionable lead card on the overview: details, phone, "create event". */
 export default function LeadCard({ lead, onCreateEvent }) {
-  const { eventName, location, guestCount } = parseLeadDetails(lead.details);
+  const { eventName, location, guestCount, templateId } = parseLeadDetails(lead.details);
   const formattedDate = lead.event_date
     ? new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'short', year: 'numeric' })
         .format(new Date(lead.event_date + 'T00:00:00'))
@@ -24,6 +34,7 @@ export default function LeadCard({ lead, onCreateEvent }) {
     formattedDate && { Icon: CalendarDays, text: formattedDate },
     location && { Icon: MapPin, text: location },
     guestCount && { Icon: Users, text: guestCount },
+    leadTemplateMeta(templateId),
   ].filter(Boolean);
 
   return (
