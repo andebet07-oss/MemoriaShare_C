@@ -20,7 +20,8 @@ export default function PhoneFrame({ center = false, className, label, children 
 
   return (
     <figure className={cn('relative shrink-0', className)} aria-label={label}>
-      <div className={cn('absolute -inset-10 -z-10 rounded-full blur-[60px]', center ? 'bg-foreground/15' : 'bg-foreground/[0.04]')} />
+      {/* Soft indigo light behind the phone */}
+      <div className={cn('absolute -inset-10 -z-10 rounded-full blur-[60px]', center ? 'bg-brand/25' : 'bg-brand/[0.08]')} />
       <div
         className={cn(
           'relative rounded-[2.8rem] border border-foreground/20 bg-cool-950 shadow-card-dark',

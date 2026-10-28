@@ -1,21 +1,18 @@
-import { useRef } from 'react';
 import { ZapOff, Film, RotateCw, RectangleVertical } from 'lucide-react';
 import { Wordmark } from '@/components/magnet/guest/GuestShell';
 import GuestTitle, { FlowLine } from '@/components/magnet/guest/GuestTitle';
 import GuestSheet from '@/components/magnet/guest/GuestSheet';
 import GuestNotice from '@/components/magnet/guest/GuestNotice';
-import PolaroidViewfinder from '@/components/magnet/camera/PolaroidViewfinder';
-import { eventRenderSpec } from '@/lib/polaroid/renderPolaroid';
-import { useSampleMagnet } from '@/hooks/useSampleMagnet';
-import { MAGNET_EVENT, CAMERA_EVENT, LANDING_EVENT } from './homeSamples';
+import { LANDING_EVENT } from './homeSamples';
+import { magnetSrc } from './samplePhotos';
 
-// The hero's screens, laid out on a 375px-wide phone (see PhoneFrame). Frames
-// come from the template renderer, so they match the print; each photo shows
-// once, inside its frame (or, on the landing, as the cover). Pictures only.
+// Screens shown inside the home page's phones, laid out on a 375px-wide phone
+// (see PhoneFrame). Magnets are pre-rendered by the template renderer (see
+// samplePhotos.js), so they match the print without drawing on load. Pictures only.
 
 const noop = () => {};
 
-/** Right: the guest landing after scanning the QR, the event cover edge to edge. */
+/** The guest landing after scanning the QR, the event cover edge to edge. */
 export function LandingScreen() {
   const quota = LANDING_EVENT.print_quota_per_device;
   return (
@@ -40,17 +37,14 @@ const FRAME_TOP = 40;  // status-bar gap above the frame
 const FRAME_H = 500;   // a portrait magnet 375px wide (3 × 4)
 
 /**
- * Centre: the camera as the real viewfinder draws it (PolaroidViewfinder +
- * renderOverlay): the frame edge to edge, the photo only through the window,
- * the shutter bar under the frame.
+ * The camera as the guest sees it: the template frame edge to edge with the
+ * photo through its window (the viewfinder looks exactly like the magnet),
+ * and the shutter bar under it.
  */
-export function CameraScreen() {
-  const videoRef = useRef(null);
+export function CameraScreen({ magnet = 'hero-camera' }) {
   return (
     <div dir="rtl" className="fixed inset-0 overflow-hidden bg-cool-950">
-      <PolaroidViewfinder spec={eventRenderSpec(CAMERA_EVENT)} orientation="portrait" videoRef={videoRef}
-        inset={{ top: FRAME_TOP, right: 0, left: 0, bottom: `calc(100% - ${FRAME_TOP + FRAME_H}px)` }}
-        still={CAMERA_EVENT.photo} />
+      <img src={magnetSrc(magnet)} alt="" draggable={false} className="absolute inset-x-0 w-full" style={{ top: FRAME_TOP, height: FRAME_H }} />
       <div className="absolute inset-x-0 bottom-0 grid grid-cols-[1fr_auto_1fr] items-center px-6" style={{ top: FRAME_TOP + FRAME_H }}>
         <div className="flex items-center justify-center gap-3">
           <span className={round}><ZapOff className="h-5 w-5 text-foreground/70" /></span>
@@ -69,16 +63,11 @@ export function CameraScreen() {
   );
 }
 
-/** Left: the finished magnet (renderComposite), ready for pickup. */
-export function MagnetScreen() {
-  const { url } = useSampleMagnet({
-    ...eventRenderSpec(MAGNET_EVENT), orientation: 'portrait', photo: MAGNET_EVENT.photo, scale: 1.5,
-  });
+/** The finished magnet, ready for pickup. */
+export function MagnetScreen({ magnet = 'hero-ready' }) {
   return (
     <div dir="rtl" className="fixed inset-0 flex flex-col items-center justify-center gap-6 overflow-hidden bg-guest-bg px-5 font-heebo text-guest-ink">
-      <div className="aspect-[3/4] w-full">
-        {url && <img src={url} alt="" draggable={false} className="block size-full shadow-2xl" />}
-      </div>
+      <img src={magnetSrc(magnet)} alt="" draggable={false} className="block aspect-[3/4] w-full shadow-2xl" />
       <div className="w-full px-1">
         <GuestNotice kind="ready" />
       </div>

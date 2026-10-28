@@ -1,46 +1,54 @@
-import SectionHeading from './SectionHeading';
+import { cn } from '@/lib/utils';
+import Reveal from './Reveal';
+import { FridgeGroup, CameraVisual, PrintedVisual } from './WhyVisuals';
 
-const BENEFITS = [
-  { title: 'מגנט מעוצב לכל אורח', desc: 'כל תמונה יוצאת כמגנט פולרואיד בעיצוב של האירוע, עם השמות והתאריך שלכם.' },
-  { title: 'בלי אפליקציה, בלי הרשמה', desc: 'סורקים QR, מצלמים ושולחים להדפסה. עובד על כל טלפון.' },
-  { title: 'עמדת הדפסה וצוות מקצועי', desc: 'אנחנו מגיעים, מקימים עמדה ומדפיסים לאורך כל האירוע. אתם רק נהנים.' },
-  { title: 'מכסה לכל אורח', desc: 'אתם קובעים כמה מגנטים כל אורח מקבל, כך שכולם נהנים.' },
-  { title: 'עיצוב לבחירתכם', desc: 'מבחר עיצובי פולרואיד נקיים, בעברית או באנגלית.' },
-  { title: 'איכות צילום', desc: 'הדפסה מקצועית בגודל 7.5 × 10 ס״מ, שנראית מצוין גם שנים אחרי.' },
+// The events we work, as one plain line under the headline.
+const EVENT_TYPES = ['חתונות', 'בר/בת מצווה', 'בריתות', 'אירועי חברה', 'ימי הולדת'];
+
+// Three points, each a big title, one line and a real visual.
+const POINTS = [
+  { title: 'מגנט מעוצב לכל אורח.', line: 'כל תמונה יוצאת כמגנט בעיצוב של האירוע, עם השמות והתאריך שלכם.', Visual: FridgeGroup },
+  { title: 'בלי אפליקציה. בלי הרשמה.', line: 'סורקים QR, מצלמים ושולחים להדפסה. עובד מכל טלפון.', Visual: CameraVisual },
+  { title: 'עמדה וצוות, במקום.', line: 'אנחנו מקימים עמדת הדפסה ומדפיסים לאורך כל האירוע. אתם רק נהנים.', Visual: PrintedVisual },
 ];
 
-// The events we work, as a quiet row under the heading (not links, not filters).
-const EVENT_TYPES = ['חתונות', 'בר/בת מצווה', 'בריתות', 'אירועי חברה', 'ימי הולדת'];
+/** One point: text beside its visual, sides alternating on desktop (`flip`). */
+function Point({ title, line, Visual, flip }) {
+  return (
+    // The visual takes the larger column, on alternating sides.
+    <div className={cn('grid grid-cols-1 items-center gap-8 md:gap-14', flip ? 'md:grid-cols-[6fr_5fr]' : 'md:grid-cols-[5fr_6fr]')}>
+      <Reveal>
+        <h3 className="text-balance text-[1.875rem] font-bold leading-[1.12] text-foreground md:text-[clamp(2.5rem,3.8vw,3.5rem)] md:leading-[1.08]">{title}</h3>
+        <p className="mt-3 max-w-md text-pretty text-[17px] leading-relaxed text-muted-foreground md:mt-5 md:text-xl">{line}</p>
+      </Reveal>
+      <Reveal delay={120} className={cn(flip && 'md:order-first')}>
+        <Visual />
+      </Reveal>
+    </div>
+  );
+}
 
 export default function Features() {
   return (
-    <section id="features" className="scroll-mt-20 border-t border-border py-24 md:py-32" dir="rtl">
-      <div className="container mx-auto px-6">
-        <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-[1fr_2fr] md:gap-20">
-
-          <div className="self-start md:sticky md:top-32">
-            <SectionHeading number="01" label="למה Memoria" title="מזכרת שנשארת על המקרר." />
-            <ul aria-label="סוגי אירועים" className="mt-6 flex flex-wrap gap-2">
+    <section id="features" className="scroll-mt-20 overflow-x-clip bg-page-alt py-24 md:py-32" dir="rtl">
+      <div className="mx-auto max-w-6xl px-6 md:px-12">
+        <Reveal className="mb-14 md:mb-16">
+          <h2 className="max-w-4xl text-balance text-[2.25rem] font-bold leading-[1.1] text-foreground md:text-[clamp(3rem,5vw,4.5rem)] md:leading-[1.05]">מזכרת שנשארת על המקרר.</h2>
+          {/* Each type carries the dot before it, and the dot that would start a
+              line sits in the clipped margin: no line starts or ends with a dot. */}
+          <div className="mt-4 overflow-hidden md:mt-6">
+            <ul aria-label="סוגי אירועים" className="-ms-6 flex flex-wrap gap-y-1 text-base text-muted-foreground md:text-xl">
               {EVENT_TYPES.map((type) => (
-                <li key={type} className="rounded-full border border-border px-3 py-1 text-sm text-muted-foreground">{type}</li>
+                <li key={type} className="flex items-center">
+                  <span aria-hidden="true" className="w-6 text-center text-foreground/30">·</span>
+                  {type}
+                </li>
               ))}
             </ul>
           </div>
-
-          <ol className="divide-y divide-border">
-            {BENEFITS.map((b, i) => (
-              <li key={b.title} className="flex items-start gap-6 py-8">
-                <span className="shrink-0 pt-0.5 text-xl font-medium leading-none tabular-nums text-brand md:text-2xl">
-                  <bdi>{String(i + 1).padStart(2, '0')}</bdi>
-                </span>
-                <div className="flex-1">
-                  <h3 className="mb-2 text-xl font-semibold text-foreground">{b.title}</h3>
-                  <p className="text-base font-light leading-relaxed text-muted-foreground">{b.desc}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-
+        </Reveal>
+        <div className="flex flex-col gap-20 md:gap-24">
+          {POINTS.map((p, i) => <Point key={p.title} {...p} flip={i % 2 === 1} />)}
         </div>
       </div>
     </section>

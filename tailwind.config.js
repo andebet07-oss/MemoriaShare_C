@@ -65,6 +65,12 @@ module.exports = {
         input:  'hsl(var(--input))',
         ring:   'hsl(var(--ring))',
         brand: 'hsl(var(--brand))',
+        // Home + legal pages: two close charcoal tones and one deep-indigo band.
+        page: {
+          DEFAULT: 'hsl(var(--page))',
+          alt:     'hsl(var(--page-alt))',
+        },
+        band: 'hsl(var(--band))',
         status: {
           pending:  'hsl(var(--status-pending))',
           printing: 'hsl(var(--status-printing))',
@@ -148,12 +154,20 @@ module.exports = {
         'card-dark': '0 2px 16px rgba(0,0,0,0.55)',
         // Top inset highlight (glass edge)
         'inner-top': 'inset 0 1px 0 rgba(252,252,254,0.07)',
+        // A printed magnet resting on a surface
+        'magnet': '0 1px 2px rgba(0,0,0,0.35), 0 22px 44px -12px rgba(0,0,0,0.6)',
       },
 
       // ─── Backgrounds ──────────────────────────────────────────────
       backgroundImage: {
         // The one page glow (CLAUDE.md §0.6): a soft indigo wash behind hero content.
         glow: 'radial-gradient(circle at 50% 30%, hsl(var(--brand) / 0.14), transparent 60%)',
+        // Soft indigo light behind a visual (fills its box, fades to nothing at the edge).
+        'glow-soft': 'radial-gradient(closest-side, hsl(var(--brand) / 0.16), transparent)',
+        // The deep-indigo band: a lighter centre so it doesn't read as a flat slab.
+        'band-light': 'radial-gradient(120% 90% at 50% 0%, hsl(var(--brand) / 0.22), transparent 60%)',
+        // Ground shadow under a standing phone or magnet group.
+        'floor': 'radial-gradient(closest-side, rgba(0,0,0,0.5), transparent)',
         'gradient-radial':   'radial-gradient(var(--tw-gradient-stops))',
         // Vignette
         'vignette':          'radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.72) 100%)',
@@ -215,6 +229,20 @@ module.exports = {
           '0%, 100%': { opacity: '0.8', transform: 'scale(1)' },
           '50%':      { opacity: '0.4', transform: 'scale(1.05)' },
         },
+        // Home motion. Each uses the independent `translate` / `scale`
+        // properties, so it composes with an element's own rotate or transform.
+        'rise': {
+          from: { opacity: '0', translate: '0 var(--rise, 16px)' },
+          to:   { opacity: '1', translate: '0 0' },
+        },
+        'settle': {
+          from: { opacity: '0', translate: '0 -14px', scale: '1.04' },
+          to:   { opacity: '1', translate: '0 0', scale: '1' },
+        },
+        'drift': {
+          '0%, 100%': { translate: '0 0' },
+          '50%':      { translate: '0 -6px' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -229,6 +257,10 @@ module.exports = {
         'paper-fly':      'paper-fly 1.3s ease-in-out infinite',
         'pulse-slow':     'pulse-slow 4s ease-in-out infinite',
         'shimmer':        'shimmer-pass 4s infinite linear',
+        // Restrained: ease-out, no overshoot.
+        'rise':           'rise 0.6s cubic-bezier(0.2,0.7,0.2,1) both',
+        'settle':         'settle 0.5s cubic-bezier(0.2,0.7,0.2,1) both',
+        'drift':          'drift 7s ease-in-out infinite',
       },
     },
   },
