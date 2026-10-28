@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home sample magnets</title>
+    <style>
+      body { margin: 0; padding: 24px; background: #1c1c20; color: #fcfcfe; font: 14px system-ui, sans-serif; }
+      #list { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+      figure { margin: 0; width: 180px; }
+      figure img { width: 100%; display: block; }
+      figcaption { margin-top: 6px; color: #b4b4b4; word-break: break-all; }
+      a { color: #a9b1ec; }
+    </style>
+  </head>
+  <body>
+    <h1>Home sample magnets</h1>
+    <p>
+      Dev tool: renders every magnet in <code>src/components/home/samplePhotos.js</code> with the real template
+      renderer and offers each one as WebP. Open it on the Vite dev server in Chrome
+      (<code>/scripts/home-samples/</code>) and save the files into <code>public/samples/magnets/</code>.
+    </p>
+    <p id="status">Rendering…</p>
+    <div id="list"></div>
+    <script type="module" src="./render.js"></script>
+  </body>
+</html>
