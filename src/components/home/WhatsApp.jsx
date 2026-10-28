@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 const LABEL = 'דברו איתנו בוואטסאפ';
 
-/** The hero's secondary button. Renders nothing when no number is set. */
+/** The secondary WhatsApp button (hero, final CTA). Renders nothing when no number is set. */
 export function WhatsAppButton({ className }) {
   const href = whatsappUrl();
   if (!href) return null;
@@ -20,27 +20,30 @@ export function WhatsAppButton({ className }) {
 }
 
 /**
- * The floating button, phones only. `hidden` while the hero's own buttons are
- * on screen, so it never sits over the main CTA. Renders nothing when no
- * number is set.
+ * The phones' bottom bar: the booking button, with WhatsApp beside it as an
+ * icon. `hidden` while another booking button is on screen or a field has
+ * focus (Home decides). Without a number, the bar holds the booking button only.
  */
-export function WhatsAppFab({ hidden }) {
+export function MobileActionBar({ hidden, onBook }) {
   const href = whatsappUrl();
-  if (!href) return null;
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={LABEL}
+    <div
       {...(hidden ? { inert: '', 'aria-hidden': true } : {})}
       className={cn(
-        'fixed left-4 z-40 flex size-12 items-center justify-center rounded-full border border-border bg-secondary/90 text-brand shadow-card-dark backdrop-blur transition-[opacity,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background md:hidden',
-        hidden ? 'pointer-events-none translate-y-2 opacity-0' : 'opacity-100',
+        'fixed inset-x-0 bottom-0 z-40 flex gap-2.5 bg-page/85 px-4 pt-2.5 backdrop-blur-xl transition-[opacity,transform] duration-200 motion-reduce:transition-none md:hidden',
+        hidden ? 'pointer-events-none translate-y-full opacity-0' : 'opacity-100',
       )}
-      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
+      dir="rtl"
     >
-      <MessageCircle aria-hidden className="size-6" />
-    </a>
+      <Button size="lg" className="h-12 flex-1" onClick={onBook}>שריינו תאריך</Button>
+      {href && (
+        <Button asChild size="icon" variant="secondary" className="size-12 shrink-0 [&_svg]:size-5">
+          <a href={href} target="_blank" rel="noopener noreferrer" aria-label={LABEL}>
+            <MessageCircle aria-hidden />
+          </a>
+        </Button>
+      )}
+    </div>
   );
 }

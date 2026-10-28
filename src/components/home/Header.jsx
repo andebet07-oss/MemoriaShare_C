@@ -130,7 +130,7 @@ export default function Header({ onCreateEvent }) {
 
           {/* Logo */}
           <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <img src="/LOGO.png" alt="Memoria" className="h-10 w-auto object-contain" />
+            <img src="/logo.svg" alt="Memoria" width="77" height="51" className="h-8 w-auto md:h-9" />
           </Link>
         </div>
       </header>
@@ -146,7 +146,7 @@ export default function Header({ onCreateEvent }) {
         <div className={`absolute top-0 right-0 w-[85%] max-w-sm h-full bg-background/95 backdrop-blur-xl border-l border-border flex flex-col shadow-card-dark transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`} dir="rtl">
 
           <div className="flex items-center justify-between p-6 border-b border-border">
-            <img src="/LOGO.png" alt="Memoria" className="h-8 w-auto object-contain" />
+            <img src="/logo.svg" alt="Memoria" width="77" height="51" className="h-7 w-auto" />
             <button ref={closeButtonRef} onClick={closeMenu} aria-label="סגור תפריט" className="w-10 h-10 flex items-center justify-center rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/40 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
               <X className="w-6 h-6" />
             </button>

@@ -17,14 +17,14 @@ export default function LegalPage({ title, updated, children }) {
   }, [title]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cool-950 via-cool-900 to-cool-950 text-foreground" dir="rtl">
+    <div className="min-h-screen bg-page text-foreground [--muted-foreground:0_0%_71%]" dir="rtl">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link to="/" className={`flex items-center gap-2 text-sm text-muted-foreground ${link}`}>
             <ArrowRight aria-hidden className="size-4" />
             לדף הבית
           </Link>
-          <Link to="/" className={link}><img src="/LOGO.png" alt="Memoria, לדף הבית" className="h-8 w-auto" /></Link>
+          <Link to="/" className={link}><img src="/logo.svg" alt="Memoria, לדף הבית" width="77" height="51" className="h-8 w-auto" /></Link>
         </div>
       </header>
 

@@ -107,6 +107,11 @@
     --input: 0 0% 15%;
     --ring: 235 64% 68%;               /* indigo focus ring */
 
+    /* Home + legal pages (approved 2026-10-28): charcoal tones and one indigo band */
+    --page: 240 7% 12%;                /* #1c1c20 — base */
+    --page-alt: 240 6% 14%;            /* #212125 — alternating sections */
+    --band: 236 56% 22%;               /* deep indigo, white text on it */
+
     --chart-1: 235 64% 68%;            /* indigo */
     --chart-2: 200 40% 60%;
     --chart-3: 15 40% 60%;
