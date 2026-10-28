@@ -1,22 +1,28 @@
 {
-  "name": "MemoriaShare",
+  "name": "Memoria",
   "short_name": "Memoria",
-  "description": "האורחים מצלמים, הכל באלבום אחד",
+  "description": "מגנטים מודפסים באירוע",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f0f",
-  "theme_color": "#0f0f0f",
+  "background_color": "#1c1c20",
+  "theme_color": "#1c1c20",
   "lang": "he",
   "dir": "rtl",
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/favicon.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
