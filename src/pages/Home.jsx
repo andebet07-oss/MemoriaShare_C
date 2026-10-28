@@ -11,9 +11,11 @@ import FinalCTA from '@/components/home/FinalCTA';
 import { WhatsAppFab } from '@/components/home/WhatsApp';
 import { LEGAL_LINKS } from '@/components/legal/legalLinks';
 import { useInView } from '@/hooks/useInView';
+import { useViewportHeight } from '@/hooks/useViewportHeight';
 
 // The bottom of the screen where the floating button sits (and a little more).
-const BOTTOM_BAND = '-78% 0px 0px 0px';
+// In px: browsers differ on what a percentage root margin is relative to.
+const BOTTOM_BAND_PX = 180;
 
 export default function Home() {
   const navigate = useNavigate();
@@ -23,9 +25,10 @@ export default function Home() {
   const heroCtaRef = useRef(null);
   const designFormRef = useRef(null);
   const finalCtaRef = useRef(null);
+  const bottomBand = `-${Math.max(0, useViewportHeight() - BOTTOM_BAND_PX)}px 0px 0px 0px`;
   const heroCtaInView = useInView(heroCtaRef, { rootMargin: '0px 0px 96px 0px' });
-  const designFormLow = useInView(designFormRef, { rootMargin: BOTTOM_BAND });
-  const finalCtaLow = useInView(finalCtaRef, { rootMargin: BOTTOM_BAND });
+  const designFormLow = useInView(designFormRef, { rootMargin: bottomBand });
+  const finalCtaLow = useInView(finalCtaRef, { rootMargin: bottomBand });
 
   // Single product: every booking CTA starts the MemoriaMagnet lead wizard.
   const startMagnetLead = () => navigate('/magnet/lead');
