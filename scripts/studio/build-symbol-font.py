@@ -5,7 +5,9 @@ Typing "עדן ♥ אביב" then draws a modern heart in the text's own colour 
 machine and in print. The font is listed first for text, but its @font-face unicode-range limits it to
 these characters, so every other character still uses the chosen font.
 
-Reads  src/studio/fonts/textSymbols.json  (which character → which icon) and  src/studio/icons/customPaths.json.
+Reads  src/studio/fonts/textSymbols.json  (which character → which icon),  src/studio/icons/customPaths.json  and,
+for colour symbols ("image:<id>"),  src/studio/icons/custom-images/<id>.svg: each <path fill="#rrggbb"> becomes a
+colour layer (COLR/CPAL), so a colour heart keeps its own colours inside text.
 Writes src/studio/fonts/magnet-symbols.woff2  and  src/studio/fonts/symbols.css.
 
 Icon artwork: Phosphor Icons (MIT) and MingCute (Apache 2.0), via the Iconify packages on npm.
@@ -45,6 +47,13 @@ def load_sets(prefixes):
     return sets
 
 
+def colour_layers(name):
+    """[(hex colour, path)] of a colour icon in custom-images, bottom layer first."""
+    svg = open(f"src/studio/icons/custom-images/{name}.svg", encoding="utf-8").read()
+    box = [float(v) for v in re.search(r'viewBox="([^"]+)"', svg).group(1).split()]
+    return box, re.findall(r'<path fill="(#[0-9A-Fa-f]{6})" d="([^"]+)"', svg)
+
+
 def artwork(source, sets, custom):
     kind, name = source.split(":", 1)
     if kind == "custom":
@@ -53,6 +62,13 @@ def artwork(source, sets, custom):
     icon = data["icons"][name]
     box = [icon.get("left", 0), icon.get("top", 0), icon.get("width", data.get("width", 16)), icon.get("height", data.get("height", 16))]
     return box, " ".join(re.findall(r'<path[^>]*\sd="([^"]+)"', icon["body"]))
+
+
+def padded(view_box, scale):
+    """Grows the grid around the icon, so an icon drawn edge to edge sits like one with padding."""
+    vx, vy, vw, vh = view_box
+    nw, nh = vw / scale, vh / scale
+    return [vx - (nw - vw) / 2, vy - (nh - vh) / 2, nw, nh]
 
 
 def draw(pen, view_box, d, rotate=0):
@@ -71,7 +87,7 @@ def draw(pen, view_box, d, rotate=0):
 def main():
     symbols = json.load(open("src/studio/fonts/textSymbols.json", encoding="utf-8"))
     custom = json.load(open("src/studio/icons/customPaths.json", encoding="utf-8"))
-    sets = load_sets({s["source"].split(":")[0] for s in symbols} - {"custom"})
+    sets = load_sets({s["source"].split(":")[0] for s in symbols} - {"custom", "image"})
 
     order, charstrings, metrics, cmap = [".notdef", "vs16"], {}, {}, {}
     for name, width in ((".notdef", 500), ("vs16", 0)):
@@ -81,17 +97,39 @@ def main():
     # still uses this font's heart instead of a colour emoji.
     cmap[0xFE0F] = "vs16"
 
-    for index, symbol in enumerate(symbols):
-        name = f"sym{index}"
-        view_box, d = artwork(symbol["source"], sets, custom)
+    palette, colr = [], {}
+
+    def add_glyph(name, view_box, d, rotate):
         advance = round(BOX * view_box[2] / view_box[3] + 2 * SIDE)
         pen = T2CharStringPen(advance, None)
-        draw(pen, view_box, d, symbol.get("rotate", 0))
+        draw(pen, view_box, d, rotate)
         bounds = BoundsPen(None)
-        draw(bounds, view_box, d, symbol.get("rotate", 0))
+        draw(bounds, view_box, d, rotate)
         order.append(name)
         charstrings[name] = pen.getCharString()
         metrics[name] = (advance, round(bounds.bounds[0]))
+
+    for index, symbol in enumerate(symbols):
+        name = f"sym{index}"
+        rotate = symbol.get("rotate", 0)
+        kind, source_name = symbol["source"].split(":", 1)
+        if kind == "image":
+            view_box, layers = colour_layers(source_name)
+            if symbol.get("scale"):
+                view_box = padded(view_box, symbol["scale"])
+            # The base glyph is the whole shape in one colour, for renderers without colour fonts.
+            add_glyph(name, view_box, " ".join(d for _, d in layers), rotate)
+            colr[name] = []
+            for j, (colour, d) in enumerate(layers):
+                add_glyph(f"{name}.layer{j}", view_box, d, rotate)
+                if colour not in palette:
+                    palette.append(colour)
+                colr[name].append((f"{name}.layer{j}", palette.index(colour)))
+        else:
+            view_box, d = artwork(symbol["source"], sets, custom)
+            if symbol.get("scale"):
+                view_box = padded(view_box, symbol["scale"])
+            add_glyph(name, view_box, d, rotate)
         for char in symbol["chars"]:
             cmap[ord(char)] = name
 
@@ -104,6 +142,9 @@ def main():
     fb.setupNameTable({"familyName": FAMILY, "styleName": "Regular"})
     fb.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
     fb.setupPost()
+    if colr:
+        fb.setupCOLR(colr)
+        fb.setupCPAL([[tuple(int(c[i:i + 2], 16) / 255 for i in (1, 3, 5)) + (1.0,) for c in palette]])
     fb.font.flavor = "woff2"
     fb.save("src/studio/fonts/magnet-symbols.woff2")
 

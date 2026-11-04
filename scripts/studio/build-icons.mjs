@@ -1,10 +1,11 @@
 // Writes the artwork for src/studio/icons/catalog.js:
 //   - single-colour paths (Phosphor, MingCute, custom rings) → src/studio/icons/symbolPaths.js
-//   - Fluent Emoji SVGs                                      → public/studio/emoji/<id>.svg
+//   - Fluent Emoji SVGs and Memoria's own colour icons       → public/studio/emoji/<id>.svg
+//     (own colour icons are copied from src/studio/icons/custom-images/)
 // Run with `node scripts/studio/build-icons.mjs`. Needs the npm registry: the Iconify icon sets are downloaded with
 // `npm pack` into a temp folder, so nothing is added to package.json.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { EMOJI, SYMBOLS } from '../../src/studio/icons/catalog.js';
@@ -57,7 +58,11 @@ try {
   const fluent = sets['fluent-emoji'];
   rmSync('public/studio/emoji', { recursive: true, force: true });
   mkdirSync('public/studio/emoji', { recursive: true });
-  for (const { id } of EMOJI) {
+  for (const { id, source } of EMOJI) {
+    if (source === 'custom') {
+      copyFileSync(`src/studio/icons/custom-images/${id}.svg`, `public/studio/emoji/${id}.svg`);
+      continue;
+    }
     const icon = fluent.icons[id];
     if (!icon) throw new Error(`emoji "${id}" not in ${PACKAGES['fluent-emoji']}`);
     const width = icon.width ?? fluent.width ?? 32;

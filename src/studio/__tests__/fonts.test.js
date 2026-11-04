@@ -45,7 +45,7 @@ describe('symbols inside text', async () => {
 
   it('offers hearts, rings and sparkles with Hebrew names', () => {
     const labels = TEXT_SYMBOLS.map((s) => s.label);
-    expect(labels).toEqual(expect.arrayContaining(['לב', 'לב בקו', 'שני לבבות', 'טבעות', 'טבעת יהלום']));
+    expect(labels).toEqual(expect.arrayContaining(['לב', 'לב מבריק', 'לב עם ברק', 'לב מצויר', 'לב בקו', 'שני לבבות', 'לב מקושקש', 'טבעות', 'טבעות יהלום', 'טבעות שזורות']));
   });
 
   it('puts the symbols font first, so it wins only for its own characters', () => {
