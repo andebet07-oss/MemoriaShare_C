@@ -1,4 +1,5 @@
 // Buttons that put a heart, rings or a sparkle into the text at the cursor: "עדן ♥ אביב".
+// Colour symbols (the scribble hearts) keep their own colours; the rest take the text colour.
 import { FieldLabel } from '@/studio/ui/fields';
 import { insertSymbol, SYMBOL_FONT, TEXT_SYMBOLS } from '@/studio/fonts/textSymbols';
 
