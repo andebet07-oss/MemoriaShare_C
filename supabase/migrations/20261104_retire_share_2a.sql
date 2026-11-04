@@ -1,6 +1,6 @@
 -- ============================================================
 -- Retire Share, Phase 2a: tighten the database rules Share left behind — security fix
--- Applied to live DB: <PENDING>   (lives in supabase/pending/ until applied; see README there)
+-- Applied to live DB: 2026-11-04 (rules checked against live pg_policies the same day)
 -- ============================================================
 --
 -- Plan: docs/share-retirement-plan.md §3 (2a). Apply AFTER the Phase 1 site is live:

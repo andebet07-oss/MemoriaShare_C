@@ -1,5 +1,5 @@
 -- ============================================================
--- QA: photos / events / upload_diagnostics after supabase/pending/20261104_retire_share_2a.sql
+-- QA: photos / events / upload_diagnostics after supabase/migrations/20261104_retire_share_2a.sql
 -- ============================================================
 -- Run the WHOLE file in the Supabase SQL editor AFTER applying the migration
 -- (if the editor asks about RLS for new tables: "Run without RLS"; the two tables
