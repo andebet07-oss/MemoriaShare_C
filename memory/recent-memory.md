@@ -1,10 +1,29 @@
 ---
 type: recent-memory
-updated: 2026-05-11T22:00Z
+updated: 2026-11-04T08:00Z
 horizon: 48 hours (NB: HEAD now 6 days stale — session blocks below preserved as actionable tech-debt context, not as fresh "recent" decisions)
 ---
 
 # Recent Memory (Last 48 Hours)
+
+> **2026-11-04 (branch `claude/hopeful-feynman-ohyurh`) — the frame studio moves into `/admin/studio`.** The standalone Magnet Frame Studio (repo `magnet-frame`, its own Supabase project) becomes part of the admin. Plan: `docs/studio-migration-plan.md`. User decisions:
+> - D1: one template library shared by all admins.
+> - D2: konva + zustand + fflate approved; the 24 font families are self-hosted (`public/fonts/studio`, `scripts/studio/gen-fonts.mjs`), not @fontsource packages.
+> - D3: ZIP backup/restore kept; it is also how the old templates move over.
+> - D4: the editor needs ≥1024 px; phones get a "פתח במחשב" message, while the library works on phones.
+> - D5: the old site is redirected, then its Supabase project deleted after two weeks.
+>
+> DB: `supabase/migrations/20261104_studio_templates.sql` is applied on live: table `studio_templates` with a revision trigger, private bucket `studio-files`, admin-only via `is_admin()`. Its guard block checks `is_admin()` is SECURITY DEFINER and tests `role = 'admin'`. QA on live: 22/22.
+>
+> Code: `src/studio/` with its own data layer, Memoria's supabase client and toaster, and Tailwind 3 semantic tokens. The studio tests run with `// @vitest-environment node`.
+>
+> Gotchas:
+> - `size-4.5` is Tailwind 4 only (now `size-[18px]`).
+> - Two site test files already fail on main (`@/api/base44Client`, `@/lib/app-params` are gone).
+> - `npm run typecheck` already has 296 errors on main.
+> - In the Supabase SQL editor, a QA file with temp tables triggers a "Run without RLS" prompt; answer **Run without RLS**.
+>
+> Next: merge, production check, move templates by ZIP, then a plan to use studio templates as an event's magnet (names/date from the event). That depends on the pending `20261026_polaroid_templates_add.sql`; whether it is applied on live is unconfirmed (asked the user to run a column check).
 
 > **2026-10-26 (polaroid templates, branch `claude/polaroid-templates`) — the frame system is gone; magnets are code-rendered templates.** Six templates (A Soft default, B Serif, C Red heart, D Rings, F Handwritten, G Script) live in `src/lib/polaroid/`. ONE renderer (`drawPolaroid`) produces both the print composite and the viewfinder overlay (transparent window), so the window geometry is identical by construction (verified pixel for pixel, 12/12). Print = `PRINT_SPEC` 3 × 4 in @ 300 DPI (900 × 1200 / 1200 × 900), landscape rotated onto the 3 × 4 page. Design units 300 × 400 / 400 × 300; text ≥ 4 mm (≈15.75 units) inside the trim. Template fonts are self-hosted OFL woff2 in `public/fonts/templates`, loaded with FontFace under `tpl-*` names before every draw (a render rejects rather than print fallback fonts). User decisions: D1 A's vertical URL **off by default** (decide after a test print); orientation follows the phone's rotation + a manual toggle; raw upload = full camera frame (composite = its centred cover crop); orientation is read from the composite's size, or `crop_config.orientation` after a re-crop (legacy `aspect` still read); the 6 applied frames_meta migrations deleted; Google Fonts trimmed to the families the UI still uses. Stickers removed. Pending migrations (user applies): `20261026_polaroid_templates_add.sql` (template_id 'A' + template_options {}) BEFORE merge; `…_drop.sql` (overlay_frame_url, frames_meta, overlay storage policies) AFTER deploy + after hardening. Overlay storage files (photos/overlays/*, bucket `overlays`) to be deleted by hand. Follow-ups: names shrink on one line only to each template's `minSize` (~70%), then wrap onto two lines with the heart/"&" leading the second name (D portrait moves the rings beside; G portrait very long Latin names accepted at ~51% — the safe margin wins); every print job stores `print_jobs.render_snapshot` {v, templateId, options, name, date} as the guest saw it (re-crops render from it; NULL → event settings) — column added to the same pending add migration.
 

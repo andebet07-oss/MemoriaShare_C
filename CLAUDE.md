@@ -389,6 +389,10 @@ src/
     PrintStation.jsx               ← Operator print queue dashboard (real-time)
     AdminDashboard.jsx             ← Admin CRM for leads + event management
     CreateMagnetEvent.jsx          ← Admin event creation for MemoriaMagnet
+    StudioLibrary.jsx / StudioEditor.jsx ← /admin/studio: frame studio library + full-screen editor
+  studio/                          ← Frame studio (Konva editor, ready-made frames, print PNG). Own data layer in
+                                     studio/storage (table studio_templates, bucket studio-files, admins only).
+                                     Plan: docs/studio-migration-plan.md
 public/
   manifest.json                   ← PWA config
 vercel.json                        ← SPA rewrite rule
