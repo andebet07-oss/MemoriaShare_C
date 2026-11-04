@@ -9,12 +9,18 @@
 -- the "no admin rights" screen.
 --
 -- 1. public.signin_allowlist: the emails that may create an account. Seeded with the current
---    admins. To let someone in later: add their email here (Table Editor), then, after their
---    first sign-in, set their role in public.profiles.
--- 2. public.hook_before_user_created(): a Supabase Auth "Before User Created" hook. It refuses
---    any new non-anonymous account whose email is not on the list. Anonymous accounts (guests
---    at events) always pass, before any table is read.
--- 3. Existing accounts that are not on the list are banned (auth.users.banned_until), so they
+--    admins. To let someone in later: add their email here (Table Editor), they sign in with
+--    Google, and then you set their role in public.profiles.
+-- 2. public.hook_before_user_created(): a Supabase Auth "Before User Created" hook. A new
+--    non-anonymous account needs a listed email AND Google as its provider: an email + password
+--    sign-up is refused even for a listed address, so nobody can claim the address of a person
+--    the owner is about to add before that person signs in with Google (account pre-hijacking).
+--    Anonymous accounts (guests at events) always pass, before any table is read.
+-- 3. auth_users_guard_signin trigger: an account that already exists cannot become a permanent
+--    account the hook never saw. A guest's anonymous account cannot turn permanent (add an
+--    email / link Google), and a permanent account cannot switch to an unlisted email. It only
+--    runs on those changes (WHEN clause); normal guest sign-ins and refreshes never reach it.
+-- 4. Existing accounts that are not on the list are banned (auth.users.banned_until), so they
 --    cannot sign in again either. Reversible (see ROLLBACK). Phase 2b deletes them once the
 --    Share backup is done (one of them owns 2 Share events).
 --
@@ -36,6 +42,9 @@ BEGIN
   END IF;
   IF to_regprocedure('public.hook_before_user_created(jsonb)') IS NOT NULL THEN
     RAISE EXCEPTION 'public.hook_before_user_created(jsonb) already exists';
+  END IF;
+  IF to_regprocedure('public.auth_users_guard_signin()') IS NOT NULL THEN
+    RAISE EXCEPTION 'public.auth_users_guard_signin() already exists';
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
     RAISE EXCEPTION 'role supabase_auth_admin is missing';
@@ -76,11 +85,13 @@ DECLARE
   v_email text  := lower(btrim(coalesce(event -> 'user' ->> 'email', '')));
 BEGIN
   -- Event guests: anonymous, no email. Let them through before anything that could fail.
+  -- (No email and not anonymous would be a phone sign-up: that provider is off.)
   IF v_user ->> 'is_anonymous' = 'true' OR v_email = '' THEN
     RETURN '{}'::jsonb;
   END IF;
 
-  IF EXISTS (SELECT 1 FROM public.signin_allowlist a WHERE lower(btrim(a.email)) = v_email) THEN
+  IF v_user -> 'app_metadata' ->> 'provider' = 'google'
+     AND EXISTS (SELECT 1 FROM public.signin_allowlist a WHERE lower(btrim(a.email)) = v_email) THEN
     RETURN '{}'::jsonb;
   END IF;
 
@@ -94,7 +105,32 @@ REVOKE EXECUTE ON FUNCTION public.hook_before_user_created(jsonb) FROM PUBLIC, a
 GRANT EXECUTE ON FUNCTION public.hook_before_user_created(jsonb) TO supabase_auth_admin;
 GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
 
--- ── 3. Existing accounts that are not on the list ─────────────
+-- ── 3. No way around the hook through an existing account ─────
+CREATE FUNCTION public.auth_users_guard_signin()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF OLD.is_anonymous THEN
+    RAISE EXCEPTION 'A guest account cannot become a permanent account' USING ERRCODE = '42501';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.signin_allowlist a
+                 WHERE lower(btrim(a.email)) = lower(btrim(coalesce(NEW.email, '')))) THEN
+    RAISE EXCEPTION 'This account is not allowed to sign in to Memoria.' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+REVOKE EXECUTE ON FUNCTION public.auth_users_guard_signin() FROM PUBLIC, anon, authenticated;
+
+CREATE TRIGGER auth_users_guard_signin
+  BEFORE UPDATE ON auth.users
+  FOR EACH ROW
+  WHEN (NOT NEW.is_anonymous AND (OLD.is_anonymous OR NEW.email IS DISTINCT FROM OLD.email))
+  EXECUTE FUNCTION public.auth_users_guard_signin();
+
+-- ── 4. Existing accounts that are not on the list ─────────────
 UPDATE auth.users u
 SET banned_until = '2999-12-31 00:00:00+00'
 WHERE NOT u.is_anonymous
@@ -126,6 +162,8 @@ COMMIT;
 -- Then:
 -- BEGIN;
 -- UPDATE auth.users SET banned_until = NULL WHERE banned_until = '2999-12-31 00:00:00+00';
+-- DROP TRIGGER auth_users_guard_signin ON auth.users;
+-- DROP FUNCTION public.auth_users_guard_signin();
 -- DROP FUNCTION public.hook_before_user_created(jsonb);
 -- DROP TABLE public.signin_allowlist;
 -- COMMIT;

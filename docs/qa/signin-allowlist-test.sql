@@ -16,6 +16,15 @@ CREATE TEMP TABLE qa_results (n serial, case_name text, expected text, actual te
 CREATE TEMP TABLE qa_ids (k text PRIMARY KEY, v text) ON COMMIT DROP;
 INSERT INTO qa_ids
 SELECT 'admin_email', email FROM public.signin_allowlist ORDER BY created_at, email LIMIT 1;
+INSERT INTO qa_ids VALUES ('guest', gen_random_uuid()::text), ('listed', gen_random_uuid()::text);
+INSERT INTO qa_ids SELECT 'listed_email', 'qa-listed-' || v || '@example.com' FROM qa_ids WHERE k = 'listed';
+INSERT INTO qa_ids SELECT 'listed_email_2', 'qa-listed-2-' || v || '@example.com' FROM qa_ids WHERE k = 'listed';
+
+-- Fixtures (as postgres): a guest, and a permanent account whose email is on the list (plus a second listed email)
+INSERT INTO public.signin_allowlist (email) SELECT v FROM qa_ids WHERE k IN ('listed_email', 'listed_email_2');
+INSERT INTO auth.users (id, is_anonymous) SELECT v::uuid, true FROM qa_ids WHERE k = 'guest';
+INSERT INTO auth.users (id, is_anonymous, email)
+SELECT (SELECT v FROM qa_ids WHERE k = 'listed')::uuid, false, (SELECT v FROM qa_ids WHERE k = 'listed_email');
 
 -- Runs p_sql (as p_role when given) and records the first column of its first row,
 -- or 'error: …' if it fails. Everything it did is rolled back.
@@ -44,13 +53,16 @@ RETURNS text LANGUAGE plpgsql AS $fn$
 BEGIN
   INSERT INTO public.signin_allowlist (email) VALUES (p_listed);
   RETURN coalesce(public.hook_before_user_created(
-           jsonb_build_object('user', jsonb_build_object('email', p_signs_in_as, 'is_anonymous', false)))
+           jsonb_build_object('user', jsonb_build_object('email', p_signs_in_as, 'is_anonymous', false,
+                                                         'app_metadata', jsonb_build_object('provider', 'google'))))
          -> 'error' ->> 'http_code', 'allowed');
 END $fn$;
 
 DO $$
 DECLARE
   admin_email text := (SELECT v FROM qa_ids WHERE k = 'admin_email');
+  guest uuid := (SELECT v FROM qa_ids WHERE k = 'guest');
+  listed uuid := (SELECT v FROM qa_ids WHERE k = 'listed');
   -- What Supabase Auth sends the hook: {"metadata": {...}, "user": {...}}
   hook text := 'SELECT coalesce(public.hook_before_user_created(%L::jsonb) -> ''error'' ->> ''http_code'', ''allowed'')';
 BEGIN
@@ -63,16 +75,31 @@ BEGIN
     format(hook, '{"user": {"email": "someone.else@gmail.com", "is_anonymous": false, "app_metadata": {"provider": "google"}}}'));
   PERFORM pg_temp.qa_value('unknown email + password sign-up → refused (403)', '403', NULL,
     format(hook, '{"user": {"email": "qa-signup@example.com", "is_anonymous": false, "app_metadata": {"provider": "email"}}}'));
-  PERFORM pg_temp.qa_value('listed admin email → allowed', 'allowed', NULL,
-    format(hook, json_build_object('user', json_build_object('email', admin_email, 'is_anonymous', false))));
-  PERFORM pg_temp.qa_value('listed admin email in capitals → allowed', 'allowed', NULL,
-    format(hook, json_build_object('user', json_build_object('email', upper(admin_email), 'is_anonymous', false))));
+  PERFORM pg_temp.qa_value('listed admin email with Google → allowed', 'allowed', NULL,
+    format(hook, json_build_object('user', json_build_object('email', admin_email, 'is_anonymous', false, 'app_metadata', json_build_object('provider', 'google')))));
+  PERFORM pg_temp.qa_value('listed admin email in capitals with Google → allowed', 'allowed', NULL,
+    format(hook, json_build_object('user', json_build_object('email', upper(admin_email), 'is_anonymous', false, 'app_metadata', json_build_object('provider', 'google')))));
+  PERFORM pg_temp.qa_value('listed email with email + password (pre-hijacking) → refused (403)', '403', NULL,
+    format(hook, json_build_object('user', json_build_object('email', admin_email, 'is_anonymous', false, 'app_metadata', json_build_object('provider', 'email')))));
   PERFORM pg_temp.qa_value('new person before being added → refused (403)', '403', NULL,
-    format(hook, '{"user": {"email": "new.person@example.com", "is_anonymous": false}}'));
+    format(hook, '{"user": {"email": "new.person@example.com", "is_anonymous": false, "app_metadata": {"provider": "google"}}}'));
   PERFORM pg_temp.qa_value('new person after the owner adds " New.Person@Example.com " → allowed', 'allowed', NULL,
     'SELECT pg_temp.qa_add_then_sign_in('' New.Person@Example.com '', ''new.person@example.com'')');
-  PERFORM pg_temp.qa_value('the list holds the admins', 'true', NULL,
-    'SELECT (count(*) = (SELECT count(*) FROM auth.users u JOIN public.profiles p ON p.id = u.id WHERE p.role = ''admin''))::text FROM public.signin_allowlist');
+  PERFORM pg_temp.qa_value('every admin is on the list', '0', NULL,
+    'SELECT count(*)::text FROM auth.users u JOIN public.profiles p ON p.id = u.id
+      WHERE p.role = ''admin'' AND NOT EXISTS (SELECT 1 FROM public.signin_allowlist a WHERE a.email = lower(btrim(u.email)))');
+
+  -- Existing accounts cannot get around the hook
+  PERFORM pg_temp.qa_value('guest turns their anonymous account permanent (adds an email) → refused', 'error', NULL,
+    format('UPDATE auth.users SET is_anonymous = false, email = ''qa-guest@example.com'' WHERE id = %L RETURNING ''ok''', guest));
+  PERFORM pg_temp.qa_value('listed account switches to an unlisted email → refused', 'error', NULL,
+    format('UPDATE auth.users SET email = ''someone.else@gmail.com'' WHERE id = %L RETURNING ''ok''', listed));
+  PERFORM pg_temp.qa_value('[regression] guest signs in again (Auth updates the row)', 'ok', NULL,
+    format('UPDATE auth.users SET last_sign_in_at = now() WHERE id = %L RETURNING ''ok''', guest));
+  PERFORM pg_temp.qa_value('[regression] listed account signs in again', 'ok', NULL,
+    format('UPDATE auth.users SET last_sign_in_at = now() WHERE id = %L RETURNING ''ok''', listed));
+  PERFORM pg_temp.qa_value('[regression] listed account switches to another listed email', 'ok', NULL,
+    format('UPDATE auth.users SET email = %L WHERE id = %L RETURNING ''ok''', (SELECT v FROM qa_ids WHERE k = 'listed_email_2'), listed));
 
   -- Who can reach what
   PERFORM pg_temp.qa_value('Supabase Auth can run the hook', 'true', NULL,
