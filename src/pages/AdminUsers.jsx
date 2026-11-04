@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Users, Search, Shield, User, ChevronRight, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 
 const SUPER_ADMIN_EMAIL = 'effitag@gmail.com';
 
@@ -141,8 +140,8 @@ export default function AdminUsers() {
         <Shield className="w-16 h-16 text-red-500 mb-4" />
         <h1 className="text-2xl font-bold mb-2">אין הרשאה</h1>
         <p className="text-gray-500 text-sm mb-6">עמוד זה מיועד לסופר אדמין בלבד.</p>
-        <button onClick={() => navigate(createPageUrl('MyEvents'))} className="bg-white text-black font-bold px-6 py-3 rounded-2xl">
-          חזרה לאירועים
+        <button onClick={() => navigate('/admin')} className="bg-white text-black font-bold px-6 py-3 rounded-2xl">
+          חזרה לניהול
         </button>
       </div>
     );
@@ -154,7 +153,7 @@ export default function AdminUsers() {
       <div className="sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/5 px-4 pt-safe">
         <div className="max-w-lg mx-auto flex items-center justify-between h-16">
           <button
-            onClick={() => navigate(createPageUrl('MyEvents'))}
+            onClick={() => navigate('/admin')}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 active:scale-90 transition-transform"
           >
             <ChevronRight className="w-5 h-5 text-white" />

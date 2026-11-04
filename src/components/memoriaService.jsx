@@ -118,26 +118,17 @@ const memoriaService = {
 
     create: async (rawData) => {
       try {
-        // Strip UI-only fields that don't exist as table columns, and map
-        // privacy_mode → auto_publish_guest_photos (immediate = true, manual = false).
+        // Only real columns go to the table; every event is a magnet event.
         const {
-          privacy_mode,
-          event_type,   // pass through only valid DB values
-          description,  // form-only
-          price,        // form-only (pricing display)
-          qr_code,      // form-only
-          photo_filter, // form-only
+          event_type: _eventType,
+          privacy_mode: _privacyMode,
+          description: _description,
+          price: _price,
+          qr_code: _qrCode,
+          photo_filter: _photoFilter,
           ...rest
         } = rawData;
-
-        const eventData = {
-          ...rest,
-          // Allow 'share'/'magnet'; ignore legacy UI values like 'wedding'
-          ...(event_type === 'share' || event_type === 'magnet' ? { event_type } : {}),
-          auto_publish_guest_photos:
-            rest.auto_publish_guest_photos ??
-            (privacy_mode === 'immediate' ? true : false),
-        };
+        const eventData = { ...rest, event_type: 'magnet' };
 
         const { data, error } = await supabase
           .from('events')
@@ -259,22 +250,6 @@ const memoriaService = {
         if (error) throw error;
       } catch (error) {
         console.error('MemoriaService [photos.delete]: Failed to delete photo', id, error);
-        throw error;
-      }
-    },
-
-    approve: async (id) => {
-      try {
-        const { data, error } = await supabase
-          .from('photos')
-          .update({ is_approved: true, updated_date: new Date().toISOString() })
-          .eq('id', id)
-          .select()
-          .single();
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('MemoriaService [photos.approve]: Failed to approve photo', id, error);
         throw error;
       }
     },
@@ -538,102 +513,6 @@ const memoriaService = {
       }
     },
   },
-
-  // ── INSERT: Phase 2 – event sharing permissions ───────────────────────────
-
-  profiles: {
-    /** Look up a user profile by email. Returns null if not found or RLS blocks
-     *  the lookup (Phase 6 policy not yet deployed). Never throws. */
-    getByEmail: async (email) => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, avatar_url')
-          .eq('email', email.trim().toLowerCase())
-          .maybeSingle();
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('MemoriaService [profiles.getByEmail]: Failed lookup for', email, error);
-        return null;
-      }
-    },
-  },
-
-  eventPermissions: {
-    /** Return all permission rows for an event, oldest-first. */
-    getByEvent: async (eventId) => {
-      try {
-        const { data, error } = await supabase
-          .from('event_permissions')
-          .select('id, event_id, user_id, role, granted_by, created_at')
-          .eq('event_id', eventId)
-          .order('created_at', { ascending: true });
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.error('MemoriaService [eventPermissions.getByEvent]: Failed', eventId, error);
-        throw error;
-      }
-    },
-
-    /** Return the permission row for a specific user on a specific event, or null. */
-    getForUser: async (eventId, userId) => {
-      if (!eventId || !userId) return null;
-      try {
-        const { data, error } = await supabase
-          .from('event_permissions')
-          .select('id, role')
-          .eq('event_id', eventId)
-          .eq('user_id', userId)
-          .maybeSingle();
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('MemoriaService [eventPermissions.getForUser]: Failed', eventId, userId, error);
-        throw error;
-      }
-    },
-
-    /** Resolve email → UUID, then upsert a permission row. Throws USER_NOT_FOUND
-     *  if the email cannot be resolved (RLS may block until Phase 6). */
-    grant: async ({ eventId, email, role, grantedBy }) => {
-      try {
-        const profile = await memoriaService.profiles.getByEmail(email);
-        if (!profile) throw new Error('USER_NOT_FOUND');
-
-        const { data, error } = await supabase
-          .from('event_permissions')
-          .upsert(
-            { event_id: eventId, user_id: profile.id, role, granted_by: grantedBy },
-            { onConflict: 'event_id,user_id' }
-          )
-          .select('id, event_id, user_id, role, granted_by, created_at')
-          .single();
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('MemoriaService [eventPermissions.grant]: Failed', eventId, email, error);
-        throw error;
-      }
-    },
-
-    /** Delete a permission row by its primary key. Returns void. */
-    revoke: async ({ permissionId }) => {
-      try {
-        const { error } = await supabase
-          .from('event_permissions')
-          .delete()
-          .eq('id', permissionId);
-        if (error) throw error;
-      } catch (error) {
-        console.error('MemoriaService [eventPermissions.revoke]: Failed', permissionId, error);
-        throw error;
-      }
-    },
-  },
-
-  // ── END INSERT ─────────────────────────────────────────────────────────────
 
 };
 

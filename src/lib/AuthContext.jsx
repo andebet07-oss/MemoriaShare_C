@@ -20,7 +20,6 @@ function buildBaseUser(supabaseUser) {
     avatar_url: meta.avatar_url || meta.picture || '',
     role: 'user',
     phone: '',
-    needsOnboarding: false,
   };
 }
 
@@ -57,7 +56,6 @@ async function enrichWithProfile(baseUser, setUser, onDone) {
           phone: profile.phone || '',
           avatar_url: profile.avatar_url || prev.avatar_url,
         };
-        enriched.needsOnboarding = !enriched.full_name || !enriched.phone;
         return enriched;
       });
     }

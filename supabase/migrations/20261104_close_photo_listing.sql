@@ -1,6 +1,6 @@
 -- ============================================================
 -- Close the public listing of the photos bucket — security fix
--- Applied to live DB: <PENDING>   (lives in supabase/pending/ until applied; see README there)
+-- Applied to live DB: 2026-11-04 (QA docs/qa/photo-listing-test.sql: 7/7)
 -- ============================================================
 --
 -- Found in the 2026-11-04 audit (also the planned Stage 1 follow-up in

@@ -63,20 +63,15 @@ export default function CreateMagnetEvent() {
     setIsLoading(true);
     try {
       const unique_code = Math.random().toString(36).substring(2, 10);
-      const pin_code = Math.floor(1000 + Math.random() * 9000).toString();
       const event = await memoriaService.events.create({
         name: form.name.trim(),
         date: form.date,
         unique_code,
-        pin_code,
         created_by: user.id,
         event_type: 'magnet',
         print_quota_per_device: form.print_quota_per_device,
         template_id: form.template.templateId,
         template_options: form.template.options,
-        guest_tier: 0,
-        max_uploads_per_user: 999,
-        auto_publish_guest_photos: false,
         is_active: true,
       });
       if (form.coverImageFile) {
@@ -87,7 +82,7 @@ export default function CreateMagnetEvent() {
         // URL came from the lead form — already uploaded, write it directly
         await memoriaService.events.update(event.id, { cover_image: form.coverImageUrl });
       }
-      setSuccess({ event_code: event.unique_code, pin_code: event.pin_code, event_id: event.id });
+      setSuccess({ event_code: event.unique_code, event_id: event.id });
     } catch (err) {
       console.error('CreateMagnetEvent: submit failed', err);
       const msg = err?.message || err?.code || 'שגיאה לא ידועה';

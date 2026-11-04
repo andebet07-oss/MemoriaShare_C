@@ -1,7 +1,7 @@
 # MemoriaShare Retirement Plan
 
 **Decision (2026-10-25):** Memoria is a single product, **MemoriaMagnet** (managed magnet printing at live events). MemoriaShare (self-service albums) is retired.
-**Status:** PLAN, awaiting approval. Nothing is deleted and no DB change is applied until each phase is approved.
+**Status:** approved 2026-11-04 (decisions in §4). Phase 1 (frontend + dead code + packages) done on the branch, awaiting deploy. Phase 2a migration written and tested, to apply after Phase 1 is live. Next: Share backup (D1), landing copy (D2).
 
 ---
 
@@ -53,13 +53,16 @@
 
 Written as `supabase/migrations/2026MMDD_retire_share.sql`, split into a **safe** part and a **destructive** part, applied separately.
 
-**2a. Security tightening (safe, reversible)**
-- `photos_select_admin` (new): `USING (is_admin())`. Must land first.
-- `photos_select_public` → drop. Today every approved photo is publicly listable, and Magnet photos are inserted with `is_approved = true` (`MagnetReview.jsx:297`), so any anonymous client can list all guest photos of every Magnet event. Guests keep `photos_select_own`.
-- `events_insert_authenticated` → admin-only (`is_admin()`). Today any Google account can create an event.
-- `photos_update_owner` / `photos_delete_owner` / `events_update_owner` → drop the `co_hosts` + `event_permissions` branches; keep creator/uploader + `is_admin()`
-- Drop `photos_select_owner`, `photos_select_viewer`
-- `upload_diagnostics_select` → admin-only
+**2a. Security tightening (safe, reversible)**: written as `supabase/pending/20261104_retire_share_2a.sql`, QA `docs/qa/share-2a-test.sql`. Tested on a local stand-in of the live rules: 16/28 before the migration (the 12 holes fail), 28/28 after, rollback restores the original rules. Apply after Phase 1 is live.
+- `photos_select_admin` already exists (Stage 1). Magnet photos are already private (`photos_magnet_private_*`, Stage 1).
+- `photos_select` (live name) → drop. Anyone can read every approved **Share** photo (83 photos). Replaced by `photos_select_own` (uploader).
+- `events_insert_authenticated` + the restrictive `events_insert_admin_only` → one `events_insert_admin`. Only admins can create events already; this is cleanup.
+- `photos_update` / `photos_update_owner` / `photos_delete_owner` / `events_update_owner` → drop the `co_hosts` + `event_permissions` branches; keep creator/uploader + `is_admin()` (new `photos_update_admin`, `photos_delete_own`, `photos_delete_admin`)
+- Drop `photos_select_owner`, `photos_select_viewer`. Their `ep.event_id = ep.event_id` bug let an editor/viewer on one event reach every event's photos (`event_permissions` is empty, so not exploited)
+- `upload_diagnostics` → admin-only (empty and unused; any guest could read and write it)
+- Supabase advisor: revoke EXECUTE on trigger functions from `anon` / `authenticated`; pin `photos_public_base_url()` search_path
+
+**Seen in the 2a audit, left for 2b:** `events_select_public` lets anyone list every active event with all its columns (incl. `pin_code`, `co_hosts`: all empty today). Dropping the Share columns fixes the PII part; drop `upload_diagnostics` too.
 
 **2b. Schema cleanup (destructive: only after the Share-data decision below)**
 - Drop `event_permissions` (+ realtime publication entry), `is_event_owner()`
@@ -92,9 +95,16 @@ Every statement gets verified against the **live** schema first (`CLEAN_RESET_SC
 - Stage 1 migration rules that assume public URLs: `photos_insert_url_guard`, `is_event_storage_url`, and the `raw_photo_url` check in `print_jobs_insert_guest`. They must validate paths instead.
 - Existing rows: a data migration from URL to path, plus copying or moving objects if the bucket changes.
 
-**Order:** close the Storage list endpoint first (small, Stage 1 follow-up). Then this rebuild, together with the Share deletions (§2–3), so the bucket split happens once.
+**Order:** close the Storage list endpoint first (small, Stage 1 follow-up; **done 2026-11-04**, `supabase/migrations/20261104_close_photo_listing.sql`, QA 7/7, public photo links still load). Then this rebuild, together with the Share deletions (§2–3), so the bucket split happens once.
 
-## 4. Decisions needed from you
+## 4. Decisions (answered 2026-11-04)
+
+- **D1 Share data → (c) back up, then delete.** Live on 2026-11-04: 20 share events (18 created by the two admins, 2 by one other user), 83 photos, none uploaded in the last 60 days. Back up rows + photos and hand the backup to the owner. Send the other user's 2 events to them first if they turn out to be real. Then run 2b.
+- **D2 Landing copy:** Claude drafts new Hebrew Magnet copy; the owner approves before it ships.
+- **D3 Phase 1 scope:** the dead code and unused npm packages go in the same round, as separate commits.
+- **D4 Phase 2a:** write it now, independently of D1.
+
+### Original questions
 
 1. **Existing Share events and photos:** (a) hard stop, where `/event/:code` for share events shows "האלבום אינו פעיל עוד"; (b) a read-only grace period so hosts can download a ZIP until a date; (c) export, then delete the rows and storage objects. This decides when 2b can run.
 2. **Landing copy:** do I draft new Hebrew Magnet copy for Home, or do you supply it?

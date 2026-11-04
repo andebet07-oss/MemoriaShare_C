@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Printer, Copy, Check, ArrowRight, Users, Calendar, Hash, Lock, ImageIcon } from 'lucide-react';
+import { Loader2, Printer, Copy, Check, ArrowRight, Users, Calendar, Hash, ImageIcon } from 'lucide-react';
 import memoriaService from '@/components/memoriaService';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/system/PageHeader';
@@ -119,7 +119,6 @@ export default function MagnetEventDashboard() {
           <Card className="!py-1">
             <InfoRow icon={Calendar} label="תאריך"        value={formatDate(event.date)} />
             <InfoRow icon={Hash}     label="קוד אירוע"    value={event.unique_code} ltr />
-            <InfoRow icon={Lock}     label="PIN"          value={event.pin_code}    ltr />
             <InfoRow icon={Users}    label="הדפסות לאורח" value={event.print_quota_per_device ? `${event.print_quota_per_device} הדפסות` : null} />
           </Card>
 
