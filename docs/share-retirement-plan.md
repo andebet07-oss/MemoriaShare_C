@@ -1,7 +1,7 @@
 # MemoriaShare Retirement Plan
 
 **Decision (2026-10-25):** Memoria is a single product, **MemoriaMagnet** (managed magnet printing at live events). MemoriaShare (self-service albums) is retired.
-**Status:** PLAN, awaiting approval. Nothing is deleted and no DB change is applied until each phase is approved.
+**Status:** approved 2026-11-04 (decisions in §4). In progress: Phase 2a migration, Phase 1 frontend + dead code, Share backup.
 
 ---
 
@@ -94,7 +94,14 @@ Every statement gets verified against the **live** schema first (`CLEAN_RESET_SC
 
 **Order:** close the Storage list endpoint first (small, Stage 1 follow-up). Then this rebuild, together with the Share deletions (§2–3), so the bucket split happens once.
 
-## 4. Decisions needed from you
+## 4. Decisions (answered 2026-11-04)
+
+- **D1 Share data → (c) back up, then delete.** Live on 2026-11-04: 20 share events (18 created by the two admins, 2 by one other user), 83 photos, none uploaded in the last 60 days. Back up rows + photos and hand the backup to the owner. Send the other user's 2 events to them first if they turn out to be real. Then run 2b.
+- **D2 Landing copy:** Claude drafts new Hebrew Magnet copy; the owner approves before it ships.
+- **D3 Phase 1 scope:** the dead code and unused npm packages go in the same round, as separate commits.
+- **D4 Phase 2a:** write it now, independently of D1.
+
+### Original questions
 
 1. **Existing Share events and photos:** (a) hard stop, where `/event/:code` for share events shows "האלבום אינו פעיל עוד"; (b) a read-only grace period so hosts can download a ZIP until a date; (c) export, then delete the rows and storage objects. This decides when 2b can run.
 2. **Landing copy:** do I draft new Hebrew Magnet copy for Home, or do you supply it?

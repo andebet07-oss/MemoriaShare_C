@@ -10,7 +10,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useParams, useLocatio
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import HostOnboardingModal from '@/components/HostOnboardingModal';
 import GuestLayout from '@/components/GuestLayout';
 import RequireAdmin from '@/components/RequireAdmin';
 import CreateEventRedirect from '@/components/CreateEventRedirect';
@@ -23,11 +22,6 @@ import { GuestNotFound } from '@/components/magnet/guest/GuestMessage';
 // Pages — lazy-loaded so each route ships its own chunk instead of one
 // monolithic bundle every visitor must download up front.
 const Home            = lazy(() => import('@/pages/Home'));
-const Event           = lazy(() => import('@/pages/Event'));
-const EventGallery    = lazy(() => import('@/pages/EventGallery'));
-const EventSuccess    = lazy(() => import('@/pages/EventSuccess'));
-const Dashboard       = lazy(() => import('@/pages/Dashboard'));
-const MyEvents        = lazy(() => import('@/pages/MyEvents'));
 const MagnetLead      = lazy(() => import('@/pages/MagnetLead'));
 const MagnetGuestPage = lazy(() => import('@/pages/MagnetGuestPage'));
 const PrintStation    = lazy(() => import('@/pages/PrintStation'));
@@ -63,13 +57,15 @@ function MagnetGuestEntry() {
   });
 
   if (isLoading) return <GuestSkeleton />;
-  if (!event) return <GuestNotFound />;
-  // Guard: only magnet events belong here. A share-event code lands on the
-  // share gallery instead of wrongly opening the magnet print UI.
-  if (event.event_type && event.event_type !== 'magnet') {
-    return <Navigate to={`/event/${code}`} replace />;
-  }
+  // Only magnet events exist now; an old MemoriaShare album code is "not found".
+  if (!event || (event.event_type && event.event_type !== 'magnet')) return <GuestNotFound />;
   return <MagnetGuestPage event={event} />;
+}
+
+/** Old QR codes printed with /event/:code (and its /gallery) open the magnet guest page. */
+function LegacyEventRedirect() {
+  const { code } = useParams();
+  return <Navigate to={`/magnet/${code}`} replace />;
 }
 
 // A guest who scans the event QR lands on /magnet/:code: while the app boots,
@@ -82,7 +78,7 @@ function RouteLoading() {
 }
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return <RouteLoading />;
@@ -95,7 +91,6 @@ const AuthenticatedApp = () => {
 
   return (
     <>
-      {user?.needsOnboarding && <HostOnboardingModal />}
       <Suspense fallback={<RouteLoading />}>
       <Routes>
 
@@ -103,16 +98,14 @@ const AuthenticatedApp = () => {
         <Route path="/" element={<LayoutWrapper currentPageName="Home"><Home /></LayoutWrapper>} />
 
         {/* ── Guest routes (anonymous auth, GuestLayout) ── */}
-        <Route path="/event/:code" element={<GuestLayout><Event /></GuestLayout>} />
-        <Route path="/event/:code/gallery" element={<GuestLayout><EventGallery /></GuestLayout>} />
+        <Route path="/event/:code" element={<LegacyEventRedirect />} />
+        <Route path="/event/:code/gallery" element={<LegacyEventRedirect />} />
         <Route path="/magnet/lead" element={<GuestLayout><MagnetLead /></GuestLayout>} />
         <Route path="/magnet/:code" element={<GuestLayout><MagnetGuestEntry /></GuestLayout>} />
 
-        {/* ── Host routes (authenticated, standard layout) ── */}
-        <Route path="/host" element={<LayoutWrapper currentPageName="MyEvents"><MyEvents /></LayoutWrapper>} />
+        {/* ── Retired MemoriaShare host pages ── */}
         <Route path="/host/events/create" element={<CreateEventRedirect />} />
-        <Route path="/host/events/:id" element={<LayoutWrapper currentPageName="Dashboard"><Dashboard /></LayoutWrapper>} />
-        <Route path="/host/events/:id/success" element={<LayoutWrapper currentPageName="EventSuccess"><EventSuccess /></LayoutWrapper>} />
+        <Route path="/host/*" element={<Navigate to="/" replace />} />
 
         {/* ── Admin: full-screen routes (no shell) ── */}
         <Route path="/admin/events/magnet/:eventId/print" element={<RequireAdmin><PrintStation /></RequireAdmin>} />
@@ -134,9 +127,9 @@ const AuthenticatedApp = () => {
         <Route path="/AdminUsers"          element={<Navigate to="/admin/users" replace />} />
         <Route path="/CreateMagnetEvent"   element={<Navigate to="/admin/events/magnet/create" replace />} />
         <Route path="/PrintStation/:id"    element={<Navigate to="/admin" replace />} />
-        <Route path="/MyEvents"            element={<Navigate to="/host" replace />} />
+        <Route path="/MyEvents"            element={<Navigate to="/" replace />} />
         <Route path="/CreateEvent"         element={<Navigate to="/host/events/create" replace />} />
-        <Route path="/EventSuccess"        element={<Navigate to="/host" replace />} />
+        <Route path="/EventSuccess"        element={<Navigate to="/" replace />} />
 
         <Route path="*" element={<PageNotFound />} />
       </Routes>
