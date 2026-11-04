@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Loader2, ArrowLeft, Home } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import memoriaService from "@/components/memoriaService";
 import { useAuth } from "@/lib/AuthContext";
 import { DEFAULT_TEMPLATE_ID, getTemplate, resolveOptions } from "@/lib/polaroid/templates";
@@ -13,6 +14,9 @@ const TOTAL_STEPS = 4;
 export default function CreateMagnetEvent() {
   const location = useLocation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  // The event once created: a retry (e.g. after a failed cover upload) never creates a second one.
+  const createdEventRef = useRef(null);
 
   // Pre-fill from lead if navigated via "צור אירוע" in LeadsPanel
   const fromLead = location.state?.fromLead ?? null;
@@ -62,27 +66,43 @@ export default function CreateMagnetEvent() {
     if (!validateStep(currentStep)) return;
     setIsLoading(true);
     try {
-      const unique_code = Math.random().toString(36).substring(2, 10);
-      const event = await memoriaService.events.create({
-        name: form.name.trim(),
-        date: form.date,
-        unique_code,
-        created_by: user.id,
-        event_type: 'magnet',
-        print_quota_per_device: form.print_quota_per_device,
-        template_id: form.template.templateId,
-        template_options: form.template.options,
-        is_active: true,
-      });
-      if (form.coverImageFile) {
-        // Admin uploaded a new file in this wizard — upload it
-        const { file_url } = await memoriaService.storage.uploadCoverImage(form.coverImageFile, event.id);
-        await memoriaService.events.update(event.id, { cover_image: file_url });
-      } else if (form.coverImageUrl) {
-        // URL came from the lead form — already uploaded, write it directly
-        await memoriaService.events.update(event.id, { cover_image: form.coverImageUrl });
+      if (!createdEventRef.current) {
+        createdEventRef.current = await memoriaService.events.create({
+          name: form.name.trim(),
+          date: form.date,
+          unique_code: Math.random().toString(36).substring(2, 10),
+          created_by: user.id,
+          event_type: 'magnet',
+          print_quota_per_device: form.print_quota_per_device,
+          template_id: form.template.templateId,
+          template_options: form.template.options,
+          is_active: true,
+        });
       }
-      setSuccess({ event_code: event.unique_code, event_id: event.id });
+      const event = createdEventRef.current;
+      // The cover is optional: if it fails the event still exists, and the cover can be set from its page.
+      let coverFailed = false;
+      try {
+        if (form.coverImageFile) {
+          const { file_url } = await memoriaService.storage.uploadCoverImage(form.coverImageFile, event.id);
+          await memoriaService.events.update(event.id, { cover_image: file_url });
+        } else if (form.coverImageUrl) {
+          // URL came from the lead form — already uploaded, write it directly
+          await memoriaService.events.update(event.id, { cover_image: form.coverImageUrl });
+        }
+      } catch (err) {
+        console.error('CreateMagnetEvent: cover failed', err);
+        coverFailed = true;
+      }
+      if (fromLead?.leadId) {
+        try {
+          await memoriaService.leads.update(fromLead.leadId, { status: 'converted' });
+        } catch (err) {
+          console.error('CreateMagnetEvent: lead status update failed', err);
+        }
+      }
+      ['admin-all-events', 'admin-leads', 'admin-leads-badge'].forEach(key => queryClient.invalidateQueries({ queryKey: [key] }));
+      setSuccess({ event_code: event.unique_code, event_id: event.id, coverFailed });
     } catch (err) {
       console.error('CreateMagnetEvent: submit failed', err);
       const msg = err?.message || err?.code || 'שגיאה לא ידועה';
@@ -145,7 +165,7 @@ export default function CreateMagnetEvent() {
             style={{ paddingTop: '0.25rem', paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
             <div className="w-full max-w-sm mx-auto flex gap-3 items-center">
               {currentStep === 1 ? (
-                <Link to="/AdminDashboard" aria-label="חזרה לניהול"
+                <Link to="/admin/events/magnet" aria-label="חזרה לאירועים"
                   className="w-11 h-11 bg-card text-muted-foreground rounded-xl flex items-center justify-center transition-all active:scale-90 border border-border shrink-0 hover:text-foreground">
                   <Home className="w-4 h-4" />
                 </Link>

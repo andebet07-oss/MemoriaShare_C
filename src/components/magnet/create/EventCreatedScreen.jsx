@@ -36,20 +36,26 @@ export default function EventCreatedScreen({ success }) {
           </button>
         </div>
 
+        {success.coverFailed && (
+          <p role="alert" className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-foreground">
+            תמונת הרקע לא נשמרה. אפשר להעלות אותה מדף האירוע.
+          </p>
+        )}
+
         {/* Actions */}
         <div className="flex flex-col gap-2">
           <button
-            onClick={() => navigate(`/PrintStation/${success.event_id}`)}
+            onClick={() => navigate(`/admin/events/magnet/${success.event_id}/print`)}
             className="flex items-center justify-center gap-2 w-full px-5 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-xl transition-colors"
           >
             <Monitor className="w-4 h-4" />
-            פתח Print Station
+            פתח עמדת הדפסה
           </button>
           <button
-            onClick={() => navigate('/AdminDashboard')}
+            onClick={() => navigate(`/admin/events/magnet/${success.event_id}`)}
             className="w-full px-5 py-3 bg-card border border-border text-muted-foreground text-sm rounded-xl hover:bg-accent transition-colors"
           >
-            חזרה לדשבורד
+            לדף האירוע
           </button>
         </div>
       </div>
