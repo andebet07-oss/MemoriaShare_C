@@ -1,6 +1,4 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Camera, Upload, X, Loader2, Film, ImageIcon } from "lucide-react";
 import CameraCapture from "@/components/camera/CameraCapture";
 
