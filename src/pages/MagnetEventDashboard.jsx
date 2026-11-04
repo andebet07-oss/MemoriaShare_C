@@ -114,7 +114,7 @@ export default function MagnetEventDashboard() {
       />
 
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 min-w-0">
           {/* Event details */}
           <Card className="!py-1">
             <InfoRow icon={Calendar} label="תאריך"        value={formatDate(event.date)} />
@@ -176,7 +176,7 @@ export default function MagnetEventDashboard() {
         </div>
 
         {/* Photo feed */}
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-3 min-w-0">
           <SectionLabel as="h2">תמונות שנשלחו (<bdi className="tabular-nums">{photos.length}</bdi>)</SectionLabel>
           {photos.length > 0 ? (
             <div className="grid grid-cols-3 gap-2">

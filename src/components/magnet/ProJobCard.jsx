@@ -5,17 +5,7 @@ import { printAndAdvance, setJobStatus, stationError } from '@/lib/printStation'
 import { HAS_REAL_FACE_ENGINE } from '@/hooks/useFaceCrop';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/system/StatusBadge';
-
-/** Relative age of a job — "עכשיו" / "לפני X דק׳" / "לפני X שע׳". */
-function timeAgo(iso) {
-  if (!iso) return '';
-  const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (sec < 60) return 'עכשיו';
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `לפני ${min} דק׳`;
-  const hr = Math.floor(min / 60);
-  return `לפני ${hr} שע׳`;
-}
+import { timeAgo } from '@/lib/timeAgo';
 
 const clampCopies = (n) => Math.max(1, Math.min(20, Math.round(n) || 1));
 

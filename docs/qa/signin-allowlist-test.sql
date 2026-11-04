@@ -1,5 +1,5 @@
 -- ============================================================
--- QA: sign-in allowlist after supabase/pending/20261104_signin_allowlist.sql
+-- QA: sign-in allowlist after supabase/migrations/20261104_signin_allowlist.sql
 -- ============================================================
 -- Run the WHOLE file in the Supabase SQL editor AFTER applying the migration
 -- (if the editor asks about RLS for new tables: "Run without RLS"; the two tables

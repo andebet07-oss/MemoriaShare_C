@@ -1,6 +1,7 @@
 -- ============================================================
 -- Only listed accounts can sign in — event guests (anonymous) are unaffected
--- Applied to live DB: <PENDING>   (lives in supabase/pending/ until applied; see README there)
+-- Applied to live DB: 2026-11-04 (QA docs/qa/signin-allowlist-test.sql: 23/23 on live). Hook enabled in the
+-- dashboard the same day; live check: anonymous guest sign-in 200, unlisted email sign-up 403 (no account).
 -- ============================================================
 --
 -- Owner's decision (2026-11-04): nobody but the two admins may sign in, until the owner adds

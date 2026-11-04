@@ -110,12 +110,13 @@ const AuthenticatedApp = () => {
         {/* ── Admin: full-screen routes (no shell) ── */}
         <Route path="/admin/events/magnet/:eventId/print" element={<RequireAdmin><PrintStation /></RequireAdmin>} />
         <Route path="/admin/studio/:templateId" element={<RequireAdmin><StudioEditor /></RequireAdmin>} />
+        {/* The create wizard is a full-screen flow: inside the tabbed shell its footer fell below the fold */}
+        <Route path="/admin/events/magnet/create" element={<RequireAdmin><CreateMagnetEvent /></RequireAdmin>} />
 
         {/* ── Admin: tabbed shell with nested routes ── */}
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>}>
           <Route index element={<AdminOverview />} />
           <Route path="events/magnet"         element={<AdminEventsList />} />
-          <Route path="events/magnet/create"  element={<CreateMagnetEvent />} />
           <Route path="events/magnet/:eventId" element={<MagnetEventDashboard />} />
           <Route path="leads"                 element={<LeadsPanel />} />
           <Route path="users"                 element={<AdminUsers />} />

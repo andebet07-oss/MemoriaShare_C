@@ -1,7 +1,7 @@
 # MemoriaShare Retirement Plan
 
 **Decision (2026-10-25):** Memoria is a single product, **MemoriaMagnet** (managed magnet printing at live events). MemoriaShare (self-service albums) is retired.
-**Status:** approved 2026-11-04 (decisions in §4). Phase 1 (frontend + dead code + packages) done on the branch, awaiting deploy. Phase 2a migration written and tested, to apply after Phase 1 is live. Next: Share backup (D1), landing copy (D2).
+**Status:** approved 2026-11-04 (decisions in §4). Done: Phase 1 (live, PR #21), Phase 2a (applied). Next: Share backup (D1), landing copy (D2), then 2b.
 
 ---
 
@@ -53,7 +53,7 @@
 
 Written as `supabase/migrations/2026MMDD_retire_share.sql`, split into a **safe** part and a **destructive** part, applied separately.
 
-**2a. Security tightening (safe, reversible)**: written as `supabase/pending/20261104_retire_share_2a.sql`, QA `docs/qa/share-2a-test.sql`. Tested on a local stand-in of the live rules: 16/28 before the migration (the 12 holes fail), 28/28 after, rollback restores the original rules. Apply after Phase 1 is live.
+**2a. Security tightening (safe, reversible)**: **applied 2026-11-04**, `supabase/migrations/20261104_retire_share_2a.sql`, QA `docs/qa/share-2a-test.sql`. Tested on a local stand-in of the live rules: 16/28 before the migration (the 12 holes fail), 28/28 after, rollback restores the original rules. Apply after Phase 1 is live.
 - `photos_select_admin` already exists (Stage 1). Magnet photos are already private (`photos_magnet_private_*`, Stage 1).
 - `photos_select` (live name) → drop. Anyone can read every approved **Share** photo (83 photos). Replaced by `photos_select_own` (uploader).
 - `events_insert_authenticated` + the restrictive `events_insert_admin_only` → one `events_insert_admin`. Only admins can create events already; this is cleanup.

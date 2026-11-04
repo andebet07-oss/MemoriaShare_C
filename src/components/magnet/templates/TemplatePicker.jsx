@@ -25,11 +25,12 @@ export default function TemplatePicker({ value, onChange, name, date, large = fa
   return (
     <div className="flex flex-col gap-5">
       {/* The selected template, large enough to read */}
+      {/* Widths shrink with the card on a phone (fixed widths overflowed a 390px screen) */}
       <div className="flex items-end justify-center gap-4">
         <PolaroidPreview spec={specFor(selected.id, options)} orientation="portrait"
-          className={large ? 'w-[180px]' : 'w-[132px]'} label={`${selected.label} לאורך`} />
+          className={`w-[40%] ${large ? 'max-w-[180px]' : 'max-w-[132px]'}`} label={`${selected.label} לאורך`} />
         <PolaroidPreview spec={specFor(selected.id, options)} orientation="landscape"
-          className={large ? 'w-[240px]' : 'w-[176px]'} label={`${selected.label} לרוחב`} />
+          className={`w-[54%] ${large ? 'max-w-[240px]' : 'max-w-[176px]'}`} label={`${selected.label} לרוחב`} />
       </div>
 
       <TemplateOptions template={selected} values={options}
