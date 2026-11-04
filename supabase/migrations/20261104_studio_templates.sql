@@ -1,6 +1,6 @@
 -- ============================================================
 -- Frame studio (/admin/studio): template library + files — additive
--- Applied to live DB: <PENDING>   (lives in supabase/pending/ until applied; see README there)
+-- Applied to live DB: 2026-11-04 (QA docs/qa/studio-templates-rls-test.sql on live: 22/22)
 -- ============================================================
 --
 -- Plan: docs/studio-migration-plan.md §3 (decision D1: one library shared by all admins).

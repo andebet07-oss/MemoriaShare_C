@@ -1,6 +1,6 @@
 # Magnet Frame Studio → `/admin/studio`
 
-**Status:** approved 2026-11-04, D1–D5 as recommended (shared library, konva + zustand + fflate, ZIP kept, editor desktop/tablet only, redirect then delete the old site). Phase 2 written: `supabase/pending/20261104_studio_templates.sql` + `docs/qa/studio-templates-rls-test.sql` (local stand-in 22/22; guards abort with no changes when re-run, when `is_admin()` is missing, or when it isn't SECURITY DEFINER). Waiting for you to apply it.
+**Status:** approved 2026-11-04, D1–D5 as recommended (shared library, konva + zustand + fflate, ZIP kept, editor desktop/tablet only, redirect then delete the old site). Phase 2 done: `supabase/migrations/20261104_studio_templates.sql` applied to live 2026-11-04; `docs/qa/studio-templates-rls-test.sql` on live 22/22 (locally the guards abort with no changes when re-run, when `is_admin()` is missing, or when it isn't SECURITY DEFINER). Phase 3 (code) in progress.
 **Branch:** `claude/hopeful-feynman-ohyurh` (from `main` 234750f).
 **Source:** the standalone studio, repo `andebet07-oss/magnet-frame` (live at magnet-frame.vercel.app, its own Supabase project `gelzopnjdlucizxpootg`).
 
@@ -99,7 +99,7 @@ Each phase is one PR into `main`. `main` deploys to production on merge, and not
 |---|---|
 | Now | Answer D1–D5. |
 | Phase 2 ✅ | Ran the pre-checks in §3. |
-| Phase 2 | Run `supabase/pending/20261104_studio_templates.sql` in the SQL editor (expect "Success. No rows returned"; a guard error means nothing changed). Then run `docs/qa/studio-templates-rls-test.sql`: it ends with an intentional error reading `22 passed, 0 failed`. The runbook's `pg_dump` is optional here: this migration only adds objects, changes no existing row or policy, runs in one transaction, and its rollback is at the end of the file. |
+| Phase 2 ✅ | Ran `20261104_studio_templates.sql` in the SQL editor (expect "Success. No rows returned"; a guard error means nothing changed). Then run `docs/qa/studio-templates-rls-test.sql`: it ends with an intentional error reading `22 passed, 0 failed`. The runbook's `pg_dump` is optional here: this migration only adds objects, changes no existing row or policy, runs in one transaction, and its rollback is at the end of the file. |
 | Phase 3 | Review and merge the PR. Then open memoriashare.com/admin/studio and create, edit and export one frame. |
 | Phase 4 | On magnet-frame.vercel.app: "גיבוי ZIP". On memoriashare.com/admin/studio: "שחזור מגיבוי" with that file. Check the templates opened. |
 | Phase 5 | Vercel → project `magnet-frame` → Settings → add the redirect I give you (or delete the project). After two weeks: Supabase → the old project → Settings → Delete project. |
