@@ -37,6 +37,8 @@ const AdminDashboard       = lazy(() => import('@/pages/AdminDashboard'));
 const CreateMagnetEvent    = lazy(() => import('@/pages/CreateMagnetEvent'));
 const MagnetEventDashboard = lazy(() => import('@/pages/MagnetEventDashboard'));
 const AdminUsers           = lazy(() => import('@/pages/AdminUsers'));
+const StudioLibrary        = lazy(() => import('@/pages/StudioLibrary'));
+const StudioEditor         = lazy(() => import('@/pages/StudioEditor'));
 
 // Admin tab content
 const AdminOverview   = lazy(() => import('@/components/admin/AdminOverview'));
@@ -114,6 +116,7 @@ const AuthenticatedApp = () => {
 
         {/* ── Admin: full-screen routes (no shell) ── */}
         <Route path="/admin/events/magnet/:eventId/print" element={<RequireAdmin><PrintStation /></RequireAdmin>} />
+        <Route path="/admin/studio/:templateId" element={<RequireAdmin><StudioEditor /></RequireAdmin>} />
 
         {/* ── Admin: tabbed shell with nested routes ── */}
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>}>
@@ -123,6 +126,7 @@ const AuthenticatedApp = () => {
           <Route path="events/magnet/:eventId" element={<MagnetEventDashboard />} />
           <Route path="leads"                 element={<LeadsPanel />} />
           <Route path="users"                 element={<AdminUsers />} />
+          <Route path="studio"                element={<StudioLibrary />} />
         </Route>
 
         {/* ── Legacy redirects (backwards compatibility) ── */}

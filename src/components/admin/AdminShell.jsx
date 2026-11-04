@@ -7,12 +7,13 @@ import memoriaService from '@/components/memoriaService';
 import TabNav from '@/components/system/TabNav';
 import { Button } from '@/components/ui/button';
 
-// Core workflow first: סקירה → לידים → מגנט → משתמשים (Magnet-only; no Share events in admin)
+// Core workflow first: סקירה → לידים → מגנט → משתמשים → סטודיו (Magnet-only; no Share events in admin)
 const TABS = [
   { to: '/admin',               label: 'סקירה',       end: true },
   { to: '/admin/leads',         label: 'לידים',        badge: true },
   { to: '/admin/events/magnet', label: 'אירועי מגנט'  },
   { to: '/admin/users',         label: 'משתמשים'      },
+  { to: '/admin/studio',        label: 'סטודיו'       },
 ];
 
 export default function AdminShell() {
