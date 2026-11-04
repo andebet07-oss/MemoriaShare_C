@@ -10,7 +10,7 @@
 | Coupling | Why it matters | Handling |
 |---|---|---|
 | `/event/:code` renders `MagnetGuestPage` for `event_type='magnet'` (`src/pages/Event.jsx:79`) | Older printed QR codes may point at `/event/:code` | Keep the route as a redirect to `/magnet/:code` |
-| Admin sign-in is the Google OAuth button in `src/components/home/Header.jsx` | `RequireAdmin` sends signed-out users to `/`, so `/admin` has no login of its own | Keep the header login and the "ניהול" link; drop only "האירועים שלי" |
+| ~~Admin sign-in is the Google OAuth button in `src/components/home/Header.jsx`~~ | **Done 2026-11-04:** the landing page has no sign-in; `/admin` shows its own (`RequireAdmin` → `AdminSignIn`) | Header keeps only the "ניהול" link for a signed-in admin |
 | `photos` table + `photos` bucket + `api/resize-photo.ts` | `print_jobs.photo_id` references `photos`; print cards read `photos.file_urls.thumbnail` | Keep. Only the Share-only columns/policies go (Phase 2) |
 | **No admin SELECT policy on `photos`**. Operators read photos only through `photos_select_public` | Tightening public read without adding an admin policy breaks PrintStation + MagnetEventDashboard | Phase 2 adds `photos_select_admin` *before* narrowing public read |
 | `memoriaService` `events` / `photos` / `printJobs` / `storage` / `leads` | Shared service layer | Keep; remove only the Share-only methods listed below |

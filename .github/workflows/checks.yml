@@ -1,0 +1,27 @@
+# Runs on every pull request and on main: the same checks to run locally before merging.
+# Vercel deploys main on its own; to make a red check block the merge, turn on
+# "Require status checks to pass" for main in GitHub → Settings → Branches.
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npm run build
