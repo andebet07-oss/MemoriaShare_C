@@ -1,6 +1,6 @@
 # Magnet Frame Studio → `/admin/studio`
 
-**Status:** approved 2026-11-04, D1–D5 as recommended (shared library, konva + zustand + fflate, ZIP kept, editor desktop/tablet only, redirect then delete the old site). Phase 2 done: `supabase/migrations/20261104_studio_templates.sql` applied to live 2026-11-04; `docs/qa/studio-templates-rls-test.sql` on live 22/22 (locally the guards abort with no changes when re-run, when `is_admin()` is missing, or when it isn't SECURITY DEFINER). Phase 3 (code) in progress.
+**Status:** approved 2026-11-04, D1–D5 as recommended (shared library, konva + zustand + fflate, ZIP kept, editor desktop/tablet only, redirect then delete the old site). Phase 2 done: `supabase/migrations/20261104_studio_templates.sql` applied to live 2026-11-04; `docs/qa/studio-templates-rls-test.sql` on live 22/22 (locally the guards abort with no changes when re-run, when `is_admin()` is missing, or when it isn't SECURITY DEFINER). Phase 3 written on this branch: the studio in `src/studio/`, `/admin/studio` + `/admin/studio/:templateId`, the "סטודיו" tab, self-hosted fonts, konva + zustand + fflate. Waiting for review and merge.
 **Branch:** `claude/hopeful-feynman-ohyurh` (from `main` 234750f).
 **Source:** the standalone studio, repo `andebet07-oss/magnet-frame` (live at magnet-frame.vercel.app, its own Supabase project `gelzopnjdlucizxpootg`).
 
@@ -49,7 +49,7 @@ The studio is ~5,700 lines of JS/JSX plus 12 test files (309 tests). It uses no 
 | D4 | The editor on a phone | **Library usable on a phone; editor desktop/tablet only**, with a "פתח במחשב" message below 1024 px. A precise mm editor on a 375 px screen isn't usable. This is an exception to mobile-first. |
 | D5 | The old site after the move | **Redirect** magnet-frame.vercel.app to memoriashare.com/admin/studio. **Delete** the old Supabase project after two weeks without problems. |
 
-## 3. DB: `supabase/pending/20261104_studio_templates.sql`
+## 3. DB: `supabase/migrations/20261104_studio_templates.sql` (applied 2026-11-04)
 
 This migration is additive only, and nothing existing reads it. It will be written in phase 2 and applied by you, following `docs/runbooks/pre-migration-backup.md`.
 
@@ -97,12 +97,20 @@ Each phase is one PR into `main`. `main` deploys to production on merge, and not
 
 | When | Step |
 |---|---|
-| Now | Answer D1–D5. |
+| ✅ | Answered D1–D5. |
 | Phase 2 ✅ | Ran the pre-checks in §3. |
-| Phase 2 ✅ | Ran `20261104_studio_templates.sql` in the SQL editor (expect "Success. No rows returned"; a guard error means nothing changed). Then run `docs/qa/studio-templates-rls-test.sql`: it ends with an intentional error reading `22 passed, 0 failed`. The runbook's `pg_dump` is optional here: this migration only adds objects, changes no existing row or policy, runs in one transaction, and its rollback is at the end of the file. |
+| Phase 2 ✅ | Ran `20261104_studio_templates.sql` in the SQL editor ("Success. No rows returned"), then `docs/qa/studio-templates-rls-test.sql` (`22 passed, 0 failed`). The runbook's `pg_dump` is optional here: this migration only adds objects, changes no existing row or policy, runs in one transaction, and its rollback is at the end of the file. |
 | Phase 3 | Review and merge the PR. Then open memoriashare.com/admin/studio and create, edit and export one frame. |
 | Phase 4 | On magnet-frame.vercel.app: "גיבוי ZIP". On memoriashare.com/admin/studio: "שחזור מגיבוי" with that file. Check the templates opened. |
 | Phase 5 | Vercel → project `magnet-frame` → Settings → add the redirect I give you (or delete the project). After two weeks: Supabase → the old project → Settings → Delete project. |
+
+### Phase 3 notes (as built)
+
+- **Checks.** `npm test`: the studio's 301 tests pass, run in the Node environment (`// @vitest-environment node`) as before. The 8 sign-in tests were removed with the studio's own sign-in. Two existing site test files fail on `main` too: they import `@/api/base44Client` and `@/lib/app-params`, which no longer exist.
+- **Lint and types.** `npm run lint` passes, and `src/studio` is now linted. `npm run typecheck` already reports 296 errors on `main` and is not a gate; the studio pages add 64 more, all inferred-type complaints inside `src/studio`.
+- **Bundle.** The main bundle grows by ~0.2 KB gzipped (routes + tab). The studio chunk is ~100 KB gzipped (Konva included) plus the two page chunks (~20 KB), loaded only on `/admin/studio`.
+- **Browser check.** The studio screens ran on the site's dev build with an in-memory backend (a local harness, not committed). Covered: ready-made frames by event (create, edit name, export, tag filter), hearts and rings in text, icons (colours, emoji upload), the PNG export (2500×1875, transparent window, heart over the window kept, border opaque) and frame import (window detected as the photo area).
+- **Not covered locally:** the real Supabase calls under an admin session. That's the phase 3 production check below.
 
 ## 6. Risks
 

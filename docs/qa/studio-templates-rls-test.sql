@@ -1,5 +1,5 @@
 -- ============================================================
--- QA: access after supabase/pending/20261104_studio_templates.sql
+-- QA: access after supabase/migrations/20261104_studio_templates.sql
 -- ============================================================
 -- Run the WHOLE file in the Supabase SQL editor AFTER applying the migration.
 -- It creates throw-away users (an admin, a signed-in non-admin, an anonymous
