@@ -1,6 +1,6 @@
 # Magnet Frame Studio → `/admin/studio`
 
-**Status:** plan, waiting for approval (decisions D1–D5 in §2). No code, no DB change yet.
+**Status:** approved 2026-11-04, D1–D5 as recommended (shared library, konva + zustand + fflate, ZIP kept, editor desktop/tablet only, redirect then delete the old site). Next: phase 2, waiting on the §3 pre-check results. No code, no DB change yet.
 **Branch:** `claude/hopeful-feynman-ohyurh` (from `main` 234750f).
 **Source:** the standalone studio, repo `andebet07-oss/magnet-frame` (live at magnet-frame.vercel.app, its own Supabase project `gelzopnjdlucizxpootg`).
 
