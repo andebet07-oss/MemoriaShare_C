@@ -1,6 +1,6 @@
 -- ============================================================
 -- Retire Share, Phase 2a: tighten the database rules Share left behind — security fix
--- Applied to live DB: 2026-11-04 (rules checked against live pg_policies the same day)
+-- Applied to live DB: 2026-11-04 (QA docs/qa/share-2a-test.sql: 28/28 on live)
 -- ============================================================
 --
 -- Plan: docs/share-retirement-plan.md §3 (2a). Apply AFTER the Phase 1 site is live:
