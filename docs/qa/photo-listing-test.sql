@@ -1,5 +1,5 @@
 -- ============================================================
--- QA: photos bucket access after supabase/pending/20261104_close_photo_listing.sql
+-- QA: photos bucket access after supabase/migrations/20261104_close_photo_listing.sql
 -- ============================================================
 -- Run the WHOLE file in the Supabase SQL editor AFTER applying the migration
 -- (if the editor asks about RLS for new tables: "Run without RLS"; the two tables

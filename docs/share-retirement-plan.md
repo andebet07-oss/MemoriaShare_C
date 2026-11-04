@@ -95,7 +95,7 @@ Every statement gets verified against the **live** schema first (`CLEAN_RESET_SC
 - Stage 1 migration rules that assume public URLs: `photos_insert_url_guard`, `is_event_storage_url`, and the `raw_photo_url` check in `print_jobs_insert_guest`. They must validate paths instead.
 - Existing rows: a data migration from URL to path, plus copying or moving objects if the bucket changes.
 
-**Order:** close the Storage list endpoint first (small, Stage 1 follow-up). Then this rebuild, together with the Share deletions (§2–3), so the bucket split happens once.
+**Order:** close the Storage list endpoint first (small, Stage 1 follow-up; **done 2026-11-04**, `supabase/migrations/20261104_close_photo_listing.sql`, QA 7/7, public photo links still load). Then this rebuild, together with the Share deletions (§2–3), so the bucket split happens once.
 
 ## 4. Decisions (answered 2026-11-04)
 
