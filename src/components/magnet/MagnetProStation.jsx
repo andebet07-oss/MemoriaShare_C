@@ -82,7 +82,7 @@ export default function MagnetProStation({ event }) {
   const cropJob = cropEditorJobId != null ? jobs.find(j => j.id === cropEditorJobId) : null;
 
   const renderGrid = (items) => (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
       {items.map(job => (
         <ProJobCard
           key={job.id}
@@ -128,8 +128,8 @@ export default function MagnetProStation({ event }) {
           </Button>
         </div>
 
-        {/* Keyboard legend */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        {/* Keyboard legend: only where there is a keyboard and mouse (not on a phone or tablet) */}
+        <div className="hidden [@media(pointer:fine)]:flex items-center gap-2 text-sm text-muted-foreground">
           <Keyboard className="w-4 h-4 shrink-0" />
           <span>חיצים = ניווט · רווח/Enter = הדפס והתקדם · R = דחה · Esc = סגור עריכה</span>
         </div>
