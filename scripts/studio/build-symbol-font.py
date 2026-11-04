@@ -55,6 +55,13 @@ def artwork(source, sets, custom):
     return box, " ".join(re.findall(r'<path[^>]*\sd="([^"]+)"', icon["body"]))
 
 
+def padded(view_box, scale):
+    """Grows the grid around the icon, so an icon drawn edge to edge sits like one with padding."""
+    vx, vy, vw, vh = view_box
+    nw, nh = vw / scale, vh / scale
+    return [vx - (nw - vw) / 2, vy - (nh - vh) / 2, nw, nh]
+
+
 def draw(pen, view_box, d, rotate=0):
     vx, vy, vw, vh = view_box
     k = BOX / vh
@@ -84,6 +91,8 @@ def main():
     for index, symbol in enumerate(symbols):
         name = f"sym{index}"
         view_box, d = artwork(symbol["source"], sets, custom)
+        if symbol.get("scale"):
+            view_box = padded(view_box, symbol["scale"])
         advance = round(BOX * view_box[2] / view_box[3] + 2 * SIDE)
         pen = T2CharStringPen(advance, None)
         draw(pen, view_box, d, symbol.get("rotate", 0))

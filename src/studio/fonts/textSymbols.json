@@ -1,11 +1,13 @@
 [
-  { "label": "לב", "insert": "♥", "chars": ["♥", "🖤"], "source": "ph:heart-fill" },
+  { "label": "לב", "insert": "♥", "chars": ["♥", "🖤"], "source": "custom:heart-bold", "scale": 1.0},
+  { "label": "לב מבריק", "insert": "💖", "chars": ["💖"], "source": "custom:heart-shine", "scale": 1.0},
   { "label": "לב בקו", "insert": "♡", "chars": ["♡"], "source": "ph:heart-light" },
   { "label": "לב מחודד", "insert": "❤", "chars": ["❤"], "source": "ph:heart-straight-fill" },
-  { "label": "לב מוטה", "insert": "❥", "chars": ["❥"], "source": "ph:heart-fill", "rotate": -18 },
+  { "label": "לב מוטה", "insert": "❥", "chars": ["❥"], "source": "ph:heart-fill", "rotate": -18},
   { "label": "שני לבבות", "insert": "💕", "chars": ["💕"], "source": "mingcute:love-fill" },
-  { "label": "טבעות", "insert": "⚭", "chars": ["⚭"], "source": "custom:rings" },
-  { "label": "טבעת יהלום", "insert": "💍", "chars": ["💍"], "source": "custom:diamond-ring" },
+  { "label": "לבבות קופצים", "insert": "💞", "chars": ["💞"], "source": "custom:hearts-burst", "scale": 1.0},
+  { "label": "טבעות", "insert": "⚭", "chars": ["⚭"], "source": "custom:rings-hearts", "scale": 1.08},
+  { "label": "טבעות יהלום", "insert": "💍", "chars": ["💍"], "source": "custom:rings-diamonds", "scale": 1.12},
   { "label": "נצנוץ", "insert": "✦", "chars": ["✦"], "source": "ph:star-four-fill" },
   { "label": "נצנוץ בקו", "insert": "✧", "chars": ["✧"], "source": "ph:star-four-light" },
   { "label": "מגן דוד", "insert": "✡", "chars": ["✡"], "source": "ph:star-of-david-light" }

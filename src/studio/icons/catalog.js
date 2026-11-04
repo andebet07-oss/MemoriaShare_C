@@ -1,9 +1,10 @@
 // Icon catalogue: what the icon picker offers, grouped by kind of celebration, with Hebrew names.
 //
 // - 'symbol' icons are single-colour vectors that take any colour, e.g. a black, red or dark red heart.
-//   `src` is "<set>:<name>": Phosphor ("ph", MIT), MingCute ("mingcute", Apache-2.0), or the rings
-//   drawn for this app ("custom", src/studio/icons/customPaths.json).
-// - 'emoji' icons are colourful illustrations from Microsoft Fluent Emoji (MIT).
+//   `src` is "<set>:<name>": Phosphor ("ph", MIT), MingCute ("mingcute", Apache-2.0), or "custom"
+//   (src/studio/icons/customPaths.json): Memoria's own hearts and rings, vectorised for print.
+// - 'emoji' icons are colourful illustrations: Microsoft Fluent Emoji (MIT), or Memoria's own
+//   (source 'custom', src/studio/icons/custom-images/).
 // Licences: public/studio/LICENSE.md. After editing these lists run `node scripts/studio/build-icons.mjs` to write the
 // artwork into src/studio/icons/symbolPaths.js and public/studio/emoji/.
 
@@ -38,6 +39,15 @@ export const DEFAULT_ICON_COLOR = '#111111';
 const symbol = (id, label, src, categories) => ({ kind: 'symbol', id, label, src, categories });
 
 export const SYMBOLS = [
+  // Memoria's own (first in their categories)
+  symbol('heart-bold', 'לב קלאסי', 'custom:heart-bold', ['hearts', 'love']),
+  symbol('heart-shine', 'לב מבריק', 'custom:heart-shine', ['hearts', 'love']),
+  symbol('heart-gloss', 'לב עם ברק', 'custom:heart-gloss', ['hearts']),
+  symbol('heart-simple', 'לב מצויר', 'custom:heart-simple', ['hearts']),
+  symbol('hearts-burst', 'לבבות קופצים', 'custom:hearts-burst', ['hearts', 'love', 'fun']),
+  symbol('rings-hearts', 'טבעות עם לבבות', 'custom:rings-hearts', ['love', 'hearts']),
+  symbol('rings-diamonds', 'טבעות יהלום', 'custom:rings-diamonds', ['love']),
+  symbol('rings-tangled', 'טבעות שזורות', 'custom:rings-tangled', ['love']),
   // Hearts
   symbol('heart', 'לב', 'ph:heart-fill', ['hearts', 'love']),
   symbol('heart-line', 'לב בקו', 'ph:heart-light', ['hearts', 'love']),
@@ -109,10 +119,12 @@ export const SYMBOLS = [
   symbol('paw', 'כף רגל', 'ph:paw-print-light', ['fun']),
 ];
 
-const emoji = (id, label, categories) => ({ kind: 'emoji', id, label, categories });
+const emoji = (id, label, categories, source = 'fluent') => ({ kind: 'emoji', id, label, categories, source });
 
-// `id` is the emoji name in the Iconify "fluent-emoji" set.
+// `id` is the emoji name in the Iconify "fluent-emoji" set, or a file in custom-images/ (source 'custom').
 export const EMOJI = [
+  emoji('heart-scribble', 'לב מקושקש', ['hearts', 'love'], 'custom'),
+  emoji('heart-scribble-outline', 'לב מקושקש עם קו', ['hearts', 'love'], 'custom'),
   emoji('red-heart', 'לב אדום', ['hearts', 'love']),
   emoji('black-heart', 'לב שחור', ['hearts']),
   emoji('white-heart', 'לב לבן', ['hearts', 'love']),
