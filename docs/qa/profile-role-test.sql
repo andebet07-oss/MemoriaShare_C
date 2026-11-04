@@ -1,5 +1,5 @@
 -- ============================================================
--- QA: profiles.role after supabase/pending/20261104_protect_profile_role.sql
+-- QA: profiles.role after supabase/migrations/20261104_protect_profile_role.sql
 -- ============================================================
 -- Run the WHOLE file in the Supabase SQL editor AFTER applying the migration
 -- (if the editor asks about RLS for new tables: "Run without RLS"; the two tables

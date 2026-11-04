@@ -1,6 +1,6 @@
 -- ============================================================
 -- Protect profiles.role — security fix
--- Applied to live DB: <PENDING>   (lives in supabase/pending/ until applied; see README there)
+-- Applied to live DB: 2026-11-04 (QA docs/qa/profile-role-test.sql on live: 11/11)
 -- ============================================================
 --
 -- Found in the 2026-11-04 audit. On live, any signed-in user could make themselves admin:
