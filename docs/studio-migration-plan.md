@@ -1,6 +1,6 @@
 # Magnet Frame Studio → `/admin/studio`
 
-**Status:** approved 2026-11-04, D1–D5 as recommended (shared library, konva + zustand + fflate, ZIP kept, editor desktop/tablet only, redirect then delete the old site). Next: phase 2, waiting on the §3 pre-check results. No code, no DB change yet.
+**Status:** approved 2026-11-04, D1–D5 as recommended (shared library, konva + zustand + fflate, ZIP kept, editor desktop/tablet only, redirect then delete the old site). Phase 2 written: `supabase/pending/20261104_studio_templates.sql` + `docs/qa/studio-templates-rls-test.sql` (local stand-in 22/22; guards abort with no changes when re-run, when `is_admin()` is missing, or when it isn't SECURITY DEFINER). Waiting for you to apply it.
 **Branch:** `claude/hopeful-feynman-ohyurh` (from `main` 234750f).
 **Source:** the standalone studio, repo `andebet07-oss/magnet-frame` (live at magnet-frame.vercel.app, its own Supabase project `gelzopnjdlucizxpootg`).
 
@@ -63,7 +63,9 @@ This migration is additive only, and nothing existing reads it. It will be writt
   - `storage.objects` policies for this bucket only, also `is_admin()`.
 - **Rollback SQL** at the bottom of the file: drop the policies, the bucket, the table and the trigger.
 
-Live RLS has drifted from `CLEAN_RESET_SCHEMA.sql`, so before the file is finalised you run three read-only checks in the SQL editor and send me the results:
+**Pre-check result (2026-11-04):** two admins in `profiles`. Queries 1–2 ran without error, so `is_admin()` exists. Their output wasn't visible (the SQL editor shows only the last result), so the migration's guard block checks the rest itself: `is_admin()` must be SECURITY DEFINER and test `auth.uid()` with `role = 'admin'`, and the table and bucket names must be free.
+
+Live RLS has drifted from `CLEAN_RESET_SCHEMA.sql`, so before the file was written these read-only checks ran in the SQL editor:
 
 ```sql
 -- 1. is_admin() exists, and what it checks
@@ -96,8 +98,8 @@ Each phase is one PR into `main`. `main` deploys to production on merge, and not
 | When | Step |
 |---|---|
 | Now | Answer D1–D5. |
-| Phase 2 | Run the 3 queries in §3 in the Supabase SQL editor (project `esjprtvfijyjjxpufjho`) and paste the results to me. |
-| Phase 2 | After I adjust the file: backup per the runbook (snapshot + `pg_dump`), then run `20261104_studio_templates.sql` in the SQL editor, then the QA queries at its end. |
+| Phase 2 ✅ | Ran the pre-checks in §3. |
+| Phase 2 | Run `supabase/pending/20261104_studio_templates.sql` in the SQL editor (expect "Success. No rows returned"; a guard error means nothing changed). Then run `docs/qa/studio-templates-rls-test.sql`: it ends with an intentional error reading `22 passed, 0 failed`. The runbook's `pg_dump` is optional here: this migration only adds objects, changes no existing row or policy, runs in one transaction, and its rollback is at the end of the file. |
 | Phase 3 | Review and merge the PR. Then open memoriashare.com/admin/studio and create, edit and export one frame. |
 | Phase 4 | On magnet-frame.vercel.app: "גיבוי ZIP". On memoriashare.com/admin/studio: "שחזור מגיבוי" with that file. Check the templates opened. |
 | Phase 5 | Vercel → project `magnet-frame` → Settings → add the redirect I give you (or delete the project). After two weeks: Supabase → the old project → Settings → Delete project. |
