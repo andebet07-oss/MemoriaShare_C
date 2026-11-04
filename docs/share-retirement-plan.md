@@ -1,7 +1,7 @@
 # MemoriaShare Retirement Plan
 
 **Decision (2026-10-25):** Memoria is a single product, **MemoriaMagnet** (managed magnet printing at live events). MemoriaShare (self-service albums) is retired.
-**Status:** approved 2026-11-04 (decisions in §4). In progress: Phase 2a migration, Phase 1 frontend + dead code, Share backup.
+**Status:** approved 2026-11-04 (decisions in §4). Phase 1 (frontend + dead code + packages) done on the branch, awaiting deploy. Phase 2a migration written and tested, to apply after Phase 1 is live. Next: Share backup (D1), landing copy (D2).
 
 ---
 
@@ -53,13 +53,16 @@
 
 Written as `supabase/migrations/2026MMDD_retire_share.sql`, split into a **safe** part and a **destructive** part, applied separately.
 
-**2a. Security tightening (safe, reversible)**
-- `photos_select_admin` (new): `USING (is_admin())`. Must land first.
-- `photos_select_public` → drop. Today every approved photo is publicly listable, and Magnet photos are inserted with `is_approved = true` (`MagnetReview.jsx:297`), so any anonymous client can list all guest photos of every Magnet event. Guests keep `photos_select_own`.
-- `events_insert_authenticated` → admin-only (`is_admin()`). Today any Google account can create an event.
-- `photos_update_owner` / `photos_delete_owner` / `events_update_owner` → drop the `co_hosts` + `event_permissions` branches; keep creator/uploader + `is_admin()`
-- Drop `photos_select_owner`, `photos_select_viewer`
-- `upload_diagnostics_select` → admin-only
+**2a. Security tightening (safe, reversible)**: written as `supabase/pending/20261104_retire_share_2a.sql`, QA `docs/qa/share-2a-test.sql`. Tested on a local stand-in of the live rules: 16/28 before the migration (the 12 holes fail), 28/28 after, rollback restores the original rules. Apply after Phase 1 is live.
+- `photos_select_admin` already exists (Stage 1). Magnet photos are already private (`photos_magnet_private_*`, Stage 1).
+- `photos_select` (live name) → drop. Anyone can read every approved **Share** photo (83 photos). Replaced by `photos_select_own` (uploader).
+- `events_insert_authenticated` + the restrictive `events_insert_admin_only` → one `events_insert_admin`. Only admins can create events already; this is cleanup.
+- `photos_update` / `photos_update_owner` / `photos_delete_owner` / `events_update_owner` → drop the `co_hosts` + `event_permissions` branches; keep creator/uploader + `is_admin()` (new `photos_update_admin`, `photos_delete_own`, `photos_delete_admin`)
+- Drop `photos_select_owner`, `photos_select_viewer`. Their `ep.event_id = ep.event_id` bug let an editor/viewer on one event reach every event's photos (`event_permissions` is empty, so not exploited)
+- `upload_diagnostics` → admin-only (empty and unused; any guest could read and write it)
+- Supabase advisor: revoke EXECUTE on trigger functions from `anon` / `authenticated`; pin `photos_public_base_url()` search_path
+
+**Seen in the 2a audit, left for 2b:** `events_select_public` lets anyone list every active event with all its columns (incl. `pin_code`, `co_hosts`: all empty today). Dropping the Share columns fixes the PII part; drop `upload_diagnostics` too.
 
 **2b. Schema cleanup (destructive: only after the Share-data decision below)**
 - Drop `event_permissions` (+ realtime publication entry), `is_event_owner()`
