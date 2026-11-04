@@ -90,7 +90,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'method_not_allowed' });
   }
 
-  // ── Layer 1: shared-secret gate (matches Authorization header on the webhook)
+  // ── Layer 1: shared-secret gate (matches Authorization header on the webhook).
+  // Fail closed: without the env var, "Bearer undefined" must not be a valid secret.
+  if (!WEBHOOK_SECRET || !SUPABASE_URL || !SERVICE_ROLE_KEY) {
+    console.error('[resize-photo] Missing SUPABASE_WEBHOOK_SECRET / SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY');
+    return res.status(500).json({ error: 'not_configured' });
+  }
   if (req.headers.authorization !== `Bearer ${WEBHOOK_SECRET}`) {
     console.error('[resize-photo] שגיאת אימות: ה-webhook secret אינו תואם.');
     return res.status(401).json({ error: 'unauthorized' });
